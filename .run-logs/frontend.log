@@ -1,0 +1,441 @@
+
+> frontend@0.0.0 dev
+> vite --host 127.0.0.1 --port 5173
+
+
+  [32m[1mVITE[22m v8.0.1[39m  [2mready in [0m[1m584[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m1:15:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m2:09:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantDetailPage.jsx[22m
+[2m2:31:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantDetailPage.jsx[22m
+[2m2:31:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m2:32:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m9:42:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/plot/PlotsPage.jsx[22m
+[2m9:42:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m9:42:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/context/AuthContext.jsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:42:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/context/AuthContext.jsx[22m
+[2m9:43:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:11:36 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m10:11:37 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mReferenceError[22m: plantName is not defined
+[39m > PlantCareDebugPage src/pages/dev/PlantCareDebugPage.jsx:493:23
+    491 |                <input
+    492 |                  id="dev-plant-name"
+    493 |                  value={plantName}
+        |                         ^
+    494 |                  onChange={(event) => setPlantName(event.target.value)}
+    495 |                  placeholder="Optional local plant name override"
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ > performWorkOnRoot node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+
+[2m10:11:37 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <PlantCareDebugPage> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m10:13:25 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m10:13:26 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mReferenceError[22m: plantName is not defined
+[39m > PlantCareDebugPage src/pages/dev/PlantCareDebugPage.jsx:490:23
+    488 |                <input
+    489 |                  id="dev-plant-name"
+    490 |                  value={plantName}
+        |                         ^
+    491 |                  onChange={(event) => setPlantName(event.target.value)}
+    492 |                  placeholder="Optional local plant name override"
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ > performWorkOnRoot node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+
+[2m10:13:26 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <PlantCareDebugPage> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m10:13:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m10:13:35 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mReferenceError[22m: plantName is not defined
+[39m > PlantCareDebugPage src/pages/dev/PlantCareDebugPage.jsx:486:23
+    484 |                <input
+    485 |                  id="dev-plant-name"
+    486 |                  value={plantName}
+        |                         ^
+    487 |                  onChange={(event) => setPlantName(event.target.value)}
+    488 |                  placeholder="Optional local plant name override"
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ > performWorkOnRoot node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+
+[2m10:13:35 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <PlantCareDebugPage> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m10:14:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m10:14:34 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mReferenceError[22m: plantName is not defined
+[39m > PlantCareDebugPage src/pages/dev/PlantCareDebugPage.jsx:486:23
+    484 |                <input
+    485 |                  id="dev-plant-name"
+    486 |                  value={plantName}
+        |                         ^
+    487 |                  onChange={(event) => setPlantName(event.target.value)}
+    488 |                  placeholder="Optional local plant name override"
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ > performWorkOnRoot node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+
+[2m10:14:34 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <PlantCareDebugPage> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m10:14:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m10:14:54 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mReferenceError[22m: plantName is not defined
+[39m > PlantCareDebugPage src/pages/dev/PlantCareDebugPage.jsx:484:23
+    482 |                <input
+    483 |                  id="dev-plant-name"
+    484 |                  value={plantName}
+        |                         ^
+    485 |                  onChange={(event) => setPlantName(event.target.value)}
+    486 |                  placeholder="Optional local plant name override"
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ > performWorkOnRoot node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+
+[2m10:14:54 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <PlantCareDebugPage> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m10:15:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m3:25:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/dev/PlantCareDebugPage.jsx[22m
+[2m3:25:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/context/AuthContext.jsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m3:25:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/context/AuthContext.jsx[22m
+[2m3:25:55 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mError[22m: useAuth must be used within AuthProvider.
+[39m > useAuth src/context/AuthContext.jsx:126:10
+    124 |  
+    125 |    if (!value) {
+    126 |      throw new Error('useAuth must be used within AuthProvider.')
+        |            ^
+    127 |    }
+    128 |  
+ > AppShell src/components/layout/AppShell.jsx?t=1775630553113:10:39
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+
+[2m3:25:55 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <AppShell> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m3:30:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m3:30:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m3:30:13 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/components/layout/Sidebar.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2m3:30:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m3:31:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m3:31:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m3:31:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m3:35:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/PlantsPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx[22m
+[2m3:35:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/context/AuthContext.jsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m3:35:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/context/AuthContext.jsx[22m
+[2m3:35:48 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mError[22m: useAuth must be used within AuthProvider.
+[39m > useAuth src/context/AuthContext.jsx:126:10
+    124 |  
+    125 |    if (!value) {
+    126 |      throw new Error('useAuth must be used within AuthProvider.')
+        |            ^
+    127 |    }
+    128 |  
+ > AppShell src/components/layout/AppShell.jsx?t=1775651154712:10:39
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+
+[2m3:35:48 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <AppShell> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m4:14:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/PlantsPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx[22m
+[2m4:14:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/context/AuthContext.jsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m4:14:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/context/AuthContext.jsx[22m
+[2m4:14:01 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mError[22m: useAuth must be used within AuthProvider.
+[39m > useAuth src/context/AuthContext.jsx:126:10
+    124 |  
+    125 |    if (!value) {
+    126 |      throw new Error('useAuth must be used within AuthProvider.')
+        |            ^
+    127 |    }
+    128 |  
+ > AppShell src/components/layout/AppShell.jsx?t=1775651747816:10:39
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+ > runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:871:29
+ > performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ > workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ > renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+
+[2m4:14:01 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <AppShell> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2m4:14:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m4:14:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m4:14:13 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+[2m4:14:13 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30234:39)
+      at TransformPluginContext.error (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30231:14)
+      at normalizeUrl (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27519:18)
+      at async file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27582:30
+      at async Promise.all (index 9)
+      at async TransformPluginContext.transform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27550:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30023:14)
+      at async loadAndTransform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:24152:26)
+[2m4:14:13 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/App.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2m4:17:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/pages/plant/CatalogPlantsPage.jsx[22m
+[2m4:17:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+[2m4:17:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+[2m4:17:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantFormPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:11:33
+[33m  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+     |                                    ^
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";
+  13 |  import ManagedPlantDetailPage from "./pages/plant/ManagedPlantDetailPage.jsx";[39m
+[2m4:17:10 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./pages/plant/CatalogPlantFormPage.jsx" from "src/App.jsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:11:33
+[33m  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+     |                                    ^
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";
+  13 |  import ManagedPlantDetailPage from "./pages/plant/ManagedPlantDetailPage.jsx";[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30234:39)
+      at TransformPluginContext.error (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30231:14)
+      at normalizeUrl (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27519:18)
+      at async file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27582:30
+      at async Promise.all (index 10)
+      at async TransformPluginContext.transform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27550:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30023:14)
+      at async loadAndTransform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:24152:26)
+[2m4:18:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m4:18:45 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+[2m4:18:45 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+[2m4:18:45 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+[2m4:18:45 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./pages/plant/CatalogPlantDetailPage.jsx" from "src/App.jsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/src/App.jsx[39m:10:35
+[33m  8  |  import PlantCareDebugPage from "./pages/dev/PlantCareDebugPage.jsx";
+  9  |  import InventoryPage from "./pages/inventory/InventoryPage.jsx";
+  10 |  import CatalogPlantDetailPage from "./pages/plant/CatalogPlantDetailPage.jsx";
+     |                                      ^
+  11 |  import CatalogPlantFormPage from "./pages/plant/CatalogPlantFormPage.jsx";
+  12 |  import CatalogPlantsPage from "./pages/plant/CatalogPlantsPage.jsx";[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30234:39)
+      at TransformPluginContext.error (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30231:14)
+      at normalizeUrl (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27519:18)
+      at async file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27582:30
+      at async Promise.all (index 9)
+      at async TransformPluginContext.transform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:27550:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:30023:14)
+      at async loadAndTransform (file:///C:/Users/Vartotojas/Desktop/PraktikaADIS/Realizacija_v2/frontend/node_modules/vite/dist/node/chunks/node.js:24152:26)
+[2m4:19:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/pages/plant/CatalogPlantDetailPage.jsx[22m
+[2m4:21:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantFormPage.jsx[22m
+[2m4:21:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantsPage.jsx[22m
+[2m4:21:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/ManagedPlantDetailPage.jsx[22m
+[2m4:21:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantDetailPage.jsx[22m
+[2m4:22:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m4:22:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m4:22:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m10:05:45 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/calendar/PlotCalendarPage.jsx[22m
+[2m10:05:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m9:17:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m9:18:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m9:18:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Topbar.jsx[22m
+[2m9:19:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/calendar/PlotCalendarPage.jsx[22m
+[2m9:21:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotsPage.jsx[22m
+[2m9:22:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m9:23:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantDetailPage.jsx[22m
+[2m10:49:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:49:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:49:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:49:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:49:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:46 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:50:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:51:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:51:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:51:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m10:51:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/shared/StatusView.jsx[22m
+[2m10:51:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m10:52:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m10:52:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Topbar.jsx[22m
+[2m10:52:37 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m10:52:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m10:52:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m10:52:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m10:53:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotsPage.jsx[22m
+[2m10:53:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotsPage.jsx[22m
+[2m10:53:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotsPage.jsx[22m
+[2m10:53:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotsPage.jsx[22m
+[2m10:53:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m2:23:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m2:23:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m2:23:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/PlantsPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx, /src/pages/plant/CatalogPlantsPage.jsx, /src/pages/plant/CatalogPlantFormPage.jsx, /src/pages/plant/CatalogPlantDetailPage.jsx[22m
+[2m2:23:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m2:23:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m2:23:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantsPage.jsx[22m
+[2m2:23:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantsPage.jsx[22m
+[2m2:24:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantsPage.jsx[22m
+[2m2:24:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantDetailPage.jsx[22m
+[2m2:24:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantFormPage.jsx[22m
+[2m2:25:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m2:25:34 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m2:27:39 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m2:28:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/ManagedPlantDetailPage.jsx[22m
+[2m2:28:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantDetailPage.jsx[22m
+[2m2:28:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m2:43:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m2:45:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m2:52:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx, /src/pages/plant/CatalogPlantDetailPage.jsx[22m
+[2m2:52:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m2:52:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m3:39:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m3:39:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m4:02:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/CatalogPlantFormPage.jsx[22m
+[2m4:02:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plant/PlantFormPage.jsx[22m
+[2m4:29:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/components/plot/PlotDesignerCanvas.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx[22m
+[2m4:29:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/components/plot/PlotDesignerCanvas.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx[22m
+[2m10:29:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/components/plot/PlotDesignerCanvas.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx[22m
+[2m10:29:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/inventory/InventoryPage.jsx[22m
+[2m10:29:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/calendar/PlotCalendarPage.jsx[22m
+[2m10:29:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/calendar/PlotCalendarPage.jsx[22m
+[2m10:38:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/plot/PlotHarvestsPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/plot/PlotHistoryPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/components/plot/PlotDesignerCanvas.jsx, /src/pages/dev/PlantCareDebugPage.jsx, /src/pages/plant/ManagedPlantDetailPage.jsx, /src/pages/plant/PlantFormPage.jsx[22m
+[2m11:30:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:31:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:31:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:31:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:31:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:31:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:32:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m11:33:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/plot/PlotDesignerCanvas.jsx[22m
+[2m11:33:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/plot/PlotDesignerCanvas.jsx[22m
+[2m11:34:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m11:38:06 PM[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m11:38:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because vite config has changed
+[2m11:38:06 PM[22m [36m[1m[vite][22m[39m server restarted.
+[2m11:44:24 PM[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+Port 5173 is in use, trying another one...
+[2m11:44:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+[2m11:44:25 PM[22m [36m[1m[vite][22m[39m server restarted.
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5174[22m/[39m
+^CTerminate batch job (Y/N)? 

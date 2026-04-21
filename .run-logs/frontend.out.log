@@ -1,0 +1,26 @@
+
+> frontend@0.0.0 dev
+> vite --host 127.0.0.1 --port 5173
+
+[2m10:26:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because vite config has changed
+
+  [32m[1mVITE[22m v8.0.1[39m  [2mready in [0m[1m591[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/calendar/PlotCalendarPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/plot/PlotDetailPage.jsx, /src/components/plot/PlotDesignerCanvas.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/context/AuthContext.jsx, /src/pages/calendar/PlotCalendarPage.jsx, /src/pages/plant/PlantDetailPage.jsx, /src/pages/admin/AdminUsersPage.jsx, /src/pages/community/CommunityPage.jsx, /src/pages/plot/PlotEditPage.jsx, /src/pages/user/DashboardPage.jsx, /src/pages/plot/PlotAnalyticsPage.jsx, /src/pages/inventory/InventoryPage.jsx, /src/pages/plot/PlotsPage.jsx, /src/pages/user/ResetPasswordPage.jsx, /src/pages/user/ForgotPasswordPage.jsx, /src/pages/plot/PlotDetailPage.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/user/DashboardPage.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Topbar.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/layout/Sidebar.jsx[22m
+[2m10:52:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/user/DashboardPage.jsx[22m
+[2m10:52:45 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/context/AuthContext.jsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m10:52:45 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/context/AuthContext.jsx[22m
+[2m10:54:25 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/pages/user/AccountPage.jsx[22m
+[2m10:54:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/admin/AdminUsersPage.jsx[22m
+[2m10:56:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/calendar/PlotCalendarPage.jsx[22m
+[2m10:57:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotAnalyticsPage.jsx[22m
+[2m10:57:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotDetailPage.jsx[22m
+[2m10:58:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/plot/PlotHarvestsPage.jsx[22m

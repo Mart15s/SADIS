@@ -1,0 +1,2700 @@
+                      Kauno technologijos universitetas
+                              Informatikos fakultetas
+
+Asmeninio sodo ar darzo informacin sistema
+
+             Baigiamasis bakalauro studij projektas
+
+                              Martynas Cesnauskas
+                                 Projekto autorius
+
+                              Doc. Linas Ablonskis
+                                      Vadovas
+
+                                   Kaunas, 2026
+                      Kauno technologijos universitetas
+                              Informatikos fakultetas
+
+Asmeninio sodo ar darzo informacin sistema
+
+             Baigiamasis bakalauro studij projektas
+      Informacini sistem studij programa (612I20001)
+
+                                          Martynas Cesnauskas
+                                          Projekto autorius
+                                          Doc. Linas Ablonskis
+                                          Vadovas
+                                          Pareig sutrumpinimas Vardenis
+                                          Pavardenis
+                                          Recenzentas / Recenzent
+
+                            Kaunas, 2026
+                                      Kauno technologijos universitetas
+                                              Informatikos fakultetas
+                                               Martynas Cesnauskas
+
+           Asmeninio sodo ar darzo informacin sistema
+
+                             Akademinio sziningumo deklaracija
+
+Patvirtinu, kad:
+1. baigiamj projekt parengiau savarankiskai ir sziningai, nepazeisdama(s) kit asmen autoriaus
+ar kit teisi, laikydamasi(s) Lietuvos Respublikos autori teisi ir gretutini teisi statymo nuostat,
+Kauno technologijos universiteto (toliau ­ Universitetas) intelektins nuosavybs valdymo ir
+perdavimo nuostat bei Universiteto akademins etikos kodekse nustatyt etikos reikalavim;
+2. baigiamajame projekte visi pateikti duomenys ir tyrim rezultatai yra teisingi ir gauti teistai, nei
+viena sio projekto dalis nra plagijuota nuo joki spausdintini ar elektronini saltini, visos
+baigiamojo projekto tekste pateiktos citatos ir nuorodos yra nurodytos literatros srase;
+3. statym nenumatyt pinigini sum uz baigiamj projekt ar jo dalis niekam nesu mokjs (-
+usi);
+4. suprantu, kad isaiskjus nesziningumo ar kit asmen teisi pazeidimo faktui, man bus taikomos
+akademins nuobaudos pagal Universitete galiojanci tvark ir bsiu pasalinta(s) is Universiteto, o
+baigiamasis projektas gali bti pateiktas Akademins etikos ir procedr kontrolieriaus tarnybai
+nagrinjant galim akademins etikos pazeidim.
+
+                                                                    Martynas Cesnauskas
+                                                                    Patvirtinta elektroniniu bdu
+                             Kauno technologijos universitetas
+                                    Informatikos fakultetas
+
+               Bakalauro baigiamojo projekto uzduotis
+
+Projekto tema          Asmeninio sodo ar darzo informacin sistema
+
+Reikalavimai ir slygos
+1. Funkciniai reikalavimai kuriamai sistemai:
+
+1.1 funkcinis reikalavimas
+1.2 funkcinis reikalavimas
+1.3 funkcinis reikalavimas
+1.4 funkcinis reikalavimas
+1.5 ...
+2. Nefunkciniai reikalavimai kuriamai sistemai:
+
+3. Reikalavimai testavimui:
+
+4. Kiti reikalavimai:
+
+Vadovas                Doc. Linas Ablonskis                        2026-02-22
+Cesnauskas Martynas. Asmeninio sodo ar darzo informacin sistema. Bakalauro studij baigiamasis
+projektas / vadovas doc. Linas Ablonskis; Kauno technologijos universitetas, Informatikos fakultetas.
+
+Studij kryptis ir sritis (studij krypci grup): Informacijos sistemos, Informatikos mokslai.
+
+Reiksminiai zodziai: informacin sistema, darzo planavimas, veiklos modeliavimas, BPMN, UML,
+rekomendacinis kalendorius, inventoriaus valdymas.
+
+Kaunas, 2026. 57 p.
+
+                                                      Santrauka
+
+Bakalauro baigiamajame projekte analizuojama asmeninio sodo ar darzo valdymo dalykin sritis ir
+projektuojama internetin informacin sistema, skirta planavimo, augal bkls stebjimo ir istekli
+valdymo procesams palaikyti. Darbe atlikta dalykins srities analiz, sudaryti veiklos tiksl, veiklos
+panaudojimo atvej, veiklos proces ir veiklos esybi modeliai. Identifikuoti esamos situacijos
+trkumai ­ fragmentuotas informacijos rinkimas, rankinis planavimas ir neintegruotas istekli
+valdymas.
+
+Remiantis atlikta analize, suformuluoti funkciniai ir nefunkciniai sistemos reikalavimai,
+suprojektuota sistemos architektra bei login duomen bazs schema. Sistemos realizacijai parinktas
+modernus internetini technologij stekas, uztikrinantis sprendimo lankstum, pltr ir prieinamum
+skirtinguose renginiuose.
+
+Sukurta informacin sistema generuoja rekomendacin veiksm kalendori, integruoja or prognozi
+duomenis, palaiko daugiamet planavimo istorij bei inventoriaus valdym. gyvendintas sprendimas
+sudaro prielaidas efektyvesniam darzo veiklos organizavimui, racionalesniam istekli naudojimui ir
+duomenimis grindziamam sprendim primimui.
+Cesnauskas Martynas. Personal Garden Information System. Bachelor's Final Degree Project /
+supervisor Assoc. Prof. Linas Ablonskis; Informatics Faculty, Kaunas University of Technology.
+
+Study field and area (study field group): Information Systems, Information Sciences.
+
+Keywords: information system, garden planning, business process modeling, BPMN, UML,
+recommendation calendar, inventory management.
+
+Kaunas, 2026. 57 p.
+
+                                                      Summary
+
+This Bachelor's Final Degree Project analyzes the business domain of personal garden management
+and presents the design and implementation of a web-based information system intended to support
+planning, plant condition monitoring, and resource management processes. The thesis includes a
+comprehensive domain analysis and the development of business goal, use case, business process,
+and business entity models. The main shortcomings of the existing situation were identified as
+fragmented information gathering, manual planning procedures, and non-integrated resource
+management.
+
+Based on the conducted analysis, functional and non-functional system requirements were defined,
+and the system architecture and logical database schema were designed. A modern web technology
+stack was selected for implementation to ensure flexibility, scalability, and accessibility across
+different devices.
+
+The developed information system generates a recommendation-based activity calendar, integrates
+weather forecast data, supports multi-year planning history, and provides inventory management
+functionality. The implemented solution contributes to more efficient garden activity organization,
+more rational resource utilization, and data-driven decision-making.
+                                                       Turinys
+Lenteli srasas ................................................................................................................................. 8
+Paveiksl srasas ............................................................................................................................... 9
+Santrump ir termin srasas ....................................................................................................... 12
+vadas................................................................................................................................................ 13
+1. Dalykins srities analiz ............................................................................................................ 16
+2. Sistemos reikalavim specifikacija ir projektas ..................................................................... 58
+3. Projektin specifikacija ............................................................................................................. 87
+Rezultat apibendrinimas ir isvados ........................................................................................... 127
+Literatros srasas ........................................................................................................................ 128
+
+                                                                                                                        7
+                                                  Lenteli srasas
+
+1 lentel. Esam inzinerini sprendim palyginimas ....................................................................... 52
+2 lentel. Backend ir frontend technologij stek palyginimas pagal realizavimo kriterijus ........... 54
+3 lentel. Duomen bazi valdymo sistem palyginimas pagal techninius kriterijus ...................... 55
+4 lentel. ,,Rekomendacinio veiksm kalendoriaus valdymas" panaudojimo atvejo specifikacija .. 61
+5 lentel. ,,Pazymti sunaudotas medziagas" panaudojimo atvejo specifikacija .............................. 64
+6 lentel. ,,Identifikuoti augalo bkl" panaudojimo atvejo specifikacija ........................................ 65
+7 lentel. ,,Gauti or prognozes" panaudojimo atvejo specifikacija ................................................. 67
+8 lentel. ,,Gauti augal informacij" panaudojimo atvejo specifikacija.......................................... 67
+9 lentel. ,,Valdyti sklypo plan" panaudojimo atvejo specifikacija ................................................ 68
+10 lentel. ,,Eksportuoti plan  PDF" panaudojimo atvejo specifikacija ......................................... 72
+11 lentel. ,,Analizuoti darzo rezultatus" panaudojimo atvejo specifikacija .................................... 72
+12 lentel. ,,Perzirti derliaus istorij" panaudojimo atvejo specifikacija ...................................... 75
+13 lentel. ,,Perzirti augalo bkls istorij" panaudojimo atvejo specifikacija ............................. 76
+14 lentel. ,,Pazymti augal rotacij" panaudojimo atvejo specifikacija ........................................ 77
+15 lentel. ,,Perzirti planavimo istorij" panaudojimo atvejo specifikacija .................................. 80
+16 lentel. Sistemos nefunkcini reikalavim specifikacija ............................................................. 82
+17 lentel. ,,Registruotis" panaudojimo atvejo specifikacija .......................................................... 130
+18 lentel. ,,Prisijungti" panaudojimo atvejo specifikacija ............................................................. 131
+19 lentel. ,,Atsijungti" panaudojimo atvejo specifikacija.............................................................. 131
+20 lentel. ,,Priminti slaptazod" panaudojimo atvejo specifikacija ............................................... 132
+21 lentel. ,,Redaguoti paskyros duomenis" panaudojimo atvejo specifikacija ............................. 133
+22 lentel. ,,Valdyti naudotoj paskyras" panaudojimo atvejo specifikacija.................................. 134
+23 lentel. ,,Valdyti darzo naudotoj prieigas" panaudojimo atvejo specifikacija ......................... 136
+24 lentel. ,,rasyti augalo bkl" panaudojimo atvejo specifikacija .............................................. 136
+25 lentel. ,,Dalintis sklypo duomenimis" panaudojimo atvejo specifikacija................................. 138
+26 lentel. ,,Perzirti informacij bendruomenje" panaudojimo atvejo specifikacija ................. 138
+27 lentel. ,,Valdyti augalus" panaudojimo atvejo specifikacija .................................................... 139
+28 lentel. ,,Registruoti derli" panaudojimo atvejo specifikacija.................................................. 141
+29 lentel. ,,Perzirti ranki ir medziag sras" panaudojimo atvejo specifikacija ................... 141
+30 lentel. ,,Papildyti inventori" panaudojimo atvejo specifikacija.............................................. 142
+31 lentel. ,,Redaguoti inventori" panaudojimo atvejo specifikacija............................................ 143
+32 lentel. ,,Salinti medziagas ir rankius" panaudojimo atvejo specifikacija ................................ 144
+
+                                                                                                                        8
+                                                 Paveiksl srasas
+
+1 pav. Darzo veiklos planavimo proceso sveika su isorinmis informacinmis sistemomis .......... 18
+2 pav. Asmeninio sodo ar darzo valdymo veiklos tiksl hierarchija, 1 dalis.................................... 18
+3 pav. Asmeninio sodo ar darzo valdymo veiklos panaudojimo atvej modelis .............................. 20
+4 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (esama situacija), 1 dalis ............... 22
+5 pav. Asmeninio sodo ar darzo ,,analizuoti ankstesnius planavimo sprendimus" procesas (esama
+situacija) ............................................................................................................................................ 24
+6 pav. Asmeninio sodo ar darzo ,,analizuoti augal bkls pokycius" procesas (esama situacija) .. 25
+7 pav. Asmeninio sodo ar darzo ,,analizuoti darzo rezultatus" procesas (esama situacija) .............. 26
+8 pav. Asmeninio sodo ar darzo ,,analizuoti derliaus rezultatus" procesas (esama situacija)........... 27
+9 pav. Asmeninio sodo ar darzo ,,bendradarbiauti su kitais darzo valdytojais" procesas (esama
+situacija) ............................................................................................................................................ 28
+10 pav. Asmeninio sodo ar darzo ,,konsultuotis dl darzo prieziros sprendim" procesas (esama
+situacija) ............................................................................................................................................ 29
+11 pav. Asmeninio sodo ar darzo ,,planuoti augal rotacij" procesas (esama situacija) ................. 30
+12 pav. Asmeninio sodo ar darzo ,,stebti augal bkl" procesas (esama situacija)....................... 31
+13 pav. Asmeninio sodo ar darzo ,,sudaryti sklypo plan" procesas (esama situacija) .................... 32
+14 pav. Asmeninio sodo ar darzo ,,valdyti darzo isteklius" procesas (esama situacija) ................... 33
+15 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (siekiama situacija), 1 dalis......... 34
+16 pav. Asmeninio sodo ar darzo ,,analizuoti ankstesnius planavimo sprendimus" procesas (siekiama
+situacija) ............................................................................................................................................ 36
+17 pav. Asmeninio sodo ar darzo ,,analizuoti augal bkls pokycius" procesas (siekiama situacija)
+........................................................................................................................................................... 37
+18 pav. Asmeninio sodo ar darzo ,,analizuoti darzo rezultatus" procesas (siekiama situacija), 1 dalis
+........................................................................................................................................................... 38
+19 pav. Asmeninio sodo ar darzo ,,analizuoti derliaus rezultatus" procesas (siekiama situacija) .... 40
+20 pav. Asmeninio sodo ar darzo ,,bendradarbiauti su kitais darzo valdytojais" procesas (siekiama
+situacija) ............................................................................................................................................ 41
+21 pav. Asmeninio sodo ar darzo ,,konsultuotis dl darzo prieziros sprendim" procesas (siekiama
+situacija), 1 dalis ................................................................................................................................ 42
+22 pav. Asmeninio sodo ar darzo ,,planuoti augal rotacij" procesas (siekiama situacija), 1 dalis 44
+23 pav. Asmeninio sodo ar darzo ,,stebti augal bkl" procesas (siekiama situacija) .................. 46
+24 pav. Asmeninio sodo ar darzo ,,sudaryti sklypo plan" procesas (siekiama situacija) ................ 47
+25 pav. Asmeninio sodo ar darzo ,,valdyti darzo isteklius" procesas (siekiama situacija), 1 dalis .. 48
+26 pav. Asmeninio sodo ar darzo veiklos esybi modelis ................................................................ 50
+27 pav. Veiklos panaudojimo atvej realizacijos kompiuterizuojamais panaudojimo atvejais
+trasavimo diagrama............................................................................................................................ 59
+28 pav. Naudotojo paskyros valdymo posistemio panaudojimo atvejai ........................................... 59
+29 pav. Sklypo valdymo posistemio panaudojimo atvejai................................................................ 60
+30 pav. Veiksm ir prieziros posistemio panaudojimo atvejai ....................................................... 61
+31 pav. Rekomendacinio veiksm kalendoriaus valdymo veiklos diagrama, 1 dalis ....................... 62
+32 pav. Rekomendacinio veiksm kalendoriaus valdymo veiklos diagrama, 2 dalis ....................... 63
+33 pav. Rekomendacinio veiksm kalendoriaus valdymo veiklos diagrama, 3 dalis ....................... 64
+34 pav. Pazymti sunaudotas medziagas veiklos diagrama .............................................................. 65
+35 pav. Identifikuoti augalo bkl veiklos diagrama ........................................................................ 66
+
+                                                                                                                        9
+36 pav. Gauti or prognozes veiklos diagrama ................................................................................. 67
+37 pav. Gauti augal informacij veiklos diagrama.......................................................................... 68
+38 pav. Valdyti sklypo plan veiklos diagrama, 1 dalis.................................................................... 70
+39 pav. Valdyti sklypo plan veiklos diagrama, 2 dalis.................................................................... 71
+40 pav. Eksportuoti plan  PDF veiklos diagrama........................................................................... 72
+41 pav. Analizuoti darzo rezultatus veiklos diagrama ...................................................................... 74
+42 pav. Perzirti derliaus istorij veiklos diagrama ........................................................................ 75
+43 pav. Perzirti augal bkls istorij veiklos diagrama............................................................... 77
+44 pav. Pazymti augal rotacij veiklos diagrama, 1 dalis ............................................................. 79
+45 pav. Pazymti augal rotacij veiklos diagrama, 2 dalis ............................................................. 80
+46 pav. Perzirti planavimo istorij veiklos diagrama .................................................................... 81
+47 pav. Asmeninio sodo ar darzo informacins sistemos esybi klasi modelis.............................. 83
+48 pav. Pagrindinio sistemos lango prototipas.................................................................................. 85
+49 pav. Veiksm kalendoriaus lango prototipas ............................................................................... 85
+50 pav. Sklypo plano redagavimo prototipas .................................................................................... 86
+51 pav. Sistemos login architektra, vaizduojanti naudotojo ssajos, valdikli ir duomen modeli
+struktr ............................................................................................................................................. 87
+52 pav. Panaudojimo atvejo ,,Rekomendacinio veiksm kalendoriaus valdymas" sek diagrama, 1
+dalis.................................................................................................................................................... 88
+53 pav. Panaudojimo atvejo ,,Rekomendacinio veiksm kalendoriaus valdymas" sek diagrama, 2
+dalis.................................................................................................................................................... 89
+54 pav. Panaudojimo atvejo ,,Rekomendacinio veiksm kalendoriaus valdymas" sek diagrama, 3
+dalis.................................................................................................................................................... 90
+55 pav. Panaudojimo atvejo ,,Pazymti sunaudotas medziagas" sek diagrama.............................. 91
+56 pav. Panaudojimo atvejo ,,Identifikuoti augalo bkl" sek diagrama........................................ 92
+57 pav. Panaudojimo atvejo ,,Gauti or prognozes" sek diagrama................................................. 93
+58 pav. Panaudojimo atvejo ,,Gauti augal informacij" sek diagrama ......................................... 94
+59 pav. Panaudojimo atvejo ,,Valdyti sklypo plan" sek diagrama, 1 dalis ................................... 95
+60 pav. Panaudojimo atvejo ,,Valdyti sklypo plan" sek diagrama, 2 dalis ................................... 96
+61 pav. Panaudojimo atvejo ,,Valdyti sklypo plan" sek diagrama, 3 dalis ................................... 97
+62 pav. Panaudojimo atvejo ,,Eksportuoti plan  PDF" sek diagrama .......................................... 98
+63 pav. Panaudojimo atvejo ,,Analizuoti darzo rezultatus" sek diagrama, 1 dalis ......................... 99
+64 pav. Panaudojimo atvejo ,,Analizuoti darzo rezultatus" sek diagrama, 2 dalis ....................... 100
+65 pav. Panaudojimo atvejo ,,Perzirti derliaus istorij" sek diagrama ...................................... 101
+66 pav. Panaudojimo atvejo ,,Perzirti augalo bkls istorij" sek diagrama............................. 102
+67 pav. Panaudojimo atvejo ,,Pazymti augal rotacij" sek diagrama, 1 dalis ........................... 103
+68 pav. Panaudojimo atvejo ,,Pazymti augal rotacij" sek diagrama, 2 dalis ........................... 104
+69 pav. Panaudojimo atvejo ,,Pazymti augal rotacij" sek diagrama, 3 dalis ........................... 105
+70 pav. Panaudojimo atvejo ,,Perzirti planavimo istorij" sek diagrama.................................. 106
+71 pav. Sistemos lang navigacijos modelis................................................................................... 107
+72 pav. Administravimo posistemio klasi modelis ....................................................................... 108
+73 pav. Isorini ssaj posistemio klasi modelis .......................................................................... 110
+74 pav. Kalendoriaus posistemio klasi modelis, 1 dalis ............................................................... 112
+75 pav. Kalendoriaus posistemio klasi modelis, 2 dalis ............................................................... 113
+76 pav. Bendruomens posistemio klasi modelis ......................................................................... 115
+77 pav. Inventoriaus posistemio klasi modelis ............................................................................. 116
+
+                                                                                                                      10
+78 pav. Augal valdymo posistemio klasi modelis, 1 dalis .......................................................... 118
+79 pav. Augal valdymo posistemio klasi modelis, 2 dalis .......................................................... 118
+80 pav. Sklypo plano posistemio klasi modelis, 1 dalis................................................................ 120
+81 pav. Sklypo plano posistemio klasi modelis, 2 dalis................................................................ 121
+82 pav. Naudotoj posistemio klasi modelis ................................................................................ 123
+83 pav. Login duomen bazs schema, 1 dalis ............................................................................. 125
+84 pav. Login duomen bazs schema, 2 dalis ............................................................................. 125
+85 pav. ,,Registruotis" panaudojimo atvejo veiklos diagrama ........................................................ 130
+86 pav. ,,Prisijungti" panaudojimo atvejo veiklos diagrama........................................................... 131
+87 pav. ,,Atsijungti" panaudojimo atvejo veiklos diagrama ........................................................... 132
+88 pav. ,,Priminti slaptazod" panaudojimo atvejo veiklos diagrama ............................................. 133
+89 pav. ,,Redaguoti paskyros duomenis" panaudojimo atvejo veiklos diagrama ........................... 134
+90 pav. ,,Valdyti naudotoj paskyras" panaudojimo atvejo veiklos diagrama ............................... 135
+91 pav. ,,Valdyti darzo naudotoj prieigas" panaudojimo atvejo veiklos diagrama....................... 136
+92 pav. ,,rasyti augalo bkl" panaudojimo atvejo veiklos diagrama............................................ 137
+93 pav. ,,Dalintis sklypo duomenimis" panaudojimo atvejo veiklos diagrama .............................. 138
+94 pav. ,,Perzirti informacij bendruomenje" panaudojimo atvejo veiklos diagrama............... 139
+95 pav. ,,Valdyti augalus" panaudojimo atvejo veiklos diagrama .................................................. 140
+96 pav. ,,Registruoti derli" panaudojimo atvejo veiklos diagrama ............................................... 141
+97 pav. ,,Perzirti ranki ir medziag sras" panaudojimo atvejo veiklos diagrama................. 142
+98 pav. ,,Papildyti inventori" panaudojimo atvejo veiklos diagrama ........................................... 143
+99 pav. ,,Redaguoti inventori" panaudojimo atvejo veiklos diagrama ......................................... 144
+100 pav. ,,Salinti medziagas ir rankius" panaudojimo atvejo veiklos diagrama............................ 145
+
+                                                                                                                      11
+                                         Santrump ir termin srasas
+Santrumpos:
+BPMN ­ Business Process Model and Notation, verslo proces modeliavimo notacija (2).
+UML ­ Unified Modeling Language, unifikuota modeliavimo kalba, skirta sistem analizei ir
+projektavimui (1).
+IS ­ Informacin sistema.
+DBVS ­ Duomen bazi valdymo sistema.
+CRUD ­ Create, Read, Update, Delete operacij rinkinys, apibdinantis pagrindines duomen
+valdymo funkcijas (15).
+ACID ­ Atomicity, Consistency, Isolation, Durability ­ duomen bazi transakcij patikimumo
+principai (14).
+Terminai:
+Veiklos tiksl modelis ­ dalykins srities tiksl hierarchinis modelis, apibrziantis siekiamus
+rezultatus ir j tarpusavio rysius.
+Veiklos panaudojimo atvejis ­ dalykins srities veikla, kuri vykdo veiklos dalyvis, siekdamas
+konkretaus tikslo.
+Veiklos procesas ­ tarpusavyje susijusi veikl seka, kuri kuria pridtin vert dalykinei sriciai.
+Veiklos esyb ­ konceptualus dalykins srities objektas, turintis savybes ir rysius su kitomis
+esybmis.
+Rekomendacinis veiksm kalendorius ­ sistemos generuojamas planavimo rankis, pateikiantis
+silomus darbus atsizvelgiant  augal bkl, planavimo istorij ir isorinius duomenis.
+Augal rotacija ­ planavimo principas, kai augalai keiciami vietomis skirtingais sezonais siekiant
+islaikyti dirvozemio kokyb ir sumazinti lig rizik (10).
+Planavimo istorija ­ ankstesni planavimo sprendim ir atlikt darb duomen visuma, naudojama
+analizei ir rekomendacij generavimui.
+
+                                                                                                                      12
+                                                        vadas
+
+Sis baigiamasis bakalauro darbas buvo parengtas Kauno technologijos universiteto Informatikos
+fakulteto Informacini sistem studij programoje, informacini sistem analizs ir projektavimo
+specializacijoje. Darbo metu buvo suprojektuota ir realizuota internetin informacin sistema, skirta
+asmeninio sodo ar darzo planavimui, duomen kaupimui ir veiklos valdymui.
+
+Yra nemazas kiekis zmoni, kurie uzsiima smulkija augalininkyste ir priziri nuosavus sodus ar
+darzus tiek savoms reikmms, tiek kaip laisvalaikio veikl (9). Analizs metu buvo identifikuota, kad
+praktikoje sodininkavimo procesai daznai organizuojami fragmentiskai, naudojant uzras knygeles,
+atskirus dokumentus, mobilisias programles ar asmeninius kalendorius. Taip pat buvo nustatyta,
+kad trksta vientisos sistemos, leidziancios struktruotai planuoti sklypo isdstym, sekti augal
+bsenas, planuoti darb kalendori bei uztikrinti ilgalaik daugiamecio planavimo perspektyv,
+taikant augal rotacijos principus.
+
+Darbo metu buvo suprojektuota ir realizuota internetin informacin sistema, skirta asmeninio sodo
+ar darzo planavimui, prieziros proces valdymui, augal bsen sekimui bei rekomendacini
+veiksm planavimui. Sistema buvo pritaikyta darbui tiek darbastalio, tiek mobiliajame renginyje,
+uztikrinant patog naudojim skirtingomis slygomis.
+
+Sukurta sistema buvo orientuota  individualius naudotojus ar naudotoj grupes, valdancias vien ar
+kelis sodus ar darzus ir siekiancias sistemingai planuoti veikl, kaupti duomenis bei optimizuoti
+prieziros procesus.
+
+Darbo problematika ir aktualumas
+
+Atliktos analizs metu nustatyta, kad asmeninio sodo ar darzo valdymas pasizymi sezoniskumu,
+cikliskumu ir ilgalaike planavimo perspektyva (13). Veikla priklauso nuo isorini veiksni ­ oro
+slyg, dirvozemio bkls, augal biologini cikl bei ankstesni laikotarpi sprendim. Buvo
+nustatyta, kad praktikoje darzo planavimas ir priezira daznai vykdomi fragmentiskai: informacija
+kaupiama uzrasuose ar atmintyje, darbai planuojami epizodiskai, o ilgalaik augal rotacija
+grindziama subjektyvia patirtimi.
+
+Nustatyta, kad tokia veiklos organizavimo forma apsunkina daugiameci cikl planavim, neleidzia
+sistemingai sekti augal bsen ir atlikt darb, riboja galimybes efektyviai taikyti rotacijos principus
+bei racionaliai valdyti turimus isteklius.
+
+Taip pat buvo identifikuota, kad sprendim primimas daznai vyksta neintegruotai, atskirai vertinant
+or prognozes, atskirai konsultuojantis informacijos saltiniuose ir atskirai planuojant darbus.
+Inventoriaus ir medziag apskaita dazniausiai nra sisteminga, todl kyla tiek perteklini pirkim,
+tiek medziag trkumo rizika. Fragmentiskas duomen kaupimas neuztikrina j analizs galimybs
+ir riboja duomenimis grsto sprendim primimo taikym.
+
+Nustatyta, kad nesistemingas planavimo ir duomen kaupimo procesas riboja galimybes uztikrinti
+veiklos nuoseklum, didina klaid tikimyb ir apsunkina racional turim istekli valdym. Tokia
+situacija pagrindzia poreik sprsti identifikuotas problemas informacini technologij priemonmis,
+
+                                                                                                                      13
+kuriant integruot sprendim, apjungiant planavimo, vykdymo ir analizs procesus vieningoje
+platformoje.
+
+Darbo tikslas ir uzdaviniai
+
+Darbo tikslas ­ pagerinti asmeninio sodo ar darzo veiklos planavimo, duomen valdymo ir sprendim
+primimo proces nuoseklum, sudarant slygas daugiameciam planavimui, sistemingai duomen
+analizei ir integruotam istekli valdymui.
+Darbo tikslui pasiekti keliami sie uzdaviniai:
+
+    1) Atlikti kompiuterizuojamos dalykins srities analiz, sudarant veiklos tiksl, panaudojimo
+         atvej, proces ir esybi modelius bei j pagrindu suformuluoti funkcinius ir nefunkcinius
+         sistemos reikalavimus.
+
+    2) Suprojektuoti sistemos login architektr, parengti dalykins srities esybi klasi model ir
+         login duomen bazs schem, uztikrinanci duomen integralum ir rysi nuoseklum.
+
+    3) Parengti funkcini ir nefunkcini reikalavim specifikacij bei kompiuterizuojam
+         panaudojimo atvej model.
+
+    4) Realizuoti internetin informacin sistem pagal suformuluotus reikalavimus ir parengt
+         projektin specifikacij.
+
+    5) Parengti sistemos naudotojo dokumentacij, aprasanci diegimo, konfigravimo ir naudojimo
+         procesus.
+
+    6) Atlikti sistemos funkcin ir nefunkcin testavim, vertinant jos atitikim suformuluotiems
+         reikalavimams.
+
+Darbo rezultatai ir j svarba
+
+Darbo metu atlikta issami dalykins srities analiz, kurios pagrindu suformuoti veiklos tiksl, veiklos
+panaudojimo atvej, veiklos proces (,,as-is" ir ,,to-be") bei veiklos esybi modeliai. Sie modeliai
+sudar nuosekl pagrind sistemos reikalavim specifikacijai ir projektiniams sprendimams,
+uztikrinant aisk rys tarp dalykins analizs ir technins realizacijos.
+
+Remiantis atlikta analize, suprojektuota ir realizuota internetin informacin sistema, leidzianti
+struktrizuotai sudaryti ir valdyti sodo ar darzo plan, kaupti daugiamecio planavimo istorij,
+registruoti augal bsenas ir atliktus darbus, generuoti rekomendacinius veiksmus bei valdyti
+inventori ir medziagas. Sistema taip pat palaiko keli naudotoj bendradarbiavim vienoje
+aplinkoje.
+
+Sukurtas sprendimas sudaro slygas pereiti nuo fragmentuoto, subjektyvia patirtimi grindziamo
+planavimo prie struktrizuoto ir duomenimis pagrsto veiklos valdymo modelio. Integruotas
+planavimo, vykdymo ir analizs mechanizmas didina veiklos nuoseklum, gerina sprendim kokyb
+ir sudaro prielaidas ilgalaikiam darzo valdymo efektyvumo augimui.
+
+                                                                                                                      14
+Dirbtinio intelekto naudojimas
+Dirbtinio intelekto rankiai buvo naudojami ribotai, kaip pagalbin priemon formuluoci tikslinimui
+ir alternatyvi sprendim svarstymui projektavimo metu. Visi esminiai analizs, projektavimo ir
+realizacijos sprendimai priimti autoriaus savarankiskai.
+Darbo struktra
+Darb sudaro keturi pagrindiniai skyriai. Pirmajame skyriuje atliekama dalykins srities analiz,
+modeliuojami veiklos tikslai, panaudojimo atvejai ir procesai, pateikiama lyginamoji analiz bei
+pagrindziamas sprendimo variantas. Antrajame skyriuje apibrziami sistemos funkciniai ir
+nefunkciniai reikalavimai bei pateikiamas sistemos projektas. Treciajame skyriuje detalizuojama
+projektin specifikacija ­ login architektra, klasi modeliai ir duomen bazs schema. Ketvirtajame
+skyriuje aprasoma sistemos realizacija ir testavimo rezultatai. Darbo pabaigoje pateikiamos isvados
+ir rezultatai, suformuluoti darbo uzdavini pagrindu.
+
+                                                                                                                      15
+1. Dalykins srities analiz
+
+Siame skyriuje analizuojama asmeninio sodo ar darzo valdymo dalykin sritis, identifikuojami
+veiklos tikslai, procesai, dalyviai, informacijos objektai bei j tarpusavio rysiai. Analizs tikslas,
+konceptualiai modeliuoti nagrinjam srit taip, kad bt pagrstas informacins sistemos poreikis ir
+sudarytas tvirtas pagrindas tolimesniam sistemos reikalavim formavimui bei projektavimui.
+
+Kadangi sprendimas nra skirtas konkreciai organizacijai, analizuojama tipin asmeninio sodo ar
+darzo veikla, jos struktra ir tikslins naudotoj grups.
+
+1.1. Analizs tikslas
+
+Analizs tikslas buvo sistemiskai istirti asmeninio sodo ar darzo valdymo dalykin srit, identifikuoti
+pagrindinius veiklos tikslus, dalyvius, procesus ir informacijos objektus bei nustatyti j tarpusavio
+priklausomybes ir semantinius rysius. Atliekant analiz buvo siekiama ne aprasyti bsim sistem, o
+konceptualiai sumodeliuoti paci veikl, nepriklausomai nuo technins realizacijos, taip sudarant
+pagrind pagrstiems inzineriniams sprendimams.
+
+Analizs metu buvo suformuotas kompiuterizuojamos veiklos konceptualus modelis, apimantis
+veiklos tiksl, veiklos panaudojimo atvej, veiklos proces ir veiklos esybi modelius. Modeliai
+sudaryti naudojant UML modeliavimo kalb, kurios sintaks ir semantika apibrzta Unified Modeling
+Language (UML) specifikacijoje (1). Sie modeliai leido struktrizuotai atskleisti, kokie siekiai yra
+keliami dalykinei sriciai, kas ir kokiu bdu juos gyvendina, kokia veiksm seka kuria pridtin vert
+bei kokie informacijos objektai yra btini veiklos tstinumui uztikrinti.
+
+Atliekant analiz buvo identifikuotos pagrindins darzo valdymo problemos, nustatyta sprendim
+primimo logika, isskirti procesai, kuri kompiuterizavimas galt padidinti veiklos efektyvum, bei
+apibrzti informacijos objektai, reikalingi daugiameciam planavimui, augal bsen sekimui ir
+istekli organizavimui. Analizs rezultatai tapo pagrindu funkcini ir nefunkcini reikalavim
+formulavimui, sistemos architektros projektavimui ir duomen struktros modeliavimui.
+
+Tokiu bdu buvo uztikrinta, kad kuriamas inzinerinis sprendimas bt grindziamas realiais dalykins
+srities poreikiais, o ne vien techninmis galimybmis, ir kad jis sprst identifikuotas veiklos
+organizavimo problemas.
+
+1.2. Veiklos charakteristika
+
+Kuriamas sprendimas nebuvo skirtas konkreciai organizacijai, todl siame poskyryje buvo
+analizuojama tipin asmeninio sodo ar darzo valdymo veikla ir jos tikslins naudotoj grups.
+Nustatyta, kad veikla gali bti vykdoma tiek individualiai, tiek keli asmen bendradarbiavimo
+pagrindu, taciau konceptualiai pagrindiniu veiklos vykdytoju buvo laikomas darzo savininkas arba
+valdytojas, atsakingas uz planavim, priezir ir sprendim primim.
+
+Analizs metu nustatyta, kad asmeninio sodo ar darzo veikla apm augal auginim, priezir, darb
+planavim, istekli valdym ir ilgalaik teritorijos organizavim. Buvo identifikuota, kad veiklos
+organizavimas dazniausiai grindziamas asmenine patirtimi, ankstesni sezon rezultatais ir
+neformalizuotais uzrasais. Planavimo sprendimai buvo priimami atsizvelgiant  sezoniskum, augal
+biologinius ciklus ir aplinkos slygas.
+
+                                                                                                                      16
+Pagrindiniu veiklos dalyviu buvo laikomas darzo savininkas, kuris planavo sezoninius ir periodinius
+darbus, sudar sklypo plan, taik augal rotacijos principus, registravo augal bsenas bei analizavo
+ankstesni sezon rezultatus (12). Nustatyta, kad praktikoje informacija daznai buvo kaupiama
+popieriniuose planuose ar ssiuviniuose, o sprendim primimas rmsi asmenine patirtimi ir
+ankstesni ras analize. Taip pat buvo vertinami turimi rankiai ir medziagos, fiksuojamas j
+sunaudojimas bei planuojamas poreikis ateiciai.
+
+Analizs metu nustatyta, kad sprendim primimo procese darzo savininkas sveikavo su isoriniais
+informacijos saltiniais. Vienu is j buvo darzininkysts informacijos svetains ar kiti teminiai
+saltiniai, teik rekomendacijas apie augal priezir, lig atpazinim ir sjos ar derliaus laikotarpius.
+Kitas reiksmingas informacijos saltinis buvo or prognozi sistemos, kuri duomenys buvo
+naudojami planuojant laistym, ravjim, vertinant saln rizik ar parenkant tinkam sjos ir
+persodinimo laik. Nustatyta, kad si sveika dar tiesiogin tak veiklos planavimo logikai.
+
+Analizuojama veikla pasizymjo aiskiu sezoniskumu, nes darb intensyvumas ir pobdis priklaus
+nuo met laiko, taip pat cikliskumu, kadangi augal rotacija vyko keli sezon perspektyvoje. Buvo
+nustatyta, kad sprendim kokyb tiesiogiai priklaus nuo istorini duomen, todl ankstesni ras
+kaupimas ir analiz buvo esmin veiklos dalis. Taciau praktikoje informacijos valdymas daznai buvo
+neformalizuotas ir fragmentiskas, o duomenys kaupiami nesistemingai, todl buvo ribojamos
+ilgalaiks analizs galimybs.
+
+Si veiklos charakteristika sudar pagrind tolimesniam modeliavimui, kuriame buvo formalizuoti
+tikslai, panaudojimo atvejai, procesai ir informacijos objektai, atspindintys tipin asmeninio sodo ar
+darzo valdymo praktik.
+
+Veiklos sveik diagrama
+
+Modelyje identifikuotas pagrindinis veiklos vykdytojas ­ darzo savininkas, atsakingas uz planavim
+ir sprendim primim. Planuodamas sezoninius ir periodinius darbus, jis remiasi isoriniais
+informacijos saltiniais: or prognozi sistema ir darzininkysts informacijos svetainmis, kuri
+teikiami duomenys daro tak darb laikui ir pobdziui.
+
+Modelis atskleidzia, kad sprendim primimas nra izoliuotas procesas. Jis grindziamas informacijos
+integravimu is skirting saltini, o tai sudaro prielaidas formalizuoti sias sveikas tolimesniame
+kompiuterizavimo etape.
+
+                                                                                                                      17
+           1 pav. Darzo veiklos planavimo proceso sveika su isorinmis informacinmis sistemomis
+1.3. Veiklos tiksl modelis
+Veiklos tiksl modelyje buvo formalizuota asmeninio sodo ar darzo valdymo tiksl hierarchija bei
+nustatytos j ssajos su veiklos panaudojimo atvejais. Modelis atskleid, kokie siekiai yra keliami
+dalykinei sriciai ir kaip jie detalizuojami skirtingais abstrakcijos lygmenimis.
+
+                     2 pav. Asmeninio sodo ar darzo valdymo veiklos tiksl hierarchija, 1 dalis
+
+                     2 pav. Asmeninio sodo ar darzo valdymo veiklos tiksl hierarchija, 2 dalis
+
+                                                                                                                      18
+                     2 pav. Asmeninio sodo ar darzo valdymo veiklos tiksl hierarchija, 3 dalis
+
+Auksciausio lygmens tikslu buvo vardytas asmeninio sodo ar darzo valdymo palengvinimas. Sis
+tikslas apima planavimo, prieziros, analizs ir istekli valdymo aspektus ir atspindi bendr siek
+uztikrinti sistemingesn ir efektyvesn veiklos organizavim. Analizs metu nustatyta, kad sis tikslas
+detalizuojamas  keturis pagrindinius dalinius tikslus.
+
+Pirmasis dalinis tikslas ­ supaprastinti sklypo plano sudarym ir ilgalaik planavim. Nustatyta, kad
+veiklos efektyvumas tiesiogiai priklauso nuo galimybs sistemingai planuoti sklypo struktr ir
+vertinti ankstesni sezon sprendimus. Sis tikslas buvo detalizuotas  sklypo plano sudarymo ir
+ankstesni planavimo sprendim analizs tikslus, kurie siejasi su veiklos panaudojimo atvejais,
+leidzianciais kurti, redaguoti ir perzirti planavimo istorij. Tokiu bdu buvo uztikrinta ilgalaik
+planavimo perspektyva ir augal rotacijos princip taikymas.
+
+Antrasis dalinis tikslas ­ padti planuoti ir atlikti prieziros darbus. Analiz parod, kad sistemingas
+darb planavimas yra esmin veiklos dalis, lemianti rezultat kokyb. Sis tikslas buvo detalizuotas 
+veiksm planavimo tiksl, apimant rekomendacini darb sudarym, darb inicijavim ir j
+vykdym. Nustatyta, kad tokia struktra leidzia formalizuoti sezonini ir periodini darb
+organizavim.
+
+Treciasis dalinis tikslas ­ padti stebti augal bkl ir augimo proces. Modeliavimas atskleid, kad
+augal gyvavimo ciklo stebsena ir istorini duomen analiz yra btinos ilgalaikiam planavimui.
+Sis tikslas buvo suskaidytas  augal bkls stebjimo ir bkls pokyci analizs tikslus, susietus su
+panaudojimo atvejais, leidzianciais registruoti bsenas, fiksuoti atliktus veiksmus ir analizuoti
+duomen pokycius laiko perspektyvoje.
+
+Ketvirtasis dalinis tikslas ­ padti valdyti ranki ir medziag inventori. Analizs metu nustatyta,
+kad racionalus istekli valdymas yra svarbi veiklos sudedamoji dalis. Sis tikslas buvo detalizuotas 
+darzo istekli valdymo tiksl, apimant inventoriaus apskait, medziag sekim ir j bkls
+atnaujinim.
+
+Modelis parod, kad zemiausio lygmens tikslai yra tiesiogiai susij su juos realizuojanciais veiklos
+panaudojimo atvejais, todl buvo uztikrintas nuoseklus perjimas nuo dalykins srities tiksl prie
+
+                                                                                                                      19
+kompiuterizavimo sprendim. Tokia struktra leido pagrsti, kurie veiklos tikslai bus palaikomi
+kuriama informacine sistema ir kokiu mastu ji prisids prie bendro auksciausio lygmens tikslo
+gyvendinimo.
+1.4. Veiklos panaudojimo atvej modelis
+Veiklos panaudojimo atvej modelyje buvo identifikuoti pagrindiniai dalykins srities dalyviai ir j
+vykdomos veiklos, susijusios su veiklos tiksl modelyje apibrzt tiksl gyvendinimu.
+Modeliavimas leido detalizuoti, kokiais konkreciais veiksmais realizuojami anksciau nustatyti tikslai
+ir kokios sveikos tarp dalyvi yra btinos veiklos tstinumui uztikrinti.
+
+                  3 pav. Asmeninio sodo ar darzo valdymo veiklos panaudojimo atvej modelis
+Analizs metu nustatyta, kad pagrindinis veiklos vykdytojas yra darzo savininkas, atsakingas uz
+planavim, priezir, analiz ir istekli valdym. Taip pat identifikuoti isoriniai informacijos saltiniai:
+darzininkysts informacijos svetains ir or prognozi sistemos, kuri teikiami duomenys daro tak
+sprendim primimo procesui.
+Modelis parod, kad planavimo veiklos apm sklypo plano sudarym, augal rotacijos planavim ir
+konkreci prieziros veiksm numatym. Nustatyta, kad sie panaudojimo atvejai realizuoja tiksl
+supaprastinti sklypo planavim ir uztikrinti ilgalaik veiklos perspektyv. Sklypo plano sudarymas ir
+jo koregavimas sudar pagrind struktrizuotam teritorijos organizavimui, o augal rotacijos
+planavimas leido traukti daugiamet perspektyv  sprendim primim.
+
+                                                                                                                      20
+Stebsenos ir analizs veiklos apm augal bkls registravim bei darzo rezultat vertinim.
+Modeliavimas atskleid, kad augal bkls pokyci, derliaus rezultat ir ankstesni planavimo
+sprendim analiz sudar isplstinius analizs scenarijus, glaudziai susijusius su pagrindiniu analizs
+panaudojimo atveju. Tokia struktra leido formalizuoti istorini duomen naudojim ir pagrsti j
+svarb ilgalaikiam planavimui.
+
+Istekli ir bendradarbiavimo veiklos buvo susietos su darzo istekli valdymu ir informacijos
+dalijimusi tarp valdytoj. Nustatyta, kad inventoriaus apskaita ir medziag sekimas yra btini
+racionaliam istekli naudojimui uztikrinti, o bendradarbiavimo scenarijai leidzia koordinuoti veikl
+keliems naudotojams. Taip pat identifikuota sveika su isoriniais informacijos saltiniais, kuri sudar
+pagrind konsultavimuisi dl prieziros sprendim ir prisidjo prie sprendim kokybs gerinimo.
+
+Modelis patvirtino, kad kiekvienas veiklos panaudojimo atvejis tiesiogiai realizuoja konkret veiklos
+tiksl modelyje apibrzt tiksl, taip uztikrinant nuosekl perjim nuo dalykins srities analizs prie
+kompiuterizuojam sprendim specifikavimo.
+
+1.5. Veiklos proces modelis
+Veiklos proces modeliavimas leido struktruotai atskleisti asmeninio sodo ar darzo planavimo ir
+vykdymo logik bei vertinti esamos situacijos trkumus. Procesai buvo modeliuojami naudojant
+Business Process Model and Notation (BPMN) notacij, skirt veiklos proces struktrai, dalyviams
+ir j sveikoms grafiskai atvaizduoti (2).
+Analizs metu buvo sumodeliuoti pagrindiniai darzo veiklos procesai, pateikiant j esamos (,,as-is")
+ir siekiamos (,,to-be") situacij modelius. Modeliuojami procesai atspindi pagrindinius darzo
+valdymo aspektus: darb planavim, augal bkls stebjim, rezultat analiz, istekli valdym,
+sklypo planavim ir bendradarbiavim su kitais darzo valdytojais.
+Esami darzo veiklos procesai (,,as-is")
+Esamoje situacijoje darzo veikla vykdoma be specializuotos informacins sistemos. Darzo savininkas
+sprendimus priima remdamasis asmenine patirtimi, atskirais informacijos saltiniais ir rankiniu
+planavimu. Informacija apie augal bkl, ankstesnius sprendimus ar atliktus darbus nra
+centralizuotai kaupiama, todl procesai vykdomi fragmentiskai, o sprendim primimas daznai
+priklauso nuo subjektyvaus vertinimo (17).
+
+                                                                                                                      21
+4 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (esama situacija), 1 dalis
+                                                                                                          22
+4 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (esama situacija), 2 dalis
+                                                                                                          23
+5 pav. Asmeninio sodo ar darzo ,,analizuoti ankstesnius planavimo sprendimus" procesas (esama situacija)
+                                                                                                                     24
+6 pav. Asmeninio sodo ar darzo ,,analizuoti augal bkls pokycius" procesas (esama situacija)
+                                                                                                              25
+7 pav. Asmeninio sodo ar darzo ,,analizuoti darzo rezultatus" procesas (esama situacija)
+                                                                                                          26
+8 pav. Asmeninio sodo ar darzo ,,analizuoti derliaus rezultatus" procesas (esama situacija)
+                                                                                                            27
+9 pav. Asmeninio sodo ar darzo ,,bendradarbiauti su kitais darzo valdytojais" procesas (esama situacija)
+                                                                                                                   28
+10 pav. Asmeninio sodo ar darzo ,,konsultuotis dl darzo prieziros sprendim" procesas (esama situacija)
+                                                                                                                     29
+11 pav. Asmeninio sodo ar darzo ,,planuoti augal rotacij" procesas (esama situacija)
+                                                                                                         30
+12 pav. Asmeninio sodo ar darzo ,,stebti augal bkl" procesas (esama situacija)
+                                                                                                       31
+13 pav. Asmeninio sodo ar darzo ,,sudaryti sklypo plan" procesas (esama situacija)
+                                                                                                        32
+14 pav. Asmeninio sodo ar darzo ,,valdyti darzo isteklius" procesas (esama situacija)
+                                                                                                         33
+Siekiami darzo veiklos procesai (,,to-be")
+Siekiamoje situacijoje darzo veiklos procesai yra palaikomi specializuotos informacins sistemos.
+Sistema centralizuotai kaupia duomenis apie augalus, darzo struktr, atliktus darbus ir turimus
+isteklius, taip pat integruoja isorinius informacijos saltinius, tokius kaip or prognozs ar augal
+prieziros rekomendacijos. Tokiu bdu sprendim primimas tampa labiau sistemingas, o planavimo
+ir stebjimo procesai yra automatizuojami ir tarpusavyje susiejami.
+
+          15 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (siekiama situacija), 1 dalis
+
+                                                                                                                      34
+15 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (siekiama situacija), 2 dalis
+
+15 pav. Asmeninio sodo ar darzo ,,planuoti veiksmus" procesas (siekiama situacija), 3 dalis
+                                                                                                            35
+16 pav. Asmeninio sodo ar darzo ,,analizuoti ankstesnius planavimo sprendimus" procesas (siekiama
+                                                       situacija)
+
+                                                                                                                  36
+17 pav. Asmeninio sodo ar darzo ,,analizuoti augal bkls pokycius" procesas (siekiama situacija)
+                                                                                                                 37
+18 pav. Asmeninio sodo ar darzo ,,analizuoti darzo rezultatus" procesas (siekiama situacija), 1 dalis
+                                                                                                                 38
+18 pav. Asmeninio sodo ar darzo ,,analizuoti darzo rezultatus" procesas (siekiama situacija), 2 dalis
+                                                                                                                 39
+19 pav. Asmeninio sodo ar darzo ,,analizuoti derliaus rezultatus" procesas (siekiama situacija)
+                                                                                                              40
+20 pav. Asmeninio sodo ar darzo ,,bendradarbiauti su kitais darzo valdytojais" procesas (siekiama situacija)
+                                                                                                                     41
+21 pav. Asmeninio sodo ar darzo ,,konsultuotis dl darzo prieziros sprendim" procesas (siekiama
+                                                 situacija), 1 dalis
+
+                                                                                                                 42
+21 pav. Asmeninio sodo ar darzo ,,konsultuotis dl darzo prieziros sprendim" procesas (siekiama
+                                                 situacija), 2 dalis
+
+                                                                                                                 43
+22 pav. Asmeninio sodo ar darzo ,,planuoti augal rotacij" procesas (siekiama situacija), 1 dalis
+                                                                                                               44
+22 pav. Asmeninio sodo ar darzo ,,planuoti augal rotacij" procesas (siekiama situacija), 2 dalis
+                                                                                                               45
+23 pav. Asmeninio sodo ar darzo ,,stebti augal bkl" procesas (siekiama situacija)
+                                                                                                         46
+24 pav. Asmeninio sodo ar darzo ,,sudaryti sklypo plan" procesas (siekiama situacija)
+                                                                                                          47
+25 pav. Asmeninio sodo ar darzo ,,valdyti darzo isteklius" procesas (siekiama situacija), 1 dalis
+                                                                                                              48
+        25 pav. Asmeninio sodo ar darzo ,,valdyti darzo isteklius" procesas (siekiama situacija), 2 dalis
+
+Palyginus esam (,,as-is") ir siekiam (,,to-be") darzo veiklos proces modelius galima pastebti
+reiksmingus skirtumus informacijos valdymo ir sprendim primimo organizavime. Esamoje
+situacijoje procesai vykdomi fragmentiskai, o informacija apie darzo bkl, atliktus darbus, augal
+priezir ar turimus isteklius nra centralizuotai kaupiama. Dl to darzo savininkas sprendimus daznai
+priima remdamasis asmenine patirtimi, atskirais informacijos saltiniais ir rankiniu planavimu. Tokia
+veiklos organizavimo forma didina rizik pavluoti atlikti reikalingus darbus, netiksliai vertinti
+augal bkl ar neefektyviai valdyti darzo isteklius.
+
+Siekiamoje situacijoje procesai yra palaikomi specializuotos informacins sistemos, kuri
+centralizuotai kaupia duomenis apie augalus, sklypo struktr, atliktus darbus ir naudojamus isteklius.
+Sistema taip pat integruoja isorinius informacijos saltinius, tokius kaip or prognozs ar augal
+prieziros rekomendacijos, todl sprendim primimas tampa labiau pagrstas duomenimis.
+Automatinis rekomendacij generavimas, veiksm kalendoriaus sudarymas ir darb vykdymo
+fiksavimas leidzia uztikrinti nuosekl planavimo cikl bei sudaro slygas kaupti istorinius duomenis
+tolimesnei analizei.
+
+Taigi, siekiam proces modelis parodo, kad informacins sistemos taikymas leidzia centralizuoti
+informacijos valdym, automatizuoti dal planavimo veikl ir sukurti nuosekl grztamojo rysio
+
+                                                                                                                      49
+mechanizm. Tai sumazina fragmentuoto informacijos rinkimo ir subjektyvaus vertinimo tak,
+padidina darzo veiklos planavimo tikslum ir sudaro prielaidas efektyvesniam istekli valdymui.
+1.6. Veiklos esybi modelis
+Veiklos esybi modelyje buvo formalizuota asmeninio sodo ar darzo dalykins srities objekt
+struktra ir j tarpusavio rysiai. Modeliavimas leido identifikuoti pagrindines planavimo, augal
+stebsenos, istekli valdymo ir bendruomenins informacijos dalijimosi srities esybes bei nustatyti j
+semantines priklausomybes.
+
+                               26 pav. Asmeninio sodo ar darzo veiklos esybi modelis
+Centrine veiklos esybe buvo laikomas darzo savininkas, su kuriuo siejami planavimo ir valdymo
+procesai. Nustatyta, kad vienas savininkas gali turti nul ar daugiau sklypo plan (1 : 0..*), o
+kiekvienas sklypo planas yra susietas su vienu konkreciu savininku. Taip buvo apibrztas
+individualios atsakomybs ir planavimo kontekstas. Be to, savininkas buvo susietas su informacijos
+bendruomenje rasais, kurie atspindi dalijimosi informacija aspekt.
+Sklypo planas buvo modeliuojamas kaip pagrindin planavimo struktr apibrzianti esyb.
+Nustatyta, kad vienas sklypo planas gali apimti nul ar daugiau augal (1 : 0..*), taip pat turti
+planavimo istorijos ras, fiksuojanci ankstesnius sprendimus. Planavimo istorija sudar pagrind
+ilgalaikei analizei ir sprendim tstinumui. Sklypo planas taip pat buvo susietas su augal rotacijos
+informacija, kuri leido modeliuoti daugiamet isdstymo logik, bei su rekomendaciniu
+kalendoriumi, atspindinciu planavimo rezultat konkreciame kontekste.
+Augalas buvo modeliuojamas kaip sklypo plano dalis ir galjo turti nul ar daugiau bkls ras (1 :
+0..*). Augalo bkl buvo apibrzta kaip atskira esyb, fiksuojanti augalo bsen konkreciu laiko
+
+                                                                                                                      50
+momentu. Toks sprendimas leido aiskiai atskirti statin augalo tapatyb nuo dinamiskai kintanci jo
+charakteristik, toki kaip brandumas, ligos ar prieziros poreikis.
+
+Rekomendacinis kalendorius buvo siejamas su konkreciu sklypo planu ir atspindjo suformuot
+veiksm rinkin. Jo generavimas buvo semantiskai susietas su planavimo istorija, augal duomenimis
+ir inventoriaus informacija, taip uztikrinant planavimo rezultat priklausomyb nuo reali duomen.
+
+Inventorius buvo modeliuojamas kaip esyb, apimanti rankius ir medziagas. Nustatyta, kad vienas
+inventorius gali turti nul ar daugiau ranki bei medziag (1 : 0..*), taip formalizuojant istekli
+valdymo aspekt. Toks modeliavimas sudar pagrind tikrinti istekli prieinamum planavimo
+procese.
+
+Informacija bendruomenje buvo apibrzta kaip atskira esyb, reprezentuojanti informacijos
+dalijimosi mechanizm tarp savinink. Si struktra isplt model uz individualaus planavimo rib ir
+leido traukti socialin dalykins srities aspekt.
+
+Sudarytas veiklos esybi modelis atskleid nuosekli dalykins srities struktr ir uztikrino semantin
+pagrind tolimesniam sistemos klasi modelio bei duomen bazs schemos projektavimui.
+
+1.7. Lyginamoji analiz
+
+1.7.1. Esam inzinerini sprendim palyginimas
+
+Atliekant lyginamj analiz buvo vertinti trys rinkoje prieinami asmeninio sodo ar darzo planavimo
+sprendimai: ,,Garden Planner", ,,Planta" ir ,,SmartGardener". Analizs tikslas buvo nustatyti, kokiu
+mastu esami sprendimai palaiko planavimo, prieziros, analizs ir istekli valdymo funkcijas bei
+identifikuoti j ribotumus kuriamos sistemos kontekste.
+
+,,Garden Planner" daugiausia orientuotas  vizualin sklypo planavim ir augal isdstymo
+modeliavim. Sistema leidzia sudaryti lysvi plan, keisti augal isdstym ir modeliuoti sklypo
+struktr. Taciau nustatyta, kad funkcionalumas apsiriboja daugiausia vizualiniu planavimu ir vieno
+sezono perspektyva. Nra realizuota isplstin planavimo istorijos analiz, automatizuota rotacijos
+kontrol ar integruotas inventoriaus valdymas (6).
+
+,,Planta" yra mobili augal prieziros aplikacija, orientuota  individuali augal stebjim ir
+prieziros priminimus. Sistema generuoja personalizuotus laistymo, trsimo ir kit prieziros
+veiksm priminimus, atsizvelgdama  augalo tip, aplinkos slygas ir naudotojo pateikt informacij.
+Taip pat palaikoma augal bkls stebsena ir augimo progreso fiksavimas. Taciau nustatyta, kad
+,,Planta" nepalaiko struktruoto sklypo plano modelio, augal rotacijos planavimo ar daugiamets
+planavimo istorijos analizs. Sistema taip pat neturi integruoto inventoriaus valdymo mechanizmo ir
+nra orientuota  keli naudotoj bendradarbiavim bendrame darzo kontekste (7).
+
+,,SmartGardener" yra internetin sistema, apjungianti sklypo planavim ir prieziros rekomendacijas.
+Ji leidzia modeliuoti darzo isdstym, parinkti augalus pagal region ir generuoti veiksm kalendori.
+Nustatyta, kad sistema is dalies palaiko planavimo ir prieziros integracij, taciau daugiamet
+rotacijos analiz, istekli apskaita ir isplstinis bendradarbiavimas realizuoti ribotai (8).
+
+                                                                                                                      51
+Palyginimui buvo parinkti kriterijai, tiesiogiai susij su dalykins srities analizje identifikuotais
+poreikiais ir kuriamos sistemos funkciniais reikalavimais. Vertinti sklypo plano sudarymo,
+daugiamets planavimo istorijos palaikymo, augal rotacijos planavimo, automatizuoto veiksm
+kalendoriaus, kalendoriaus adaptacijos pagal or prognozes, augal bkls stebjimo, inventoriaus
+valdymo, automatizuoto medziag poreikio skaiciavimo, keli naudotoj bendradarbiavimo ir
+prieinamumo skirtinguose renginiuose aspektai.
+
+Funkcionalumas vertintas 0­5 bal skalje:
+0 ­ funkcija nepalaikoma;
+1­2 ­ realizuota minimaliai arba fragmentiskai;
+3­4 ­ realizuota is dalies;
+5 ­ realizuota pilnai ir sistemingai.
+
+1 lentel. Esam inzinerini sprendim palyginimas
+
+        Palyginimo kriterijus       Garden       Planta SmartGardener  Kuriama
+                                    Planner                             sistema
+1. Sklypo plano sudarymas                        1  4
+2. Daugiamets planavimo istorijos       5                                   5
+palaikymas                                       1  2                       5
+3. Augal rotacijos planavimas           1                                   5
+4. Automatinis veiksm kalendorius                0  3                       5
+5. Kalendoriaus adaptacija pagal        1                                   5
+or prognozes                            1        5  4                       5
+6. Augal bkls stebjimas                                                     5
+7. Inventoriaus valdymas                0        3  3                       5
+8. Automatizuotas medziag
+poreikio skaiciavimas                   2        5  3                       5
+9. Bendras darzo valdymas keliems       0
+naudotojams                                      0  2                       5
+10. Prieinamumas (web +                 0
+mobilusis)                                       0  1
+                                        0
+                                                 0  2
+                                   2 (desktop
+                                      app)       5  5
+
+Palyginimo rezultatai parod, kad analizuojami sprendimai dazniausiai orientuojasi  vien funkcij
+grup ­ vizualin planavim arba prieziros kalendori generavim. Nei vienas is vertint sprendim
+neuztikrina integruotos daugiamets planavimo istorijos, isplstinio augal rotacijos valdymo,
+struktruoto inventoriaus apskaitos ir keli naudotoj bendradarbiavimo vieningoje sistemoje. Taip
+pat nebuvo identifikuota visapusiska medziag poreikio skaiciavimo funkcija, susieta su planavimo
+rezultatais.
+
+Atlikta analiz leido nustatyti esmines rinkos spragas ­ trksta integruoto sprendimo, apjungiancio
+planavim, vykdym ir analiz vieningoje platformoje bei uztikrinancio sisteming duomen
+kaupim daugiametei veiklos perspektyvai. Sios zvalgos tapo pagrindu suformuluoti kuriamos
+sistemos funkcinius reikalavimus ir apibrzti jos pozicionavim esam sprendim kontekste.
+
+                                                                                 52
+1.7.2. Realizavimo technologij palyginimas
+
+Atliekant realizavimo technologij analiz buvo siekiama pagrsti kuriamos asmeninio sodo ar darzo
+informacins sistemos technologini sprendim pasirinkim. Atsizvelgiant  tai, kad sistema
+realizuojama kaip web aplikacija ir turi palaikyti sudting tarpusavyje susijusi esybi duomen
+model (sklypai, augalai, planavimo istorija, rotacijos, rekomendacinis kalendorius, inventorius, keli
+naudotojai), technologij analiz suskirstyta  dvi dalis: programavimo technologij rinkini ir
+duomen bazi valdymo sistem palyginim. Web sistem architektra paprastai grindziama
+reprezentacins bsenos perdavimo (REST) principais, apibrztais Fielding darbuose (3), todl
+vertinant programavimo karkasus buvo atsizvelgta  j galimybes realizuoti REST tipo API ir kliento­
+serverio sveik.
+
+Programavimo technologij rinkini palyginimas
+
+Vertinimui buvo atrinkti trys placiai rinkoje naudojami ir architektriskai brands ,,web" sistem
+realizavimo rinkiniai: Laravel (PHP) su React, Django (Python) su Vue.js ir Node.js (NextJS) su
+Angular. Sie rinkiniai buvo pasirinkti dl j paplitimo, aktyvi bendruomeni ir galimybi kurti
+vieno puslapio (SPA) tipo vartotojo ssajas bei struktruotas serverio dalis.
+
+Laravel karkasas buvo vertinamas kaip brandus MVC principu paremtas sprendimas, turintis
+integruot ORM, migracij mechanizm, validavimo ir autentifikavimo funkcijas. React buvo
+analizuotas kaip lanksti vartotojo ssajos biblioteka, leidzianti realizuoti dinamiskus komponentus,
+tokius kaip sklypo plano vizualizacija ar interaktyvus kalendorius.
+
+Django buvo vertintas kaip auksto lygio Python karkasas su integruotu ORM ir administravimo
+moduliu, uztikrinantis aiski projekto struktr bei saugumo mechanizmus. Vue.js buvo analizuotas
+kaip progresyvus frontend sprendimas, leidziantis greitai realizuoti interaktyvi vartotojo ssaj.
+
+NextJS buvo vertintas kaip modulin architektr palaikantis Node.js karkasas, orientuotas 
+struktruotus ,,enterprise" tipo sprendimus. Angular buvo analizuotas kaip pilnas frontend karkasas,
+uztikrinantis grieztesn projekto struktr ir tinkamas komandiniam vystymui.
+
+Technologij vertinimas buvo grindziamas kriterijais, tiesiogiai susijusiais su sistemos
+architektriniais ir funkciniais poreikiais. Vertintas minimalios veikiancios sistemos (MVP)
+realizavimo greitis, kadangi svarbu efektyviai sukurti funkcin prototip. Taip pat analizuotas ORM
+patogumas ir galimybs modeliuoti sudtingus rysius, nes sistema turi daug tarpusavyje susijusi
+esybi (4). Reiksmingu kriterijumi laikyti integruoti saugumo mechanizmai, btini autentifikacijai,
+rolms ir prieigos kontrolei. Vertintas architektrinis aiskumas, kuris turi uztikrinti kodo
+nuoseklum ir pltojimo galimybes. Papildomai analizuotos integracij galimybs, aktualios
+isorini duomen saltini (pvz., or prognozi) panaudojimui, bei ekosistemos brandumas ir
+bendruomens aktyvumas.
+
+Atlikta analiz parod, kad visi trys rinkiniai yra tinkami sudting ,,web" sistem realizacijai,
+taciau skiriasi vystymo paprastumu, integruot sprendim gausa ir architektriniu lankstumu. Sie
+skirtumai tapo pagrindu tolimesniam technologinio varianto pasirinkimui.
+
+Technologij rinkiniai buvo vertinami 0­5 bal skalje:
+
+                                                                                                                      53
+0 ­ funkcionalumas nepalaikomas;
+1 ­ palaikomas minimaliai, reikalingi papildomi sprendimai ar isorins bibliotekos;
+2 ­ palaikomas ribotai, reikalinga papildoma konfigracija;
+3 ­ palaikomas is dalies, taciau nra integruotas pagal nutyljim;
+4 ­ palaikomas pakankamai, su nedideliais papildomais sprendimais;
+5 ­ pilnai palaikomas ir integruotas karkaso lygiu.
+
+2 lentel. Backend ir frontend technologij stek palyginimas pagal realizavimo kriterijus
+
+               Palyginimo kriterijus            Laravel +  Django +                      NextJS +
+                                                  React     Vue.js                       Angular
+1. Reliacinio ORM palaikymas (rysiai 1:N,            5          5
+N:M, eager loading)                                                                           3
+2. Duomen bazs migracij mechanizmas                  5          5
+(schema versioning)                                  5          5                             4
+3. Integruota naudotoj autentifikacija ir rols       5          5                             3
+4. Duomen transakcij palaikymas (ACID                5          5                             4
+operacijos)                                          5          4                             4
+5. Serverio puss validacijos mechanizmas                                                      4
+6. Sudtingos domeno logikos realizavimas             5          3
+(service layer struktra)                                                                      5
+7. REST API realizavimas be papildomo                4          3
+karkaso                                                                                       5
+8. Realiojo laiko rysio palaikymas
+(WebSockets)
+
+DBVS technologij palyginimas
+
+Atliekant duomen bazi valdymo sistem analiz buvo vertintos trys placiai naudojamos
+technologijos: PostgreSQL, MySQL ir MongoDB. Vertinimo tikslas buvo nustatyti, kuri sistema
+geriausiai atitinka kuriamos asmeninio sodo ar darzo informacins sistemos duomen modelio ir
+transakcini operacij reikalavimus.
+
+PostgreSQL buvo analizuojama kaip pazangi reliacin duomen bazi valdymo sistema, palaikanti
+ACID transakcijas, sudtingas SQL uzklausas, pazangius indeksavimo mechanizmus ir griezt
+duomen integralumo kontrol. Sistema leidzia realizuoti sudtingus tarpusavyje susijusi esybi
+modelius ir uztikrinti duomen nuoseklum keli operacij metu.
+
+MySQL buvo vertinama kaip placiai paplitusi reliacin DBVS, tinkama tipinms ,,web" sistemoms
+ir palaikanti standartines SQL uzklausas bei transakcijas (naudojant InnoDB saugykl). Nustatyta,
+kad ji uztikrina pakankam reliacini rysi palaikym, taciau sudtingesni analitini uzklaus ir
+isplstini funkcij srityje jos galimybs yra siauresns nei PostgreSQL.
+
+MongoDB buvo analizuojama kaip dokumentin NoSQL tipo duomen baz, leidzianti saugoti
+lankscios struktros dokumentus. Nors si sistema pasizymi schema-less principu ir geru horizontalios
+pltros palaikymu, nustatyta, kad ji nra optimali sistemoms, kuriose dominuoja aisks reliaciniai
+rysiai tarp esybi ir reikalinga griezta duomen integralumo kontrol (5).
+
+                                                                                                   54
+Vertinimo kriterijai buvo parinkti atsizvelgiant  sistemos dalykins srities model, kuriame
+identifikuoti daugiasluoksniai rysiai tarp sklyp, augal, bkli, planavimo istorijos, rotacijos,
+inventoriaus ir naudotoj. Todl buvo vertinamas reliacini rysi palaikymas, ACID transakcij
+uztikrinimas, sudting analitini uzklaus vykdymo galimybs, duomen integralumo mechanizmai
+bei suderinamumas su pasirinktu backend karkasu.
+
+Analiz parod, kad kuriamos sistemos kontekste prioritetas teiktinas reliacinei duomen bazei,
+gebanciai efektyviai modeliuoti aiskius rysius tarp esybi ir uztikrinti transakcij nuoseklum.
+Dokumentinio tipo duomen baz siuo atveju bt maziau tinkama dl sudting tarpusavio
+priklausomybi ir poreikio vykdyti struktruotas analitines uzklausas.
+
+Duomen bazi valdymo sistemos buvo vertinamos 0­5 bal skalje:
+
+0 ­ funkcionalumas nepalaikomas;
+1 ­ palaikomas minimaliai, reikalingi sudtingi papildomi sprendimai;
+2 ­ palaikomas ribotai;
+3 ­ palaikomas is dalies, su apribojimais;
+4 ­ palaikomas pakankamai;
+5 ­ pilnai palaikomas DBVS branduolio lygiu.
+
+3 lentel. Duomen bazi valdymo sistem palyginimas pagal techninius kriterijus
+
+                Palyginimo kriterijus          PostgreSQL             MySQL     MongoDB
+                                                      5               (InnoDB)       1
+1. N:M rysi realizavimas be duomen                    5                              3
+dubliavimo                                            5                    5         2
+2. Daugelio lenteli transakcijos (multi-table         5                              2
+transactions)                                         5                    5         3
+3. Sudtingos SQL uzklausos (JOIN, subquery,           5                              2
+CTE)                                                                       4
+4. Duomen integralumo apribojimai
+(constraints, checks)                                                      4
+5. Agregacijos ir statistins uzklausos
+6. ORM natralus palaikymas reliaciniame                                    4
+modelyje                                                                   5
+
+Atlikus programavimo technologij rinkini vertinim buvo pasirinktas Laravel ir React technologij
+derinys. Vertinimo rezultatai parod, kad sis rinkinys geriausiai atitiko sistemos architektrinius ir
+funkcinius reikalavimus. Laravel karkasas uztikrino pilnavert reliacinio duomen modelio
+realizavim, integruot naudotoj autentifikacijos ir autorizacijos mechanizm, duomen bazs
+migracij valdym bei serverio puss validacij. Sistemos realizacijos metu buvo isnaudotos
+transakcij palaikymo galimybs ir struktruotas domeno logikos isskyrimas, reikalingas planavimo,
+inventoriaus atnaujinimo ir istorijos kaupimo scenarijams. React buvo panaudotas interaktyviai
+vartotojo ssajai realizuoti, gyvendinant sklypo plano sudarymo ir veiksm kalendoriaus valdymo
+funkcionalum.
+
+Duomen bazi valdymo sistem analizs pagrindu sistemos realizacijai buvo pasirinkta
+PostgreSQL. Nustatyta, kad sistemos duomen modelis yra reliacinio pobdzio ir grindziamas
+
+                                                                                                                      55
+uzsienio rakt priklausomybmis, N:M rysiais bei keli lenteli transakcijomis. PostgreSQL
+pasirinkimas leido uztikrinti duomen integralumo apribojimus, sudting SQL uzklaus vykdym
+bei analitini scenarij realizavim, susijus su rotacijos istorijos, statistini suvestini ir planavimo
+duomen analize. Sistemos realizacijos metu buvo isnaudotos duomen bazs transakcij ir
+apribojim galimybs, uztikrinant duomen nuoseklum ir patikimum.
+
+1.8. Kompiuterizuoto sistemos varianto pasirinkimas
+
+Remiantis atlikta dalykins srities analize ir 1.7 skyriuje pateiktais lyginamosios analizs rezultatais,
+buvo pasirinktas kompiuterizuotos sistemos variantas, apibrziantis kompiuterizuojamus veiklos
+panaudojimo atvejus bei technologin sprendim.
+
+Pasirinktasis variantas apima sklypo plano sudarymo ir valdymo funkcionalum, skaitant sklypo
+struktros formavim, augal isdstymo planavim ir planavimo istorijos kaupim. Tokia apimtis
+grindziama poreikiu uztikrinti ilgalaik duomen saugojim ir daugiamets planavimo perspektyvos
+palaikym.
+
+Variantas taip pat apima augal rotacijos planavimo funkcionalum, leidziant analizuoti ankstesni
+sezon duomenis ir taikyti rotacijos taisykles. Si funkcija susiejama su planavimo istorijos kaupimu
+ir konflikt identifikavimo logika.
+
+Kompiuterizuojamas veiksm kalendoriaus generavimo ir valdymo procesas, kuriame planavimo
+duomenys, augal informacija ir nustatytos taisykls integruojamos  rekomendacin veiksm sras.
+Numatyta galimyb zymti atliktus darbus ir atnaujinti susijusius duomenis.
+
+Augal bkli stebjimo dalyje apibrziamas bsen registravimas ir j istorijos kaupimas, sudarant
+prielaidas duomen analizei. Inventoriaus ir medziag valdymas apima ranki registravim, likuci
+sekim ir poreikio planavim, integruojant siuos duomenis su planavimo procesu.
+
+Pasirinktame variante taip pat numatytas naudotoj ir prieigos valdymas, grindziamas registracijos,
+autentifikacijos ir rolmis pagrstos prieigos kontrols mechanizmais.
+
+Technologinis sprendimas apibrztas kaip Laravel ir React technologij derinys, naudojant
+PostgreSQL duomen baz. Laravel pasirinktas serverio daliai dl reliacinio duomen modelio
+palaikymo, migracij mechanizmo, autentifikacijos sprendim ir transakcij galimybi. React
+pasirinktas dinamiskai vartotojo ssajai formuoti, leidzianciai realizuoti interaktyv sklypo plano ir
+kalendoriaus valdym. PostgreSQL pasirinkta kaip reliacin duomen baz, uztikrinanti uzsienio
+rakt palaikym, duomen integralumo apribojimus ir sudting uzklaus vykdym.
+
+Pasirinktas kompiuterizuotos sistemos variantas struktriskai atitinka dalykins srities model,
+suformuotus funkcinius reikalavimus ir technologins analizs rezultatus.
+
+1.9. Analizs isvados
+
+Atlikta asmeninio sodo ar darzo valdymo dalykins srities analiz parod, kad si veikla pasizymjo
+sezoniskumu, cikliskumu ir didele priklausomybe nuo ankstesni laikotarpi duomen. Veiklos
+
+                                                                                                                      56
+charakteristikos, tiksl modelis, panaudojimo atvej, proces ir esybi modeliai leido sistemiskai
+identifikuoti pagrindinius veiklos elementus ­ dalyvius, j tikslus, vykdomas veiklas ir naudojamus
+informacijos objektus.
+
+Analizs metu nustatyta, kad praktikoje informacija dazniausiai buvo kaupiama fragmentiskai ­
+uzrasuose, atskiruose dokumentuose ar remiantis asmenine atmintimi. Tokia organizavimo forma
+neuztikrino duomen tstinumo ir struktruotos daugiamets analizs, todl rankinis planavimas
+buvo nepakankamai efektyvus rotacijos planavimui, derliaus analizei ir ilgalaikiam sprendim
+pagrindimui. Taip pat nustatyta, kad augal rotacijos ir istorini duomen analiz rankiniu bdu buvo
+sudtinga ir imli laikui, o tai pagrind automatizuoto duomen kaupimo ir analitini funkcij poreik.
+
+Veiklos proces modeliavimas atskleid, kad dalis prieziros darb yra periodinio ir pasikartojancio
+pobdzio, todl tinkami automatizuoti. Laistymo, ravjimo, sjimo ar trsimo veiklos galjo bti
+generuojamos pagal nustatytas taisykles ir sezoninius parametrus, o tai pagrind rekomendacinio
+kalendoriaus realizavimo tikslingum. Analiz taip pat parod, kad inventoriaus ir medziag apskaita
+nebuvo sisteminga, todl egzistavo rizika pertekliniams pirkimams ar medziag trkumui. Si
+aplinkyb pagrind istekli valdymo funkcionalumo kompiuterizavimo poreik.
+
+Nustatyta, kad sprendim primimo procese reiksming vaidmen turjo isoriniai informacijos
+saltiniai, tokie kaip or prognozs ir darzininkysts rekomendacijos. Tai parod, jog kuriamas
+sprendimas turi bti atviras integracijoms ir sudaryti slygas isorini duomen panaudojimui
+planavimo procese.
+
+Esam inzinerini sprendim lyginamoji analiz parod, kad rinkoje silomos sistemos dazniausiai
+orientavosi  atskiras funkcij grupes, vizualin planavim arba prieziros kalendoriaus generavim,
+taciau neuztikrino integruoto daugiamets analizs, rotacijos valdymo, inventoriaus apskaitos ir
+bendradarbiavimo funkcionalumo vieningoje platformoje. Tai patvirtino integruoto sprendimo
+poreik.
+
+Realizavimo technologij analiz leido pagrsti pasirinkto technologinio sprendimo tinkamum.
+Nustatyta, kad sistemos duomen modelis yra reliacinio pobdzio ir grindziamas sudtingais rysiais
+tarp esybi bei integralumo reikalavimais, todl reliacins duomen bazs pasirinkimas buvo
+pagrstas. Taip pat identifikuotas brandzios ORM infrastruktros poreikis sudtingam duomen
+modeliui realizuoti bei ,,web" architektros btinyb, uztikrinant sistemos prieinamum skirtinguose
+renginiuose.
+
+Apibendrinant nustatyta, kad atlikta analiz patvirtino informacins sistemos poreik, identifikavo
+kompiuterizuotinus veiklos procesus, suformavo pagrst funkcini ir nefunkcini reikalavim
+pagrind ir pagrind pasirinkto technologinio sprendimo racionalum. Analizs rezultatai sudar
+nuosekl pagrind tolimesniam sistemos reikalavim specifikavimui, projektavimui ir realizavimui,
+uztikrinant, kad kuriamas sprendimas bt orientuotas  realias dalykins srities problemas.
+
+                                                                                                                      57
+2. Sistemos reikalavim specifikacija ir projektas
+Siame skyriuje pateikta sukurtos informacins sistemos reikalavim specifikacija ir projektiniai
+sprendimai. Remiantis analitinje darbo dalyje atlikta dalykins srities analize, buvo apibrzti
+sistemos funkciniai ir nefunkciniai reikalavimai, suprojektuota sistemos architektra, duomen
+struktra bei pagrindiniai sistemos komponentai.
+Projektuojant sistem buvo sudaryti sistemos modeliai, kurie struktruotai apraso sistemos veikim,
+jos elementus ir j tarpusavio sveik. Siame skyriuje pateikiami sistemos projektavimo metu
+sudaryti modeliai ir j pagrindu suformuoti projektiniai sprendimai.
+2.1. Funkciniai reikalavimai
+Siame poskyryje pateikiami informacins sistemos funkciniai reikalavimai, aprasantys sistemos
+teikiamas funkcijas ir sistemos naudotojo sveik su sistema. Funkciniai reikalavimai modeliuojami
+naudojant kompiuterizuojam panaudojimo atvej model.
+Siekiant parodyti rys tarp veiklos panaudojimo atvej ir kompiuterizuojam panaudojimo atvej,
+sudaryta trasavimo diagrama. Joje pavaizduota, kokiais kompiuterizuojamais panaudojimo atvejais
+realizuojami veiklos panaudojimo atvejai.
+
+                                                                                                                      58
+    27 pav. Veiklos panaudojimo atvej realizacijos kompiuterizuojamais panaudojimo atvejais trasavimo
+                                                            diagrama
+
+Toliau pateikiama kompiuterizuojam panaudojimo atvej diagrama, apibrzianti sistemos naudotoj
+ir sistemos funkcij sveik.
+
+                       28 pav. Naudotojo paskyros valdymo posistemio panaudojimo atvejai
+                                                                                                                      59
+29 pav. Sklypo valdymo posistemio panaudojimo atvejai
+                                                                                         60
+                     30 pav. Veiksm ir prieziros posistemio panaudojimo atvejai
+
+Kiekvienam panaudojimo atvejui sudaryta specifikacija bei pateiktas jo vykdymo scenarijus,
+sumodeliuotas UML veiklos diagrama.
+
+Algoritmiskai sudtingesni panaudojimo atvejai siame poskyryje pateikiami pilnai, o paprastesni
+panaudojimo atvejai, kurie realizuoja nesudtingas CRUD operacijas, pateikiami prieduose.
+
+4 lentel. ,,Rekomendacinio veiksm kalendoriaus valdymas" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Rekomendacinio veiksm kalendoriaus valdymas
+Tikslas              Sugeneruoti rekomenduojam darzo prieziros veiksm kalendori, remiantis sklypo plano
+Aprasymas            duomenimis, augal bkle ir aplinkos slygomis.
+                     Darzo savininkas inicijuoja veiksm kalendoriaus perzir arba krim. Sistema patikrina,
+Pries slyga          ar pasirinktam planui jau egzistuoja veiksm kalendorius. Jei kalendorius neegzistuoja,
+Suzadinimo slyga     naudotojas veda norim planavimo laikotarp, o sistema surenka reikalingus duomenis apie
+Po slyga             sklypo struktr, augalus, j bkl bei aplinkos slygas. Remiantis siais duomenimis
+                     generuojamas rekomendacinis veiksm planas, kuriame gali bti numatyti augal prieziros
+                     darbai, papildomi veiksmai pagal oro slygas bei reikaling priemoni sigijimas.
+                     Sugeneruotas kalendorius pateikiamas naudotojui perzirai, o naudotojas gali pazymti
+                     atliktus darbus, pazymti sunaudotas medziagas arba atsaukti suplanuotus veiksmus.
+                     Darzo savininkas yra prisijungs prie sistemos ir turi sukurt arba pasirinkt sklypo plan su
+                     jame esanciais augalais.
+                     Darzo savininkas pasirenka funkcij perzirti arba sukurti rekomendacin veiksm
+                     kalendori pasirinktam sklypo planui.
+                     Sugeneruotas arba atnaujintas rekomendacinis veiksm kalendorius yra issaugomas
+                     sistemoje ir pateikiamas naudotojui perzirai bei tolesniam veiksm valdymui.
+
+                                                                                           61
+31 pav. Rekomendacinio veiksm kalendoriaus valdymo veiklos diagrama, 1 dalis
+                                                                                                       62
+32 pav. Rekomendacinio veiksm kalendoriaus valdymo veiklos diagrama, 2 dalis
+                                                                                                       63
+33 pav. Rekomendacinio veiksm kalendoriaus valdymo veiklos diagrama, 3 dalis
+
+5 lentel. ,,Pazymti sunaudotas medziagas" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Pazymti sunaudotas medziagas
+Tikslas              Uzregistruoti darzo prieziros metu sunaudotas medziagas ar panaudotus rankius ir
+Aprasymas            atnaujinti j kiekius inventoriuje.
+                     Darzo savininkas inicijuoja sunaudot medziag zymjim. Sistema pateikia inventoriuje
+Pries slyga          esanci medziag ir ranki sras, is kurio naudotojas pasirenka norim element.
+Suzadinimo slyga     Pasirinks medziag ar rank, naudotojas veda sunaudot kiek. Sistema patikrina vesto
+Po slyga             kiekio korektiskum. Jei vestas kiekis yra neteisingas, naudotojui pateikiamas klaidos
+                     pranesimas ir suteikiama galimyb pakartotinai vesti duomenis. Jei vestas kiekis yra
+                     tinkamas, sistema atnaujina pasirinktos medziagos ar rankio kiek inventoriuje ir pateikia
+                     pranesim apie skming atnaujinim.
+                     Darzo savininkas yra prisijungs prie sistemos ir inventoriuje yra bent viena medziaga arba
+                     rankis.
+                     Darzo savininkas pasirenka funkcij ,,Pazymti sunaudotas medziagas".
+                     Inventoriuje atnaujinamas pasirinktos medziagos ar rankio kiekis, o naudotojui pateikiamas
+                     pranesimas apie skming atnaujinim arba klaid, jei vesti duomenys buvo neteisingi.
+
+                                                                              64
+                     34 pav. Pazymti sunaudotas medziagas veiklos diagrama
+
+6 lentel. ,,Identifikuoti augalo bkl" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Identifikuoti augalo bkl
+Tikslas              Nustatyti ir atnaujinti augalo bkl, remiantis jo augimo trukme, biologiniais parametrais ir
+Aprasymas            esamais duomenimis.
+                     Sistema inicijuoja augalo bkls identifikavimo proces. Pirmiausia gaunama tikrinamo
+Pries slyga          laikotarpio data ir augalo pasodinimo data, pagal kurias apskaiciuojama augimo trukm.
+Suzadinimo slyga     Toliau sistema gauna augalo biologinius parametrus is duomen rinkinio ir patikrina, ar
+Po slyga             augalui yra nustatyta liga. Jei augalas yra sergantis, jo bsena atnaujinama  ,,Sergantis".
+                     Jei liga nenustatyta, sistema tikrina augalo vystymosi etapus pagal prajusius laikotarpius.
+                     Priklausomai nuo to, ar prajo dygimo pradzios, dygimo pabaigos, augimo, zydjimo ar
+                     brandumo laikotarpiai, augalo bsena atnaujinama atitinkamai  ,,Pasodintas", ,,Dygstantis",
+                     ,,Augantis", ,,Zydintis" arba ,,Brandus". Papildomai tikrinama, ar augalas yra vienmetis ar
+                     daugiametis. Jei augalas yra vienmetis ir pasiek brandos pabaig, jo bsena atnaujinama 
+                     ,,Nudzivs". Jei augalas yra daugiametis, tikrinamas poilsio laikotarpis, po kurio bsena
+                     gali bti atnaujinama  ,,Atsinaujinantis". Proceso pabaigoje sistema issaugo atnaujint
+                     augalo bsen.
+                     Sistemoje egzistuoja augalas su nustatyta pasodinimo data ir priskirtais biologiniais
+                     parametrais.
+                     Sistema inicijuoja funkcij ,,Identifikuoti augalo bkl".
+                     Augalui priskiriama atnaujinta bkl, atitinkanti jo vystymosi etap ar sveikatos bkl, ir si
+                     informacija issaugoma sistemoje.
+
+                                                                            65
+35 pav. Identifikuoti augalo bkl veiklos diagrama
+                                                                                      66
+7 lentel. ,,Gauti or prognozes" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Gauti or prognozes
+Tikslas              Gauti aktualias or prognozes ir panaudoti jas darzo prieziros planavimui bei sprendim
+Aprasymas            primimui.
+                     Sistema inicijuoja or prognozs uzklaus isorinei or prognozi sistemai (11). Isorin
+Pries slyga          sistema gauna uzklaus ir paruosia reikiamus duomenis, kurie grzinami  sistem. Gavus
+Suzadinimo slyga     duomenis, sistema patikrina j korektiskum. Jei duomenys yra tinkami, jie apdorojami ir
+Po slyga             issaugomi sistemoje tolimesniam naudojimui. Naudotojui pateikiamas pranesimas apie
+                     skmingai gautas or prognozes. Jei gaunami duomenys yra neteisingi arba vyksta klaida,
+                     sistema naudoja paskutinius issaugotus or duomenis ir pateikia naudotojui pranesim apie
+                     vykusi klaid.
+                     Sistema turi galimyb pasiekti isorin or prognozi sistem arba turi anksciau issaugotus
+                     or duomenis.
+                     Sistema inicijuoja funkcij ,,Gauti or prognozes".
+                     Sistemoje issaugomi nauji or prognozi duomenys arba naudojami paskutiniai galimi
+                     duomenys, kurie tampa prieinami darzo prieziros planavimui.
+
+                     36 pav. Gauti or prognozes veiklos diagrama
+
+8 lentel. ,,Gauti augal informacij" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Gauti augal informacij
+Tikslas              Gauti isorins sistemos teikiam augal informacij ir panaudoti j augal valdymui bei
+                     prieziros planavimui.
+Aprasymas            Sistema inicijuoja augal informacijos uzklaus isorinei sistemai ,,Perenual" (16). Isorin
+                     sistema gauna uzklaus ir atrenka reikalingus duomenis, kurie grzinami  sistem. Gavus
+
+                                                                                                               67
+Pries slyga          duomenis, sistema patikrina j korektiskum. Jei duomenys yra tinkami, jie apdorojami ir
+                     issaugomi sistemoje, kad galt bti naudojami tolimesniuose procesuose, pavyzdziui,
+Suzadinimo slyga     generuojant prieziros rekomendacijas ar planuojant veiksmus. Naudotojui pateikiamas
+Po slyga             pranesimas apie skmingai gaut augal informacij. Jei gaunami duomenys yra neteisingi
+                     arba vyksta klaida, sistema naudoja paskutinius issaugotus augal duomenis ir pateikia
+                     naudotojui pranesim apie vykusi klaid.
+                     Sistema turi galimyb pasiekti isorin augal informacijos sistem ,,Perenual" arba turi
+                     anksciau issaugotus augal duomenis.
+                     Sistema inicijuoja funkcij ,,Gauti augal informacij".
+                     Sistemoje issaugomi nauji augal duomenys arba naudojami paskutiniai galimi duomenys,
+                     kurie tampa prieinami tolimesniam naudojimui.
+
+                     37 pav. Gauti augal informacij veiklos diagrama
+
+9 lentel. ,,Valdyti sklypo plan" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Valdyti sklypo plan
+Tikslas              Valdyti sklypo plan, atliekant jo krimo, perziros, redagavimo, salinimo ir eksportavimo
+                     veiksmus, uztikrinant duomen korektiskum ir nuosekl plano atnaujinim.
+Aprasymas            Darzo savininkas inicijuoja sklypo plano valdym ir pasirenka norim veiksm. Jei
+                     pasirenkamas naujo sklypo plano krimas, sistema pateikia sklypo duomen vedimo form,
+                     o naudotojas veda reikiamus duomenis. Sistema patikrina j korektiskum ir, jei duomenys
+                     tinkami, sugeneruoja tusci sklypo plano sablon. Naudotojas pazymi sklypo ribas
+                     zemlapyje, kurios patikrinamos ir issaugomos sistemoje. Toliau naudotojas gali valdyti
+                     augal zonas, pridti naujas zonas, vesti j duomenis, redaguoti ar pasalinti esamas zonas.
+                     Kiekvienu atveju sistema pateikia atitinkamas formas, patikrina vestus duomenis ir
+                     atnaujina informacij sistemoje. Naudotojas taip pat gali valdyti augalus zonose, pasirinkti
+                     zon, pridti augal, redaguoti jo duomenis arba pasalinti j is zonos. Sistema pateikia
+                     galim augal pasirinkim, apdoroja naudotojo veiksmus ir issaugo pakeitimus. Be krimo
+                     ir redagavimo veiksm, naudotojas gali perzirti esamus sklypo planus, pasirinkti konkret
+                     plan ir j atvaizduoti. Taip pat galima pasalinti sklypo plan, pries tai patvirtinus salinimo
+
+                                                                                                             68
+Pries slyga       veiksm. Papildomai naudotojas gali pasirinkti eksportuoti sklypo plan  PDF format.
+Suzadinimo slyga  Sistema sugeneruoja dokument ir pateikia j atsisiuntimui. Visi atlikti pakeitimai yra
+Po slyga          issaugomi sistemoje, o naudotojui pateikiami atitinkami pranesimai apie skmingai atliktus
+                  veiksmus arba klaidas.
+                  Darzo savininkas yra prisijungs prie sistemos.
+                  Darzo savininkas pasirenka funkcij ,,Valdyti sklypo plan".
+                  Sistemoje sukuriamas, atnaujinamas, perzirimas arba pasalinamas sklypo planas su jame
+                  apibrztomis augal zonomis ir augalais, o naudotojas gali papildomai eksportuoti plan 
+                  PDF format.
+
+                                                                                                             69
+38 pav. Valdyti sklypo plan veiklos diagrama, 1 dalis
+                                                                                        70
+39 pav. Valdyti sklypo plan veiklos diagrama, 2 dalis
+                                                                                        71
+10 lentel. ,,Eksportuoti plan  PDF" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Eksportuoti plan  PDF
+Tikslas              Sugeneruoti sklypo plan PDF formatu, kad naudotojas galt j atsisisti, perzirti ar
+Aprasymas            naudoti uz sistemos rib.
+                     Darzo savininkas inicijuoja sklypo plano eksportavim  PDF format. Sistema priima
+Pries slyga          uzklaus ir suformuoja PDF dokument, kuriame pateikiamas pasirinktas sklypo planas su
+Suzadinimo slyga     visais jo elementais. Sugeneravus dokument, sistema pateikia PDF fail atsisiuntimui.
+Po slyga             Naudotojas atsisiuncia fail  savo rengin. Skmingai atlikus eksportavimo proces,
+                     sistema papildomai pateikia pranesim apie skming PDF failo sugeneravim ir
+                     atsisiuntim.
+                     Darzo savininkas yra prisijungs prie sistemos ir turi bent vien sukurt sklypo plan.
+                     Darzo savininkas pasirenka funkcij ,,Eksportuoti plan  PDF".
+                     Sugeneruotas sklypo plano PDF dokumentas yra atsisistas  naudotojo rengin ir gali bti
+                     naudojamas tolimesnei perzirai ar dalijimuisi.
+
+                                   40 pav. Eksportuoti plan  PDF veiklos diagrama
+11 lentel. ,,Analizuoti darzo rezultatus" panaudojimo atvejo specifikacija
+
+ Panaudojimo atvejis Analizuoti darzo rezultatus
+
+                                                                                                                      72
+Tikslas           vertinti darzo veiklos rezultatus pasirinktu aspektu ir suteikti naudotojui analitin zvalg
+Aprasymas         apie darzo veiklos efektyvum.
+                  Darzo savininkas inicijuoja darzo rezultat analiz. Sistema pateikia turimus sklypo planus,
+Pries slyga       is kuri naudotojas pasirenka norim plan, tuomet sistema papraso pasirinkti analizs tip.
+Suzadinimo slyga  Pasirinkus planavimo sprendim analiz, sistema gauna istorinius planavimo duomenis,
+Po slyga          isskiria augal pasirinkimus pagal zonas ir sezonus, patikrina galimus rotacijos pazeidimus
+                  bei apskaiciuoja plano keitim daznum.
+                  Pasirinkus augal bkls analiz, sistema gauna istorinius bkls rasus, juos isrsiuoja
+                  chronologiskai, identifikuoja bkli pokycius, nustato kritinio pablogjimo taskus ir vertina
+                  bkls gerjimo tendencij po atlikt prieziros veiksm.
+                  Pasirinkus derliaus analiz, sistema gauna istorinius derliaus rasus, apskaiciuoja bendr
+                  derliaus kiek, nustato tendencijas, identifikuoja geriausiai derjusius augalus ir palygina
+                  faktin derli su planuotu.
+                  Baigus pasirinkt analizs sak, sistema apskaiciuoja bendrus sklypo naudingumo rodiklius,
+                  sugeneruoja galutin suvestins ataskait ir j pateikia naudotojui.
+                  Darzo savininkas yra prisijungs prie sistemos, turi bent vien sukurt sklypo plan ir
+                  sistemoje yra sukaupt istorini darzo veiklos duomen.
+                  Darzo savininkas pasirenka funkcij ,,Analizuoti darzo rezultatus".
+                  Sugeneruota analizs ataskaita issaugoma sistemoje ir pateikiama naudotojui su
+                  pasirinktosios analizs rezultatais bei bendraisiais sklypo naudingumo rodikliais.
+
+                  73
+41 pav. Analizuoti darzo rezultatus veiklos diagrama
+                                                                                       74
+12 lentel. ,,Perzirti derliaus istorij" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Perzirti derliaus istorij
+Tikslas              Suteikti galimyb gauti pasirinkto sklypo plano derliaus istorijos duomenis, kurie naudojami
+Aprasymas            tiek naudotojo perzirai, tiek sistemos atliekamai analizei.
+                     Panaudojimo atvejis gali bti inicijuojamas darzo savininko arba automatiskai iskvieciamas
+Pries slyga          sistemos vykdomos analizs metu. Jeigu panaudojimo atvej inicijuoja darzo savininkas,
+Suzadinimo slyga     sistema pateikia naudotojui turim sklypo plan sras, is kurio jis pasirenka norim plan.
+Po slyga             Pasirinkus plan, sistema patikrina, ar egzistuoja su juo susij derliaus rasai. Jeigu derliaus
+                     rasai neegzistuoja, sistema pateikia informacin pranesim apie duomen nebuvim ir
+                     suteikia galimyb pasirinkti kit plan arba baigti veiksm. Jeigu derliaus rasai egzistuoja,
+                     sistema surenka ir apdoroja duomenis: nustato derliaus kiekius pagal augalus, identifikuoja
+                     derliaus datas bei suformuoja laikotarpius. Apdoroti duomenys pateikiami naudotojui
+                     perzirai. Jeigu panaudojimo atvejis iskvieciamas sistemos analizs metu, sklypo planas
+                     parenkamas automatiskai pagal analizs kontekst. Sistema patikrina derliaus ras
+                     egzistavim ir, jei jie yra, surenka bei apdoroja duomenis. Siuo atveju duomenys nra
+                     pateikiami naudotojo ssajoje, o perduodami tolimesniam analizs apdorojimui. Jei
+                     duomen nra, analizs procesui grzinama atitinkama informacija apie j nebuvim.
+                     Panaudojimo atvejis uzbaigiamas, kai duomenys pateikiami naudotojui arba perduodami
+                     analizei.
+                     Darzo savininkas yra autentifikuotas sistemoje ir egzistuoja bent vienas sklypo planas.
+                     Panaudojimo atvejis inicijuojamas darzo savininko pasirinkus funkcij ,,Perzirti derliaus
+                     istorij" arba automatiskai iskvieciamas sistemos analizs proceso metu.
+                     Naudotojui pateikiami pasirinkto sklypo plano derliaus istorijos duomenys arba, jei
+                     panaudojimo atvejis vykdomas analizs kontekste, duomenys perduodami analizs procesui.
+
+                     42 pav. Perzirti derliaus istorij veiklos diagrama
+                                                                                                           75
+13 lentel. ,,Perzirti augalo bkls istorij" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Perzirti augalo bkls istorij
+Tikslas              Gauti pasirinkto augalo bkls istorijos duomenis, leidziancius vertinti augalo bkls
+Aprasymas            pokycius laikui bgant ir naudoti juos tiek naudotojo perzirai, tiek sistemos atliekamai
+                     analizei.
+Pries slyga          Panaudojimo atvejis gali bti inicijuojamas darzo savininko arba automatiskai iskvieciamas
+Suzadinimo slyga     sistemos analizs metu. Jeigu panaudojimo atvej inicijuoja darzo savininkas, sistema
+Po slyga             pateikia augal sras. Naudotojas pasirenka norim augal, po to sistema gauna visus
+                     pasirinkto augalo bkls rasus. Esant poreikiui, naudotojas gali pasirinkti kit augal ir
+                     procesas kartojamas. Sistema patikrina, ar pasirinktam augalui egzistuoja bkls rasai. Jei
+                     ras nra, pateikiamas informacinis pranesimas apie j nebuvim. Jei rasai egzistuoja,
+                     sistema suformuoja augalo bkls istorij ir pateikia j naudotojui perzirai. Jeigu
+                     panaudojimo atvejis iskvieciamas sistemos analizs metu, augalas arba augal rinkinys
+                     parenkamas automatiskai pagal analizs kontekst. Sistema surenka visus bkls rasus,
+                     patikrina j egzistavim ir, jei duomenys yra, perduoda juos tolimesniam analizs
+                     apdorojimui. Siuo atveju duomenys nra pateikiami naudotojo ssajoje. Jei ras nra,
+                     analizs procesui grzinama informacija apie j nebuvim. Panaudojimo atvejis
+                     uzbaigiamas, kai duomenys pateikiami naudotojui arba perduodami analizs procesui.
+                     Darzo savininkas yra prisijungs prie sistemos ir sistemoje yra bent vienas augalas.
+                     Panaudojimo atvejis inicijuojamas darzo savininko pasirinkus funkcij ,,Perzirti augalo
+                     bkls istorij" arba automatiskai iskvieciamas sistemos analizs proceso metu.
+                     Naudotojui pateikiama pasirinkto augalo bkls istorija arba, jei panaudojimo atvejis
+                     vykdomas analizs kontekste, duomenys perduodami analizs procesui.
+
+                                                                             76
+                     43 pav. Perzirti augal bkls istorij veiklos diagrama
+
+14 lentel. ,,Pazymti augal rotacij" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Pazymti augal rotacij
+Tikslas              Uzregistruoti augal rotacijos sprendim darzo plane, nurodant naujas augal sodinimo
+                     vietas zonose ir uztikrinant teising rotacijos sek.
+Aprasymas            Darzo savininkas inicijuoja augal rotacijos pazymjim. Sistema pateikia turimus sklypo
+                     planus, is kuri naudotojas pasirenka norim. Sistema kelia plano duomenis, gauna augal
+                     informacij ir patikrina rotacijos rekomendacijas, ar kurie nors augalai buvo sodinti toje
+                     pacioje zonoje ankstesniais sezonais. Aptikus rotacijos pazeidim, naudotojas
+                     informuojamas apie alternatyvias sodinimo vietas.
+
+                                                                                                                77
+Pries slyga       Naudotojas pasirenka augal ir nurodo nauj sodinimo viet. Sistema patikrina pasirinktos
+                  zonos tinkamum pagal augalo poreikius ir suderinamum su kitais tos zonos augalais. Jei
+Suzadinimo slyga  zona netinkama, pateikiamas spjimas. Procesas kartojamas tol, kol naudotojas nori
+Po slyga          pazymti dar vien augal.
+                  Baigus zymjim naudotojas patvirtina rotacijos sprendimus, sistema patikrina j
+                  suderinamum, issaugo atnaujint rotacijos informacij ir pateikia patvirtinimo pranesim.
+                  Darzo savininkas yra prisijungs prie sistemos ir turi bent vien sukurt sklypo plan su
+                  jame apibrztomis augal zonomis ir augalais.
+                  Darzo savininkas pasirenka funkcij ,,Pazymti augal rotacij".
+                  Sistemoje issaugoma atnaujinta augal rotacijos informacija su naujomis kiekvieno augalo
+                  sodinimo vietomis, o rotacijos sprendimai prieinami vlesnei planavimo istorijos analizei.
+
+                                                                                                             78
+44 pav. Pazymti augal rotacij veiklos diagrama, 1 dalis
+                                                                                          79
+                     45 pav. Pazymti augal rotacij veiklos diagrama, 2 dalis
+
+15 lentel. ,,Perzirti planavimo istorij" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Perzirti planavimo istorij
+Tikslas              Gauti pasirinkto sklypo plano planavimo istorijos duomenis, leidziancius perzirti
+                     ankstesnes plano bsenas arba naudoti duomenis sistemos analizei.
+Aprasymas            Panaudojimo atvejis gali bti inicijuojamas darzo savininko arba automatiskai iskvieciamas
+                     sistemos analizs metu. Jeigu panaudojimo atvej inicijuoja darzo savininkas, jis pasirenka
+                     sklypo plan. Sistema gauna visas pasirinkto plano versijas ir planavimo istorijos duomenis,
+                     po to pateikia plano istorijos versij sras. Sistema patikrina, ar egzistuoja planavimo
+                     istorijos rasai. Jei j nra, pateikiamas informacinis pranesimas apie duomen nebuvim ir
+                     panaudojimo atvejis uzbaigiamas. Jei istorijos rasai egzistuoja, naudotojas pasirenka
+                     konkreci plano versij is sraso. Sistema kelia pasirinkt versij ir pateikia j perzirai.
+                     Naudotojas gali tsti perzir pasirinkdamas kit versij arba uzbaigti veiksm. Jeigu
+                     panaudojimo atvejis iskvieciamas sistemos analizs metu, sklypo planas parenkamas
+
+                                                                              80
+Pries slyga       automatiskai pagal analizs kontekst. Sistema gauna visas plano versijas ir planavimo
+Suzadinimo slyga  istorijos duomenis. Siuo atveju duomenys nra pateikiami naudotojo ssajoje ­ jie
+                  perduodami tolimesniam analizs apdorojimui. Jei istorijos duomen nra, analizs procesui
+Po slyga          grzinama informacija apie j nebuvim. Panaudojimo atvejis uzbaigiamas, kai duomenys
+                  pateikiami naudotojui arba perduodami analizs procesui.
+                  Darzo savininkas yra autentifikuotas sistemoje ir turi bent vien sukurt sklypo plan.
+                  Panaudojimo atvejis inicijuojamas darzo savininko pasirinkus funkcij ,,Perzirti
+                  planavimo istorij" arba automatiskai iskvieciamas sistemos analizs proceso metu.
+                  Naudotojui pateikiama pasirinkta plano versija arba pranesimas apie istorijos duomen
+                  nebuvim. Jei panaudojimo atvejis vykdomas analizs kontekste, planavimo istorijos
+                  duomenys perduodami analizs procesui.
+
+                                 46 pav. Perzirti planavimo istorij veiklos diagrama
+
+2.2. Nefunkciniai reikalavimai
+Nefunkciniai reikalavimai apibrzia bendras informacins sistemos savybes, kurios nra tiesiogiai
+susijusios su konkreci funkcij realizavimu, taciau yra btinos siekiant uztikrinti sistemos
+patikimum, nasum, saugum, patogum naudoti ir prieziros galimybes. Sie reikalavimai nustato
+sistemos veikimo kokybinius kriterijus bei slygas, kuriomis turi bti uztikrinamas stabilus ir
+efektyvus sistemos veikimas.
+Nefunkciniai reikalavimai taip pat apibrzia techninius sistemos veikimo aspektus, tokius kaip
+sistemos reagavimo laikas, duomen saugumas, prieinamumas vairiuose renginiuose, duomen
+
+                                                                                                                      81
+vientisumo uztikrinimas ir sistemos prieziros galimybs. Siekiant uztikrinti objektyv si
+reikalavim vertinim, kiekvienam reikalavimui yra nustatomi konkrets kriterijai bei testavimo
+bdai, leidziantys patikrinti, ar sistemos realizacija atitinka nustatytus reikalavimus.
+
+16 lentel. Sistemos nefunkcini reikalavim specifikacija
+
+ NR    Reikalavimo           Reikalavimas             gyvendinimo kriterijus           Testavimo bdas
+NFR1     kategorija
+NFR2    Patikimumas   Sistemoje vesti duomenys         Po duomen rasymo ir            vedami testavimo
+NFR3                  turi bti patikimai saugomi      puslapio perkrovimo visi    duomenys, perkraunamas
+NFR4  Veiksmingumas                                     rasai islieka sistemoje     puslapis ir tikrinama ar
+NFR5     Patogumas          duomen bazje
+NFR6     Saugumas                                        Pagrindini sistemos            duomenys isliko
+                      Sistemos puslapiai turi bti      puslapi klimo laikas          Matuojamas puslapio
+      Naudojamumas     keliami per trump laik           nevirsija 3 sekundzi       klimo laikas naudojant
+                                                                                  narsykls krjo rankius
+      Funkcionalumas  Sistemos naudotojo ssaja            Sistemos elementai         Atliekamas sistemos
+                           turi bti pritaikyta        korektiskai atvaizduojami   testavimas kompiuterio ir
+                          skirtingiems ekrano         skirtingose rezoliucijose       mobiliojo renginio
+                                dydziams
+                                                         Sistemos puslapiai ir             ekranuose
+                      Prie sistemos funkcij gali       funkcijos neprieinamos    Bandymas pasiekti sistemos
+                      prisijungti tik autentifikuoti                             funkcijas neprisijungus prie
+                                                             neprisijungus
+                                naudotojai                                                  sistemos
+                      Sistema turi pateikti aisk       Po duomen rasymo ar
+                       pranesim naudotojui po           atnaujinimo rodomas          Atliekamas duomen
+                                                                                 rasymo testas ir tikrinama
+                           skmingo veiksmo            informacinis pranesimas
+                                 atlikimo                                           ar rodomas pranesimas
+                                                         Netinkami arba tusti
+                          Sistema turi tikrinti       duomenys nra leidziami      Atliekamas testas vedant
+                           vedam duomen                                            neteisingus duomenis ir
+                                                            rasyti  sistem        tikrinama ar sistema juos
+                              korektiskum
+                                                                                              atmeta
+
+2.3. Dalykins srities esybi klasi modelis
+
+Dalykins srities esybi klasi modelyje pateikiamos pagrindins informacins sistemos dalykins
+srities klass ir j tarpusavio rysiai. Modelis sudarytas remiantis analitinje dalyje identifikuotomis
+veiklos esybmis ir atspindi pagrindinius sistemoje naudojamus informacijos objektus bei j
+tarpusavio priklausomybes.
+
+                                                                                 82
+                  47 pav. Asmeninio sodo ar darzo informacins sistemos esybi klasi modelis
+
+Modelyje isskirtos pagrindins klass: ,,Naudotojas", ,,Darzo savininkas", ,,Profilis", ,,Sklypas",
+,,Augalo zona", ,,Augalas", ,,Augalo bkls istorija", ,,Rotacijos istorija", ,,Veiksm kalendorius",
+,,Veiksmas", ,,Inventoriaus vienetas", ,,Or prognoz", ,,Prieziros informacija", ,,Prieigos teiss" ir
+,,Bendruomens rasas". Sios klass apraso naudotoj valdomus darzo objektus, planavimo veiklas,
+istorinius duomenis, bendradarbiavimo aspektus bei papildom informacij, naudojam sprendim
+primimui.
+
+Tarp klasi ,,Naudotojas" ir ,,Darzo savininkas" modelyje pavaizduotas apibendrinimo rysys. Klas
+,,Darzo savininkas" yra specializuota ,,Naudotojo" forma, kuri paveldi bendrus atributus ir turi
+papildomus rysius su darzo valdymo objektais. Toks modeliavimas leidzia aiskiai atskirti bendr
+naudotojo funkcionalum nuo specifini darzo valdymo veikl.
+
+Klas ,,Darzo savininkas" yra susieta su klase ,,Sklypas". Vienas darzo savininkas gali nevaldyti n
+vieno arba valdyti vien ar daugiau sklyp, o kiekvienas sklypas turi bent vien darzo savinink ir
+gali bti valdomas keli savinink. Sis daug-prie-daug rysys realizuojamas per tarpin klas ,,Prieigos
+teiss", kuri papildomai apibrzia naudotojo vaidmen ir prieigos suteikimo laik. Tokiu bdu
+sudaromos slygos lanksciam bendradarbiavimui tarp keli naudotoj.
+
+Klas ,,Darzo savininkas" taip pat siejama su klasmis ,,Inventoriaus vienetas" ir ,,Bendruomens
+rasas". Naudotojas gali turti kelis rankius ar medziagas, naudojamas darzo prieziros veiksmams,
+bei skelbti bendruomens rasus, skirtus informacijos dalijimuisi su kitais sistemos naudotojais.
+
+                                                                                                                      83
+Klas ,,Naudotojas" yra susieta su klase ,,Profilis", kuri saugo papildom informacij apie naudotoj,
+toki kaip vardas, pavard ir paskutinio prisijungimo laikas. Sis rysys leidzia atskirti autentifikacijos
+duomenis nuo naudotojo profilio informacijos.
+Klas ,,Sklypas" agregavimo rysiu susieta su klase ,,Augalo zona". Vienas sklypas gali bti sudarytas
+is keli augalo zon, kurios apibrzia skirtingas darzo vietas. Kiekviena zona pasizymi savo
+charakteristikomis, tokiomis kaip dydis, dirvozemio tipas ar rotacijos etapas.
+Klas ,,Augalo zona" siejama su klase ,,Augalas", kuri apraso konkretaus augalo savybes, tokias kaip
+augimo trukm, rekomenduojamos aplinkos slygos ar dydis. Taip pat augalo zona yra susieta su
+,,Rotacijos istorija", kuri leidzia fiksuoti augal auginimo laikotarpius bei j kait laike.
+Augal bkls pokyciai registruojami klasje ,,Augalo bkls istorija", kuri yra susieta su klase
+,,Augalas". Joje kaupiami duomenys apie augalo bkl, matavimus, pastabas bei fiksavimo dat, taip
+sudarant galimybes analizuoti augalo vystymsi.
+Darzo darb planavimas modelyje realizuojamas naudojant klases ,,Veiksm kalendorius" ir
+,,Veiksmas". ,,Veiksm kalendorius" apibrzia tam tikr laikotarp, o su juo susieti ,,Veiksmai"
+nusako konkrecius darzo prieziros darbus, j atlikimo datas, pavadinimus, komentarus bei
+naudojamus isteklius. ,,Veiksmai" taip pat siejami su augalais arba augalo zonomis, taip uztikrinant
+kontekstin planavim.
+Klas ,,Veiksm kalendorius" papildomai yra susieta su klase ,,Or prognoz", kurios duomenys
+naudojami planuojant ir koreguojant darzo darbus pagal aplinkos slygas.
+Klas ,,Prieziros informacija" (Plant_care) apraso rekomenduojamus veiksmus, augimo trukmes bei
+slygas, susijusias su konkreciais augalais. Si informacija naudojama generuojant rekomendacinius
+veiksmus ir planuojant darzo priezir.
+Diagramoje pateikti rysiai su kardinalumais ir rysi pavadinimais leidzia tiksliai apibrzti skirting
+klasi tarpusavio sveik. Modelyje naudojami asociacijos, agregavimo ir apibendrinimo rysiai, kurie
+leidzia nuosekliai atvaizduoti dalykins srities struktr ir objekt priklausomybes.
+
+2.4. Grafins naudotojo ssajos eskizai
+Siame poskyryje pateikiami pagrindini sistemos lang prototipai, atspindintys svarbiausias sistemos
+funkcines sritis ir naudotojo ssajos struktr. Prototipai parodo, kaip naudotojas sveikauja su
+sistema bei kaip realizuojami pagrindiniai panaudojimo atvejai.
+Pagrindinis langas
+
+                                                                                                                      84
+                                      48 pav. Pagrindinio sistemos lango prototipas
+Pagrindinis sistemos langas skirtas pateikti apibendrint informacij apie naudotojo valdomus
+sklypus. Siame lange rodoma suvestin apie naudotojo rol, turim sklyp skaici ir
+bendradarbiavimo bsen. Taip pat pateikiamos naujausi sklyp kortels bei greitos prieigos
+veiksmai, leidziantys inicijuoti naujo sklypo krim ar pereiti  kitus sistemos modulius. Sis langas
+veikia kaip centrinis navigacijos taskas.
+Veiksm kalendoriaus langas
+
+                                     49 pav. Veiksm kalendoriaus lango prototipas
+Veiksm kalendoriaus langas skirtas planuojam darb valdymui. Jame pateikiamas kalendorinis
+veiksm isdstymas pagal datas bei konkrecios dienos uzduoci srasas. Kiekvienai uzduociai
+nurodomas jos tipas, susijs augalas, reikalingos medziagos ir vykdymo bsena. Naudotojas gali
+
+                                                                                                                      85
+pazymti uzduotis kaip vykdytas arba jas atsaukti. Taip realizuojamas rekomendacinio veiksm
+kalendoriaus funkcionalumas.
+Sklypo plano redagavimo langas
+
+                                       50 pav. Sklypo plano redagavimo prototipas
+Sklypo plano redagavimo langas skirtas vizualiam sklypo struktros modeliavimui. Siame lange
+naudotojas gali kurti ir redaguoti sklypo ribas, formuoti augal zonas bei priskirti joms augalus.
+Ssaja paremta grafine darbo sritimi, kurioje objektai gali bti perkeliami, keiciamas j dydis ir
+struktra. Papildomai pateikiami rankiai zon krimui bei pasirinkt element savybi redagavimui.
+.
+
+                                                                                                                      86
+3. Projektin specifikacija
+3.1. Sistemos login architektra
+Sistemos login architektra atspindi pagrindini sistemos komponent struktr ir j tarpusavio
+sveik. Architektra organizuota sluoksniskai, isskiriant naudotojo ssajos, valdymo logikos ir
+duomen sluoksnius, kurie kartu uztikrina nuosekl sistemos veikim.
+
+51 pav. Sistemos login architektra, vaizduojanti naudotojo ssajos, valdikli ir duomen modeli struktr
+Naudotojo ssajos sluoksnyje sukoncentruoti visi sistemos langai, skirti sveikai su naudotoju. Sis
+sluoksnis suskirstytas pagal funkcines sritis, apimancias naudotojo paskyros valdym, sklyp ir
+augal duomen tvarkym, veiksm planavim, inventoriaus valdym ir bendruomens
+funkcionalum. Kiekvienoje srityje pateikiami atskiri langai, skirti duomen perzirai, krimui ir
+redagavimui, taip uztikrinant nuosekl darbo scenarij realizavim.
+Valdymo logikos sluoksnis atsakingas uz sistemos veiksm vykdym, uzklaus apdorojim ir
+sveikos tarp ssajos ir duomen sluoksni koordinavim. Siame sluoksnyje funkcionalumas taip pat
+suskirstytas pagal tas pacias funkcines sritis, kaip ir naudotojo ssajoje, taip islaikant struktrin
+nuoseklum. Valdymo komponentai uztikrina duomen validavim, verslo taisykli taikym ir
+atitinkam operacij inicijavim.
+Duomen sluoksnyje apibrziamos sistemoje naudojamos esybs ir j tarpusavio rysiai. Siame
+sluoksnyje kaupiama informacija apie naudotojus, sklypus, augalus, veiksm planus, inventoriaus
+elementus ir kitus sistemos objektus. Taip pat traukiamos pagalbins struktros, skirtos istorini
+duomen saugojimui ir analizei.
+3.2. Kompiuterizuojam panaudojimo atvej realizacija projekto klasmis
+Rekomendacinio veiksm kalendoriaus valdymas
+
+                                                                                                                      87
+52 pav. Panaudojimo atvejo ,,Rekomendacinio veiksm kalendoriaus valdymas" sek diagrama, 1 dalis
+                                                                                                                   88
+53 pav. Panaudojimo atvejo ,,Rekomendacinio veiksm kalendoriaus valdymas" sek diagrama, 2 dalis
+                                                                                                                   89
+   54 pav. Panaudojimo atvejo ,,Rekomendacinio veiksm kalendoriaus valdymas" sek diagrama, 3 dalis
+
+Pateiktoje sek diagramoje modeliuojamas rekomendacinio veiksm kalendoriaus sudarymo ir
+tolimesnio valdymo scenarijus, kur inicijuoja darzo savininkas. Pasirinkus kalendoriaus funkcij,
+pirmiausia atliekamas patikrinimas, ar konkreciam sklypo planui jau yra sukurtas kalendorius.
+Jeigu kalendorius neegzistuoja, naudotojas nurodo planavimo laikotarp. Tuomet sistema surenka
+aktualius duomenis apie sklyp, jo zonas, augalus, j bsenas bei aplinkos slygas. Remiantis sia
+informacija automatiskai sugeneruojamas veiksm planas, apimantis prieziros darbus,
+rekomendacijas ir reikalingus isteklius.
+Sukurtas arba jau egzistuojantis kalendorius pateikiamas naudotojui, suteikiant galimyb atlikti
+valdymo veiksmus: zymti uzduotis kaip vykdytas, registruoti sunaudotas medziagas ar atmesti
+nereikalingus veiksmus. Visi pakeitimai perduodami valdikliams, kurie uztikrina duomen
+atnaujinim sistemoje.
+Pazymti sunaudotas medziagas
+
+                                                                                                                      90
+                  55 pav. Panaudojimo atvejo ,,Pazymti sunaudotas medziagas" sek diagrama
+Siame modelyje aprasomas medziag sunaudojimo registravimo scenarijus. Naudotojui inicijavus
+funkcij, per valdiklio klas gaunamas inventoriaus element srasas ir pateikiamas ssajoje.
+
+Pasirinkus konkret element bei vedus sunaudot kiek, atliekama vesties validacija, tikrinant
+duomen atitikim turimam kiekiui. Skms atveju inventoriaus rasas atnaujinamas, o naudotojui
+pateikiamas patvirtinimas. Jei nustatomi neatitikimai, grzinamas klaidos pranesimas ir sudaroma
+galimyb pakartoti vedim.
+
+Identifikuoti augalo bkl
+
+                                                                                                                      91
+56 pav. Panaudojimo atvejo ,,Identifikuoti augalo bkl" sek diagrama
+                                                                                                 92
+Modelyje detalizuojamas augalo bsenos nustatymo mechanizmas, inicijuojamas uzduoci
+kalendoriaus valdiklio. Uzklausa perduodama bsenos valdymo komponentui, kuris is esybs klass
+gauna augalo pasodinimo dat ir apskaiciuoja augimo trukm.
+Tolimesniame etape vertinami prieziros duomenys bei papildomi veiksniai. Sprendim logikoje
+tikrinamos slygos, susijusios su lig pozymiais ir vystymosi etap ribomis. Atsizvelgiant  siuos
+kriterijus, atnaujinama augalo bsena.
+Galutinis rezultatas ­ nustatyta aktuali augalo faz, leidzianti sistemai adaptuoti tolimesnius
+veiksmus.
+Gauti or prognozes
+
+                         57 pav. Panaudojimo atvejo ,,Gauti or prognozes" sek diagrama
+Or duomen gavimo scenarijuje uzklaus inicijuoja uzduoci kalendoriaus valdiklis, kuris per
+integracin ssaj kreipiasi  isorin prognozi sistem.
+Gauti duomenys pirmiausia patikrinami, vertinant j kokyb ir tinkamum naudojimui. Tinkami
+duomenys apdorojami ir issaugomi sistemoje kaip nauja bsena. Priesingu atveju taikomas
+alternatyvus scenarijus ­ naudojami anksciau sukaupti duomenys.
+Tokiu bdu uztikrinamas nepertraukiamas sistemos veikimas net esant isorini paslaug
+sutrikimams.
+Gauti augal informacij
+
+                                                                                                                      93
+                       58 pav. Panaudojimo atvejo ,,Gauti augal informacij" sek diagrama
+Augalo prieziros duomen gavimo procese valdiklis inicijuoja uzklaus, kuri per ssajos
+komponent perduodama isorinei API.
+Sugrzinti duomenys vertinami pagal nustatytus kriterijus. Jei jie atitinka reikalavimus, atliekamas j
+apdorojimas ir integravimas  sistemos duomen struktr. Jei ne, naudojami anksciau saugoti rasai.
+Valdyti sklypo plan
+
+                                                                                                                      94
+59 pav. Panaudojimo atvejo ,,Valdyti sklypo plan" sek diagrama, 1 dalis
+                                                                                                   95
+60 pav. Panaudojimo atvejo ,,Valdyti sklypo plan" sek diagrama, 2 dalis
+                                                                                                   96
+                    61 pav. Panaudojimo atvejo ,,Valdyti sklypo plan" sek diagrama, 3 dalis
+Siame scenarijuje apimamas visas sklypo plano gyvavimo ciklas: krimas, redagavimas, perzira ir
+salinimas. Naudotojui pasirinkus planavimo funkcij, pateikiamas plan srasas ir galimi veiksmai.
+Kuriant nauj plan, tikrinami vedami duomenys ir, esant korektiskiems rezultatams, sukuriamas
+naujas rasas. Redagavimo metu naudojami esami plano duomenys, kurie po validacijos
+atnaujinami.
+Papildomai realizuotas zon ir augal valdymas, leidziantis kurti, keisti ar salinti plano struktrinius
+elementus. Taip pat numatyti issaugojimo, perziros, salinimo bei eksporto funkcionalumai.
+Eksportuoti plan  PDF
+
+                                                                                                                      97
+                       62 pav. Panaudojimo atvejo ,,Eksportuoti plan  PDF" sek diagrama
+Sek diagramoje pavaizduotas sklypo plano eksporto  dokumento format procesas. Inicijavus
+eksportavimo veiksm, sistema per valdikl surenka reikalingus duomenis is susijusi esybi ­
+sklypo, zon ir augal.
+Surinkta informacija transformuojama  struktrizuot ataskaitos form, po to generuojamas
+dokumentas PDF formatu. Sugeneravus fail, jis pateikiamas naudotojui.
+Analizuoti darzo rezultatus
+
+                                                                                                                      98
+63 pav. Panaudojimo atvejo ,,Analizuoti darzo rezultatus" sek diagrama, 1 dalis
+                                                                                                      99
+                 64 pav. Panaudojimo atvejo ,,Analizuoti darzo rezultatus" sek diagrama, 2 dalis
+Analizs scenarijus apima keli tip duomen apdorojim, integruojant rezultatus  bendr
+vertinim. Naudotojui pasirinkus sklyp, sistema surenka susijusius duomenis apie zonas ir augalus.
+Toliau pasirenkamas analizs tipas, kuris lemia taikomus skaiciavimo metodus. Gali bti vertinama
+planavimo istorija, augal bkls pokyciai ar derliaus rezultatai. Kiekvienu atveju atliekamas
+duomen apibendrinimas ir tendencij identifikavimas.
+Perzirti derliaus istorij
+
+                                                                                                                     100
+                      65 pav. Panaudojimo atvejo ,,Perzirti derliaus istorij" sek diagrama
+Sek diagramoje vaizduojamas derliaus istorijos perziros procesas, apimantis tiek automatizuot
+duomen paruosim, tiek naudotojo inicijuot uzklaus. Sistemos valdiklis surenka informacij apie
+atliktas derliaus operacijas, identifikuodamas atitinkamus darbus ir susijusius augalus bei
+apskaiciuodamas pagrindinius rodiklius, tokius kaip derliaus kiekiai ir datos.
+Naudotojui pasirinkus konkret sklyp, sistema papildomai gauna susijusi zon ir uzduoci
+duomenis, leidziancius patikrinti, ar egzistuoja derliaus rasai. Jei duomen nra, pateikiamas
+informacinis pranesimas. Priesingu atveju suformuota derliaus informacija perduodama  ssajos
+sluoksn ir pateikiama naudotojui perzirai.
+Perzirti augalo bkls istorij
+
+                                                                                                                     101
+                   66 pav. Panaudojimo atvejo ,,Perzirti augalo bkls istorij" sek diagrama
+Sioje diagramoje vaizduojamas augalo bkls istorijos gavimo ir pateikimo scenarijus, kuriame
+integruojami einamieji ir istoriniai duomenys. Procesas gali bti inicijuojamas tiek naudotojo
+veiksmais, tiek automatiskai sistemos, priklausomai nuo konteksto. Valdiklis surenka informacij
+apie augal ir jo bsenos pokyci rasus.
+Tolimesniame etape vertinama, ar egzistuoja pakankamas istorini duomen kiekis. Jei tokie
+duomenys yra, jie pateikiami per ssajos komponent. Jei istorija nesukaupta, naudotojui pateikiamas
+informacinis pranesimas apie duomen nebuvim.
+Pazymti augal rotacij
+
+                                                                                                                     102
+67 pav. Panaudojimo atvejo ,,Pazymti augal rotacij" sek diagrama, 1 dalis
+                                                                                                    103
+68 pav. Panaudojimo atvejo ,,Pazymti augal rotacij" sek diagrama, 2 dalis
+                                                                                                    104
+                  69 pav. Panaudojimo atvejo ,,Pazymti augal rotacij" sek diagrama, 3 dalis
+Rotacijos planavimo scenarijuje sistema, remdamasi surinktais duomenimis apie sklyp, zonas ir
+augalus, generuoja galimus rotacijos variantus.
+Procesas apima galim rotacijos variant generavim, vertinant augal tarpusavio suderinamum,
+pasli kaitos principus ir taikomus apribojimus. Jei nustatomi netinkami ar neissams duomenys,
+sistema parenka alternatyvius sprendinius arba koreguoja silomus variantus. Vliau naudotojas
+gali perzirti sugeneruot schem ir priimti sprendim dl jos taikymo.
+Patvirtinus pasirinkt rotacijos schem, sistema atnaujina sklypo duomenis ir issaugo pokycius
+istorijoje, o atmetimo atveju ­ grzina ankstesn bsen.
+Perzirti planavimo istorij
+
+                                                                                                                     105
+                     70 pav. Panaudojimo atvejo ,,Perzirti planavimo istorij" sek diagrama
+Sek diagramoje pavaizduotas sklypo planavimo istorijos perziros scenarijus, apimantis skirting
+plano versij gavim ir j detalizavim. Procesas gali bti inicijuojamas tiek naudotojo, tiek sistemos.
+
+Pirmiausia surenkamas galim plano versij srasas, kuris pateikiamas pasirinkimui. Naudotojui
+pasirinkus konkreci versij, sistema papildomai gauna su ja susijusius sklypo, zon ir augal
+duomenis, leidziancius atkurti istorin plano bsen.
+
+3.3. Grafins naudotojo ssajos navigavimo planas
+Sistemos navigacijos struktra apibrzia pagrindinius naudotojo ssajos langus ir perjimus tarp j.
+Navigacija suprojektuota taip, kad naudotojas galt nuosekliai pereiti nuo bendr sistemos funkcij
+prie konkreci veiksm vykdymo, islaikant aisk darbo kontekst.
+
+                                                                                                                     106
+                                       71 pav. Sistemos lang navigacijos modelis
+Pagrindinis jimo taskas  sistem yra prisijungimo langas, is kurio autentifikuotas naudotojas
+nukreipiamas  pagrindin lang. Pagrindinis langas veikia kaip centrinis navigacijos mazgas, is kurio
+pasiekiami pagrindiniai sistemos moduliai: sklyp srasas, veiksm kalendorius, inventorius,
+bendruomens langas ir analizs langas. Taip pat is sio lango inicijuojami sklypo krimo ir
+redagavimo veiksmai.
+
+Sklyp sraso lange naudotojas gali pasirinkti konkret sklyp, po kurio atveriamas detalus sklypo
+vaizdas. Is sio lango pasiekiami susij moduliai, tokie kaip augal srasas, augalo detalus langas ir
+rotacijos planavimo langas. Tokia struktra leidzia valdyti sklypo planavim ir augal duomenis
+viename kontekste.
+
+Analizs langas suteikia galimyb perzirti suvestinius duomenis ir atlikti darzo rezultat analiz, o
+inventoriaus langas skirtas ranki ir medziag valdymui. Bendruomens langas uztikrina
+informacijos dalijimsi tarp naudotoj.
+
+Administratoriaus langas suteikia prieig prie naudotoj valdymo funkcij, skaitant naudotoj sraso
+perzir ir detali analiz. Navigacija tarp si lang organizuota naudojant nuoseklius perjimus,
+leidziancius grzti  aukstesnio lygmens langus ir uztikrinancius vientis naudotojo darbo eig.
+
+3.4. Sistemos klasi modelis
+Administravimo posistemio klasi modelis
+Administravimo posistemio klasi modelyje detalizuojamas naudotoj paskyr perziros, sraso
+sudarymo, paieskos ir salinimo funkcionalumas. Si diagrama parodo pagrindinius komponentus,
+dalyvaujancius paskyr administravimo procese, bei j rysius, per kuriuos realizuojami naudotoj
+valdymo scenarijai. Joje atsiskleidzia, kaip sistemoje organizuojami administravimo veiksmai, kokia
+seka jie vykdomi ir kaip j eiga susiejama su duomen apdorojimu.
+
+                                                                                                                     107
+                                   72 pav. Administravimo posistemio klasi modelis
+
+Naudotojo ssajos lygmenyje isskirtos klass Account_page, Account_list_page ir
+Account_delete_page. Klas Account_page skirta konkrecios naudotojo paskyros informacijos
+perzirai ir turi operacijas view_user() bei end_view(). Klas Account_list_page realizuoja
+administratoriui skirt naudotoj sraso lang ir apima operacijas display_user_list(), select_user()
+
+                                                                                                                     108
+bei show_filtered_list(), todl si klas atsakinga ne tik uz vis paskyr atvaizdavim, bet ir uz
+konkretaus naudotojo pasirinkim bei filtruoto sraso pateikim. Klas Account_delete_page
+modeliuoja naudotojo salinimo patvirtinimo lang ir apima operacijas confirm_delete() bei
+reject_delete(), kurios nusako alternatyvius administratoriaus sprendimo scenarijus.
+
+Proces valdymo lygmenyje pateiktos klass Account_router ir Account_controller. Klas
+Account_router koordinuoja perjimus tarp administravimo lang. Joje aprasytos operacijos
+route_to_user_list(), route_to_view(), route_to_delete(), route_to_filtered_list(), end_view() ir end().
+Is si operacij matyti, kad marsrutizatorius nukreipia naudotoj  reikiam sistemos bsen bei valdo
+grzimo ar darbo uzbaigimo eig. Toks sprendimas leidzia navigacijos logik atskirti nuo duomen
+tvarkymo logikos.
+
+Pagrindin administravimo logika sutelkta klasje Account_controller. Joje apibrztos operacijos
+get_all_users(), search_users(), get_user(), delete_user(), confirm_delete(), reject_delete(), end() ir
+end_view(). Si klas veikia kaip tarpinis sluoksnis tarp naudotojo ssajos ir modelio: ji priima
+uzklausas is ssajos klasi, inicijuoja reikalingus duomen gavimo ar keitimo veiksmus modelio
+klasse ir perduoda rezultatus atgal  ssaj. Dl to ssajos klass nra tiesiogiai priklausomos nuo
+duomen saugojimo ar apdorojimo realizacijos.
+
+Duomen lygmenyje model sudaro klass User ir Profile. Klas User saugo pagrindinius paskyros
+duomenis: email, password, reset_code ir role. Be atribut, si klas turi operacijas, susijusias su
+naudotoj paieska, gavimu, krimu, redagavimu ir salinimu: create_new_user(), find_by_email(),
+get_user(), get_all(), find_users(), update_user() ir delete_user(). Taip pat joje numatytos operacijos,
+susijusios su profilio valdymu ir slaptazodzio atkrimu: get_associated_profiles(),
+get_profile_for_user(), get_profile_for_edit(), remove_profile(), create_new_profile(),
+save_reset_code(), update_password() ir delete_reset_code(). Is to matyti, kad klas User modeliuoja
+centrin administravimo posistemio esyb, su kuria siejami paskyros identifikavimo, autentifikavimo
+ir administravimo veiksmai.
+
+Klas Profile apraso papildomus naudotojo profilio duomenis. Joje pateikti atributai last_login, name
+ir surname, o operacijos apima profilio gavim, redagavim, krim ir salinim: find_account(),
+find_all_accounts(), get_for_edit(), modify_account(), remove_account(), create_new_account(),
+get_profile_data(), update_profile(), get_all(), get_profiles(), get_profile() ir delete_profile(). Si klas
+isplecia naudotojo paskyros informacij ir leidzia administravimo posistemiui atskirti prisijungimo ir
+autorizacijos duomenis nuo bendrj profilio duomen.
+
+Isorini ssaj posistemio klasi modelis
+
+Isorini ssaj integracijos posistemio klasi modelis parodo, kaip sistema sveikauja su isorinmis
+paslaugomis, reikalingomis pagrindiniam funkcionalumui gyvendinti. Diagramoje isskirti
+komponentai ir j rysiai, per kuriuos vyksta duomen gavimas bei perdavimas tarp sistemos ir isorini
+saltini. Modelis leidzia matyti, kaip inicijuojamos uzklausos  isorines sistemas ir kaip gauta
+informacija traukiama  vidinius sistemos procesus.
+
+                                                                                                                     109
+                                    73 pav. Isorini ssaj posistemio klasi modelis
+
+Siame posistemyje svarbiausias vaidmuo tenka klasms, kurios uztikrina rys su isoriniais duomen
+saltiniais ir paslaugomis. Modelyje isskirti komponentai, atsakingi uz uzklaus inicijavim, duomen
+gavim ir j panaudojim vidinje sistemos logikoje.
+
+Klas Weather_forecast_boundary realizuoja sveik su isorine or prognozs sistema. Joje apibrzta
+operacija request_forecast(), kuri naudojama gauti aktualius meteorologinius duomenis. Sie
+duomenys yra reiksmingi kalendoriaus posistemyje, nes leidzia vertinti aplinkos slygas ir
+atitinkamai koreguoti rekomenduojamus veiksmus.
+
+                                                                                                                     110
+Klas Plant_care_boundary skirta augal prieziros duomen gavimui is isorini saltini. Operacija
+request_plant_care_data() leidzia uzklausti informacij apie augal prieziros reikalavimus, tokius
+kaip laistymo, trsimo ar kenkj kontrols rekomendacijos. Sie duomenys naudojami formuojant
+kontekstinius veiksm planus kalendoriaus posistemyje.
+
+Klas Email_server_boundary realizuoja sveik su el. pasto serveriu. Operacija send_reset_email()
+naudojama slaptazodzio atkrimo procese, siunciant naudotojui autentifikavimo ar atkrimo
+informacij. Tai leidzia uztikrinti saug naudotoj autentifikavimo funkcionalum.
+
+Valdymo sluoksnyje pateiktos klass, kurios organizuoja rys su isorinmis sistemomis ir apdoroja j
+grzinamus rezultatus. Klas Password_reset_controller atsakinga uz slaptazodzio atkrimo proceso
+valdym. Joje apibrztos operacijos generate_reset_code(), start_reset_code_generation(),
+request_reset(), verify_code(), submit_new_password() ir validate_password(). Sios operacijos
+apima vis slaptazodzio atkrimo eig ­ nuo uzklausos inicijavimo iki naujo slaptazodzio
+patvirtinimo.
+
+Klas Forgot_password_router realizuoja navigacij slaptazodzio atkrimo scenarijuje per operacijas
+route_to_forgot_password() ir open_new_password_form(). Ji uztikrina, kad naudotojo veiksmai
+bt nukreipiami  atitinkamas ssajos bsenas.
+
+Kalendoriaus funkcionalumo kontekste sveika su isorinmis sistemomis realizuojama per klas
+Task_calendar_controller, kuri naudoja or prognozs ir augal prieziros duomenis. Operacijos
+validate_forecast(), process_forecast(), validate_plant_care() ir process_plant_care() rodo, kad
+isoriniai duomenys pirmiausia tikrinami, o vliau apdorojami pries panaudojant juos uzduoci
+generavime. Tai leidzia uztikrinti duomen patikimum ir tinkamum sistemos logikai.
+
+Papildomai naudojamos klass Calendar_controller ir Calendar_router, kurios integruoja gautus
+duomenis  kalendoriaus valdymo scenarijus. Operacijos get_all_calendars(), get_calendar() ir
+check_if_exists() leidzia valdyti kalendoriaus egzistavim ir prieig prie jo, o marsrutizavimo
+operacijos uztikrina nuosekl scenarij vykdym.
+
+Kalendoriaus posistemio klasi modelis
+
+Kalendoriaus posistemio klasi modelis skirtas parodyti, kaip sistemoje realizuojamas
+rekomendacinio veiksm kalendoriaus sudarymas, perzira ir vykdymas. Diagramoje atsispindi
+pagrindiniai komponentai bei j tarpusavio rysiai, per kuriuos gyvendinami kalendoriaus formavimo
+ir uzduoci valdymo scenarijai. Modelis leidzia suprasti, kaip sistemoje generuojami ir apdorojami
+kalendoriniai veiksmai, remiantis augal bsenomis, aplinkos slygomis ir naudotojo pasirinktais
+parametrais.
+
+                                                                                                                     111
+74 pav. Kalendoriaus posistemio klasi modelis, 1 dalis
+                                                                                       112
+                                75 pav. Kalendoriaus posistemio klasi modelis, 2 dalis
+
+Sio posistemio pagrind sudaro kalendorini uzduoci generavimo ir valdymo logika, paskirstyta
+kelioms tarpusavyje susijusioms klasms. Svarbiausia jo paskirtis ­ sudaryti rekomenduojam
+veiksm rinkin konkreciai datai, atsizvelgiant  augal vystymosi eig, istorinius duomenis ir
+aplinkos slygas.
+
+Klas Task_calendar_controller realizuoja pagrindin kalendoriaus sudarymo logik. Joje
+apibrztos operacijos get_tasks_for_date(), validate_forecast(), process_forecast(),
+validate_plant_care(), process_plant_care(), calculate_growing_time(), calculate_days() ir
+check_if_any_tasks_needed(). Sios operacijos rodo, kad kalendorini uzduoci generavimas
+vykdomas etapais: pirmiausia vertinami isoriniai veiksniai, tuomet tikrinami augal prieziros
+reikalavimai, apskaiciuojamas augimo laikas bei nustatoma, ar konkreciai dienai reikalingi
+veiksmai. Taip pat si klas apima operacijas check_if_weather_is_extreme(), check_if_last_plant()
+ir check_if_last_day(), kurios leidzia identifikuoti specifines slygas ir ribinius atvejus, turincius
+takos uzduoci generavimui.
+
+Pagalbin funkcij siame procese atlieka klas Plant_state_controller, atsakinga uz augalo bsenos
+nustatym ir augimo trukms skaiciavim per operacijas get_date() ir calculate_growing_time(). Ji
+tiekia reikalingus duomenis kalendoriaus sudarymo logikai.
+
+Aukstesnio lygmens kalendori valdymas realizuojamas klasje Calendar_controller. Joje pateiktos
+operacijos get_all_calendars(), get_calendar() ir check_if_exists(), kurios leidzia gauti esamus
+kalendorius, patikrinti j egzistavim bei inicijuoti j perzir ar krim. Taip uztikrinama, kad
+kalendoriaus duomenys bt valdomi nuosekliai ir nebt kuriami pertekliniai rasai.
+
+Uzduoci bsen valdymui naudojama klas Task_controller, kuri apima operacijas get_all_tasks(),
+complete() ir reject(). Si klas leidzia keisti uzduoci bsen, pavyzdziui, pazymti jas kaip
+vykdytas arba atmestas, ir taip islaikyti kalendoriaus aktualum.
+
+                                                                                                                     113
+Naudotojo veiksm nukreipim tarp scenarij uztikrina klass Calendar_router ir Task_router.
+Klas Calendar_router apibrzia perjimus tarp kalendoriaus funkcionalumo bsen per operacijas
+route_to_calendar_list(), route_to_view(), route_to_plot_list() ir route_to_end(). Klas Task_router
+analogiskai valdo perjimus tarp uzduoci scenarij per operacijas route_to_all_tasks(),
+route_to_reject() ir route_to_complete().
+
+Naudotojo ssajos lygmenyje pateiktos klass Calendar_view_page, Calendar_list_page ir
+Create_calendar_page. Klas Calendar_view_page realizuoja konkretaus kalendoriaus perzir ir
+sveik su uzduotimis, apimdama operacijas select_date(), view_calendar(), view_tasks(),
+select_task(), select_item_consumption() ir perjimo valdymo operacijas. Klas Calendar_list_page
+skirta kalendori sraso atvaizdavimui ir pasirinkimui per operacijas select_calendar(),
+show_calendar_list() ir select_end_view(). Klas Create_calendar_page leidzia inicijuoti naujo
+kalendoriaus krim, vedant pradinius parametrus per operacijas show_calendar_create_page() ir
+input_date().
+
+Modelio lygmenyje pateiktos pagrindins domeno klass, susijusios su kalendorini uzduoci
+formavimu. Klas Calendar apibrzia kalendoriaus esyb ir turi operacijas, skirtas kalendoriaus
+krimui, gavimui ir susijusi uzduoci valdymui. Klas Task reprezentuoja konkreci kalendorin
+uzduot ir apima operacijas, susijusias su uzduoci gavimu pagal dat, bsenos keitimu bei
+filtravimu. Klas Task_calendar apibrzia rys tarp kalendoriaus ir uzduoci, leidziant struktruoti
+uzduotis konkretaus kalendoriaus kontekste.
+
+Papildomos domeno klass, tokios kaip Plant, Plant_zone, Plot, Weather_forecast ir Plant_care,
+naudojamos kaip duomen saltiniai kalendoriaus sudarymo procese. Sios klass teikia informacij
+apie augalus, j issidstym, augimo slygas, prieziros reikalavimus ir aplinkos veiksnius.
+Remiantis siais duomenimis, kalendoriaus logika generuoja kontekstines uzduotis, pritaikytas
+konkreciai situacijai.
+
+Bendruomens posistemio klasi modelis
+
+Bendruomens posistemio klasi modelis atspindi naudotoj tarpusavio sveik, susijusi su sklyp
+informacijos viesinimu, ras krimu ir j perzira. Diagramoje isskirti pagrindiniai komponentai ir
+j rysiai, per kuriuos realizuojami bendruomens turinio valdymo scenarijai. Modelis parodo, kaip
+sistemoje kuriami, pateikiami ir administruojami bendruomens rasai bei kaip tarp naudotoj
+dalijamasi informacija.
+
+                                                                                                                     114
+                                    76 pav. Bendruomens posistemio klasi modelis
+
+Sis posistemis orientuotas  naudotoj generuojamo turinio krim, publikavim ir perzir. Jis
+sudaro slygas dalintis informacija apie sklypus bei augalus ir taip skatina naudotoj
+bendradarbiavim bei patirties mainus.
+
+Klas Community_controller realizuoja pagrindin bendruomens funkcionalumo logik. Joje
+apibrztos operacijos get_shared_plot(), get_community_posts(), create_post(), delete_post(),
+validate_post() ir get_public_posts(). Sios operacijos leidzia gauti viesai bendrinamus sklypus,
+perzirti bendruomens rasus, kurti naujus rasus bei juos salinti. Taip pat atliekamas ras
+validavimas pries j publikavim, uztikrinant duomen korektiskum.
+
+Naudotojo keli tarp skirting bendruomens scenarij valdo klas Community_router, kuri apima
+operacijas route_to_community_plots(), route_to_end_view(), route_to_plot_view(),
+route_to_create_post() ir route_to_view_post(). Ji uztikrina nuosekl perjim tarp bendruomens
+funkcionalumo bsen, priklausomai nuo naudotojo atliekam veiksm.
+
+Naudotojo ssajos lygmenyje pateiktos klass Community_plot_list_page, Create_post_page,
+View_post_page ir Community_plot_view_page. Klas Community_plot_list_page skirta
+bendrinam sklyp sraso atvaizdavimui ir pasirinkimui per operacijas show_community_plots_list()
+ir select_plot(). Klas Create_post_page leidzia naudotojui sukurti nauj ras, pasirenkant sklyp ir
+pateikiant turin per operacijas show_create_form(), select_plot() ir submit_post(). Klas
+View_post_page skirta konkretaus raso perzirai, o Community_plot_view_page ­ pasirinkto sklypo
+informacijos atvaizdavimui.
+
+Modelio lygmenyje pateiktos pagrindins domeno klass Plot ir Community_post. Klas Plot apraso
+sklypo duomenis ir apima atributus, susijusius su sklypo identifikacija, dydziu, sukrimo data ir
+bendrinimo nustatymais. Operacijos, tokios kaip get_plot(), get_version_plot(), get_all_plots(),
+update_share_settings() ir get_all_shared(), leidzia valdyti sklypo duomenis bei j prieinamum
+
+                                                                                                                     115
+kitiems naudotojams. Klas Community_post reprezentuoja bendruomens ras ir apima atributus,
+nusakancius raso turin, pavadinim, viesumo nustatymus ir sukrimo dat. Operacijos create_post(),
+delete_post(), get_posts(), get_by_garden_owner() ir get_public_posts() leidzia valdyti ras
+gyvavimo cikl ir uztikrina prieig prie skirting ras rinkini.
+Inventoriaus posistemio klasi modelis
+Inventoriaus posistemio klasi modelis parodo, kaip sistemoje realizuojama ranki ir medziag
+apskaita bei j valdymas. Diagramoje pateikiami komponentai ir j rysiai, per kuriuos gyvendinami
+inventoriaus objekt krimo, atnaujinimo, salinimo ir naudojimo scenarijai. Modelis nusako, kaip
+valdomi inventoriaus duomenys ir kaip uztikrinama j kiekio bei panaudojimo kontrol.
+
+                                     77 pav. Inventoriaus posistemio klasi modelis
+                                                                                                                     116
+Sis posistemis skirtas ranki ir medziag apskaitai, j kieki valdymui bei panaudojimo stebsenai.
+Jis leidzia naudotojui efektyviai kontroliuoti turimus resursus ir uztikrinti, kad vykdant darzo
+prieziros veiksmus bt prieinami reikalingi objektai.
+Pagrindin inventoriaus logika sutelkta klasje Inventory_controller. Joje apibrztos operacijos
+prepare_delete(), delete_item(), select(), prepare_edit(), validate_edit(), validate(), prepare_add(),
+validate_addition(), open_inventory(), select_action(), end_view(), update_amount(),
+validate_amount(), reject_delete(), select_add(), select_edit(), select_delete() ir
+select_item_consumption(). Sios operacijos rodo, kad inventoriaus valdymas vykdomas nuosekliais
+etapais: pirmiausia pasirenkama operacija, tuomet atliekamas pasirengimas, vykdomas duomen
+validavimas ir tik po to atliekamas konkretus veiksmas.
+Perjimus tarp inventoriaus scenarij valdo klas Inventory_router, kuri apima operacijas
+route_to_list(), route_to_add(), route_to_edit() ir route_to_delete(). Ji atsakinga uz naudotojo
+veiksm nukreipim  atitinkamus inventoriaus valdymo scenarijus.
+Naudotojo ssajos lygmenyje pateiktos klass Inventory_list_page, Add_item_page,
+Edit_item_page ir Delete_item_page. Klas Inventory_list_page skirta vis inventoriaus objekt
+sraso atvaizdavimui ir valdymui, apimant operacijas show_list(), add_item(), edit_item(),
+delete_item(), refresh_list() bei pasirinkimo operacijas. Klas Add_item_page leidzia sukurti nauj
+inventoriaus objekt per operacijas show_add_form() ir submit_changes(). Klas Edit_item_page
+skirta esamo objekto redagavimui, o Delete_item_page ­ objekto salinimo procesui, skaitant
+patvirtinimo ir atmetimo veiksmus.
+Modelio lygmenyje pateikta klas Inventory_item, kuri apraso inventoriaus objekt. Si klas apima
+atributus, nusakancius objekto pavadinim, tip ir kiek. Operacijos create(), update(), delete(),
+select(), get_all(), get_amount(), update_amount(), get_needed_items() ir check_if_enough() leidzia
+valdyti objekto gyvavimo cikl bei tikrinti, ar turim resurs pakanka konkretiems veiksmams
+atlikti.
+Augal valdymo posistemio klasi modelis
+
+Augal valdymo posistemio klasi modelis detalizuoja augal duomen valdymo, bsen sekimo ir
+istorijos kaupimo funkcionalum. Diagramoje pateikti pagrindiniai komponentai ir j tarpusavio
+rysiai, per kuriuos gyvendinami augal krimo, atnaujinimo, salinimo bei bsenos registravimo
+scenarijai. Modelis leidzia suprasti, kaip apdorojami augal duomenys ir kaip sistemoje fiksuojami
+j pokyciai laiko atzvilgiu.
+
+                                                                                                                     117
+78 pav. Augal valdymo posistemio klasi modelis, 1 dalis
+
+79 pav. Augal valdymo posistemio klasi modelis, 2 dalis
+                                                                                         118
+Siame posistemyje pagrindinis dmesys skiriamas augal informacijos kaupimui, j bsen
+stebjimui ir istorini duomen analizei. Jis suteikia galimyb ne tik valdyti augal duomenis, bet ir
+registruoti j vystymosi pokycius.
+
+Klas Plant_controller realizuoja pagrindin augal valdymo logik. Joje apibrztos operacijos
+get_all_plants(), get_plants(), validate_data(), get_plant() ir delete(). Sios operacijos leidzia gauti
+augal srasus, pasirinkti konkret augal, validuoti vedamus duomenis bei vykdyti augalo
+salinim.
+
+Navigacijai tarp skirting augal valdymo scenarij naudojama klas Plant_router, kuri apima
+operacijas route_to_plant_list(), route_to_filtered_list(), route_to_create(), route_to_view(),
+route_to_delete() ir route_to_edit(). Ji nukreipia naudotojo veiksmus  atitinkamas sistemos
+bsenas.
+
+Augal bsen registravimo funkcionalumas realizuojamas per klas Plant_condition_controller,
+kurioje apibrztos operacijos get_all_plants(), submit_condition() ir validate(). Si klas leidzia
+registruoti naujus augalo bsenos rasus, uztikrinant, kad pateikti duomenys atitikt nustatytus
+reikalavimus.
+
+Papildomai naudojama klas Plant_condition_router, kuri apima operacijas get_all_plants(),
+select_action() ir end(), uztikrinancias perjim tarp bsenos registravimo scenarij.
+
+Klas Condition_history_controller atsakinga uz augal bsenos istorijos valdym. Joje apibrztos
+operacijos plant_history(), get_plot() ir get_plant_state_data(), kurios leidzia gauti istorinius
+duomenis apie augalo bkl bei juos pateikti analizei ar perzirai.
+
+Naudotojo ssajos lygmenyje pateiktos klass Plant_list_page, View_plant_page,
+Create_plant_page, Edit_plant_page, Delete_plant_page, Plant_filter_page, Plant_condition_page ir
+Condition_history_page. Klas Plant_list_page skirta augal sraso atvaizdavimui ir filtravimui,
+View_plant_page ­ konkretaus augalo perzirai, o Create_plant_page, Edit_plant_page ir
+Delete_plant_page ­ atitinkamai augalo krimui, redagavimui ir salinimui. Plant_filter_page leidzia
+taikyti filtrus augal srasui, Plant_condition_page ­ registruoti nauj augalo bsen, o
+Condition_history_page ­ perzirti istorinius bsenos duomenis.
+
+Modelio lygmenyje pateikta pagrindin klas Plant, kuri apraso augalo esyb ir apima atributus,
+susijusius su augalo tipu, augimo trukme, rekomenduojamomis aplinkos slygomis, pasodinimo
+data bei bsenos informacija. Operacijos get_plant_data(), update_condition(), get_all_plants(),
+get_version_plants(), delete_all(), update(), get_rest_time(), assign_plant_to_zone() ir kitos leidzia
+valdyti augalo gyvavimo cikl bei jo sveik su kitais sistemos komponentais.
+
+Klas Plant_condition_history skirta augalo bsenos istorijos saugojimui. Ji apima atributus,
+nusakancius bsenos tip, matavimo dat, pastabas ir nuotraukas. Operacijos get_history() ir
+create_record() leidzia kaupti ir gauti istorinius rasus, kurie yra svarbs analizei ir sprendim
+primimui.
+
+                                                                                                                     119
+Sklypo plano posistemio klasi modelis
+Sklypo plano valdymo posistemio klasi modelis apima sklypo planavimo, zon formavimo, augal
+isdstymo bei su tuo susijusios analizs ir istorijos kaupimo funkcionalum. Diagramoje isskirti
+pagrindiniai komponentai ir j rysiai, kurie nusako sklypo plano krimo, redagavimo, perziros ir
+analizs scenarij realizavim sistemoje. Modelis parodo, kaip valdomi sklypo struktros duomenys
+ir kaip jie panaudojami kituose procesuose.
+
+                                80 pav. Sklypo plano posistemio klasi modelis, 1 dalis
+
+                                                                                                                     120
+                                81 pav. Sklypo plano posistemio klasi modelis, 2 dalis
+
+Sis posistemis sudaro pagrind daugeliui kit sistemos funkcij, nes jame apibrziama fizin darzo
+struktra, augal isdstymas ir erdvinis planavimas. Be to, siame lygmenyje kaupiami duomenys
+vliau naudojami analizje, istorijos sekime ir rotacijos planavime.
+
+Klas Plot_controller realizuoja pagrindin sklypo valdymo logik. Joje apibrztos operacijos,
+susijusios su sklypo krimu, redagavimu, validavimu ir salinimu, tokios kaip create(), update(),
+delete(), validate() bei sklypo duomen gavimo operacijos. Si klas uztikrina, kad sklypo duomenys
+bt tvarkomi nuosekliai ir atitikt nustatytus reikalavimus.
+
+Naudotojo veiksm nukreipim tarp skirting scenarij uztikrina klas Plot_router, kuri apima
+daugyb operacij, skirt perjimui tarp sklypo plano valdymo scenarij, skaitant krim,
+redagavim, zon valdym, analiz ir kitus veiksmus. Si klas palaiko nuosekli naudotojo sveikos
+eig skirtingose sistemos bsenose.
+
+Analizs funkcionalumas realizuojamas per klas Analyze_controller, kuri apima operacijas, skirtas
+sklypo duomen analizei, tokioms kaip derliaus, augal isdstymo ar kit rodikli vertinimas. Ji
+leidzia apdoroti sukauptus duomenis ir generuoti zvalgas, kurios gali bti naudojamos sprendim
+primimui.
+
+Istorijos kaupimas realizuojamas per klas History_controller, kuri leidzia saugoti ir gauti sklypo
+plano pokyci istorij. Operacijos, susijusios su istorini duomen gavimu, uztikrina galimyb
+analizuoti ankstesnius sprendimus ir j poveik.
+
+                                                                                                                     121
+Papildomai naudojama klas Rotation_controller, kuri atsakinga uz augal rotacijos planavim. Joje
+apibrztos operacijos leidzia tikrinti rotacijos taisykles, nustatyti augal perklim tarp zon ir
+uztikrinti, kad bt laikomasi agronomini princip.
+Klas Harvest_controller skirta derliaus duomen valdymui, leidzianti registruoti ir analizuoti
+derliaus rezultatus. Tuo tarpu klas Share_controller realizuoja sklypo dalijimosi funkcionalum,
+leidziant konfigruoti prieigos teises ir bendrinti sklypo duomenis su kitais naudotojais.
+Papildomos klass, tokios kaip Export_controller ir Scheme_controller, skirtos duomen eksportui
+bei schem generavimui, uztikrinant galimyb pateikti sklypo plano informacij isorinms sistemoms
+ar vizualizacijai.
+Modelio lygmenyje pagrindins domeno klass yra Plot, Plant_zone, Plant, Rotation_history ir
+Access_rights. Klas Plot apraso sklypo esyb, apimanci jo identifikacinius ir struktrinius
+duomenis bei operacijas, skirtas si duomen valdymui. Klas Plant_zone reprezentuoja sklypo zonas
+ir leidzia susieti konkrecius augalus su fizinmis vietomis sklype. Klas Plant apraso augalus ir j
+savybes, kurios naudojamos planavimo ir analizs procesuose.
+Klas Rotation_history skirta augal rotacijos duomen kaupimui, leidzianti sekti augal isdstymo
+pokycius laikui bgant. Klas Access_rights apibrzia prieigos teises prie sklypo, uztikrindama
+skirting naudotoj teisi valdym.
+Naudotoj posistemio klasi modelis
+Naudotoj valdymo ir autentifikavimo posistemio klasi modelis parodo, kaip sistemoje
+realizuojama registracija, prisijungimas, atsijungimas ir profilio valdymas. Diagramoje pateikti
+pagrindiniai komponentai ir j rysiai, kurie apibrzia naudotojo autentifikavimo ir paskyros
+valdymo scenarij realizavim sistemoje. Modelis leidzia matyti, kaip apdorojami naudotoj
+duomenys ir kaip uztikrinamas saugus prieigos prie sistemos valdymas.
+
+                                                                                                                     122
+                                      82 pav. Naudotoj posistemio klasi modelis
+
+Sio posistemio paskirtis ­ valdyti naudotoj paskyras, autentifikavimo proces ir asmenini duomen
+tvarkym. Jis sudaro pagrind saugiai prieigai prie kit sistemos funkcij ir leidzia individualizuoti
+naudotojo patirt.
+
+Klas Sign_up_controller realizuoja naudotojo registracijos logik. Joje apibrztos operacijos
+submit_registration() ir validate(), kurios leidzia apdoroti registracijos formos duomenis bei patikrinti
+j korektiskum pries sukuriant nauj naudotojo paskyr.
+
+Klas Login_controller atsakinga uz prisijungimo proces. Operacijos submit_login(),
+validate_login() ir create_session() uztikrina, kad naudotojo pateikti duomenys bt patikrinti, o
+skmingo autentifikavimo atveju bt sukurta aktyvi sesija.
+
+Klas Logout_controller realizuoja naudotojo atsijungimo funkcionalum per operacijas
+request_logout(), destroy_session() ir redirect_to_login(), taip uztikrinant sesijos nutraukim ir saug
+atsijungim is sistemos.
+
+Navigacijos valdymui naudojama klas Auth_router, kuri apima operacijas route_to_sign_up(),
+redirect_to_login() ir route_to_login(). Si klas atsakinga uz naudotojo nukreipim  atitinkamas
+autentifikavimo proceso bsenas.
+
+Naudotojo profilio valdymas realizuojamas per klases Profile_controller ir Profile_router. Klas
+Profile_controller apima operacijas load_profile(), submit_edit() ir validate(), kurios leidzia
+
+                                                                                                                     123
+perzirti ir redaguoti naudotojo duomenis. Klas Profile_router uztikrina navigacij  profilio
+redagavimo scenarijus.
+Slaptazodzio atkrimo funkcionalumas realizuojamas per klas Password_reset_controller, kurioje
+apibrztos operacijos generate_reset_code(), start_reset_code_generation(), request_reset(),
+verify_code(), submit_new_password() ir validate_password(). Sios operacijos nusako vis
+slaptazodzio atkrimo proces ­ nuo uzklausos inicijavimo iki naujo slaptazodzio nustatymo.
+Papildomai naudojama klas Forgot_password_router, kuri apima operacijas
+route_to_forgot_password() ir open_new_password_form(), leidziancias valdyti slaptazodzio
+atkrimo scenarijaus eig.
+Naudotojo ssajos lygmenyje pateiktos klass Sign_up_page, Login_page, Home_page, Main_page,
+Profile_page, Forgot_password_page ir Reset_password_page. Sios klass realizuoja skirtingas
+naudotojo sveikos su sistema bsenas, leidziancias registruotis, prisijungti, perzirti pagrindin
+sistemos lang, redaguoti profil bei atkurti slaptazod.
+Modelio lygmenyje pateiktos klass User ir Profile. Klas User apraso naudotojo paskyros duomenis,
+tokius kaip el. pastas, slaptazodis, rol ir atkrimo kodas, bei operacijas, susijusias su naudotojo
+duomen valdymu. Klas Profile apima papildom naudotojo informacij, toki kaip vardas, pavard
+ir paskutinio prisijungimo duomenys, bei operacijas, skirtas si duomen valdymui.
+3.5. Login duomen bazs schema
+Siame poskyryje pateikiama suprojektuotos informacins sistemos login duomen bazs schema,
+kurioje atvaizduojamos pagrindins duomen struktros, j tarpusavio rysiai, pirminiai ir isoriniai
+raktai bei kiti duomen vientisumui uztikrinti reiksmingi elementai. Schema sudaryta remiantis
+dalykins srities analizs metu identifikuotomis esybmis ir j rysiais bei realizuoja sistemos
+funkciniams reikalavimams gyvendinti reikaling duomen model.
+
+                                                                                                                     124
+83 pav. Login duomen bazs schema, 1 dalis
+
+84 pav. Login duomen bazs schema, 2 dalis
+                                                                                  125
+Login duomen bazs schema sukurta taikant reliacins duomen bazs modelio principus.
+Kiekviena dalykins srities esyb transformuota  atskir lentel, o rysiai tarp lenteli realizuojami
+naudojant isorinius raktus. Tokiu bdu uztikrinamas duomen struktriskumas, vientisumas ir
+nuoseklus duomen apdorojimas.
+
+Naudotoj ir prieigos valdymo struktra realizuojama naudojant lenteles ,,User", ,,Profile" ir
+,,Garden_owner". Lentelje ,,User" saugomi pagrindiniai sistemos naudotoj duomenys, ,,Profile"
+apibrzia naudotojo profilio informacij, o ,,Garden_owner" nusako naudotojo vaidmen sistemoje
+bei jo rys su valdomais objektais. Rysiai tarp naudotoj ir sklyp realizuojami per tarpines
+struktras, leidziancias modeliuoti daug su daugeliu tipo (N:M) rys, vienas naudotojas gali bti
+susietas su keliais sklypais, o vienas sklypas gali turti kelis savininkus.
+
+Sklypo struktros ir planavimo aspektai realizuojami naudojant lenteles ,,Plot" ir ,,Plant_zone".
+Lentelje ,,Plot" apibrziami sklypo atributai, tokie kaip pavadinimas, plotas ir geometrin
+struktra, o lentel ,,Plant_zone" nusako sklypo vidines zonas. Tarp si lenteli realizuotas vienas
+su daugeliu (1:N) tipo rysys, kai vienas sklypas gali turti kelias augal zonas.
+
+Augal duomen modelis realizuojamas naudojant lenteles ,,Plant" ir ,,Plant_care". Lentel ,,Plant"
+saugo konkreci augal egzempliori duomenis ir j rys su augal zona, o lentel ,,Plant_care"
+apibrzia bendrines augal prieziros charakteristikas. Tokia struktra leidzia atskirti konkrecius
+augal egzempliorius nuo j prieziros taisykli ir uztikrina duomen normalizavim.
+
+Augal bsenos kitimo stebjimas realizuojamas naudojant lentel ,,Plant_condition_history",
+kurioje kaupiami augalo bkls pokyciai laiko atzvilgiu. Augal rotacijos planavimo ir analizs
+funkcionalumui gyvendinti naudojama lentel ,,Rotation_history", leidzianti fiksuoti augal
+pasodinimo ir kaitos informacij skirtingais laikotarpiais.
+
+Veiksm planavimo ir vykdymo funkcionalumas realizuojamas naudojant lenteles ,,Task" ir
+,,Task_calendar". Lentel ,,Task" apibrzia sistemoje registruojamus darbus, j tip ir bsen, o
+,,Task_calendar" nusako si veiksm laiko planavim. Papildomai naudojama lentel
+,,Weather_forecast", kuri leidzia integruoti aplinkos slyg duomenis  veiksm planavimo proces.
+
+Inventoriaus valdymo funkcionalumas realizuojamas naudojant lentel ,,Inventory_item", kurioje
+saugoma informacija apie turimus rankius ir medziagas bei j kiekius. Socialinio bendradarbiavimo
+aspektas realizuojamas naudojant lentel ,,Community_post", leidzianci naudotojams kurti ir
+dalintis rasais.
+
+                                                                                                                     126
+Rezultat apibendrinimas ir isvados
+Remiantis darbo metu atlikta dalykins srities analize ir suformuotais modeliais, suformuluotos sios
+isvados:
+
+    1. Atlikta asmeninio sodo ar darzo valdymo dalykins srities analiz parod, kad veikla pasizymi
+         sezoniskumu, cikliskumu ir didele priklausomybe nuo istorini duomen. Nustatyta, kad
+         fragmentiskas informacijos kaupimas ir rankinis planavimas riboja galimybes uztikrinti
+         nuosekl rotacijos planavim, ilgalaik analiz ir duomenimis pagrst sprendim primim,
+         todl identifikuotas specializuotos informacins sistemos poreikis.
+
+    2. Sudaryti veiklos tiksl, panaudojimo atvej, proces ir esybi modeliai leido sistemiskai
+         apibrzti kompiuterizuojamus veiklos procesus ir suformuoti pagrst funkcini bei
+         nefunkcini reikalavim pagrind. Modeliavimas uztikrino nuosekl perjim nuo dalykins
+         analizs prie technologini sprendim parinkimo.
+
+    3. Atlikta esam inzinerini sprendim ir realizavimo technologij analiz pagrind integruoto,
+         reliaciniu duomen modeliu grindziamo ,,web" sprendimo pasirinkim. Nustatyta, kad
+         sistemos pobdis reikalauja reliacins duomen bazs, brandzios ORM infrastruktros ir
+         architektros, leidziancios realizuoti sudtingus tarpusavio rysius bei uztikrinti duomen
+         integralum.
+
+    4. Suformuluoti funkciniai ir nefunkciniai reikalavimai bei parengti j realizacij detalizuojantys
+         modeliai leido aiskiai apibrzti sistemos funkcionalumo ribas, naudotoj sveikas ir
+         kokybinius veikimo kriterijus. Tai sudar nuosekl pagrind sistemos projektavimui ir
+         uztikrino reikalavim atsekamum nuo dalykins analizs iki projektini sprendim.
+
+    5. Parengtas dalykins srities esybi klasi modelis atspindi kompleksinius darzo valdymo
+         duomen rysius, skaitant daugialyp naudotoj sveik, istorini duomen kaupim ir
+         planavimo proces integracij. Modelis sudaro prielaidas efektyviam duomen saugojimui,
+         analizavimui ir panaudojimui sprendim primimo procese.
+
+    6. Atliktas sistemos projektavimas ir pasirinkt sprendim pagrindimas leidzia teigti, kad
+         suformuotas sistemos modelis yra tinkamas tolesnei realizacijai, uztikrinant sistemos
+         pleciamum, modulin struktr ir galimyb integruoti papildomas funkcijas, susijusias su
+         duomen analize ir rekomendacini sprendim generavimu.
+
+                                                                                                                     127
+                                  Literatros srasas
+
+1. OBJECT MANAGEMENT GROUP. Unified Modeling Language (UML) Version
+    2.5.1 Specification [interaktyvus]. 2017. [zirta 2026-03-02]. Prieiga per internet:
+    https://www.omg.org/spec/UML/2.5.1/About-UML
+
+2. OBJECT MANAGEMENT GROUP. Business Process Model and Notation (BPMN)
+    Version 2.0.2 [interaktyvus]. 2014. [zirta 2026-03-02]. Prieiga per internet:
+    https://www.omg.org/spec/BPMN/2.0.2/About-BPMN
+
+3. FIELDING, Roy Thomas. Architectural Styles and the Design of Network-based
+
+Software Architectures [interaktyvus]. Irvine: University of California, 2000. [zirta
+
+2026-03-02].  Prieiga  per                                        internet:
+
+https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf
+
+4. FOWLER, Martin. Patterns of Enterprise Application Architecture. Boston: Addison-
+    Wesley, 2003.
+
+5. STONEBRAKER, Michael. SQL databases v. NoSQL databases. Communications of
+    the ACM, 2010, t. 53, nr. 4, p. 10­11. DOI: 10.1145/1721654.1721659
+
+6. SMALL BLUE PRINTER. Garden Planner: Design your dream garden [interaktyvus].
+    [zirta 2026-03-02]. Prieiga per internet: https://smallblueprinter.com/garden/
+
+7. PLANTA. Planta: Plant care app [interaktyvus]. [zirta 2026-03-02]. Prieiga per
+    internet: https://getplanta.com/
+
+8. SMARTGARDENER. Vegetable Garden Planner [interaktyvus]. [zirta 2026-03-
+    02]. Prieiga per internet: https://www.smartgardener.com/
+
+9. VISUOTIN LIETUVI ENCIKLOPEDIJA. Sodinink bendrija [interaktyvus].
+    [zirta 2026-04-02]. Prieiga per internet: https://www.vle.lt/straipsnis/sodininku-
+    bendrija/
+
+10. MIKUCIONIEN, Romut. Dirvozemio organin medziaga ­ dirvozemio sveikatos
+    saltinis [interaktyvus]. 2022-04-06. [zirta 2026-04-02]. Prieiga per internet:
+    https://www.agroakademija.lt/s/augalininkyste/dirvozemio-organine-medziaga-
+    dirvozemiosveikatos-saltinis-13007/
+
+11. LIETUVOS HIDROMETEOROLOGIJOS TARNYBA. Meteo.lt API [interaktyvus].
+    [zirta 2026-04-02]. Prieiga per internet: https://api.meteo.lt/
+
+12. GALHENA, Dilrukshi Hashini; FREED, Russell; MAREDIA, Karim M. Home
+    gardens: a promising approach to enhance household food security and wellbeing.
+    Agriculture & Food Security, 2013, 2(8). DOI: 10.1186/2048-7010-2-8
+
+                                                                  128
+13. MUDARE, Shingirai ir kt. Crop rotations synergize yield, nutrition, and revenue: a
+    meta-analysis. Nature Communications, 2025, 16, 9552. DOI: 10.1038/s41467-025-
+    64567-9
+
+14. HÄRDER, Theo; REUTER, Andreas. Principles of transaction-oriented database
+    recovery. ACM Computing Surveys, 1983, 15(4), p. 287­317. DOI: 10.1145/289.291
+
+15. MARTIN, James. Managing the Data-base Environment. Prentice-Hall, 1983. ISBN
+    9780135505823
+
+16. PERENUAL. Free Plant API Documentation [interaktyvus]. 2026. [zirta 2026-04-
+    02]. Prieiga per internet: https://www.perenual.com/docs/plant-open-api
+
+17. TUMMERS, Joep; KASSAHUN, A.; TEKINERDOGAN, Bedir. Obstacles and
+    features of Farm Management Information Systems: A systematic literature review.
+    Computers and Electronics in Agriculture, 2019, 157, p. 189­204. DOI:
+    10.1016/j.compag.2018.12.044
+
+                                                                                                       129
+                     Priedai
+
+Papildoma informacija ir dokumentai, neeinantys  pagrindin dokument. Kiekvienas priedas
+pradedamas naujame puslapyje.
+
+1 priedas. Kompiuterizuojam panaudojimo atvej specifikacijos
+
+Siame priede pateikiamos kompiuterizuojam panaudojimo atvej specifikacijos, kurios nebuvo
+trauktos  2.1 poskyr. Priede pateikiamos panaudojimo atvej specifikacij lentels bei si atvej
+scenarijus aprasancios veiklos diagramos.
+
+17 lentel. ,,Registruotis" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Registruotis
+Tikslas              Sukurti nauj naudotojo paskyr sistemoje, vedant registracijos duomenis ir uztikrinant j
+Aprasymas            korektiskum bei unikalum.
+                     Svecias inicijuoja registracijos proces. Sistema pateikia registracijos form,  kuri
+Pries slyga          naudotojas veda reikalingus duomenis. Sistema patikrina, ar registracijos forma uzpildyta
+Suzadinimo slyga     teisingai. Jei duomenys neteisingi arba neuzpildyti pilnai, sistema pateikia klaidos pranesim
+Po slyga             ir leidzia naudotojui pakoreguoti vestus duomenis. Jei forma uzpildyta teisingai, sistema
+                     tikrina, ar nurodytas el. pasto adresas dar nra naudojamas. Jei el. pastas jau registruotas,
+                     pateikiamas klaidos pranesimas ir naudotojui suteikiama galimyb vesti kit el. pasto
+                     adres. Jei el. pasto adresas yra unikalus, sistema issaugo naudotojo duomenis, sukuria
+                     paskyr ir pateikia pranesim apie skming registracij. Po to naudotojui pateikiamas
+                     prisijungimo puslapis. Panaudojimo atvejis uzbaigiamas, kai naudotojo paskyra sukuriama
+                     arba naudotojas nutraukia registracijos proces.
+                     Naudotojas nra autentifikuotas sistemoje.
+                     Svecias pasirenka funkcij ,,Registruotis".
+                     Sistemoje sukuriama nauja naudotojo paskyra ir naudotojui pateikiamas prisijungimo
+                     puslapis, arba pateikiamas klaidos pranesimas, jei registracija nepavyksta.
+
+                     85 pav. ,,Registruotis" panaudojimo atvejo veiklos diagrama
+                                                                                                               130
+18 lentel. ,,Prisijungti" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Prisijungti
+Tikslas              Suteikti registruotam naudotojui galimyb autentifikuotis sistemoje ir pasiekti pagrindines
+Aprasymas            sistemos funkcijas.
+                     Naudotojas inicijuoja prisijungimo proces. Sistema pateikia prisijungimo form.
+Pries slyga          Naudotojas gali pasirinkti priminti slaptazod, jei yra j pamirss. Tokiu atveju vykdomas
+Suzadinimo slyga     slaptazodzio priminimo procesas, po kurio naudotojas gali tsti prisijungim. Naudotojas
+Po slyga             veda prisijungimo duomenis, kuriuos sistema patikrina. Jei duomenys yra neteisingi,
+                     sistema pateikia klaidos pranesim ir leidzia naudotojui pakartotinai vesti duomenis. Jei
+                     prisijungimo duomenys yra teisingi, sistema autentifikuoja naudotoj, prijungia j prie
+                     sistemos ir pateikia pagrindin puslap. Panaudojimo atvejis uzbaigiamas, kai naudotojas
+                     skmingai prisijungia arba nutraukia prisijungimo proces.
+                     Naudotojas turi registruot paskyr sistemoje.
+                     Naudotojas pasirenka funkcij ,,Prisijungti".
+                     Naudotojas yra autentifikuotas sistemoje ir nukreiptas  pagrindin puslap, arba pateikiamas
+                     klaidos pranesimas, jei prisijungimas nepavyksta.
+
+                     86 pav. ,,Prisijungti" panaudojimo atvejo veiklos diagrama
+
+19 lentel. ,,Atsijungti" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Atsijungti
+Tikslas              Uzbaigti naudotojo sesij sistemoje, uztikrinant saug atsijungim ir prieigos nutraukim.
+Aprasymas            Naudotojas inicijuoja atsijungimo proces. Sistema pasalina aktyvios sesijos duomenis ir
+                     nutraukia naudotojo autentifikacij. Po sesijos nutraukimo sistema pateikia pranesim apie
+Pries slyga          skming atsijungim ir nukreipia naudotoj  prisijungimo puslap. Panaudojimo atvejis
+Suzadinimo slyga     uzbaigiamas, kai naudotojas yra atsijungs nuo sistemos ir jam pateikiamas prisijungimo
+Po slyga             langas.
+                     Naudotojas yra autentifikuotas sistemoje.
+                     Naudotojas pasirenka funkcij ,,Atsijungti".
+                     Naudotojo sesija yra nutraukta, jis nra autentifikuotas sistemoje ir jam pateikiamas
+                     prisijungimo puslapis.
+
+                                                                                 131
+                     87 pav. ,,Atsijungti" panaudojimo atvejo veiklos diagrama
+
+20 lentel. ,,Priminti slaptazod" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Priminti slaptazod
+Tikslas              Suteikti naudotojui galimyb atkurti pamirst slaptazod, naudojant el. pasto adres ir
+Aprasymas            atkrimo kod, uztikrinant saug tapatybs patvirtinim.
+                     Naudotojas inicijuoja slaptazodzio priminimo proces. Sistema pateikia el. pasto vedimo
+Pries slyga          form,  kuri naudotojas veda savo el. pasto adres. Sistema patikrina, ar nurodytas el.
+Suzadinimo slyga     pasto adresas egzistuoja duomen bazje. Jei el. pastas neegzistuoja, pateikiamas klaidos
+Po slyga             pranesimas ir naudotojas gali pakartoti vedim. Jei el. pasto adresas egzistuoja, sistema
+                     sugeneruoja atkrimo kod ir inicijuoja laisko siuntim per el. pasto server. El. pasto
+                     serveris gauna siuntimo uzklaus ir issiuncia laisk naudotojui. Naudotojas gauna laisk su
+                     atkrimo kodu. Sistema pateikia kodo vedimo lauk,  kur naudotojas veda gaut kod.
+                     Sistema patikrina vest atkrimo kod. Jei kodas neteisingas, pateikiamas klaidos
+                     pranesimas ir naudotojas gali pakartoti vedim arba sugeneruoti nauj kod. Jei kodas
+                     teisingas, sistema pateikia slaptazodzio keitimo form. Naudotojas veda nauj slaptazod, o
+                     sistema patikrina, ar jis atitinka nustatytus reikalavimus. Jei slaptazodis neatitinka
+                     reikalavim, pateikiamas klaidos pranesimas ir naudotojas gali pakartoti vedim. Jei
+                     slaptazodis tinkamas, sistema atnaujina slaptazod duomen bazje, pateikia pranesim apie
+                     skming pakeitim ir nukreipia naudotoj  prisijungimo form. Panaudojimo atvejis
+                     uzbaigiamas, kai slaptazodis skmingai pakeiciamas arba naudotojas nutraukia proces.
+                     Naudotojas turi registruot paskyr sistemoje.
+                     Naudotojas pasirenka funkcij ,,Priminti slaptazod".
+                     Naudotojo slaptazodis yra atnaujintas ir naudotojui pateikiama prisijungimo forma, arba
+                     pateikiamas klaidos pranesimas, jei procesas nepavyksta.
+
+                                                                                132
+         88 pav. ,,Priminti slaptazod" panaudojimo atvejo veiklos diagrama
+
+21 lentel. ,,Redaguoti paskyros duomenis" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis Redaguoti paskyros duomenis
+
+Tikslas  Suteikti naudotojui galimyb perzirti ir atnaujinti savo paskyros duomenis, uztikrinant
+
+         vedam duomen korektiskum.
+
+                                                                                                 133
+Aprasymas            Naudotojas inicijuoja paskyros duomen redagavimo proces. Sistema kelia esamus
+                     naudotojo paskyros duomenis ir pateikia redagavimo form. Naudotojas perziri esamus
+Pries slyga          duomenis ir veda naujus arba pakoreguotus duomenis. Sistema patikrina vest duomen
+Suzadinimo slyga     korektiskum. Jei duomenys yra nekorektiski, sistema pateikia klaidos pranesim ir leidzia
+Po slyga             naudotojui pakartotinai vesti duomenis. Jei duomenys yra korektiski, sistema atnaujina
+                     paskyros duomenis duomen bazje ir pateikia pranesim apie skming duomen
+                     issaugojim. Panaudojimo atvejis uzbaigiamas, kai duomenys skmingai atnaujinami arba
+                     naudotojas nutraukia redagavimo proces.
+                     Naudotojas yra autentifikuotas sistemoje.
+                     Naudotojas pasirenka funkcij ,,Redaguoti paskyros duomenis".
+                     Naudotojo paskyros duomenys yra atnaujinti sistemoje arba pateikiamas klaidos pranesimas,
+                     jei duomenys neatitinka reikalavim.
+
+89 pav. ,,Redaguoti paskyros duomenis" panaudojimo atvejo veiklos diagrama
+
+22 lentel. ,,Valdyti naudotoj paskyras" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Valdyti naudotoj paskyras
+Tikslas              Suteikti administratoriui galimyb perzirti, ieskoti ir salinti naudotoj paskyras,
+Aprasymas            uztikrinant efektyv naudotoj valdym sistemoje.
+                     Administratorius inicijuoja naudotoj paskyr valdymo proces. Sistema pateikia vis
+Pries slyga          naudotoj sras. Administratorius gali pasirinkti ieskoti konkretaus naudotojo. Tokiu atveju
+Suzadinimo slyga     sistema pateikia paieskos form,  kuri administratorius veda paieskos kriterijus. Sistema
+                     vykdo paiesk ir, jei naudotojai randami, pateikia rast naudotoj sras. Jei naudotoj
+                     nerandama, pateikiamas informacinis pranesimas. Administratorius pasirenka konkret
+                     naudotoj is sraso ir nurodo veiksm. Jei pasirenkama perzira, sistema pateikia naudotojo
+                     informacij, kuri administratorius gali perzirti. Jei pasirenkamas naudotojo salinimas,
+                     sistema pateikia salinimo uzklaus. Administratorius gali patvirtinti arba atsaukti salinim.
+                     Jei salinimas patvirtinamas, sistema pasalina naudotoj ir pateikia pranesim apie skming
+                     salinim. Jei salinimas atsaukiamas, sistema pateikia pranesim, kad salinimas nevyko.
+                     Administratorius gali tsti darb su kitais naudotojais arba uzbaigti proces. Baigus
+                     veiksmus, sistema pateikia pagrindin puslap. Panaudojimo atvejis uzbaigiamas, kai
+                     administratorius baigia naudotoj valdymo veiksmus.
+                     Administratorius yra autentifikuotas sistemoje ir turi administratoriaus teises.
+                     Administratorius pasirenka funkcij ,,Valdyti naudotoj paskyras".
+
+                                                                            134
+Po slyga  Naudotoj srasas gali bti perzirtas, konkretus naudotojas perzirtas arba pasalintas, o
+          sistema pateikia atitinkamus pranesimus apie atliktus veiksmus.
+
+          90 pav. ,,Valdyti naudotoj paskyras" panaudojimo atvejo veiklos diagrama
+                                                                                                            135
+23 lentel. ,,Valdyti darzo naudotoj prieigas" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Valdyti darzo naudotoj prieigas
+Tikslas              Suteikti darzo savininkui galimyb valdyti naudotoj prieigas prie sklypo, leidziant pridti
+Aprasymas            naujus naudotojus, keisti j prieigos teises arba pasalinti prieig.
+                     Darzo savininkas inicijuoja prieig valdymo proces. Sistema pateikia esam naudotoj ir j
+Pries slyga          prieigos teisi sras. Naudotojas pasirenka norim veiksm. Jei pasirenkama redaguoti ar
+Suzadinimo slyga     pasalinti esam prieig, savininkas pasirenka konkret naudotoj. Jei pasirenkamas prieigos
+Po slyga             pasalinimas, sistema pasalina naudotojo prieig prie sklypo. Jei pasirenkamas prieigos teisi
+                     keitimas, sistema pateikia prieigos lygio pasirinkim. Savininkas pasirenka nauj prieigos
+                     lyg, o sistema atnaujina naudotojo prieigos teises. Jei pasirenkama pridti nauj naudotoj,
+                     savininkas veda naudotojo duomenis. Sistema pateikia prieigos lygio pasirinkim,
+                     savininkas pasirenka lyg, o sistema issaugo naujas prieigos teises. Panaudojimo atvejis
+                     uzbaigiamas, kai prieigos teiss yra atnaujinamos, sukuriamos arba pasalinamos.
+                     Darzo savininkas yra autentifikuotas sistemoje ir turi teis valdyti sklypo prieigas.
+                     Darzo savininkas pasirenka funkcij ,,Valdyti prieigas".
+                     Naudotoj prieigos teiss yra atnaujintos, pridtos arba pasalintos pagal atlikt veiksm.
+
+91 pav. ,,Valdyti darzo naudotoj prieigas" panaudojimo atvejo veiklos diagrama
+
+24 lentel. ,,rasyti augalo bkl" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  rasyti augalo bkl
+Tikslas              Suteikti darzo savininkui galimyb uzregistruoti augalo bkls duomenis, siekiant kaupti
+                     istorinius duomenis ir stebti augalo bkls pokycius laikui bgant.
+Aprasymas            Darzo savininkas inicijuoja augalo bkls rasymo proces. Sistema pateikia augal sras,
+                     is kurio naudotojas pasirenka augal. Naudotojas gali pasirinkti perzirti pasirinkto augalo
+
+                                                                                136
+Pries slyga       ankstesnius bkls rasus. Tokiu atveju sistema pateikia augalo bkls istorij, po kurios
+Suzadinimo slyga  naudotojas gali tsti naujo raso krim. Naudotojas pasirenka kurti nauj bkls ras,
+Po slyga          sistema pateikia bkls vedimo form. Naudotojas veda bkls duomenis. Sistema
+                  patikrina vest duomen korektiskum. Jei duomenys yra neteisingi, pateikiamas klaidos
+                  pranesimas ir naudotojas gali pakartotinai vesti duomenis. Jei duomenys yra teisingi,
+                  sistema issaugo bkls ras ir pateikia pranesim apie skming issaugojim. Naudotojas
+                  gali tsti darb (vesti kit ras arba pasirinkti kit augal) arba baigti proces. Baigus
+                  veiksm, sistema pateikia pagrindin lang. Panaudojimo atvejis uzbaigiamas, kai bkls
+                  rasas issaugomas arba naudotojas nutraukia proces.
+                  Darzo savininkas yra autentifikuotas sistemoje ir sistemoje yra bent vienas augalas.
+                  Darzo savininkas pasirenka funkcij ,,rasyti augalo bkl".
+                  Sistemoje issaugomas naujas augalo bkls rasas arba pateikiamas klaidos pranesimas, jei
+                  duomenys nekorektiski.
+
+                  92 pav. ,,rasyti augalo bkl" panaudojimo atvejo veiklos diagrama
+                                                                                                                137
+25 lentel. ,,Dalintis sklypo duomenimis" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Dalintis sklypo duomenimis
+Tikslas              Suteikti darzo savininkui galimyb dalintis sklypo planu su kitais naudotojais, nustatant
+Aprasymas            dalijimosi parametrus ir prieigos teises.
+                     Darzo savininkas inicijuoja dalijimosi proces. Sistema pateikia naudotojo turim sklypo
+Pries slyga          plan sras, is kurio savininkas pasirenka plan. Sistema pateikia dalijimosi nustatym
+Suzadinimo slyga     form. Savininkas nurodo, su kuo ir kokiu bdu bus dalinamasi, pazymdamas norimus
+Po slyga             dalijimosi parametrus. Jei savininkas patvirtina pasirinkimus, sistema atnaujina dalijimosi
+                     nustatymus ir pateikia pranesim apie skming dalijimsi. Jei savininkas atsaukia veiksm,
+                     sistema pateikia pranesim, kad dalijimasis buvo atsauktas. Panaudojimo atvejis
+                     uzbaigiamas, kai dalijimosi nustatymai issaugomi arba veiksmas atsaukiamas.
+                     Darzo savininkas yra autentifikuotas sistemoje ir turi bent vien sukurt sklypo plan.
+                     Darzo savininkas pasirenka funkcij ,,Dalintis sklypo duomenimis".
+                     Sklypo plano dalijimosi nustatymai yra atnaujinti arba pateikiamas pranesimas, kad
+                     dalijimasis buvo atsauktas.
+
+93 pav. ,,Dalintis sklypo duomenimis" panaudojimo atvejo veiklos diagrama
+
+26 lentel. ,,Perzirti informacij bendruomenje" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Perzirti informacij bendruomenje
+Tikslas              Suteikti darzo savininkui galimyb perzirti kit naudotoj viesai dalinamus sklypo planus,
+Aprasymas            siekiant pasisemti idj ar analizuoti kit sprendimus.
+                     Darzo savininkas inicijuoja bendruomens plan perzir. Sistema kelia visus viesai
+Pries slyga          dalinamus sklypo planus ir pateikia bendruomens plan sras. Naudotojas gali pasirinkti
+Suzadinimo slyga     konkret kito naudotojo plan. Sistema pateikia pasirinkto plano perzir, kuri naudotojas
+Po slyga             gali analizuoti. Baigs perzirti plan, naudotojas gali grzti  bendruomens plan sras ir
+                     pasirinkti kit plan arba uzbaigti perzir. Jei naudotojas nusprendzia baigti veiksm,
+                     sistema pateikia pagrindin lang. Panaudojimo atvejis uzbaigiamas, kai naudotojas baigia
+                     bendruomens plan perzir.
+                     Darzo savininkas yra autentifikuotas sistemoje.
+                     Darzo savininkas pasirenka funkcij ,,Perzirti informacij bendruomenje".
+                     Naudotojui pateikiama bendruomens plan informacija arba pagrindinis langas, jei perzira
+                     baigiama.
+
+                                                                                 138
+94 pav. ,,Perzirti informacij bendruomenje" panaudojimo atvejo veiklos diagrama
+
+27 lentel. ,,Valdyti augalus" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Valdyti augalus
+Tikslas              Suteikti darzo savininkui galimyb perzirti, ieskoti, kurti, redaguoti ir salinti augalus,
+Aprasymas            uztikrinant augal duomen valdym sistemoje.
+                     Darzo savininkas inicijuoja augal valdymo proces. Sistema pateikia augal sras.
+Pries slyga          Naudotojas gali atlikti augal paiesk. Tokiu atveju sistema pateikia paieskos form,
+Suzadinimo slyga     naudotojas veda paieskos kriterijus, o sistema pateikia rast augal sras arba pranesim,
+                     jei augal nerasta. Naudotojas pasirenka veiksm su augalais. Jei pasirenkamas naujo augalo
+                     krimas, sistema pateikia duomen vedimo form. Naudotojas veda augalo duomenis,
+                     sistema patikrina j korektiskum. Jei duomenys neteisingi, pateikiamas klaidos pranesimas.
+                     Jei duomenys teisingi, sistema issaugo nauj augal ir pateikia pranesim apie skming
+                     sukrim. Jei pasirenkamas esamo augalo perzirjimas, sistema pateikia augalo
+                     informacij. Jei pasirenkamas augalo salinimas, sistema pateikia salinimo uzklaus.
+                     Naudotojas gali patvirtinti arba atsaukti veiksm. Patvirtinus, sistema pasalina augal ir
+                     pateikia pranesim apie skming pasalinim. Atsaukus ­ pateikiamas pranesimas, kad
+                     salinimas nevyko. Jei pasirenkamas augalo redagavimas, sistema pateikia redagavimo
+                     form su esamais duomenimis. Naudotojas veda pakeitimus, sistema patikrina duomenis.
+                     Jei duomenys neteisingi, pateikiamas klaidos pranesimas. Jei teisingi ­ pakeitimai issaugomi
+                     ir pateikiamas pranesimas apie skming redagavim. Naudotojas gali tsti darb su kitais
+                     augalais arba uzbaigti proces. Panaudojimo atvejis uzbaigiamas, kai naudotojas baigia
+                     augal valdymo veiksmus.
+                     Darzo savininkas yra autentifikuotas sistemoje.
+                     Darzo savininkas pasirenka funkcij ,,Valdyti augalus".
+
+                                                                                 139
+Po slyga  Augal duomenys gali bti sukurti, atnaujinti, perzirti arba pasalinti, o sistema pateikia
+          atitinkamus pranesimus apie atliktus veiksmus.
+
+          95 pav. ,,Valdyti augalus" panaudojimo atvejo veiklos diagrama
+                                                                                                      140
+28 lentel. ,,Registruoti derli" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Registruoti derli
+Tikslas              Suteikti darzo savininkui galimyb uzregistruoti surinkto derliaus kiek konkreciam augalui,
+Aprasymas            siekiant kaupti derliaus duomenis tolimesnei analizei.
+                     Darzo savininkas inicijuoja derliaus registravimo proces. Sistema pateikia augal sras, is
+Pries slyga          kurio naudotojas pasirenka augal. Pasirinkus augal, sistema pateikia uzklaus vesti
+Suzadinimo slyga     derliaus kiek. Naudotojas veda surinkto derliaus kiek. Sistema issaugo vest derliaus
+Po slyga             informacij kaip nauj derliaus ras. Panaudojimo atvejis uzbaigiamas, kai derliaus
+                     duomenys yra skmingai issaugomi.
+                     Darzo savininkas yra autentifikuotas sistemoje ir sistemoje yra bent vienas augalas.
+                     Darzo savininkas pasirenka funkcij ,,Registruoti derli".
+                     Sistemoje sukuriamas naujas derliaus rasas su nurodytu kiekiu.
+
+                     96 pav. ,,Registruoti derli" panaudojimo atvejo veiklos diagrama
+
+29 lentel. ,,Perzirti ranki ir medziag sras" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Perzirti ranki ir medziag sras
+Tikslas              Suteikti darzo savininkui galimyb perzirti ir valdyti turimus rankius bei medziagas,
+Aprasymas            leidziant juos papildyti, redaguoti ar pasalinti.
+                     Darzo savininkas inicijuoja inventoriaus perziros proces. Sistema pateikia ranki ir
+Pries slyga          medziag sras. Naudotojas perziri inventoriaus sras ir gali pasirinkti atlikti veiksmus
+Suzadinimo slyga     su inventoriaus rasais. Jei pasirenkamas inventoriaus papildymas, sistema leidzia vesti
+Po slyga             naujus ranki ar medziag duomenis ir juos issaugo sistemoje. Jei pasirenkamas
+                     inventoriaus redagavimas, sistema pateikia esam duomen redagavimo galimyb.
+                     Naudotojas atnaujina duomenis, o sistema issaugo pakeitimus. Jei pasirenkamas
+                     inventoriaus raso salinimas, sistema pasalina pasirinktus rankius ar medziagas is
+                     inventoriaus. Naudotojas gali tsti darb su inventoriaus rasais arba uzbaigti perzir.
+                     Panaudojimo atvejis uzbaigiamas, kai naudotojas baigia inventoriaus valdymo veiksmus.
+                     Darzo savininkas yra autentifikuotas sistemoje.
+                     Darzo savininkas pasirenka funkcij ,,Perzirti ranki ir medziag sras".
+                     Inventoriaus duomenys gali bti papildyti, atnaujinti arba pasalinti, o sistema atspindi
+                     atliktus pakeitimus.
+
+                                                                                       141
+97 pav. ,,Perzirti ranki ir medziag sras" panaudojimo atvejo veiklos diagrama
+
+30 lentel. ,,Papildyti inventori" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Papildyti inventori
+Tikslas              Suteikti darzo savininkui galimyb traukti naujus rankius ar medziagas  inventori,
+Aprasymas            uztikrinant vedam duomen korektiskum.
+                     Darzo savininkas inicijuoja inventoriaus papildymo proces. Sistema pateikia duomen
+Pries slyga          vedimo form. Naudotojas veda nauj ranki ar medziag duomenis. Sistema patikrina
+Suzadinimo slyga     vest duomen korektiskum. Jei duomenys yra neteisingi, sistema pateikia klaidos
+Po slyga             pranesim ir leidzia naudotojui pakartotinai vesti duomenis. Jei duomenys yra teisingi,
+                     sistema issaugo naujus inventoriaus duomenis ir pateikia pranesim apie skming
+                     inventoriaus papildym. Panaudojimo atvejis uzbaigiamas, kai duomenys skmingai
+                     issaugomi arba naudotojas nutraukia proces.
+                     Darzo savininkas yra autentifikuotas sistemoje.
+                     Darzo savininkas pasirenka funkcij ,,Papildyti inventori".
+                     Sistemoje sukuriamas naujas inventoriaus rasas arba pateikiamas klaidos pranesimas, jei
+                     duomenys nekorektiski.
+
+                                                                                                              142
+98 pav. ,,Papildyti inventori" panaudojimo atvejo veiklos diagrama
+
+31 lentel. ,,Redaguoti inventori" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Redaguoti inventori
+Tikslas              Suteikti darzo savininkui galimyb atnaujinti esam inventoriaus ras duomenis, uztikrinant
+Aprasymas            j korektiskum ir aktualum.
+                     Darzo savininkas inicijuoja inventoriaus redagavimo proces. Sistema pateikia uzklaus
+Pries slyga          pasirinkti inventoriaus ras ­ rank arba medziag, kuri norima redaguoti. Naudotojas
+Suzadinimo slyga     pasirenka konkret inventoriaus ras. Sistema pateikia redagavimo form su esamais
+Po slyga             pasirinkto raso duomenimis. Naudotojas veda naujus arba pakoreguotus duomenis. Sistema
+                     patikrina vest duomen korektiskum. Jei duomenys yra neteisingi, sistema pateikia
+                     klaidos pranesim ir leidzia naudotojui pakartotinai vesti duomenis. Jei duomenys yra
+                     teisingi, sistema issaugo pakeistus duomenis ir pateikia pranesim apie skming
+                     inventoriaus redagavim. Panaudojimo atvejis uzbaigiamas, kai inventoriaus duomenys
+                     skmingai atnaujinami arba naudotojas nutraukia proces.
+                     Darzo savininkas yra autentifikuotas sistemoje ir inventoriuje yra bent vienas rasas.
+                     Darzo savininkas pasirenka funkcij ,,Redaguoti inventori".
+                     Pasirinkto inventoriaus raso duomenys yra atnaujinti sistemoje arba pateikiamas klaidos
+                     pranesimas, jei vesti duomenys nekorektiski.
+
+                                                                    143
+99 pav. ,,Redaguoti inventori" panaudojimo atvejo veiklos diagrama
+
+32 lentel. ,,Salinti medziagas ir rankius" panaudojimo atvejo specifikacija
+
+Panaudojimo atvejis  Salinti medziagas ir rankius
+Tikslas              Suteikti darzo savininkui galimyb pasalinti nereikalingus ranki ar medziag rasus is
+Aprasymas            inventoriaus.
+                     Darzo savininkas inicijuoja inventoriaus raso salinimo proces. Sistema pateikia uzklaus
+Pries slyga          pasirinkti inventoriaus ras ­ rank arba medziag, kur norima pasalinti. Naudotojas
+Suzadinimo slyga     pasirenka konkret ras. Sistema pateikia salinimo uzklaus, prasydama patvirtinti arba
+Po slyga             atmesti veiksm. Jei naudotojas patvirtina salinim, sistema pasalina pasirinkt inventoriaus
+                     ras ir pateikia pranesim apie skming pasalinim. Jei naudotojas atmeta salinimo
+                     uzklaus, sistema pateikia pranesim, kad salinimas nevyko. Panaudojimo atvejis
+                     uzbaigiamas, kai rasas pasalinamas arba veiksmas atsaukiamas.
+                     Darzo savininkas yra autentifikuotas sistemoje ir inventoriuje yra bent vienas rasas.
+                     Darzo savininkas pasirenka funkcij ,,Salinti inventoriaus ras".
+                     Inventoriaus rasas yra pasalintas is sistemos arba pateikiamas pranesimas, kad salinimas
+                     nebuvo vykdytas.
+
+                                                                             144
+100 pav. ,,Salinti medziagas ir rankius" panaudojimo atvejo veiklos diagrama
+                                                                                                   145
+
