@@ -10,7 +10,6 @@ import InventoryPage from './pages/inventory/InventoryPage.jsx'
 import CatalogPlantDetailPage from './pages/plant/CatalogPlantDetailPage.jsx'
 import CatalogPlantFormPage from './pages/plant/CatalogPlantFormPage.jsx'
 import CatalogPlantsPage from './pages/plant/CatalogPlantsPage.jsx'
-import ManagedPlantDetailPage from './pages/plant/ManagedPlantDetailPage.jsx'
 import PlantDetailPage from './pages/plant/PlantDetailPage.jsx'
 import PlantFormPage from './pages/plant/PlantFormPage.jsx'
 import PlantsPage from './pages/plant/PlantsPage.jsx'
@@ -137,7 +136,7 @@ function App() {
           path="plants/:plantId"
           element={(
             <ProtectedRoute>
-              <ManagedPlantDetailPage />
+              <PlantDetailPage />
             </ProtectedRoute>
           )}
         />

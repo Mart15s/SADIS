@@ -2,7 +2,11 @@ import { startTransition, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
+import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
+import FormSection from '../../components/ui/FormSection.jsx'
+import SectionCard from '../../components/ui/SectionCard.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
 import {
   INVENTORY_TYPES,
@@ -16,7 +20,6 @@ import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 const emptyForm = {
   name: '',
   quantity: '',
-  minimum_quantity: '0',
   type: INVENTORY_TYPES[0],
   unit: 'unit',
 }
@@ -53,7 +56,6 @@ function buildSuggestedForm(resource, existingItem = null) {
   return {
     name: existingItem?.name ?? resource.name ?? '',
     quantity: formatQuantityInput(currentQuantity + shortageQuantity, type),
-    minimum_quantity: formatQuantityInput(existingItem?.minimum_quantity ?? 0, type) || '0',
     type,
     unit: type === 'tool' ? 'unit' : resource.unit ?? 'unit',
   }
@@ -69,6 +71,7 @@ export default function InventoryPage() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
   const inventoryRequestContext = useMemo(() => {
     const rawMissing = searchParams.get('missing')
 
@@ -110,6 +113,12 @@ export default function InventoryPage() {
     )
   }, [inventoryState.data])
 
+  const selectedTaskResource = useMemo(() => (
+    inventoryRequestContext?.missing.find((resource) => buildResourceKey(resource) === activeResourceKey) ?? null
+  ), [activeResourceKey, inventoryRequestContext])
+
+  const typeLockedByTask = Boolean(selectedTaskResource)
+
   function applyResourceSuggestion(resource) {
     const matchingItem = inventoryMatchesByResource.get(buildResourceKey(resource))
 
@@ -144,7 +153,7 @@ export default function InventoryPage() {
 
     applyResourceSuggestion(inventoryRequestContext.missing[0])
     setHasAppliedRequestPrefill(true)
-  }, [applyResourceSuggestion, hasAppliedRequestPrefill, inventoryMatchesByResource, inventoryRequestContext, inventoryState.loading])
+  }, [hasAppliedRequestPrefill, inventoryMatchesByResource, inventoryRequestContext, inventoryState.loading])
 
   async function handleEdit(itemId) {
     setError('')
@@ -158,7 +167,6 @@ export default function InventoryPage() {
         setForm({
           name: item.name,
           quantity: item.quantity,
-          minimum_quantity: item.minimum_quantity ?? 0,
           type: item.type,
           unit: item.unit ?? 'unit',
         })
@@ -178,6 +186,7 @@ export default function InventoryPage() {
       inventoryState.setData((current) => current.filter((item) => item.id !== itemId))
       if (editingId === itemId) {
         setEditingId(null)
+        setActiveResourceKey(null)
         setForm(emptyForm)
       }
     } catch (requestError) {
@@ -197,7 +206,11 @@ export default function InventoryPage() {
       const payload = {
         ...form,
         quantity: Number(form.quantity),
-        minimum_quantity: Number(form.minimum_quantity || 0),
+      }
+
+      if (selectedTaskResource?.id && inventoryRequestContext?.taskId) {
+        payload.source_task_id = Number(inventoryRequestContext.taskId)
+        payload.source_requirement_id = Number(selectedTaskResource.id)
       }
 
       if (editingId) {
@@ -213,6 +226,7 @@ export default function InventoryPage() {
       }
 
       setEditingId(null)
+      setActiveResourceKey(null)
       setForm(emptyForm)
     } catch (requestError) {
       setError(requestError.message)
@@ -235,27 +249,28 @@ export default function InventoryPage() {
   return (
     <div className="page-stack">
       <PageHeader
+        eyebrow="Stock and supplies"
         title="Inventory"
-        description="Track consumable materials and reusable tools with explicit units, stock thresholds, and calendar-ready inventory data."
+        description="Track consumable materials and reusable tools with explicit units and calendar-ready inventory data."
+        meta={<StatusBadge kind="ownership">{inventoryState.data.length} items tracked</StatusBadge>}
       />
 
       {inventoryRequestContext ? (
-        <section className="panel page-stack">
-          <h3 style={{ margin: 0 }}>Missing resources for task</h3>
+        <SectionCard title="Missing resources for task" description="Restock directly from calendar shortages, then return to the originating task context.">
           <div className="inline-note">
             {inventoryRequestContext.taskName
               ? `You came here from task "${inventoryRequestContext.taskName}". Replenish the missing inventory, then return and complete the task.`
               : 'You came here from a task with missing inventory. Replenish the missing items, then return and complete the task.'}
           </div>
           {inventoryRequestContext.returnTo ? (
-            <div className="row-actions">
+            <ActionRow>
               <Link to={inventoryRequestContext.returnTo}>
                 <Button variant="secondary">{inventoryRequestContext.returnLabel}</Button>
               </Link>
-            </div>
+            </ActionRow>
           ) : null}
           {inventoryRequestContext.missing.length > 0 ? (
-            <div className="page-stack" style={{ gap: '0.35rem' }}>
+            <div className="stack stack-sm">
               {inventoryRequestContext.missing.map((resource, index) => {
                 const resourceKey = buildResourceKey(resource)
                 const matchingItem = inventoryMatchesByResource.get(resourceKey)
@@ -264,23 +279,22 @@ export default function InventoryPage() {
                 return (
                   <div
                     key={`${resource.id ?? index}-${resource.name}`}
-                    className="panel"
-                    style={{
-                      padding: '0.85rem 1rem',
-                      borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
-                    }}
+                    className={`inventory-request-card ${isSelected ? 'is-selected' : ''}`.trim()}
                   >
-                    <div className="page-stack" style={{ gap: '0.5rem' }}>
+                    <div className="stack stack-sm">
                       <strong>{resource.name}</strong>
                       <span className="muted">
                         Need {safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)}, have {safeNumber(resource.available_quantity ?? 0, resource.type === 'tool' ? 0 : 2)}, missing {safeNumber(resource.shortage_quantity ?? 0, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
                       </span>
-                      <div className="inline-note" style={{ fontSize: '0.85rem' }}>
+                      <div className="inline-note inline-note-compact">
+                        Item type will be assigned automatically as <strong>{resource.type}</strong> from the task resource.
+                      </div>
+                      <div className="inline-note inline-note-compact">
                         {matchingItem
                           ? `Existing stock found. The form is prepared to update "${matchingItem.name}" to ${formatQuantityInput(Number(matchingItem.quantity) + Number(resource.shortage_quantity ?? 0), resource.type)} ${formatInventoryUnit(resource.unit)} total.`
                           : 'No matching inventory entry was found. The form is prepared to create this item with the missing quantity.'}
                       </div>
-                      <div className="row-actions">
+                      <ActionRow>
                         <Button
                           variant={isSelected ? 'primary' : 'secondary'}
                           onClick={() => {
@@ -291,18 +305,21 @@ export default function InventoryPage() {
                         >
                           {matchingItem ? 'Prepare restock form' : 'Prepare add form'}
                         </Button>
-                      </div>
+                      </ActionRow>
                     </div>
                   </div>
                 )
               })}
             </div>
           ) : null}
-        </section>
+        </SectionCard>
       ) : null}
 
       <div className="detail-grid">
-        <section className="panel table-stack">
+        <SectionCard
+          title="Tracked items"
+          description="The table shrinks to its content when the inventory is small, so the list feels intentional instead of half-empty."
+        >
           {inventoryState.data.length === 0 ? (
             <EmptyState
               title="Inventory is empty"
@@ -317,7 +334,6 @@ export default function InventoryPage() {
                     <th>Type</th>
                     <th>Unit</th>
                     <th>Quantity</th>
-                    <th>Min. stock</th>
                     <th>Status</th>
                     <th />
                   </tr>
@@ -329,8 +345,7 @@ export default function InventoryPage() {
                       <td>{item.type}</td>
                       <td>{formatInventoryUnit(item.unit)}</td>
                       <td>{safeNumber(item.quantity, item.type === 'tool' ? 0 : 2)}</td>
-                      <td>{safeNumber(item.minimum_quantity, item.type === 'tool' ? 0 : 2)}</td>
-                      <td>{item.is_below_minimum ? 'Needs replenishment' : 'Available'}</td>
+                      <td>{item.is_available ? 'In stock' : 'Out of stock'}</td>
                       <td>
                         <div className="row-actions">
                           <Button variant="ghost" onClick={() => handleEdit(item.id)}>
@@ -347,104 +362,111 @@ export default function InventoryPage() {
               </table>
             </div>
           )}
-        </section>
+        </SectionCard>
 
-        <form className="panel input-grid" onSubmit={handleSubmit}>
-          <h3>{editingId ? 'Edit inventory item' : 'Add inventory item'}</h3>
-          {inventoryRequestContext && activeResourceKey ? (
-            <div className="inline-note">
-              {editingId
-                ? 'The form is preloaded for replenishment. Adjust the total stock after purchase, save it, then return to the task.'
-                : 'The form is preloaded with the missing resource so you can add it without retyping details.'}
+        <form onSubmit={handleSubmit}>
+          <FormSection
+            title={editingId ? 'Edit inventory item' : 'Add inventory item'}
+            description="Use the compact form on the right to add or restock items without letting the editor dominate the page."
+          >
+            {inventoryRequestContext && activeResourceKey ? (
+              <div className="inline-note">
+                {editingId
+                  ? 'The form is preloaded for replenishment. Adjust the total stock after purchase, save it, then return to the task.'
+                  : 'The form is preloaded with the missing resource so you can add it without retyping details.'}
+              </div>
+            ) : null}
+            <div className="input-grid">
+              <div className="field">
+                <label htmlFor="item-name">Name</label>
+                <input id="item-name" name="name" value={form.name} onChange={handleChange} required />
+              </div>
+              <div className="field">
+                <label htmlFor="item-type">Type</label>
+                <select
+                  id="item-type"
+                  name="type"
+                  value={form.type}
+                  onChange={handleChange}
+                  disabled={typeLockedByTask}
+                >
+                  {INVENTORY_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                {typeLockedByTask ? (
+                  <span className="field-hint">Type is locked to the task resource.</span>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="item-unit">Unit</label>
+                <select
+                  id="item-unit"
+                  name="unit"
+                  value={form.unit}
+                  onChange={handleChange}
+                  disabled={form.type === 'tool' || typeLockedByTask}
+                >
+                  {unitOptions.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {formatInventoryUnit(unit)}
+                    </option>
+                  ))}
+                </select>
+                {typeLockedByTask ? (
+                  <span className="field-hint">Unit is locked to the task resource.</span>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="item-quantity">Quantity</label>
+                <input
+                  id="item-quantity"
+                  name="quantity"
+                  type="number"
+                  min="0"
+                  step={quantityStep}
+                  value={form.quantity}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-          ) : null}
-          <div className="field">
-            <label htmlFor="item-name">Name</label>
-            <input id="item-name" name="name" value={form.name} onChange={handleChange} required />
-          </div>
-          <div className="field">
-            <label htmlFor="item-type">Type</label>
-            <select id="item-type" name="type" value={form.type} onChange={handleChange}>
-              {INVENTORY_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="item-unit">Unit</label>
-            <select
-              id="item-unit"
-              name="unit"
-              value={form.unit}
-              onChange={handleChange}
-              disabled={form.type === 'tool'}
-            >
-              {unitOptions.map((unit) => (
-                <option key={unit} value={unit}>
-                  {formatInventoryUnit(unit)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="item-quantity">Quantity</label>
-            <input
-              id="item-quantity"
-              name="quantity"
-              type="number"
-              min="0"
-              step={quantityStep}
-              value={form.quantity}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="item-minimum-quantity">Minimum stock</label>
-            <input
-              id="item-minimum-quantity"
-              name="minimum_quantity"
-              type="number"
-              min="0"
-              step={quantityStep}
-              value={form.minimum_quantity}
-              onChange={handleChange}
-            />
-          </div>
 
-          <div className="inline-note" style={{ fontSize: '0.85rem' }}>
-            {form.type === 'tool'
-              ? 'Reusable tools are only checked for availability and are never deducted after task completion.'
-              : 'Consumable materials are automatically deducted from inventory when linked care tasks are completed.'}
-          </div>
+            <div className="inline-note inline-note-compact">
+              {form.type === 'tool'
+                ? 'Reusable tools are only checked for availability and are never deducted after task completion.'
+                : 'Consumable materials are automatically deducted from inventory when linked care tasks are completed.'}
+            </div>
 
-          {successMessage ? <span style={{ color: 'var(--success)' }}>{successMessage}</span> : null}
-          {error ? <span className="field-error">{error}</span> : null}
+            {successMessage ? <span className="form-success">{successMessage}</span> : null}
+            {error ? <span className="field-error">{error}</span> : null}
 
-          <div className="form-actions">
-            <Button type="submit" disabled={submitting}>
-              {submitting ? 'Saving...' : editingId ? 'Save item' : 'Add item'}
-            </Button>
-            {editingId ? (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setEditingId(null)
-                  setForm(emptyForm)
-                  setSuccessMessage('')
-                }}
-              >
-                Cancel edit
+            <ActionRow>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Saving...' : editingId ? 'Save item' : 'Add item'}
               </Button>
-            ) : null}
-            {inventoryRequestContext?.returnTo ? (
-              <Link to={inventoryRequestContext.returnTo}>
-                <Button variant="secondary">{inventoryRequestContext.returnLabel}</Button>
-              </Link>
-            ) : null}
-          </div>
+              {editingId ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setEditingId(null)
+                    setActiveResourceKey(null)
+                    setForm(emptyForm)
+                    setSuccessMessage('')
+                  }}
+                >
+                  Cancel edit
+                </Button>
+              ) : null}
+              {inventoryRequestContext?.returnTo ? (
+                <Link to={inventoryRequestContext.returnTo}>
+                  <Button variant="secondary">{inventoryRequestContext.returnLabel}</Button>
+                </Link>
+              ) : null}
+            </ActionRow>
+          </FormSection>
         </form>
       </div>
     </div>

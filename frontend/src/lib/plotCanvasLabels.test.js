@@ -1,52 +1,113 @@
 import { describe, expect, it } from 'vitest'
-import { getZoneLabelConfig } from './plotCanvasLabels.js'
+import { getBoundaryLabelLayout, getZoneLabelLayout, getZoneLabelMetrics } from './plotCanvasLabels.js'
 
-describe('getZoneLabelConfig', () => {
-  it('returns a centered readable config for reasonably sized zones across zoom levels', () => {
-    const config = getZoneLabelConfig('Tomato Bed', {
-      width: 14,
-      height: 8,
-      centerX: 7,
-      centerY: 4,
-    }, 18)
+function rectPoints(width, height, x = 0, y = 0) {
+  return [
+    { x, y },
+    { x: x + width, y },
+    { x: x + width, y: y + height },
+    { x, y: y + height },
+  ]
+}
 
-    expect(config).not.toBeNull()
-    expect(config.text).toBe('Tomato Bed')
-    expect(config.fontSize).toBeGreaterThan(0)
-    expect(config.width).toBeGreaterThan(0)
-    expect(config.x).toBeLessThan(7)
-    expect(config.y).toBeLessThan(4)
+describe('getZoneLabelLayout', () => {
+  it('keeps large zone labels readable and screen-stable across zoom levels', () => {
+    const lowZoom = getZoneLabelLayout({
+      zoneName: 'Tomato Bed',
+      screenPoints: rectPoints(140, 88),
+      context: 'editor',
+    })
+    const highZoom = getZoneLabelLayout({
+      zoneName: 'Tomato Bed',
+      screenPoints: rectPoints(320, 200),
+      context: 'editor',
+    })
+
+    expect(lowZoom?.mode).toBe('full')
+    expect(highZoom?.mode).toBe('full')
+    expect(lowZoom?.fontSize).toBe(highZoom?.fontSize)
+    expect(lowZoom?.text).toBe('Tomato Bed')
   })
 
-  it('hides labels for very small zones and truncates long names when needed', () => {
-    expect(getZoneLabelConfig('Tiny', {
-      width: 2,
-      height: 1,
-      centerX: 1,
-      centerY: 0.5,
-    }, 10)).toBeNull()
-
-    const longNameConfig = getZoneLabelConfig('Very long greenhouse tomato and basil rotation zone', {
-      width: 10,
-      height: 5,
-      centerX: 5,
-      centerY: 2.5,
-    }, 20)
-
-    expect(longNameConfig).not.toBeNull()
-    expect(longNameConfig.text.endsWith('...')).toBe(true)
-  })
-
-  it('falls back to compact labels for medium zones that cannot fit the inline label shell', () => {
-    const config = getZoneLabelConfig('Herbs', {
-      width: 4.5,
-      height: 2.8,
-      centerX: 2.25,
-      centerY: 1.4,
-    }, 18)
+  it('downgrades to a compact label for medium screen-space zones', () => {
+    const config = getZoneLabelLayout({
+      zoneName: 'Greenhouse Strip',
+      screenPoints: rectPoints(92, 34),
+      context: 'editor',
+    })
 
     expect(config).not.toBeNull()
-    expect(config.variant).toBe('compact')
-    expect(config.height).toBeGreaterThan(0)
+    expect(config?.mode).toBe('compact')
+    expect(config?.text.length).toBeLessThanOrEqual('Greenhouse Strip'.length)
+  })
+
+  it('uses a deterministic marker fallback for very small zones', () => {
+    const editorConfig = getZoneLabelLayout({
+      zoneName: 'Tiny Herbs',
+      screenPoints: rectPoints(30, 18),
+      context: 'editor',
+      markerText: 3,
+    })
+    const previewConfig = getZoneLabelLayout({
+      zoneName: 'Tiny Herbs',
+      screenPoints: rectPoints(30, 18),
+      context: 'preview',
+      markerText: 3,
+    })
+
+    expect(editorConfig?.mode).toBe('marker')
+    expect(previewConfig?.mode).toBe('marker')
+    expect(previewConfig?.text).toBe('3')
+  })
+
+  it('caps label shells to the safe interior span instead of stretching to the full bbox', () => {
+    const screenPoints = [
+      { x: 0, y: 0 },
+      { x: 170, y: 22 },
+      { x: 112, y: 96 },
+      { x: 36, y: 96 },
+    ]
+    const metrics = getZoneLabelMetrics(screenPoints)
+    const config = getZoneLabelLayout({
+      zoneName: 'Zone 2',
+      screenPoints,
+      context: 'preview',
+    })
+
+    expect(config).not.toBeNull()
+    expect(config?.width).toBeLessThan(metrics.bounds.width)
+    expect(config?.width).toBeLessThanOrEqual(metrics.horizontalSpan.size)
+    expect(config?.height).toBeLessThanOrEqual(metrics.verticalSpan.size)
+  })
+
+  it('keeps projected labels inside the visible viewport when a zone hugs the canvas edge', () => {
+    const config = getZoneLabelLayout({
+      zoneName: 'Edge Zone',
+      screenPoints: rectPoints(92, 40, 2, 6),
+      context: 'editor',
+      viewportBounds: { width: 112, height: 76 },
+    })
+
+    expect(config).not.toBeNull()
+    expect(config?.x).toBeGreaterThanOrEqual(10)
+    expect((config?.x ?? 0) + (config?.width ?? 0)).toBeLessThanOrEqual(102)
+    expect(config?.y).toBeGreaterThanOrEqual(10)
+  })
+})
+
+describe('getBoundaryLabelLayout', () => {
+  it('anchors plot boundary labels near the top of the visible boundary and keeps them readable', () => {
+    const config = getBoundaryLabelLayout({
+      plotName: 'North Plot',
+      areaText: '42.0 m2',
+      screenPoints: rectPoints(240, 150, 12, 12),
+      viewportBounds: { width: 280, height: 200 },
+    })
+
+    expect(config).not.toBeNull()
+    expect(config?.mode).toBe('full')
+    expect(config?.text).toBe('North Plot | 42.0 m2')
+    expect(config?.y).toBeLessThan(70)
+    expect((config?.x ?? 0) + (config?.width ?? 0)).toBeLessThanOrEqual(268)
   })
 })

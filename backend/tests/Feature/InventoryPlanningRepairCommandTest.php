@@ -34,7 +34,6 @@ class InventoryPlanningRepairCommandTest extends TestCase
             'name' => 'Protective cover',
             'normalized_name' => 'protective cover',
             'quantity' => 1,
-            'minimum_quantity' => 0,
             'type' => InventoryItemType::Material,
             'inventory_item_type' => InventoryItemType::Material,
             'unit' => InventoryUnit::Kilogram,
@@ -99,7 +98,7 @@ class InventoryPlanningRepairCommandTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame(2.0, (float) $buyTask->item_quantity);
-        $this->assertSame('purchase_required', $buyTask->inventory_context['status'] ?? null);
+        $this->assertSame('replenishment', $buyTask->inventory_context['status'] ?? null);
 
         $repairedTask = Task::query()
             ->where('task_calendar_id', $calendar->id)

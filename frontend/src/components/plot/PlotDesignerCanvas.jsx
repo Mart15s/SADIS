@@ -1,9 +1,10 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Circle, Group, Layer, Line, Rect, Stage, Text } from 'react-konva'
+import { Circle, Group, Layer, Line, Rect, Stage } from 'react-konva'
 import Button from '../ui/Button.jsx'
+import ModeToggleGroup from '../ui/ModeToggleGroup.jsx'
 import { safeNumber } from '../../lib/constants.js'
-import { getZoneLabelConfig } from '../../lib/plotCanvasLabels.js'
-import { getZoneColor } from '../../lib/plotRender.js'
+import { getBoundaryLabelLayout } from '../../lib/plotCanvasLabels.js'
+import { getProjectedLabelConfig, getZoneColor, projectShape } from '../../lib/plotRender.js'
 import {
   GRID_SIZE,
   MAX_ZOOM,
@@ -35,10 +36,9 @@ import {
   updateShapePoint,
 } from '../../lib/plotDesigner.js'
 
-const LABEL_FONT_PIXELS = 13
 const HANDLE_RADIUS_PIXELS = 8
-const HANDLE_HIT_PIXELS = 18
-const SHAPE_HIT_PIXELS = 18
+const HANDLE_HIT_PIXELS = 22
+const SHAPE_HIT_PIXELS = 26
 const POINTER_SLOP_PIXELS = 6
 
 function isStageBackground(target) {
@@ -60,6 +60,7 @@ function roundViewport(viewport) {
 
 export default memo(forwardRef(function PlotDesignerCanvas({
   plotId,
+  plotName,
   plotSize,
   plotGeometry,
   zones,
@@ -199,7 +200,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     }
   }
 
-  function applyViewport(nextViewport, commitState = true) {
+  function applyViewport(nextViewport) {
     const rounded = roundViewport(nextViewport)
     viewportRef.current = rounded
 
@@ -209,9 +210,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       stageRef.current.batchDraw()
     }
 
-    if (commitState) {
-      setViewport(rounded)
-    }
+    setViewport(rounded)
   }
 
   function toWorldPoint(pointer, activeViewport = viewportRef.current) {
@@ -222,7 +221,12 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   }
 
   function fitView() {
-    const nextViewport = createViewportToFit(boundary, layouts, canvasSize)
+    const nextViewport = createViewportToFit(
+      liveBoundaryRef.current ?? boundary,
+      liveLayoutsRef.current ?? layouts,
+      canvasSize,
+      0.86,
+    )
     applyViewport(nextViewport)
   }
 
@@ -708,12 +712,13 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   const selectedBounds = selectedShape ? getShapeBounds(selectedShape) : null
   const boundaryBounds = getShapeBounds(renderedBoundary)
-  const labelFontSize = Math.max(LABEL_FONT_PIXELS / viewport.scale, 0.34)
   const strokeWidth = Math.max(2 / viewport.scale, 0.08)
-  const activeStrokeWidth = Math.max(3 / viewport.scale, 0.11)
+  const activeStrokeWidth = Math.max(4.25 / viewport.scale, 0.13)
   const handleRadius = Math.max(HANDLE_RADIUS_PIXELS / viewport.scale, 0.16)
   const handleHitWidth = Math.max(HANDLE_HIT_PIXELS / viewport.scale, handleRadius * 2.5)
   const hitStrokeWidth = Math.max(SHAPE_HIT_PIXELS / viewport.scale, strokeWidth * 3)
+  const zoomLabel = viewport.scale >= 10 ? `${safeNumber(viewport.scale, 1)}x` : `${safeNumber(viewport.scale, 2)}x`
+  const viewportBounds = { width: canvasSize.width, height: canvasSize.height }
   const saveStatus = isLayoutSaving
     ? { className: 'badge badge-warning', text: 'Saving layout...' }
     : layoutSaveFeedback?.type === 'error'
@@ -721,32 +726,82 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       : layoutSaveFeedback?.type === 'success'
         ? { className: 'badge badge-success', text: layoutSaveFeedback.message }
         : null
+  const plotBoundaryLabel = getBoundaryLabelLayout({
+    plotName: plotName?.trim() || 'Plot boundary',
+    areaText: `${safeNumber(calculateArea(renderedBoundary), 1)} m2`,
+    screenPoints: projectShape(renderedBoundary, viewport),
+    viewportBounds,
+    isSelected: selectedTarget.type === 'boundary',
+    context: 'editor',
+  })
+  const screenLabels = zones.map((zone, index) => {
+    const zoneId = String(zone.id)
+    const shape = renderedLayouts[zoneId]
+
+    if (!shape) {
+      return null
+    }
+
+    const colors = getZoneColor(index)
+    const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
+    const label = getProjectedLabelConfig(zone.name, shape, viewport, {
+      isSelected: isActive,
+      context: 'editor',
+      markerText: index + 1,
+      viewportBounds,
+    })
+
+    if (!label) {
+      return null
+    }
+
+    return {
+      id: zoneId,
+      color: colors,
+      isActive,
+      label,
+    }
+  }).filter(Boolean)
+  const toolbarStatusTitle = selectedZone
+    ? `${selectedZone.name} selected`
+    : selectedTarget.type === 'boundary'
+      ? 'Plot boundary selected'
+      : mode === 'draw-zone'
+        ? 'Zone drawing mode'
+        : 'Selection mode'
+  const toolbarStatusHint = selectedZone
+    ? `${plantCountsByZoneId[selectedTarget.id] ?? 0} plants in zone`
+    : selectedTarget.type === 'boundary'
+      ? 'Drag the boundary or corner handles to reshape the plot'
+      : mode === 'draw-zone'
+        ? 'Drag inside the plot to create a new zone'
+        : 'Click a zone to edit it, or drag the background to pan'
 
   return (
     <div className="designer-panel">
       <div className="designer-toolbar">
-        <div className="inline-actions">
-          <Button
-            variant={mode === 'select' ? 'primary' : 'secondary'}
-            onClick={() => setMode('select')}
-          >
-            Select
-          </Button>
-          {canEdit ? (
-            <Button
-              variant={mode === 'draw-zone' ? 'primary' : 'secondary'}
-              onClick={() => {
-                setMode((current) => (current === 'draw-zone' ? 'select' : 'draw-zone'))
-              }}
-            >
-              Draw zone
-            </Button>
-          ) : null}
+        <div className="designer-toolbar-group designer-toolbar-group--controls">
+          <ModeToggleGroup
+            ariaLabel="Plot designer modes"
+            value={mode}
+            onChange={(nextMode) => {
+              setMode((current) => (nextMode === 'draw-zone' && current === 'draw-zone' ? 'select' : nextMode))
+            }}
+            options={[
+              { value: 'select', label: 'Select' },
+              ...(canEdit ? [{ value: 'draw-zone', label: 'Draw zone' }] : []),
+            ]}
+          />
           <Button variant="ghost" onClick={fitView}>Fit to view</Button>
-          <Button variant="ghost" onClick={resetDesignerLayout}>Reset layout</Button>
+          {canEdit ? <Button variant="secondary" onClick={resetDesignerLayout}>Reset layout</Button> : null}
         </div>
 
-        <div className="designer-toolbar-actions">
+        <div className="designer-toolbar-group designer-toolbar-group--status">
+          <span className="designer-toolbar-kicker">{toolbarStatusTitle}</span>
+          <span className="designer-toolbar-hint">{toolbarStatusHint}</span>
+        </div>
+
+        <div className="designer-toolbar-group designer-toolbar-group--actions">
           {canEdit ? (
             <Button onClick={onSaveLayout} disabled={isLayoutSaveDisabled || isLayoutSaving}>
               {isLayoutSaving ? 'Saving layout...' : 'Save plot layout'}
@@ -764,22 +819,29 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         </div>
       </div>
 
-      <div className="designer-meta">
-        <span>Plot {safeNumber(calculateArea(renderedBoundary), 1)} m2</span>
-        <span>
-          Bounds {safeNumber(boundaryBounds.width, 1)}m x {safeNumber(boundaryBounds.height, 1)}m
-        </span>
-        <span>Zoom {safeNumber(viewport.scale, 2)}x</span>
-        <span>{zones.length} zones</span>
-        <span>
-          {selectedZone
-            ? `${selectedZone.name} - ${plantCountsByZoneId[selectedTarget.id] ?? 0} plants`
-            : selectedTarget.type === 'boundary'
-              ? 'Plot boundary selected'
-              : mode === 'draw-zone'
-                ? 'Drag inside the plot to draw a zone'
-                : 'Drag the background to pan'}
-        </span>
+      <div className="designer-meta-grid">
+        <article className="designer-stat-card">
+          <span className="designer-stat-label">Plot area</span>
+          <strong className="designer-stat-value">{safeNumber(calculateArea(renderedBoundary), 1)} m2</strong>
+        </article>
+        <article className="designer-stat-card">
+          <span className="designer-stat-label">Bounds</span>
+          <strong className="designer-stat-value">
+            {safeNumber(boundaryBounds.width, 1)}m x {safeNumber(boundaryBounds.height, 1)}m
+          </strong>
+        </article>
+        <article className="designer-stat-card">
+          <span className="designer-stat-label">Viewport</span>
+          <strong className="designer-stat-value">Zoom {zoomLabel}</strong>
+        </article>
+        <article className="designer-stat-card">
+          <span className="designer-stat-label">Mapped zones</span>
+          <strong className="designer-stat-value">
+            {selectedZone
+              ? `${plantCountsByZoneId[selectedTarget.id] ?? 0} plants in ${selectedZone.name}`
+              : `${zones.length} total`}
+          </strong>
+        </article>
       </div>
 
       <div ref={containerRef} className={`designer-stage ${mode === 'draw-zone' ? 'is-drawing' : ''}`}>
@@ -845,14 +907,6 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                 shadowOffsetY={0.08}
               />
 
-              <Text
-                x={boundaryBounds.left}
-                y={boundaryBounds.top - (labelFontSize * 1.8)}
-                text={`Plot boundary | ${safeNumber(calculateArea(renderedBoundary), 1)} m2`}
-                fontSize={labelFontSize}
-                fill="#47633b"
-                listening={false}
-              />
             </Group>
 
             {zones.map((zone, index) => {
@@ -864,11 +918,9 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               }
 
               const points = getShapePoints(shape)
-              const bounds = getShapeBounds(shape)
               const colors = getZoneColor(index)
               const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
               const isHovered = hoveredZoneId === zoneId
-              const labelConfig = getZoneLabelConfig(zone.name, bounds, viewport.scale)
 
               return (
                 <Group
@@ -913,36 +965,16 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                     shadowOpacity={isActive ? 0.68 : 0.25}
                     shadowOffsetY={0.06}
                   />
-                  {labelConfig ? (
-                    <>
-                      <Rect
-                        x={labelConfig.x}
-                        y={labelConfig.y}
-                        width={labelConfig.width}
-                        height={labelConfig.height}
-                        cornerRadius={labelConfig.cornerRadius}
-                        fill={labelConfig.variant === 'compact' ? 'rgba(255, 250, 242, 0.92)' : 'rgba(255, 250, 242, 0.82)'}
-                        stroke={isActive ? 'rgba(185, 104, 63, 0.35)' : 'rgba(36, 49, 31, 0.12)'}
-                        strokeWidth={Math.max(1 / viewport.scale, 0.04)}
-                        listening={false}
-                      />
-                      <Text
-                        x={labelConfig.x}
-                        y={labelConfig.y}
-                        width={labelConfig.width}
-                        height={labelConfig.height}
-                        padding={labelConfig.padding}
-                        text={labelConfig.text}
-                        fontSize={labelConfig.fontSize}
-                        fontStyle="bold"
-                        fill="#24311f"
-                        align="center"
-                        verticalAlign="middle"
-                        wrap="none"
-                        ellipsis
-                        listening={false}
-                      />
-                    </>
+                  {isActive ? (
+                    <Line
+                      points={flattenPoints(points)}
+                      closed
+                      fill="rgba(242, 106, 33, 0.12)"
+                      stroke="#f26a21"
+                      strokeWidth={Math.max(activeStrokeWidth * 0.48, strokeWidth)}
+                      hitStrokeWidth={hitStrokeWidth}
+                      listening={false}
+                    />
                   ) : null}
                 </Group>
               )
@@ -1078,7 +1110,88 @@ export default memo(forwardRef(function PlotDesignerCanvas({
             ) : null}
           </Layer>
         </Stage>
+
+        <div className="designer-label-layer" aria-hidden="true">
+          {plotBoundaryLabel ? (
+            <div
+              className={`designer-plot-label designer-plot-label--${plotBoundaryLabel.mode} ${selectedTarget.type === 'boundary' ? 'is-active' : ''}`.trim()}
+              title={plotBoundaryLabel.title}
+              style={{
+                left: `${plotBoundaryLabel.x}px`,
+                top: `${plotBoundaryLabel.y}px`,
+                width: `${plotBoundaryLabel.width}px`,
+                height: `${plotBoundaryLabel.height}px`,
+                borderRadius: `${plotBoundaryLabel.cornerRadius}px`,
+                fontSize: `${plotBoundaryLabel.fontSize}px`,
+                padding: `${plotBoundaryLabel.paddingY}px ${plotBoundaryLabel.paddingX}px`,
+              }}
+            >
+              <span className="designer-plot-label-text">{plotBoundaryLabel.text}</span>
+            </div>
+          ) : null}
+          {screenLabels.map(({ id, label, color, isActive }) => (
+            <div
+              key={id}
+              className={`designer-zone-label designer-zone-label--${label.mode} ${isActive ? 'is-active' : ''}`.trim()}
+              title={label.title}
+              style={{
+                left: `${label.x}px`,
+                top: `${label.y}px`,
+                width: `${label.width}px`,
+                height: `${label.height}px`,
+                borderColor: isActive ? 'rgba(185, 104, 63, 0.34)' : 'rgba(36, 49, 31, 0.12)',
+                background: label.mode === 'marker'
+                  ? 'rgba(255, 252, 248, 0.98)'
+                  : label.mode === 'full'
+                    ? 'rgba(255, 250, 242, 0.9)'
+                    : 'rgba(255, 251, 246, 0.95)',
+                color: label.mode === 'marker' ? color.stroke : '#24311f',
+                boxShadow: isActive
+                  ? '0 14px 28px rgba(185, 104, 63, 0.22)'
+                  : '0 8px 18px rgba(36, 49, 31, 0.08)',
+                borderLeftColor: label.mode === 'marker' ? 'rgba(255,255,255,0)' : color.stroke,
+                borderRadius: `${label.cornerRadius}px`,
+                fontSize: `${label.fontSize}px`,
+                padding: `${label.paddingY}px ${label.paddingX}px`,
+                transform: isActive ? 'translate3d(0, 0, 0) scale(1.02)' : 'translate3d(0, 0, 0)',
+              }}
+            >
+              <span className="designer-zone-label-text">{label.text}</span>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {zones.length > 0 ? (
+        <div className="designer-legend" aria-label="Zone legend">
+          {zones.map((zone, index) => {
+            const zoneId = String(zone.id)
+            const colors = getZoneColor(index)
+            const label = screenLabels.find((entry) => entry.id === zoneId)?.label
+            const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
+
+            return (
+              <span
+                key={`designer-legend-${zoneId}`}
+                className={`designer-legend-item ${isActive ? 'is-active' : ''}`.trim()}
+              >
+                <span className="designer-legend-index">{index + 1}</span>
+                <span
+                  className="designer-legend-swatch"
+                  style={{
+                    background: colors.fill,
+                    borderColor: colors.stroke,
+                  }}
+                />
+                <span className="designer-legend-text">{zone.name}</span>
+                {label?.mode === 'marker' || !label ? (
+                  <span className="designer-legend-note">compact</span>
+                ) : null}
+              </span>
+            )
+          })}
+        </div>
+      ) : null}
     </div>
   )
 }))

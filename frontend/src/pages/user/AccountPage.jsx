@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import Button from '../../components/ui/Button.jsx'
+import FormSection from '../../components/ui/FormSection.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 
 export default function AccountPage() {
   const { profile, updateAccount, user } = useAuth()
@@ -48,31 +50,44 @@ export default function AccountPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Edit account data"
+        eyebrow="Profile"
+        title="Account"
         description="Review and update the profile data tied to your authenticated account."
+        meta={<StatusBadge kind="connection">{user?.email}</StatusBadge>}
       />
 
-      <form className="panel input-grid" onSubmit={handleSubmit}>
-        <div className="field">
-          <label htmlFor="account-email">Email</label>
-          <input id="account-email" name="email" type="email" value={form.email} onChange={handleChange} required />
-        </div>
-        <div className="field">
-          <label htmlFor="account-name">Name</label>
-          <input id="account-name" name="name" value={form.name} onChange={handleChange} required />
-        </div>
-        <div className="field">
-          <label htmlFor="account-surname">Surname</label>
-          <input id="account-surname" name="surname" value={form.surname} onChange={handleChange} required />
-        </div>
+      <div className="form-shell">
+        <form onSubmit={handleSubmit}>
+          <FormSection
+            title="Edit account data"
+            description="Keep your core identity details readable and easy to update without stretching the form across the full page."
+          >
+            <div className="input-grid">
+              <div className="field">
+                <label htmlFor="account-email">Email</label>
+                <input id="account-email" name="email" type="email" value={form.email} onChange={handleChange} required />
+              </div>
+              <div className="field">
+                <label htmlFor="account-name">Name</label>
+                <input id="account-name" name="name" value={form.name} onChange={handleChange} required />
+              </div>
+              <div className="field">
+                <label htmlFor="account-surname">Surname</label>
+                <input id="account-surname" name="surname" value={form.surname} onChange={handleChange} required />
+              </div>
+            </div>
 
-        {error ? <span className="field-error">{error}</span> : null}
-        {success ? <span className="muted">{success}</span> : null}
+            {error ? <span className="field-error">{error}</span> : null}
+            {success ? <span className="form-success">{success}</span> : null}
 
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving...' : 'Save account data'}
-        </Button>
-      </form>
+            <div className="action-row">
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Saving...' : 'Save account data'}
+              </Button>
+            </div>
+          </FormSection>
+        </form>
+      </div>
     </div>
   )
 }

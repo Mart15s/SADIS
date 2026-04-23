@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ConditionType;
 use App\Enums\InventoryItemType;
 use App\Enums\TaskPriority;
 use App\Enums\TaskState;
@@ -15,6 +16,7 @@ use App\Models\Task;
 use App\Models\TaskCalendar;
 use App\Models\TaskResourceRequirement;
 use App\Models\WeatherForecast;
+use App\ValueObjects\NormalizedTaskResource;
 use App\ValueObjects\WeatherData;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -25,8 +27,10 @@ class CalendarGenerationService
 {
     public function __construct(
         private readonly InventoryService $inventoryService,
+        private readonly TaskInventoryCoverageService $taskInventoryCoverageService,
         private readonly PlantCareService $plantCareService,
-        private readonly PlantStateService $plantStateService,
+        private readonly PlantLifecyclePhaseService $plantLifecyclePhaseService,
+        private readonly PlantLifecycleService $plantLifecycleService,
         private readonly WeatherService $weatherService,
     ) {
     }
@@ -42,6 +46,7 @@ class CalendarGenerationService
             'plantZones.rotationHistory',
             'plantZones.plants.catalogPlant.plantCare',
             'plantZones.plants.conditionHistory',
+            'plantZones.plants.harvestRecords',
         ]);
 
         $plants = $this->collectPlants($plot);
@@ -109,13 +114,27 @@ class CalendarGenerationService
 
                     /** @var PlantCare $care */
                     $care = $plant->effectivePlantCare();
-                    $simulatedState = $this->plantStateService->simulatePlantState($plant, $care, $generationDate);
+                    $simulatedState = $this->plantLifecyclePhaseService->resolveSimulatedPhase($plant, $care, $generationDate);
 
-                    if (! $simulatedState['is_active'] && ! $simulatedState['is_diseased']) {
+                    if ($simulatedState['simulated_phase'] === null && ! ($simulatedState['transition']['from'] ?? null)) {
                         continue;
                     }
 
-                    $actions = $this->buildBaseActions($plant, $care, $simulatedState);
+                    if (($simulatedState['actual_condition'] ?? null) === ConditionType::Dried->value) {
+                        continue;
+                    }
+
+                    $actions = array_merge(
+                        $this->buildBaseActions($plant, $care, $simulatedState),
+                        $this->plantLifecycleService->buildActionsForDate(
+                            $plant,
+                            $care,
+                            $simulatedState,
+                            $generationDate,
+                            $plant->conditionHistory,
+                            $plant->harvestRecords,
+                        )
+                    );
                     $actions = $this->applyWeatherRules($actions, $plant, $care, $simulatedState, $weatherData, $weatherContext);
 
                     if ($this->hasPreviousZoneRotation($plant) && $generationDate->isSameDay($plant->plant_date)) {
@@ -176,6 +195,7 @@ class CalendarGenerationService
                     'weather_context' => $action['weather_context'] ?? null,
                     'inventory_context' => $inventoryContext,
                     'simulated_state' => $action['simulated_state'] ?? null,
+                    'workflow_context' => $action['workflow_context'] ?? null,
                     'state' => TaskState::Pending,
                     'status' => TaskState::Pending->value,
                     'task_calendar_id' => $calendar->id,
@@ -264,11 +284,12 @@ class CalendarGenerationService
      */
     private function buildBaseActions(Plant $plant, PlantCare $care, array $simulatedState): array
     {
-        $daysSincePlanting = (int) $simulatedState['days_since_planting'];
-        $phase = (string) $simulatedState['phase'];
+        $daysSincePlanting = (int) $simulatedState['elapsed_days_from_planted'];
+        $phase = (string) ($simulatedState['simulated_phase'] ?? '');
+        $actualCondition = (string) ($simulatedState['actual_condition'] ?? '');
         $actions = [];
 
-        if ($simulatedState['is_diseased']) {
+        if ($plant->disease || $actualCondition === ConditionType::Diseased->value) {
             return [[
                 'type' => TaskType::Spray->value,
                 'name' => "Treat {$plant->name}",
@@ -282,7 +303,8 @@ class CalendarGenerationService
             ]];
         }
 
-        if ($phase === 'early' && ($simulatedState['is_phase_start'] || $daysSincePlanting <= 3)) {
+        if (in_array($phase, [ConditionType::Planted->value, ConditionType::Germinating->value], true)
+            && (($simulatedState['is_transition_day'] ?? false) || $daysSincePlanting <= 3)) {
             $actions[] = [
                 'type' => TaskType::Rest->value,
                 'name' => "Monitor {$plant->name} establishment",
@@ -292,31 +314,47 @@ class CalendarGenerationService
             ];
         }
 
-        if ($phase !== 'harvest_ready' && $phase !== 'inactive' && $this->isIntervalDue($daysSincePlanting, $care->watering_interval_days, 0)) {
+        if ($phase !== '' && $this->isIntervalDue($daysSincePlanting, $care->watering_interval_days, 0)) {
             $actions[] = [
                 'type' => TaskType::Watering->value,
                 'name' => "Water {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
                 'reason' => 'The watering interval is due for this simulated day.',
-                'comment' => "Watering interval aligned with the {$simulatedState['state_label']} phase.",
+                'comment' => sprintf(
+                    'Watering interval aligned with the expected %s phase for this day.',
+                    $simulatedState['phase_label'] ?? $phase
+                ),
             ];
         }
 
-        if (in_array($phase, ['growth', 'mature'], true)
-            && $this->isIntervalDue($daysSincePlanting, $care->fertilizing_interval_days, max(1, (int) ($care->germinating_duration_days ?? 0)))) {
+        if (in_array($phase, [
+            ConditionType::Growing->value,
+            ConditionType::Flowering->value,
+            ConditionType::Mature->value,
+            ConditionType::Regenerating->value,
+        ], true)
+            && $this->isIntervalDue($daysSincePlanting, $care->fertilizing_interval_days, max(1, (int) ($care->germinating_duration_days ?? 0) + 1))) {
             $actions[] = [
                 'type' => TaskType::Fertilize->value,
                 'name' => "Fertilize {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
-                'reason' => 'The fertilizing interval is due during the active growth cycle.',
-                'comment' => 'Fertilize only after the early establishment phase has passed.',
+                'reason' => 'The fertilizing interval is due for the simulated lifecycle phase on this day.',
+                'comment' => sprintf(
+                    'Fertilize after establishment, using the expected %s phase for scheduling.',
+                    $simulatedState['phase_label'] ?? $phase
+                ),
                 'required_resources' => [
                     $this->resourceRequirement('Fertilizer', InventoryItemType::Material, 1, 'kg', true),
                 ],
             ];
         }
 
-        if (in_array($phase, ['growth', 'mature', 'harvest_ready'], true)
+        if (in_array($phase, [
+            ConditionType::Growing->value,
+            ConditionType::Flowering->value,
+            ConditionType::Mature->value,
+            ConditionType::Regenerating->value,
+        ], true)
             && $this->isIntervalDue($daysSincePlanting, $care->pest_check_interval_days, 0)) {
             $actions[] = [
                 'type' => TaskType::Spray->value,
@@ -327,7 +365,7 @@ class CalendarGenerationService
             ];
         }
 
-        if ($phase === 'mature' && $simulatedState['is_phase_start']) {
+        if (($simulatedState['transition']['to'] ?? null) === ConditionType::Mature->value) {
             $actions[] = [
                 'type' => TaskType::Rest->value,
                 'name' => "Inspect {$plant->name} support and canopy",
@@ -338,24 +376,6 @@ class CalendarGenerationService
                     $this->resourceRequirement('Plant support', InventoryItemType::Tool, 1, 'unit', false),
                 ],
             ];
-        }
-
-        if ($phase === 'harvest_ready') {
-            $harvestReminderInterval = max(1, min(3, (int) $simulatedState['harvest_window_days']));
-            $harvestOffset = (int) $simulatedState['harvest_start_day'];
-
-            if ($this->isIntervalDue($daysSincePlanting, $harvestReminderInterval, $harvestOffset)) {
-                $actions[] = [
-                    'type' => TaskType::Harvest->value,
-                    'name' => "Harvest {$plant->name}",
-                    'priority' => TaskPriority::High->value,
-                    'reason' => 'The simulated lifecycle shows an active harvest window on this day.',
-                    'comment' => 'Harvest-ready plants should be checked promptly to avoid quality loss.',
-                    'required_resources' => [
-                        $this->resourceRequirement('Harvest box', InventoryItemType::Tool, 1, 'unit', false),
-                    ],
-                ];
-            }
         }
 
         return $actions;
@@ -447,7 +467,7 @@ class CalendarGenerationService
         }
 
         if ($weatherContext['is_drought']
-            && ! $simulatedState['is_harvest_ready']
+            && ($simulatedState['simulated_phase'] ?? null) !== ConditionType::Mature->value
             && ! $weatherContext['is_heavy_rain']) {
             $actions[] = [
                 'type' => TaskType::Watering->value,
@@ -540,6 +560,7 @@ class CalendarGenerationService
             $existing['required_resources'] ?? [],
             $incoming['required_resources'] ?? [],
         );
+        $existing['workflow_context'] = $existing['workflow_context'] ?? $incoming['workflow_context'] ?? null;
 
         return $existing;
     }
@@ -636,11 +657,11 @@ class CalendarGenerationService
      */
     private function buyActionKey(array $requirement): string
     {
-        return implode('|', [
-            (string) ($requirement['inventory_item_type'] ?? InventoryItemType::Material->value),
-            (string) ($requirement['unit'] ?? 'unit'),
-            (string) ($requirement['normalized_name'] ?? ''),
-        ]);
+        if (isset($requirement['resource_key']) && is_string($requirement['resource_key'])) {
+            return $requirement['resource_key'];
+        }
+
+        return NormalizedTaskResource::from($requirement)->key();
     }
 
     private function dailyBuyActionKey(string $date, string $resourceKey): string
@@ -843,6 +864,7 @@ class CalendarGenerationService
                         'inventory_item_type' => $requirement['inventory_item_type'],
                         'unit' => $requirement['unit'],
                         'required_quantity' => 0.0,
+                        'resource_mode' => $requirement['resource_mode'] ?? ((bool) $requirement['is_consumed'] ? 'consumable' : 'reusable'),
                         'is_consumed' => (bool) $requirement['is_consumed'],
                         'consumption_mode' => (bool) $requirement['is_consumed'] ? 'consumable' : 'reusable',
                         'task_names' => [],
@@ -898,6 +920,7 @@ class CalendarGenerationService
                     'normalized_name' => $requirement['normalized_name'],
                     'inventory_item_type' => $requirement['inventory_item_type'],
                     'unit' => $requirement['unit'],
+                    'resource_mode' => $resourcePlan['resource_mode'] ?? ($requirement['resource_mode'] ?? ((bool) $requirement['is_consumed'] ? 'consumable' : 'reusable')),
                     'required_quantity' => round((float) $requirement['required_quantity'], 2),
                     'available_quantity' => round((float) ($resourcePlan['available_quantity'] ?? 0), 2),
                     'shortage_quantity' => $dayShortage > 0
@@ -921,6 +944,7 @@ class CalendarGenerationService
         if ($requirements->isEmpty()) {
             return [
                 'status' => 'not_required',
+                'inventory_mode' => 'not_required',
                 'is_actionable' => true,
                 'shortage_count' => 0,
                 'requirements' => [],
@@ -932,6 +956,7 @@ class CalendarGenerationService
 
         return [
             'status' => $missingResources->isEmpty() ? 'available' : 'shortage',
+            'inventory_mode' => $missingResources->isEmpty() ? 'available' : 'shortage',
             'is_actionable' => $missingResources->isEmpty(),
             'shortage_count' => $missingResources->count(),
             'requirements' => $requirements->all(),
@@ -952,7 +977,6 @@ class CalendarGenerationService
             ->unique()
             ->values()
             ->all();
-        $taskList = $taskNames === [] ? 'planned work' : implode(', ', $taskNames);
         $itemType = (string) ($missingResource['inventory_item_type'] ?? InventoryItemType::Material->value);
         $unit = (string) ($missingResource['unit'] ?? 'unit');
         $buyActionKey = $this->dailyBuyActionKey($date, (string) $missingResource['resource_key']);
@@ -970,16 +994,18 @@ class CalendarGenerationService
                 $date,
             ),
             'comment' => sprintf(
-                'Short by %s %s for %s.',
+                'Missing %s %s for %d blocked task%s.',
                 number_format($quantity, $itemType === InventoryItemType::Tool->value ? 0 : 2, '.', ''),
                 $unit,
-                $taskList,
+                count($taskNames),
+                count($taskNames) === 1 ? '' : 's',
             ),
             'plant_id' => null,
             'zone_id' => null,
             'weather_context' => null,
             'inventory_context' => [
-                'status' => 'purchase_required',
+                'status' => 'replenishment',
+                'inventory_mode' => 'replenishment',
                 'is_actionable' => true,
                 'shortage_count' => 1,
                 'shortage_quantity' => $quantity,
@@ -988,6 +1014,8 @@ class CalendarGenerationService
                 'planned_for_tasks' => $taskNames,
                 'planned_for_task_count' => count($taskNames),
                 'calendar_date' => $date,
+                'resource_key' => $missingResource['resource_key'],
+                'resource_mode' => $missingResource['resource_mode'] ?? ($missingResource['is_consumed'] ? 'consumable' : 'reusable'),
                 'expected_item_type' => $itemType,
                 'unit' => $unit,
                 'buy_task_ids' => [],
@@ -1000,6 +1028,7 @@ class CalendarGenerationService
                 'unit' => $unit,
                 'required_quantity' => $quantity,
                 'shortage_quantity' => $quantity,
+                'resource_mode' => $missingResource['resource_mode'] ?? ($missingResource['is_consumed'] ? 'consumable' : 'reusable'),
                 'is_consumed' => false,
             ]],
         ];
@@ -1013,8 +1042,8 @@ class CalendarGenerationService
     {
         return $actions->map(function (array $action): array {
             $action['inventory_context'] = ($action['required_resources'] ?? []) === []
-                ? ['status' => 'not_required', 'is_actionable' => true, 'shortage_count' => 0, 'requirements' => [], 'missing_resources' => []]
-                : ['status' => 'unknown', 'is_actionable' => false, 'shortage_count' => count($action['required_resources'] ?? []), 'requirements' => [], 'missing_resources' => $action['required_resources'] ?? []];
+                ? ['status' => 'not_required', 'inventory_mode' => 'not_required', 'is_actionable' => true, 'shortage_count' => 0, 'requirements' => [], 'missing_resources' => []]
+                : ['status' => 'unknown', 'inventory_mode' => 'shortage', 'is_actionable' => false, 'shortage_count' => count($action['required_resources'] ?? []), 'requirements' => [], 'missing_resources' => $action['required_resources'] ?? []];
 
             return $action;
         });
@@ -1039,6 +1068,7 @@ class CalendarGenerationService
                     'unit' => (string) $requirement['unit'],
                     'required_quantity' => round((float) $requirement['required_quantity'], 2),
                     'shortage_quantity' => round((float) ($requirement['shortage_quantity'] ?? 0), 2),
+                    'resource_mode' => NormalizedTaskResource::normalizeResourceMode($requirement),
                     'is_consumed' => (bool) $requirement['is_consumed'],
                 ];
             })
@@ -1111,8 +1141,8 @@ class CalendarGenerationService
             $key = implode('|', [
                 $requirement['inventory_item_type'],
                 $requirement['unit'],
+                $requirement['resource_mode'] ?? ((bool) $requirement['is_consumed'] ? 'consumable' : 'reusable'),
                 $requirement['normalized_name'],
-                $requirement['is_consumed'] ? '1' : '0',
             ]);
 
             if (! isset($merged[$key])) {
@@ -1148,12 +1178,34 @@ class CalendarGenerationService
             ->with('requiredResources')
             ->get()
             ->flatMap(function (Task $task) {
+                $resourceKey = data_get($task->inventory_context, 'resource_key');
+
+                if (is_string($resourceKey) && $resourceKey !== '') {
+                    return [$resourceKey => $task];
+                }
+
                 return $task->requiredResources->mapWithKeys(function (TaskResourceRequirement $requirement) use ($task): array {
-                    return [$this->buyActionKey([
+                    $baseRequirement = [
                         'inventory_item_type' => $requirement->inventory_item_type?->value ?? $requirement->inventory_item_type,
                         'unit' => $requirement->unit?->value ?? $requirement->unit,
                         'normalized_name' => $requirement->normalized_name,
-                    ]) => $task];
+                        'resource_mode' => data_get($task->inventory_context, 'resource_mode', $requirement->is_consumed ? 'consumable' : 'reusable'),
+                        'is_consumed' => $requirement->is_consumed,
+                    ];
+                    $keys = [$this->buyActionKey($baseRequirement)];
+                    $itemType = (string) ($baseRequirement['inventory_item_type'] ?? '');
+
+                    if (! data_get($task->inventory_context, 'resource_mode') && $itemType !== '') {
+                        $keys[] = $this->buyActionKey(array_merge($baseRequirement, [
+                            'resource_mode' => $itemType === InventoryItemType::Material->value ? 'consumable' : 'reusable',
+                            'is_consumed' => $itemType === InventoryItemType::Material->value,
+                        ]));
+                    }
+
+                    return collect($keys)
+                        ->unique()
+                        ->mapWithKeys(fn (string $key): array => [$key => $task])
+                        ->all();
                 });
             })
             ->all();
@@ -1176,6 +1228,7 @@ class CalendarGenerationService
             'unit' => $unit,
             'required_quantity' => round($requiredQuantity, 2),
             'shortage_quantity' => 0.0,
+            'resource_mode' => $isConsumed ? 'consumable' : 'reusable',
             'is_consumed' => $isConsumed,
         ];
     }

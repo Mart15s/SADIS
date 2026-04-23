@@ -1,10 +1,7 @@
 import { memo, useMemo } from 'react'
 import {
-  buildPlotRenderModel,
-  createPreviewViewport,
-  getProjectedLabelConfig,
-  getZoneColor,
-  shapePointsToSvg,
+  STANDARD_PREVIEW_VIEWBOX,
+  buildPreviewModel,
 } from '../../lib/plotRender.js'
 
 export default memo(function PlanPreview({
@@ -15,35 +12,12 @@ export default memo(function PlanPreview({
   className = '',
 }) {
   const preview = useMemo(() => {
-    const renderModel = buildPlotRenderModel({
+    return buildPreviewModel({
       plotGeometry,
       plotSize,
       zones,
+      viewBox: STANDARD_PREVIEW_VIEWBOX,
     })
-    const viewport = createPreviewViewport(renderModel.boundary, renderModel.layouts)
-    const previewZones = zones
-      .map((zone, index) => {
-        const shape = renderModel.layouts[String(zone.id)] ?? renderModel.layouts[zone.id]
-
-        if (!shape) {
-          return null
-        }
-
-        return {
-          id: zone.id ?? index,
-          name: zone.name ?? 'Zone',
-          points: shapePointsToSvg(shape, viewport),
-          label: getProjectedLabelConfig(zone.name, shape, viewport),
-          color: getZoneColor(index),
-        }
-      })
-      .filter(Boolean)
-
-    return {
-      plot: shapePointsToSvg(renderModel.boundary, viewport),
-      zones: previewZones,
-      source: renderModel.source,
-    }
   }, [plotGeometry, plotSize, zones])
 
   const clipPathId = useMemo(
@@ -53,18 +27,25 @@ export default memo(function PlanPreview({
 
   return (
     <figure className={`plan-preview-card ${className}`.trim()} data-plan-source={preview.source}>
-      <svg className="plan-preview-svg" viewBox="0 0 100 100" aria-label={`${plotName || 'Plot'} visual preview`}>
+      <svg
+        className="plan-preview-svg"
+        viewBox={`0 0 ${preview.viewBox.width} ${preview.viewBox.height}`}
+        aria-label={`${plotName || 'Plot'} visual preview`}
+      >
         <defs>
           <clipPath id={clipPathId}>
             <polygon points={preview.plot} />
           </clipPath>
         </defs>
 
+        <rect className="plan-preview-frame" x="2.5" y="2.5" width={preview.viewBox.width - 5} height={preview.viewBox.height - 5} rx="18" ry="18" />
+        <rect className="plan-preview-surface" x="8" y="8" width={preview.viewBox.width - 16} height={preview.viewBox.height - 16} rx="14" ry="14" />
         <polygon className="plan-preview-outline" points={preview.plot} />
 
         <g clipPath={`url(#${clipPathId})`}>
           {preview.zones.map((zone) => (
             <g key={zone.id}>
+              <title>{zone.name}</title>
               <polygon
                 className="plan-preview-zone"
                 points={zone.points}
@@ -74,7 +55,7 @@ export default memo(function PlanPreview({
               {zone.label ? (
                 <>
                   <rect
-                    className={`plan-preview-label-shell plan-preview-label-shell--${zone.label.variant}`}
+                    className={`plan-preview-label-shell plan-preview-label-shell--${zone.label.mode}`}
                     x={zone.label.x}
                     y={zone.label.y}
                     width={zone.label.width}
@@ -83,9 +64,10 @@ export default memo(function PlanPreview({
                     ry={zone.label.cornerRadius}
                   />
                   <text
-                    className={`plan-preview-label plan-preview-label--${zone.label.variant}`}
+                    className={`plan-preview-label plan-preview-label--${zone.label.mode}`}
                     x={zone.label.x + (zone.label.width / 2)}
                     y={zone.label.y + (zone.label.height / 2)}
+                    fontSize={zone.label.fontSize}
                   >
                     {zone.label.text}
                   </text>
@@ -95,6 +77,26 @@ export default memo(function PlanPreview({
           ))}
         </g>
       </svg>
+      {preview.zones.length > 0 ? (
+        <div className="plan-preview-legend" aria-label="Zone legend">
+          {preview.legend.map((zone) => (
+            <span
+              key={`legend-${zone.id}`}
+              className={`plan-preview-legend-item ${zone.usesFallback ? 'is-fallback' : ''}`.trim()}
+            >
+              <span className="plan-preview-legend-index">{zone.index}</span>
+              <span
+                className="plan-preview-legend-swatch"
+                style={{
+                  background: zone.color.fill,
+                  borderColor: zone.color.stroke,
+                }}
+              />
+              <span className="plan-preview-legend-text">{zone.name}</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
       <figcaption className="plan-preview-caption">
         {preview.source === 'geometry' ? 'Synced plot geometry preview' : 'Fallback plot preview'}
       </figcaption>

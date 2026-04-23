@@ -8,9 +8,11 @@ import {
   ProcessingState,
   SuccessToast,
 } from '../../components/shared/StatusView.jsx'
-import Badge from '../../components/ui/Badge.jsx'
+import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
-import Card from '../../components/ui/Card.jsx'
+import FormSection from '../../components/ui/FormSection.jsx'
+import SectionCard from '../../components/ui/SectionCard.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
 import { formatDate, safeNumber } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
@@ -140,11 +142,11 @@ export default function PlotsPage() {
       <PageHeader
         eyebrow="Garden portfolio"
         title="Plots"
-        description="Create new plots, review access roles, and jump into workspace, calendar, history, harvest, and analytics views from one premium overview."
+        description="Browse plots, review ownership, and create new workspaces without burying the main list in oversized empty panels."
         meta={(
           <>
-            <Badge tone="soft">{plotsState.data.length} total plots</Badge>
-            <Badge tone="neutral">{filteredPlots.length} matching current filters</Badge>
+            <StatusBadge kind="ownership">{plotsState.data.length} total plots</StatusBadge>
+            <StatusBadge kind="selection" tone="neutral">{filteredPlots.length} matching current filters</StatusBadge>
           </>
         )}
       />
@@ -152,8 +154,11 @@ export default function PlotsPage() {
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
       <div className="plots-layout">
-        <section className="panel page-stack">
-          <div className="field">
+        <SectionCard
+          title="Browse plots"
+          description="Search by plot name, city, description, or access role. The list scales to the available content instead of floating in an oversized content well."
+        >
+          <div className="field plots-search-field">
             <label htmlFor="plot-search">Search plots</label>
             <div className="search-input-wrap">
               <span className="search-icon"><SearchIcon /></span>
@@ -172,19 +177,19 @@ export default function PlotsPage() {
               description="Create your first plot or change the current search to reveal more results."
             />
           ) : (
-            <div className="plot-grid">
+            <div className="plot-grid plot-browser-grid">
               {filteredPlots.map((plot) => (
-                <Card key={plot.id} className="plot-card">
+                <article key={plot.id} className="plot-browser-card">
                   <div className="list-head">
                     <h3>{plot.name}</h3>
-                    <Badge tone="soft">{plot.access_role ?? 'viewer'}</Badge>
+                    <StatusBadge kind="ownership">{plot.access_role ?? 'viewer'}</StatusBadge>
                   </div>
 
                   <span className="muted">
                     {plot.city} | {safeNumber(plot.plot_size, 2)} m2
                   </span>
 
-                  <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>
+                  <p className="muted plot-browser-copy">
                     {plot.description || 'No description yet.'}
                   </p>
 
@@ -194,7 +199,7 @@ export default function PlotsPage() {
                     <span>Created {formatDate(plot.creation_date)}</span>
                   </div>
 
-                  <div className="row-actions">
+                  <ActionRow>
                     <Link to={`/plots/${plot.id}`}>
                       <Button variant="ghost"><ArrowIcon /> Open</Button>
                     </Link>
@@ -207,96 +212,99 @@ export default function PlotsPage() {
                     <Link to={`/plots/${plot.id}/edit`}>
                       <Button variant="secondary"><PencilIcon /> Edit</Button>
                     </Link>
-                  </div>
-                </Card>
+                  </ActionRow>
+                </article>
               ))}
             </div>
           )}
-        </section>
+        </SectionCard>
 
         <div className="plots-form-panel">
-          <form className="panel input-grid" onSubmit={handleSubmit}>
-            <div className="page-stack" style={{ gap: '0.35rem' }}>
-              <h3 style={{ margin: 0 }}>Create plot</h3>
-              <p className="section-copy">Start with the essentials now, then polish geometry and zoning inside the dedicated plot workspace.</p>
-            </div>
+          <form onSubmit={handleSubmit}>
+            <FormSection
+              title="Create plot"
+              description="Capture the essentials here, then refine geometry and zones inside the plot workspace."
+            >
+              <div className="input-grid">
+                <div className="field">
+                  <label htmlFor="plot-name">Name</label>
+                  <input id="plot-name" name="name" value={form.name} onChange={handleChange} required />
+                </div>
 
-            <div className="field">
-              <label htmlFor="plot-name">Name</label>
-              <input id="plot-name" name="name" value={form.name} onChange={handleChange} required />
-            </div>
+                <div className="field">
+                  <label htmlFor="plot-city">City</label>
+                  <input id="plot-city" name="city" value={form.city} onChange={handleChange} required />
+                </div>
 
-            <div className="field">
-              <label htmlFor="plot-city">City</label>
-              <input id="plot-city" name="city" value={form.city} onChange={handleChange} required />
-            </div>
+                <div className="field">
+                  <label htmlFor="plot-size">Plot size (m2)</label>
+                  <input
+                    id="plot-size"
+                    name="plot_size"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={form.plot_size}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-            <div className="field">
-              <label htmlFor="plot-size">Plot size (m2)</label>
-              <input
-                id="plot-size"
-                name="plot_size"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.plot_size}
-                onChange={handleChange}
-                required
-              />
-            </div>
+                <div className="field">
+                  <label htmlFor="creation-date">Creation date</label>
+                  <input
+                    id="creation-date"
+                    name="creation_date"
+                    type="date"
+                    value={form.creation_date}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-            <div className="field">
-              <label htmlFor="creation-date">Creation date</label>
-              <input
-                id="creation-date"
-                name="creation_date"
-                type="date"
-                value={form.creation_date}
-                onChange={handleChange}
-                required
-              />
-            </div>
+                <div className="field field-span-2">
+                  <label htmlFor="plot-description">Description</label>
+                  <textarea id="plot-description" name="description" value={form.description} onChange={handleChange} />
+                </div>
 
-            <div className="field">
-              <label htmlFor="plot-description">Description</label>
-              <textarea id="plot-description" name="description" value={form.description} onChange={handleChange} />
-            </div>
+                <label className="field field-span-2">
+                  <span>Community sharing</span>
+                  <select
+                    name="share"
+                    value={String(form.share)}
+                    onChange={(event) => {
+                      setForm((current) => ({
+                        ...current,
+                        share: event.target.value === 'true',
+                      }))
+                    }}
+                  >
+                    <option value="false">Private</option>
+                    <option value="true">Shared</option>
+                  </select>
+                </label>
+              </div>
 
-            <label className="field">
-              <span>Community sharing</span>
-              <select
-                name="share"
-                value={String(form.share)}
-                onChange={(event) => {
-                  setForm((current) => ({
-                    ...current,
-                    share: event.target.value === 'true',
-                  }))
-                }}
-              >
-                <option value="false">Private</option>
-                <option value="true">Shared</option>
-              </select>
-            </label>
+              {error ? <span className="field-error">{error}</span> : null}
 
-            {error ? <span className="field-error">{error}</span> : null}
+              {submitting ? (
+                <ProcessingState
+                  title="Creating plot"
+                  description="Saving metadata and preparing the new workspace."
+                  steps={['Validating form', 'Creating plot', 'Refreshing list']}
+                  compact
+                />
+              ) : null}
 
-            {submitting ? (
-              <ProcessingState
-                title="Creating plot"
-                description="Saving metadata and preparing the new workspace."
-                steps={['Validating form', 'Creating plot', 'Refreshing list']}
-                compact
-              />
-            ) : null}
-
-            <Button type="submit" loading={submitting}>
-              {submitting ? 'Creating plot' : <><PlusIcon /> Create plot</>}
-            </Button>
+              <ActionRow>
+                <Button type="submit" loading={submitting}>
+                  {submitting ? 'Creating plot' : <><PlusIcon /> Create plot</>}
+                </Button>
+              </ActionRow>
+            </FormSection>
           </form>
         </div>
       </div>
     </div>
   )
 }
-

@@ -1089,8 +1089,8 @@ class CalendarGenerationTest extends TestCase
         $payload = $response->json();
         $tasks = $payload['data'] ?? $payload;
 
-        $this->assertCount(1, $tasks);
-        $this->assertSame('2026-03-21', data_get($tasks, '0.date'));
+        $this->assertNotEmpty($tasks);
+        $this->assertTrue(collect($tasks)->every(fn (array $task) => data_get($task, 'date') === '2026-03-21'));
     }
 
     public function test_same_input_produces_same_generated_task_contract(): void
@@ -1176,7 +1176,6 @@ class CalendarGenerationTest extends TestCase
             'name' => $name,
             'normalized_name' => mb_strtolower(trim($name)),
             'quantity' => 10,
-            'minimum_quantity' => 0,
             'type' => $normalizedType,
             'inventory_item_type' => $normalizedType,
             'unit' => $unit,

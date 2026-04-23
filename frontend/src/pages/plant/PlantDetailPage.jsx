@@ -1,15 +1,11 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
 import { api } from '../../lib/api.js'
-import { CONDITION_TYPES, PLANT_TYPES, formatDate } from '../../lib/constants.js'
+import { CONDITION_TYPES, formatDate, formatDateTime } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
-
-function parseBooleanSelectValue(value) {
-  return value === 'true'
-}
 
 const initialConditionForm = {
   measured_at: new Date().toISOString().slice(0, 10),
@@ -19,133 +15,216 @@ const initialConditionForm = {
   disease: '',
 }
 
+function valueOrFallback(value, suffix = '') {
+  if (value === null || value === undefined || value === '') {
+    return 'Not set'
+  }
+
+  return `${value}${suffix}`
+}
+
+function createReviewForm(task) {
+  const review = task?.workflow_context?.review ?? {}
+
+  return {
+    action: 'confirm',
+    condition: review.target_condition ?? '',
+    measured_at: task?.date ?? new Date().toISOString().slice(0, 10),
+    notes: '',
+  }
+}
+
 export default function PlantDetailPage() {
-  const navigate = useNavigate()
+  const location = useLocation()
   const { plotId, plantId } = useParams()
-  const [plantForm, setPlantForm] = useState(null)
   const [conditionForm, setConditionForm] = useState(initialConditionForm)
+  const [reviewTask, setReviewTask] = useState(location.state?.pendingReviewTask ?? null)
+  const [reviewForm, setReviewForm] = useState(createReviewForm(location.state?.pendingReviewTask))
   const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [notice, setNotice] = useState(location.state?.notice ?? '')
+  const [submittingCondition, setSubmittingCondition] = useState(false)
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   const pageState = useAsyncData(
     async () => {
       const plots = await api.listPlots()
-      const accessRole = plots.find((entry) => String(entry.id) === String(plotId))?.access_role ?? null
-      const [plant, conditions, rotations, zones] = await Promise.all([
-        api.getPlant(plotId, plantId),
-        api.listPlantConditions(plotId, plantId),
-        api.listRotations(plotId),
-        api.listPlantZones(plotId),
-      ])
+      const plant = plotId
+        ? await api.getPlant(plotId, plantId)
+        : await api.getManagedPlant(plantId)
+      const resolvedPlotId = String(plotId ?? plant.plot?.id ?? plant.fk_plot_id ?? '')
+      const accessRole = plots.find((entry) => String(entry.id) === resolvedPlotId)?.access_role ?? null
+      const [conditions, harvests, rotations] = resolvedPlotId
+        ? await Promise.all([
+          api.listPlantConditions(resolvedPlotId, plantId),
+          api.listHarvests(resolvedPlotId, { plant_id: plantId }),
+          api.listRotations(resolvedPlotId),
+        ])
+        : [[], [], []]
 
       return {
         plant,
         conditions,
+        harvests,
         rotations: rotations.filter((rotation) => String(rotation.fk_plant_id) === String(plantId)),
-        zones,
         accessRole,
+        resolvedPlotId,
       }
     },
     [plotId, plantId],
     {
       plant: null,
       conditions: [],
+      harvests: [],
       rotations: [],
-      zones: [],
       accessRole: null,
+      resolvedPlotId: '',
     },
   )
 
-  useEffect(() => {
-    if (pageState.data.plant) {
-      setPlantForm({
-        name: pageState.data.plant.name ?? '',
-        plant_date: pageState.data.plant.plant_date ?? '',
-        type: pageState.data.plant.type ?? '',
-        condition: pageState.data.plant.condition ?? CONDITION_TYPES[6],
-        disease: Boolean(pageState.data.plant.disease),
-        growing_time_days: pageState.data.plant.growing_time_days ?? '',
-        recommended_temperature: pageState.data.plant.recommended_temperature ?? '',
-        recommended_humidity: pageState.data.plant.recommended_humidity ?? '',
-        rest_time_days: pageState.data.plant.rest_time_days ?? '',
-        plant_size: pageState.data.plant.plant_size ?? '',
-        fk_plant_zone_id: pageState.data.plant.fk_plant_zone_id ?? '',
-      })
-    }
-  }, [pageState.data.plant])
-
+  const plant = pageState.data.plant
+  const resolvedPlotId = pageState.data.resolvedPlotId
   const canEdit = ['owner', 'editor'].includes(pageState.data.accessRole)
+  const linkedZone = plant?.plantZone ?? plant?.plant_zone ?? null
+  const linkedCare = plant?.plantCare ?? plant?.plant_care ?? null
+  const linkedCatalogPlant = plant?.catalogPlant ?? plant?.catalog_plant ?? null
+  const lifecycle = plant?.lifecycle ?? null
 
-  async function handlePlantSave(event) {
-    event.preventDefault()
-    setSubmitting(true)
-    setError('')
-
-    try {
-      const updated = await api.updatePlant(plotId, plantId, {
-        ...plantForm,
-        fk_plant_zone_id: Number(plantForm.fk_plant_zone_id),
-        growing_time_days: plantForm.growing_time_days ? Number(plantForm.growing_time_days) : null,
-        recommended_temperature: plantForm.recommended_temperature ? Number(plantForm.recommended_temperature) : null,
-        recommended_humidity: plantForm.recommended_humidity ? Number(plantForm.recommended_humidity) : null,
-        rest_time_days: plantForm.rest_time_days ? Number(plantForm.rest_time_days) : null,
-        plant_size: plantForm.plant_size ? Number(plantForm.plant_size) : null,
-        disease: Boolean(plantForm.disease),
-      })
-      pageState.setData((current) => ({
-        ...current,
-        plant: updated,
-      }))
-    } catch (requestError) {
-      setError(requestError.message)
-    } finally {
-      setSubmitting(false)
+  const backTarget = useMemo(() => {
+    if (location.state?.backTo) {
+      return {
+        to: location.state.backTo,
+        label: location.state.backLabel ?? 'Back',
+      }
     }
-  }
+
+    if (plotId) {
+      return {
+        to: `/plots/${plotId}`,
+        label: 'Back to plot',
+      }
+    }
+
+    return {
+      to: '/plants',
+      label: 'Back to plants',
+    }
+  }, [location.state, plotId, resolvedPlotId])
 
   async function handleConditionSubmit(event) {
     event.preventDefault()
-    setSubmitting(true)
+    if (!resolvedPlotId) {
+      return
+    }
+
+    setSubmittingCondition(true)
     setError('')
+    setNotice('')
 
     try {
-      const created = await api.createPlantCondition(plotId, plantId, {
+      const created = await api.createPlantCondition(resolvedPlotId, plantId, {
         ...conditionForm,
         notes: conditionForm.notes || null,
         photo_url: conditionForm.photo_url || null,
-        disease: conditionForm.disease || null,
+        disease: conditionForm.disease === '' ? null : conditionForm.disease === 'true',
       })
+
       pageState.setData((current) => ({
         ...current,
+        plant: current.plant
+          ? {
+            ...current.plant,
+            condition: created.condition,
+            lifecycle: current.plant.lifecycle
+              ? {
+                ...current.plant.lifecycle,
+                current_condition: created.condition,
+                latest_condition_entry: {
+                  id: created.id,
+                  measured_at: created.measured_at,
+                  condition: created.condition,
+                  notes: created.notes,
+                },
+              }
+              : current.plant.lifecycle,
+          }
+          : current.plant,
         conditions: [created, ...current.conditions],
-        plant: {
-          ...current.plant,
-          condition: conditionForm.condition,
-          disease: conditionForm.disease || current.plant.disease,
-        },
       }))
-      setConditionForm(initialConditionForm)
+
+      setConditionForm({
+        ...initialConditionForm,
+        condition: created.condition ?? initialConditionForm.condition,
+      })
+      setNotice('Condition logged successfully.')
+      await pageState.reload()
     } catch (requestError) {
       setError(requestError.message)
     } finally {
-      setSubmitting(false)
+      setSubmittingCondition(false)
     }
   }
 
-  async function handleDelete() {
-    setSubmitting(true)
+  async function handleReviewSubmit(event) {
+    event.preventDefault()
+    if (!reviewTask) {
+      return
+    }
+
+    setSubmittingReview(true)
     setError('')
+    setNotice('')
 
     try {
-      await api.deletePlant(plotId, plantId)
-      navigate(`/plots/${plotId}`)
+      const payload = {
+        condition_review: {
+          action: reviewForm.action,
+          measured_at: reviewForm.measured_at,
+          notes: reviewForm.notes || null,
+        },
+      }
+
+      if (reviewForm.action === 'adjust') {
+        payload.condition_review.condition = reviewForm.condition
+      }
+
+      const response = await api.completeTask(reviewTask.id, payload)
+      const entry = response.condition_history_entry
+
+      pageState.setData((current) => ({
+        ...current,
+        plant: current.plant && entry
+          ? {
+            ...current.plant,
+            condition: entry.condition,
+            lifecycle: current.plant.lifecycle
+              ? {
+                ...current.plant.lifecycle,
+                current_condition: entry.condition,
+                latest_condition_entry: {
+                  id: entry.id,
+                  measured_at: entry.measured_at,
+                  condition: entry.condition,
+                  notes: entry.notes,
+                },
+              }
+              : current.plant.lifecycle,
+          }
+          : current.plant,
+        conditions: entry ? [entry, ...current.conditions] : current.conditions,
+      }))
+
+      setReviewTask(null)
+      setReviewForm(createReviewForm(null))
+      setNotice('Lifecycle review completed successfully.')
+      await pageState.reload()
     } catch (requestError) {
       setError(requestError.message)
-      setSubmitting(false)
+    } finally {
+      setSubmittingReview(false)
     }
   }
 
-  if (pageState.loading || !plantForm) {
+  if (pageState.loading) {
     return <LoadingState title="Loading plant detail..." />
   }
 
@@ -153,145 +232,75 @@ export default function PlantDetailPage() {
     return <ErrorState error={pageState.error} onRetry={pageState.reload} />
   }
 
-  if (!pageState.data.plant) {
+  if (!plant) {
     return <EmptyState title="Plant not found" description="The requested plant could not be loaded." />
   }
-
-  const linkedZone = pageState.data.plant.plantZone ?? pageState.data.plant.plant_zone ?? null
-  const linkedCare = pageState.data.plant.plantCare ?? pageState.data.plant.plant_care ?? null
-  const sharedCare = pageState.data.plant.sharedPlantCare ?? pageState.data.plant.shared_plant_care ?? linkedCare
-  const linkedCatalogPlant = pageState.data.plant.catalogPlant ?? pageState.data.plant.catalog_plant ?? null
-  const hasLinkedCare = Boolean(pageState.data.plant.fk_plant_care_id || linkedCare)
 
   return (
     <div className="page-stack">
       <PageHeader
-        title={pageState.data.plant.name}
-        description={`Type ${pageState.data.plant.type} | condition ${pageState.data.plant.condition} | zone ${linkedZone?.name ?? 'Unknown'} | catalog ${linkedCatalogPlant?.name ?? 'none'}`}
+        title={plant.name}
+        description={`${plant.plant_type} in ${plant.plot?.name ?? 'Unknown plot'} / ${linkedZone?.name ?? 'Unknown zone'}`}
         actions={(
-          <Link to={`/plots/${plotId}`}>
-            <Button variant="secondary">Back to plot</Button>
-          </Link>
+          <>
+            <Link to={backTarget.to}>
+              <Button variant="secondary">{backTarget.label}</Button>
+            </Link>
+            {resolvedPlotId && !plotId ? (
+              <Link to={`/plots/${resolvedPlotId}`}>
+                <Button variant="ghost">Open plot</Button>
+              </Link>
+            ) : null}
+            {canEdit ? (
+              <Link to={`/plants/${plant.id}/edit`}>
+                <Button>Edit</Button>
+              </Link>
+            ) : null}
+          </>
         )}
       />
 
-      <div className="detail-grid">
+      {notice ? <div className="inline-note">{notice}</div> : null}
+      {error ? <span className="field-error">{error}</span> : null}
+
+      {reviewTask ? (
         <section className="panel page-stack">
-          <h3>Plant details</h3>
-          <div className="meta-cluster">
-            <span>Planted {formatDate(pageState.data.plant.plant_date)}</span>
-            <span>Disease {pageState.data.plant.disease ? 'Yes' : 'No'}</span>
-            <span>Care profile {pageState.data.plant.fk_plant_care_id ?? 'Not linked'}</span>
-            <span>Catalog {linkedCatalogPlant?.name ?? 'Not linked'}</span>
-            <span>
-              Care source {linkedCare?.source_quality ?? 'missing'}
-            </span>
+          <div>
+            <h3 className="section-title">Pending Lifecycle Review</h3>
+            <p className="section-copy">This review task was opened from the calendar and will update the plant’s confirmed condition once you submit the review.</p>
           </div>
-
-          {linkedCatalogPlant ? (
-            <div className="inline-note">
-              This planted instance is linked to reusable catalog plant {linkedCatalogPlant.name}. Shared care edits happen on the catalog plant.
+          <div className="meta-cluster">
+            <span>Task {reviewTask.name}</span>
+            <span>Suggested {reviewTask.workflow_context?.review?.target_condition ?? 'Not set'}</span>
+            <span>Expected {formatDate(reviewTask.workflow_context?.review?.expected_on ?? reviewTask.date)}</span>
+          </div>
+          <form className="input-grid" onSubmit={handleReviewSubmit}>
+            <div className="field">
+              <label htmlFor="review-action">Decision</label>
+              <select
+                id="review-action"
+                value={reviewForm.action}
+                onChange={(event) => setReviewForm((current) => ({
+                  ...current,
+                  action: event.target.value,
+                  condition: event.target.value === 'confirm'
+                    ? (reviewTask.workflow_context?.review?.target_condition ?? current.condition)
+                    : current.condition,
+                }))}
+              >
+                <option value="confirm">Confirm suggested transition</option>
+                <option value="keep_current">Keep current stage</option>
+                <option value="adjust">Adjust manually</option>
+              </select>
             </div>
-          ) : null}
-
-          {linkedCare ? (
-            <div className="panel page-stack">
-              <h3>Effective care profile</h3>
-              <div className="meta-cluster">
-                <span>{linkedCare.plant_name}</span>
-                <span>Water every {linkedCare.watering_interval_days ?? 'n/a'} days</span>
-                <span>Fertilize every {linkedCare.fertilizing_interval_days ?? 'n/a'} days</span>
-                <span>Provider {linkedCare.source_provider ?? 'local'}</span>
-                <span>Quality {linkedCare.source_quality ?? 'unknown'}</span>
-                <span>Canonical {linkedCare.canonical_name ?? 'n/a'}</span>
-                <span>Scientific {linkedCare.source_scientific_name ?? 'n/a'}</span>
-                <span>Family {linkedCare.source_family ?? 'n/a'}</span>
-                <span>Species ID {linkedCare.source_perenual_species_id ?? 'n/a'}</span>
-              </div>
-
-              {sharedCare ? (
-                <div className="inline-note">
-                  This plant uses the shared catalog care profile #{pageState.data.plant.fk_plant_care_id}. To change watering, fertilizing, or thresholds, edit the catalog plant.
-                </div>
-              ) : null}
-              {linkedCatalogPlant ? (
-                <div className="row-actions">
-                  <Link to={`/plants/catalog/${linkedCatalogPlant.id}`}>
-                    <Button variant="ghost">Open Catalog Plant</Button>
-                  </Link>
-                  <Link to={`/plants/catalog/${linkedCatalogPlant.id}/edit`}>
-                    <Button variant="secondary">Edit Shared Care</Button>
-                  </Link>
-                </div>
-              ) : null}
-            </div>
-          ) : !hasLinkedCare ? (
-            <div className="inline-note">
-              No linked care profile is present on this plant record. The backend can still generate defaults when needed.
-            </div>
-          ) : (
-            <div className="inline-note">
-              A care profile ID is linked, but its metadata is not available in this response yet.
-            </div>
-          )}
-
-          {canEdit ? (
-            <form className="input-grid" onSubmit={handlePlantSave}>
+            {reviewForm.action === 'adjust' ? (
               <div className="field">
-                <label htmlFor="plant-edit-name">Name</label>
-                <input
-                  id="plant-edit-name"
-                  value={plantForm.name}
-                  onChange={(event) => setPlantForm((current) => ({ ...current, name: event.target.value }))}
+                <label htmlFor="review-condition">Condition</label>
+                <select
+                  id="review-condition"
+                  value={reviewForm.condition}
+                  onChange={(event) => setReviewForm((current) => ({ ...current, condition: event.target.value }))}
                   required
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="plant-edit-zone">Zone</label>
-                <select
-                  id="plant-edit-zone"
-                  value={plantForm.fk_plant_zone_id}
-                  onChange={(event) => setPlantForm((current) => ({ ...current, fk_plant_zone_id: event.target.value }))}
-                >
-                  {pageState.data.zones.map((zone) => (
-                    <option key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label>Catalog plant</label>
-                <div className="inline-note">
-                  {linkedCatalogPlant ? (
-                    <Link to={`/plants/catalog/${linkedCatalogPlant.id}`}>
-                      Open {linkedCatalogPlant.name}
-                    </Link>
-                  ) : 'No catalog plant linked'}
-                </div>
-              </div>
-              <div className="field">
-                <label htmlFor="plant-edit-type">Type</label>
-                <select
-                  id="plant-edit-type"
-                  value={plantForm.type}
-                  onChange={(event) => setPlantForm((current) => ({ ...current, type: event.target.value }))}
-                  required
-                >
-                  <option value="" disabled>Select type</option>
-                  {PLANT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="plant-edit-condition">Condition</label>
-                <select
-                  id="plant-edit-condition"
-                  value={plantForm.condition}
-                  onChange={(event) => setPlantForm((current) => ({ ...current, condition: event.target.value }))}
                 >
                   {CONDITION_TYPES.map((condition) => (
                     <option key={condition} value={condition}>
@@ -300,33 +309,195 @@ export default function PlantDetailPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
-                <label htmlFor="plant-edit-disease">Disease present</label>
-                <select
-                  id="plant-edit-disease"
-                  value={plantForm.disease ? 'true' : 'false'}
-                  onChange={(event) => setPlantForm((current) => ({ ...current, disease: parseBooleanSelectValue(event.target.value) }))}
-                >
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
-              </div>
-              {error ? <span className="field-error">{error}</span> : null}
-              <div className="form-actions">
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Save plant'}
-                </Button>
-                <Button variant="danger" onClick={handleDelete} disabled={submitting}>
-                  Delete plant
-                </Button>
-              </div>
-            </form>
+            ) : null}
+            <div className="field">
+              <label htmlFor="review-date">Reviewed on</label>
+              <input
+                id="review-date"
+                type="date"
+                value={reviewForm.measured_at}
+                onChange={(event) => setReviewForm((current) => ({ ...current, measured_at: event.target.value }))}
+                required
+              />
+            </div>
+            <div className="field field-span-2">
+              <label htmlFor="review-notes">Notes</label>
+              <textarea
+                id="review-notes"
+                value={reviewForm.notes}
+                onChange={(event) => setReviewForm((current) => ({ ...current, notes: event.target.value }))}
+              />
+            </div>
+            <div className="form-actions">
+              <Button type="submit" disabled={submittingReview}>
+                {submittingReview ? 'Submitting review...' : 'Complete review'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setReviewTask(null)
+                  setReviewForm(createReviewForm(null))
+                }}
+              >
+                Dismiss panel
+              </Button>
+            </div>
+          </form>
+        </section>
+      ) : null}
+
+      <div className="detail-grid">
+        <section className="panel page-stack">
+          <div>
+            <h3 className="section-title">Plant Overview</h3>
+            <p className="section-copy">Authoritative detail view for this planted instance, regardless of whether it was opened from the plot workspace or from the plants list.</p>
+          </div>
+
+          <div className="meta-cluster">
+            <span>Condition {plant.condition}</span>
+            <span>Planted {formatDate(plant.plant_date)}</span>
+            <span>Plot {plant.plot?.name ?? 'Unknown'}</span>
+            <span>Zone {linkedZone?.name ?? 'Unknown'}</span>
+            <span>Catalog {linkedCatalogPlant?.name ?? 'Not linked'}</span>
+            <span>Disease {plant.disease ? 'Yes' : 'No'}</span>
+          </div>
+
+          <div className="form-grid plants-detail-grid">
+            <div className="card">
+              <strong>Growing time</strong>
+              <span className="muted">{valueOrFallback(plant.growing_time_days, ' days')}</span>
+            </div>
+            <div className="card">
+              <strong>Recommended temperature</strong>
+              <span className="muted">{valueOrFallback(plant.recommended_temperature, ' C')}</span>
+            </div>
+            <div className="card">
+              <strong>Recommended humidity</strong>
+              <span className="muted">{valueOrFallback(plant.recommended_humidity, '%')}</span>
+            </div>
+            <div className="card">
+              <strong>Rest time</strong>
+              <span className="muted">{valueOrFallback(plant.rest_time_days, ' days')}</span>
+            </div>
+            <div className="card">
+              <strong>Plant size</strong>
+              <span className="muted">{valueOrFallback(plant.plant_size)}</span>
+            </div>
+            <div className="card">
+              <strong>Linked care profile</strong>
+              <span className="muted">{plant.fk_plant_care_id ?? linkedCare?.id ?? 'Not linked'}</span>
+            </div>
+          </div>
+
+          {plant.disease_notes ? <div className="inline-note">{plant.disease_notes}</div> : null}
+
+          {linkedCatalogPlant ? (
+            <div className="row-actions">
+              <Link to={`/plants/catalog/${linkedCatalogPlant.id}`}>
+                <Button variant="ghost">Open catalog plant</Button>
+              </Link>
+              <Link to={`/plants/catalog/${linkedCatalogPlant.id}/edit`}>
+                <Button variant="secondary">Edit shared care</Button>
+              </Link>
+            </div>
           ) : null}
+
+          <section className="panel page-stack">
+            <div>
+              <h3 className="section-title">Lifecycle Guidance</h3>
+              <p className="section-copy">Expected lifecycle checkpoints are derived from the linked plant care durations. They guide review tasks, but they do not silently change the confirmed plant condition.</p>
+            </div>
+            {lifecycle ? (
+              <>
+                <div className="meta-cluster">
+                  <span>Confirmed stage {lifecycle.current_condition}</span>
+                  <span>Anchor date {formatDate(lifecycle.current_condition_anchor_date)}</span>
+                  <span>Regenerating path {lifecycle.supports_regeneration ? 'Supported' : 'No'}</span>
+                </div>
+                {lifecycle.next_review ? (
+                  <div className="card">
+                    <strong>Next review</strong>
+                    <span className="muted">
+                      Review transition to {lifecycle.next_review.target_condition} on {formatDate(lifecycle.next_review.expected_on)}
+                      {lifecycle.next_review.is_overdue ? ' (overdue)' : ''}
+                    </span>
+                  </div>
+                ) : null}
+                {lifecycle.next_harvest ? (
+                  <div className="card">
+                    <strong>Next harvest checkpoint</strong>
+                    <span className="muted">
+                      Harvest expected on {formatDate(lifecycle.next_harvest.expected_on)}
+                      {lifecycle.next_harvest.is_overdue ? ' (overdue)' : ''}
+                    </span>
+                  </div>
+                ) : null}
+                <div className="page-stack" style={{ gap: '0.35rem' }}>
+                  {Object.entries(lifecycle.scheduled_stage_starts ?? {}).map(([condition, date]) => (
+                    <span key={condition} className="muted">
+                      {condition}: {formatDate(date)}
+                    </span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <EmptyState title="No lifecycle guidance" description="Link a plant care profile to derive expected stage transitions." />
+            )}
+          </section>
         </section>
 
         <aside className="page-stack">
           <section className="panel page-stack">
-            <h3>Condition history</h3>
+            <div>
+              <h3 className="section-title">Effective Care Profile</h3>
+              <p className="section-copy">The shared plant care record used to derive lifecycle guidance and recommendation tasks.</p>
+            </div>
+
+            {linkedCare ? (
+              <div className="form-grid plants-detail-grid">
+                <div className="card">
+                  <strong>Watering interval</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.watering_interval_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Fertilizing interval</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.fertilizing_interval_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Pest check interval</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.pest_check_interval_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Germinating duration</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.germinating_duration_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Growing duration</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.growing_duration_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Flowering duration</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.flowering_duration_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Mature duration</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.mature_duration_days, ' days')}</span>
+                </div>
+                <div className="card">
+                  <strong>Regenerating duration</strong>
+                  <span className="muted">{valueOrFallback(linkedCare.regenerating_duration_days, ' days')}</span>
+                </div>
+              </div>
+            ) : (
+              <EmptyState title="No plant care linked" description="This plant does not currently have a linked care profile." />
+            )}
+          </section>
+
+          <section className="panel page-stack">
+            <div>
+              <h3 className="section-title">Condition History</h3>
+              <p className="section-copy">Confirmed condition updates are recorded here and remain the source of truth for the current plant condition.</p>
+            </div>
             {pageState.data.conditions.length === 0 ? (
               <EmptyState title="No condition history" description="No condition logs exist for this plant yet." />
             ) : (
@@ -334,7 +505,7 @@ export default function PlantDetailPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Date</th>
+                      <th>Measured</th>
                       <th>Condition</th>
                       <th>Notes</th>
                     </tr>
@@ -342,7 +513,7 @@ export default function PlantDetailPage() {
                   <tbody>
                     {pageState.data.conditions.map((entry) => (
                       <tr key={entry.id}>
-                        <td>{formatDate(entry.measured_at)}</td>
+                        <td>{formatDateTime(entry.measured_at)}</td>
                         <td>{entry.condition}</td>
                         <td>{entry.notes || 'No notes'}</td>
                       </tr>
@@ -352,7 +523,7 @@ export default function PlantDetailPage() {
               </div>
             )}
 
-            {canEdit ? (
+            {canEdit && resolvedPlotId ? (
               <form className="input-grid" onSubmit={handleConditionSubmit}>
                 <div className="field">
                   <label htmlFor="condition-date">Measured at</label>
@@ -379,6 +550,18 @@ export default function PlantDetailPage() {
                   </select>
                 </div>
                 <div className="field">
+                  <label htmlFor="condition-disease">Disease present</label>
+                  <select
+                    id="condition-disease"
+                    value={conditionForm.disease}
+                    onChange={(event) => setConditionForm((current) => ({ ...current, disease: event.target.value }))}
+                  >
+                    <option value="">Infer from condition</option>
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
+                </div>
+                <div className="field field-span-2">
                   <label htmlFor="condition-notes">Notes</label>
                   <textarea
                     id="condition-notes"
@@ -386,15 +569,58 @@ export default function PlantDetailPage() {
                     onChange={(event) => setConditionForm((current) => ({ ...current, notes: event.target.value }))}
                   />
                 </div>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Log condition'}
-                </Button>
+                <div className="form-actions">
+                  <Button type="submit" disabled={submittingCondition}>
+                    {submittingCondition ? 'Saving...' : 'Log condition'}
+                  </Button>
+                </div>
               </form>
             ) : null}
           </section>
 
           <section className="panel page-stack">
-            <h3>Rotation history</h3>
+            <div>
+              <h3 className="section-title">Harvest History</h3>
+              <p className="section-copy">Explicit harvest records persist here and feed harvest analytics later.</p>
+            </div>
+            {resolvedPlotId ? (
+              <div className="row-actions">
+                <Link to={`/plots/${resolvedPlotId}/harvests?plantId=${plant.id}`}>
+                  <Button variant="secondary">Open harvest workflow</Button>
+                </Link>
+              </div>
+            ) : null}
+            {pageState.data.harvests.length === 0 ? (
+              <EmptyState title="No harvest history" description="No harvest records are stored for this plant yet." />
+            ) : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Quantity</th>
+                      <th>Task</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageState.data.harvests.map((record) => (
+                      <tr key={record.id}>
+                        <td>{formatDate(record.harvested_on)}</td>
+                        <td>{valueOrFallback(record.quantity)}</td>
+                        <td>{record.task_name || record.task_id || 'Manual'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="panel page-stack">
+            <div>
+              <h3 className="section-title">Rotation History</h3>
+              <p className="section-copy">Past rotation records involving this plant instance.</p>
+            </div>
             {pageState.data.rotations.length === 0 ? (
               <EmptyState title="No rotations" description="This plant has not appeared in recorded rotation history yet." />
             ) : (

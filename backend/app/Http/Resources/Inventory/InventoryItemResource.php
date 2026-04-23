@@ -11,18 +11,16 @@ class InventoryItemResource extends JsonResource
     {
         $type = $this->inventory_item_type?->value ?? $this->type?->value ?? $this->type;
         $quantity = $this->quantity === null ? null : (float) $this->quantity;
-        $minimumQuantity = $this->minimum_quantity === null ? 0.0 : (float) $this->minimum_quantity;
 
         return [
             'id' => $this->id,
             'name' => $this->name,
             'quantity' => $quantity,
-            'minimum_quantity' => $minimumQuantity,
             'type' => $type,
             'inventory_item_type' => $type,
             'unit' => $this->unit?->value ?? $this->unit,
             'consumption_mode' => $type === 'tool' ? 'reusable' : 'consumable',
-            'is_below_minimum' => $quantity !== null && $quantity <= $minimumQuantity,
+            'is_available' => $quantity === null ? false : $quantity > 0,
         ];
     }
 }

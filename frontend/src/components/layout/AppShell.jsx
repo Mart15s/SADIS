@@ -13,7 +13,7 @@ export default function AppShell() {
       <Sidebar isAuthenticated={isAuthenticated} isAdmin={isAdmin} />
       <main className="shell-main">
         <Topbar />
-        <div className={`page-container ${isWorkspaceRoute ? 'page-container-wide' : ''}`.trim()}>
+        <div className={`page-container ${isWorkspaceRoute ? 'page-container-wide page-container-workspace' : ''}`.trim()}>
           <Outlet />
         </div>
       </main>

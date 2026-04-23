@@ -68,6 +68,7 @@ class PlantResource extends JsonResource
             'shared_plant_care' => $loadedSharedPlantCare ? $loadedSharedPlantCare->toArray() : null,
             'plantCare' => $loadedSharedPlantCare ? $loadedSharedPlantCare->toArray() : null,
             'plant_care' => $loadedSharedPlantCare ? $loadedSharedPlantCare->toArray() : null,
+            'lifecycle' => $this->lifecycle_summary ?? null,
             'plant_care_summary' => $loadedSharedPlantCare ? [
                 'id' => $loadedSharedPlantCare->id,
                 'plant_name' => $loadedSharedPlantCare->plant_name,

@@ -105,11 +105,21 @@ export default function PlantsPage() {
     return <ErrorState error={pageState.error} onRetry={pageState.reload} />
   }
 
+  const resultCount = activeView === 'catalog'
+    ? pageState.data.catalogPlants.length
+    : pageState.data.plants.length
+
   return (
     <div className="page-stack">
       <PageHeader
         title="Plants"
         description="Manage planted records and the reusable plant catalog in one workspace."
+        meta={(
+          <>
+            <Badge tone="soft">{activeView === 'catalog' ? 'Catalog workspace' : 'Managed plants'}</Badge>
+            <Badge tone="neutral">{resultCount} visible</Badge>
+          </>
+        )}
         actions={(
           <Link to={activeView === 'catalog' ? '/plants/catalog/new' : '/plants/new'}>
             <Button>{activeView === 'catalog' ? 'Add Catalog Plant' : 'Add New Plant'}</Button>
@@ -117,7 +127,7 @@ export default function PlantsPage() {
         )}
       />
 
-      <section className="panel page-stack">
+      <section className="panel page-stack plants-workspace-panel">
         <div className="plants-view-switch" role="tablist" aria-label="Plant workspace views">
           {VIEW_OPTIONS.map((option) => (
             <button

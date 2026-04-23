@@ -20,10 +20,11 @@ class StoreInventoryItemRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:1', 'max:255'],
             'quantity' => ['required', 'numeric', 'min:0'],
-            'minimum_quantity' => ['nullable', 'numeric', 'min:0'],
             'type' => ['required_without:inventory_item_type', Rule::enum(InventoryItemType::class)],
             'inventory_item_type' => ['sometimes', Rule::enum(InventoryItemType::class)],
             'unit' => ['nullable', Rule::enum(InventoryUnit::class)],
+            'source_task_id' => ['sometimes', 'integer', 'exists:tasks,id'],
+            'source_requirement_id' => ['sometimes', 'integer', 'exists:task_resource_requirements,id'],
         ];
     }
 
@@ -52,18 +53,12 @@ class StoreInventoryItemRequest extends FormRequest
 
             $unit = $this->input('unit') ?: InventoryUnit::Unit->value;
             $quantity = $this->input('quantity');
-            $minimumQuantity = $this->input('minimum_quantity');
-
             if ($type === InventoryItemType::Tool && $unit !== InventoryUnit::Unit->value) {
                 $validator->errors()->add('unit', 'Irankiams leidziamas tik vienetu matavimo vienetas.');
             }
 
             if ($type === InventoryItemType::Tool && $quantity !== null && floor((float) $quantity) !== (float) $quantity) {
                 $validator->errors()->add('quantity', 'Irankiu kiekis turi buti sveikas vienetu skaicius.');
-            }
-
-            if ($type === InventoryItemType::Tool && $minimumQuantity !== null && floor((float) $minimumQuantity) !== (float) $minimumQuantity) {
-                $validator->errors()->add('minimum_quantity', 'Irankiu minimalus likutis turi buti sveikas vienetu skaicius.');
             }
         });
     }

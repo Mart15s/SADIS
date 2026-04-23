@@ -1,6 +1,5 @@
 import { startTransition, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import Badge from '../../components/ui/Badge.jsx'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import {
   EmptyState,
@@ -9,7 +8,11 @@ import {
   ProcessingState,
   SuccessToast,
 } from '../../components/shared/StatusView.jsx'
+import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
+import FormSection from '../../components/ui/FormSection.jsx'
+import SectionCard from '../../components/ui/SectionCard.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
 import { formatDate, formatInventoryUnit, safeNumber } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
@@ -42,6 +45,24 @@ function statusTone(status) {
   return 'warning'
 }
 
+function formatStatusLabel(status) {
+  if (!status) return 'pending'
+  return status.replace(/_/g, ' ')
+}
+
+function formatPriorityLabel(priority) {
+  if (!priority) return 'medium'
+  return priority.replace(/_/g, ' ')
+}
+
+function getDayTone(taskCount, dayStatus) {
+  if (dayStatus === 'blocked') return 'blocked'
+  if (dayStatus === 'partially_blocked') return 'warning'
+  if (taskCount >= 4) return 'busy'
+  if (taskCount >= 1) return 'active'
+  return 'empty'
+}
+
 function buildCalendarReturnPath(plotId, calendarId, date) {
   const params = new URLSearchParams()
 
@@ -59,17 +80,17 @@ function buildCalendarReturnPath(plotId, calendarId, date) {
 }
 
 function buildInventoryLink(task, context = {}) {
-  const shortages = (task.required_resources ?? [])
-    .filter((resource) => resource.is_shortage)
+  const shortages = (task.inventory_shortages ?? task.required_resources ?? [])
+    .filter((resource) => resource.is_shortage ?? resource.shortage_quantity > 0)
     .map((resource) => ({
-      id: resource.id,
-      name: resource.name,
+      id: resource.id ?? resource.requirement_id ?? resource.resource_key ?? resource.name,
+      name: resource.name ?? resource.resource_name,
       type: resource.type,
       unit: resource.unit,
       required_quantity: resource.required_quantity,
       available_quantity: resource.available_quantity,
       shortage_quantity: resource.shortage_quantity,
-      consumption_mode: resource.consumption_mode,
+      consumption_mode: resource.resource_mode ?? resource.consumption_mode,
     }))
 
   const params = new URLSearchParams()
@@ -85,6 +106,129 @@ function buildInventoryLink(task, context = {}) {
   return `/inventory?${params.toString()}`
 }
 
+function taskInventoryLabel(mode) {
+  if (mode === 'available') return 'Inventory available'
+  if (mode === 'shortage') return 'Inventory shortage'
+  if (mode === 'replenishment') return 'Replenishment reminder'
+  return 'Inventory not required'
+}
+
+function summarizeInventoryContext(task, isReplenishmentTask) {
+  if (!task.inventory_context) {
+    return null
+  }
+
+  if (task.inventory_mode === 'shortage' && task.inventory_context.shortage_count > 0) {
+    return `${task.inventory_context.shortage_count} shortage${task.inventory_context.shortage_count === 1 ? '' : 's'} detected`
+  }
+
+  if (!isReplenishmentTask && (task.inventory_context.buy_task_ids ?? []).length > 0) {
+    return 'Linked replenishment task exists'
+  }
+
+  if ((task.inventory_context.open_buy_task_ids ?? []).length > 0) {
+    return 'Open purchase task already exists'
+  }
+
+  if (task.inventory_mode === 'available') {
+    return 'Required inventory is available'
+  }
+
+  return taskInventoryLabel(task.inventory_mode)
+}
+
+function describeTaskFocus(task, missingResources, isReplenishmentTask) {
+  const firstMissing = missingResources[0]
+  const firstMissingLabel = firstMissing
+    ? `${firstMissing.name ?? firstMissing.resource_name}: ${safeNumber(firstMissing.shortage_quantity, firstMissing.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(firstMissing.unit)} short`
+    : null
+
+  if (task.status === 'completed') {
+    return {
+      tone: 'success',
+      label: 'Completed',
+      detail: task.comment || 'This action has already been completed.',
+    }
+  }
+
+  if (task.status === 'canceled' || task.status === 'cancelled') {
+    return {
+      tone: 'danger',
+      label: 'Cancelled',
+      detail: task.comment || 'This action was cancelled and no longer needs work.',
+    }
+  }
+
+  if (isReplenishmentTask) {
+    return {
+      tone: firstMissing ? 'warning' : 'soft',
+      label: 'Restock reminder',
+      detail: firstMissingLabel
+        ? `This replenishment reminder does not consume inventory. ${firstMissingLabel}. Update stock, then mark this reminder complete.`
+        : 'This replenishment reminder does not consume inventory. Update stock, then mark this reminder complete.',
+    }
+  }
+
+  if (task.status === 'pending' && firstMissing) {
+    return {
+      tone: 'danger',
+      label: 'Blocked by shortage',
+      detail: `Task completion is blocked until inventory is replenished. ${firstMissingLabel}`,
+    }
+  }
+
+  if (task.workflow_context?.kind === 'lifecycle_review' && task.plant_id) {
+    return {
+      tone: 'warning',
+      label: 'Needs plant review',
+      detail: 'Open the plant record to confirm the lifecycle state before completing this task.',
+    }
+  }
+
+  if (task.type === 'harvest' && task.plant_id) {
+    return {
+      tone: 'warning',
+      label: 'Harvest recording required',
+      detail: 'Register the harvested output from the linked plant workflow.',
+    }
+  }
+
+  if (task.actual_condition && task.actual_condition !== 'healthy') {
+    return {
+      tone: 'warning',
+      label: `Condition: ${task.actual_condition}`,
+      detail: task.reason || 'This task is reacting to the plant condition detected for this day.',
+    }
+  }
+
+  if (task.reason) {
+    return {
+      tone: 'soft',
+      label: 'Scheduled by rule',
+      detail: task.reason,
+    }
+  }
+
+  if (task.comment) {
+    return {
+      tone: 'neutral',
+      label: 'Operator note',
+      detail: task.comment,
+    }
+  }
+
+  return {
+    tone: task.inventory_mode === 'available' ? 'success' : 'neutral',
+    label: taskInventoryLabel(task.inventory_mode),
+    detail: summarizeInventoryContext(task, isReplenishmentTask) || 'Ready for action.',
+  }
+}
+
+function resourceTypeLabel(resource) {
+  if (resource.resource_type_label) return resource.resource_type_label
+  return (resource.resource_mode ?? resource.consumption_mode) === 'consumable' ? 'Consumable' : 'Reusable'
+}
+
 function weatherSourceLabel(source) {
   if (source === 'api') return 'Live Meteo.lt'
   if (source === 'stored_city_date') return 'Stored forecast (same city/date)'
@@ -94,8 +238,6 @@ function weatherSourceLabel(source) {
   return 'Fallback forecast'
 }
 
-// ── Monthly calendar helpers ──────────────────────────────────────
-
 function getMonthDays(yearMonth) {
   const [year, month] = yearMonth.split('-').map(Number)
   const firstDay = new Date(year, month - 1, 1)
@@ -103,16 +245,16 @@ function getMonthDays(yearMonth) {
   let startPad = firstDay.getDay() - 1
   if (startPad < 0) startPad = 6
   const days = []
-  for (let i = 0; i < startPad; i++) days.push(null)
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    days.push(`${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`)
+  for (let i = 0; i < startPad; i += 1) days.push(null)
+  for (let day = 1; day <= lastDay.getDate(); day += 1) {
+    days.push(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
   }
   return days
 }
 
 function shiftMonth(yearMonth, delta) {
-  const [y, m] = yearMonth.split('-').map(Number)
-  const date = new Date(y, m - 1 + delta, 1)
+  const [year, month] = yearMonth.split('-').map(Number)
+  const date = new Date(year, month - 1 + delta, 1)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
@@ -123,8 +265,6 @@ function formatMonthTitle(yearMonth) {
 
 const TODAY = new Date().toISOString().slice(0, 10)
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
-// ─────────────────────────────────────────────────────────────────
 
 export default function PlotCalendarPage() {
   const { plotId } = useParams()
@@ -198,10 +338,9 @@ export default function PlotCalendarPage() {
   )
 
   const canEdit = ['owner', 'editor'].includes(pageState.data.accessRole)
-
   const plantOptions = uniqueOptions(detailState.data, 'plant_id', 'plant_name')
   const zoneOptions = uniqueOptions(detailState.data, 'zone_id', 'zone_name')
-  const selectedForecast = detailState.data?.weather?.find((f) => f.date === selectedDate) ?? null
+  const selectedForecast = detailState.data?.weather?.find((forecast) => forecast.date === selectedDate) ?? null
   const selectedDaySummary = detailState.data?.day_resource_summary?.[selectedDate] ?? null
   const weatherSources = [...new Set((detailState.data?.weather ?? []).map((forecast) => forecast.source).filter(Boolean))]
   const usingWeatherFallback = weatherSources.some((source) => source !== 'api')
@@ -261,7 +400,8 @@ export default function PlotCalendarPage() {
       <PageHeader
         eyebrow="Recommendation calendar"
         title={`${pageState.data.plot?.name ?? 'Plot'} calendar`}
-        description="Generate a recommendation calendar, then click any day on the grid to view actions, weather, and mark tasks."
+        description="Plan a window, generate a recommendation calendar, and open any day for a cleaner operational task view."
+        meta={selectedCalendarId ? <StatusBadge kind="selection">Calendar #{selectedCalendarId}</StatusBadge> : null}
         actions={(
           <Link to={`/plots/${plotId}`}>
             <Button variant="secondary">Back to plot</Button>
@@ -272,79 +412,109 @@ export default function PlotCalendarPage() {
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
       <div className="calendar-layout">
-        {/* ── Left sidebar ── */}
-        <aside className="page-stack">
+        <aside className="page-stack calendar-sidebar">
           {canEdit ? (
-            <form className="panel input-grid" onSubmit={handleGenerate}>
-              <h3 style={{ margin: 0 }}>Generate calendar</h3>
-              <div className="field">
-                <label htmlFor="calendar-start">Start date</label>
-                <input
-                  id="calendar-start"
-                  type="date"
-                  value={generateForm.start_date}
-                  onChange={(e) => setGenerateForm((c) => ({ ...c, start_date: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="calendar-end">End date</label>
-                <input
-                  id="calendar-end"
-                  type="date"
-                  value={generateForm.end_date}
-                  onChange={(e) => setGenerateForm((c) => ({ ...c, end_date: e.target.value }))}
-                  required
-                />
-              </div>
-              {error ? <span className="field-error">{error}</span> : null}
-              {submitting ? (
-                <ProcessingState
-                  title="Generating calendar"
-                  description="The calendar engine is combining weather, plant care, and current plot data into scheduled tasks."
-                  steps={['Preparing plot data', 'Checking weather rules', 'Generating tasks']}
-                  compact
-                />
-              ) : null}
-              <Button type="submit" loading={submitting}>
-                {submitting ? 'Generating calendar' : 'Generate'}
-              </Button>
+            <form onSubmit={handleGenerate}>
+              <FormSection
+                title="Generate calendar"
+                description="Set the planning window for this plot. Weather, plant care, and inventory coverage will be combined server-side into daily work."
+                className="calendar-rail-card calendar-generator-card"
+              >
+                <div className="calendar-generator-highlights">
+                  <span className="calendar-generator-highlight">Meteo.lt forecast rules</span>
+                  <span className="calendar-generator-highlight">Plant care intervals</span>
+                  <span className="calendar-generator-highlight">Inventory coverage check</span>
+                </div>
+
+                <div className="calendar-generator-fields">
+                  <div className="field">
+                    <label htmlFor="calendar-start">Start date</label>
+                    <input
+                      id="calendar-start"
+                      type="date"
+                      value={generateForm.start_date}
+                      onChange={(event) => setGenerateForm((current) => ({ ...current, start_date: event.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="calendar-end">End date</label>
+                    <input
+                      id="calendar-end"
+                      type="date"
+                      value={generateForm.end_date}
+                      onChange={(event) => setGenerateForm((current) => ({ ...current, end_date: event.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {error ? <span className="field-error">{error}</span> : null}
+                {submitting ? (
+                  <ProcessingState
+                    title="Generating calendar"
+                    description="The calendar engine is combining weather, plant care, and current plot data into scheduled tasks."
+                    steps={['Preparing plot data', 'Checking weather rules', 'Generating tasks']}
+                    compact
+                  />
+                ) : null}
+
+                <ActionRow>
+                  <Button type="submit" loading={submitting}>
+                    {submitting ? 'Generating calendar' : 'Generate'}
+                  </Button>
+                </ActionRow>
+              </FormSection>
             </form>
           ) : null}
 
-          <section className="panel page-stack">
-            <h3 style={{ margin: 0 }}>Calendars</h3>
+          <SectionCard
+            title="Generated calendars"
+            description="Switch between recommendation runs without losing your current month view."
+            className="calendar-rail-card calendar-list-card"
+            actions={<StatusBadge kind="selection" tone="neutral">{pageState.data.calendars.length}</StatusBadge>}
+          >
             {pageState.data.calendars.length === 0 ? (
-              <EmptyState title="No calendars yet" description="Generate the first recommendation calendar for this plot." />
-            ) : pageState.data.calendars.map((calendar) => (
-              <button
-                key={calendar.id}
-                type="button"
-                className={`card calendar-card ${selectedCalendarId === calendar.id ? 'is-selected' : ''}`}
-                onClick={() => { startTransition(() => { setSelectedCalendarId(calendar.id) }) }}
-              >
-                <h3 style={{ margin: 0 }}>Calendar #{calendar.id}</h3>
-                <span className="muted">
-                  {formatDate(calendar.start_date)} – {formatDate(calendar.end_date)}
-                </span>
-                <span>{calendar.tasks_count ?? 0} tasks</span>
-              </button>
-            ))}
-          </section>
+              <div className="calendar-list-empty">
+                <strong>No calendars yet</strong>
+                <p className="muted">Generate the first recommendation calendar to unlock the month grid and daily drawer.</p>
+              </div>
+            ) : (
+              <div className="stack stack-sm">
+                {pageState.data.calendars.map((calendar) => (
+                  <button
+                    key={calendar.id}
+                    type="button"
+                    className={`calendar-choice-card ${String(selectedCalendarId) === String(calendar.id) ? 'is-selected' : ''}`.trim()}
+                    onClick={() => { startTransition(() => { setSelectedCalendarId(calendar.id) }) }}
+                  >
+                    <div className="calendar-choice-copy">
+                      <h3>Calendar #{calendar.id}</h3>
+                      <span className="muted">{formatDate(calendar.start_date)} to {formatDate(calendar.end_date)}</span>
+                    </div>
+                    <StatusBadge kind="selection" tone="neutral">{calendar.tasks_count ?? 0} tasks</StatusBadge>
+                  </button>
+                ))}
+              </div>
+            )}
+          </SectionCard>
 
-          {/* Filters */}
           {detailState.data ? (
-            <section className="panel page-stack">
-              <h3 style={{ margin: 0 }}>Filters</h3>
+            <SectionCard
+              title="Task filters"
+              description="Focus the drawer on one plant or zone when you want a tighter daily review."
+              className="calendar-rail-card"
+              compact
+            >
               <div className="field">
                 <label htmlFor="calendar-plant-filter">Plant</label>
                 <select
                   id="calendar-plant-filter"
                   value={filters.plant_id}
-                  onChange={(e) => setFilters((c) => ({ ...c, plant_id: e.target.value }))}
+                  onChange={(event) => setFilters((current) => ({ ...current, plant_id: event.target.value }))}
                 >
                   <option value="">All plants</option>
-                  {plantOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {plantOptions.map((plant) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
                 </select>
               </div>
               <div className="field">
@@ -352,121 +522,172 @@ export default function PlotCalendarPage() {
                 <select
                   id="calendar-zone-filter"
                   value={filters.zone_id}
-                  onChange={(e) => setFilters((c) => ({ ...c, zone_id: e.target.value }))}
+                  onChange={(event) => setFilters((current) => ({ ...current, zone_id: event.target.value }))}
                 >
                   <option value="">All zones</option>
-                  {zoneOptions.map((z) => <option key={z.id} value={z.id}>{z.name}</option>)}
+                  {zoneOptions.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
                 </select>
               </div>
-            </section>
+            </SectionCard>
           ) : null}
         </aside>
 
-        {/* ── Right main — monthly grid ── */}
         <section className="page-stack">
           {detailState.loading ? <LoadingState title="Loading calendar..." /> : null}
           {detailState.error ? <ErrorState error={detailState.error} onRetry={detailState.reload} /> : null}
 
           {!detailState.loading && !detailState.data ? (
-            <EmptyState title="Pick a calendar" description="Select a calendar on the left to view the monthly grid." />
+            <SectionCard
+              title="Planning workspace"
+              description="The month grid is ready as soon as a calendar exists, and the daily drawer stays focused on weather, shortages, and actions."
+              className="calendar-empty-workspace"
+            >
+              <div className="calendar-empty-guide">
+                <article className="calendar-empty-step">
+                  <span className="calendar-empty-step-index">1</span>
+                  <div className="calendar-empty-step-copy">
+                    <strong>Choose the planning window</strong>
+                    <p>Pick the date range from the planning rail so the generator uses the right weather period.</p>
+                  </div>
+                </article>
+                <article className="calendar-empty-step">
+                  <span className="calendar-empty-step-index">2</span>
+                  <div className="calendar-empty-step-copy">
+                    <strong>Generate the recommendation run</strong>
+                    <p>The backend schedules work from plant care, forecast data, and current plot state.</p>
+                  </div>
+                </article>
+                <article className="calendar-empty-step">
+                  <span className="calendar-empty-step-index">3</span>
+                  <div className="calendar-empty-step-copy">
+                    <strong>Open a day for operational detail</strong>
+                    <p>Review the most important blocker or condition first, then complete, reject, or route to inventory.</p>
+                  </div>
+                </article>
+              </div>
+
+              <div className="calendar-empty-preview">
+                <span className="calendar-empty-preview-label">What appears after generation</span>
+                <div className="calendar-empty-preview-bars">
+                  <span className="calendar-empty-preview-bar calendar-empty-preview-bar-soft" />
+                  <span className="calendar-empty-preview-bar calendar-empty-preview-bar-brand" />
+                  <span className="calendar-empty-preview-bar calendar-empty-preview-bar-warning" />
+                </div>
+                <p className="muted">Workload bars stay visible in each day cell so busy and blocked dates are immediately obvious.</p>
+              </div>
+            </SectionCard>
           ) : null}
 
           {!detailState.loading && detailState.data ? (
-            <section className="panel page-stack">
+            <SectionCard
+              title="Month view"
+              description="Day cells keep the improved workload bar and status clarity, while the surrounding planning experience stays quieter and more focused."
+            >
               {usingWeatherFallback ? (
                 <div className="inline-note">
                   Weather forecast includes fallback data: {weatherSources.map(weatherSourceLabel).join(', ')}.
                 </div>
               ) : null}
 
-              {/* Month navigation */}
               <div className="month-nav">
-                <Button variant="ghost" onClick={() => setCurrentMonth((m) => shiftMonth(m, -1))}>‹</Button>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, -1))}>Prev</Button>
                 <span className="month-title">{formatMonthTitle(currentMonth)}</span>
-                <Button variant="ghost" onClick={() => setCurrentMonth((m) => shiftMonth(m, 1))}>›</Button>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, 1))}>Next</Button>
               </div>
 
-              {/* Weekday headers */}
               <div className="month-weekdays">
-                {WEEKDAYS.map((d) => (
-                  <span key={d} className="month-day-label">{d}</span>
+                {WEEKDAYS.map((weekday) => (
+                  <span key={weekday} className="month-day-label">{weekday}</span>
                 ))}
               </div>
 
-              {/* Day cells */}
               <div className="month-days">
-                {monthDays.map((day, i) => {
+                {monthDays.map((day, index) => {
                   if (!day) {
-                    return <div key={`pad-${i}`} className="month-day month-day-empty" />
+                    return <div key={`pad-${index}`} className="month-day month-day-empty" />
                   }
+
+                  const dayTasks = detailState.data?.tasks_by_date?.[day] ?? []
+                  const taskCount = dayTasks.length
+                  const dayStatus = detailState.data?.day_resource_summary?.[day]?.day_inventory_status
+                    ?? detailState.data?.day_resource_summary?.[day]?.status
+                    ?? null
                   const hasTasks = availableDates.includes(day)
-                  const hasShortage = detailState.data?.day_resource_summary?.[day]?.status === 'shortage'
                   const isSelected = day === selectedDate
                   const isToday = day === TODAY
+                  const tone = getDayTone(taskCount, dayStatus)
+                  const workloadLabel = dayStatus === 'blocked'
+                    ? 'Blocked'
+                    : dayStatus === 'partially_blocked'
+                      ? 'Shortage'
+                      : taskCount >= 4
+                        ? 'Busy'
+                        : taskCount >= 1
+                          ? 'Planned'
+                          : 'Open'
+
                   return (
                     <button
                       key={day}
                       type="button"
-                      className={`month-day ${isSelected ? 'is-selected' : ''} ${isToday ? 'is-today' : ''} ${hasShortage ? 'has-shortage' : ''}`}
+                      aria-label={day.slice(8)}
+                      className={`month-day month-day-${tone} ${isSelected ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}`.trim()}
                       onClick={() => handleDayClick(day)}
-                      title={hasTasks ? `${day} — has tasks` : day}
+                      title={hasTasks ? `${day} has ${taskCount} tasks` : day}
                     >
                       <span className="month-day-num">{day.slice(8)}</span>
-                      {hasTasks ? (
-                        <span className="day-dots">
-                          <span className="day-dot" />
-                          {hasShortage ? <span className="day-dot" style={{ background: 'var(--danger)' }} /> : null}
-                        </span>
-                      ) : null}
+                      <span className="month-day-state">{workloadLabel}</span>
+                      <span className="month-day-tasks">{taskCount ? `${taskCount} task${taskCount === 1 ? '' : 's'}` : 'No tasks'}</span>
+                      <span className="month-day-load" aria-hidden="true">
+                        <span
+                          className={`month-day-load-bar month-day-load-${tone}`.trim()}
+                          style={{ width: `${taskCount ? Math.min(100, Math.max(24, taskCount * 22)) : 18}%` }}
+                        />
+                      </span>
                     </button>
                   )
                 })}
               </div>
 
-              <p className="muted" style={{ fontSize: '0.82rem', margin: 0 }}>
-                Orange dots mark days with scheduled tasks. Click any day to view details.
+              <p className="muted calendar-footnote">
+                Selected day state, workload, and shortage pressure stay visible directly in the month grid.
               </p>
-            </section>
+            </SectionCard>
           ) : null}
         </section>
       </div>
 
-      {/* ── Day detail modal ── */}
       {dayModalOpen ? (
         <div className="day-modal-overlay" onClick={closeDayModal}>
-          <div className="day-modal-panel" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
+          <div className="day-modal-panel" onClick={(event) => event.stopPropagation()}>
             <div className="day-modal-header">
               <div>
-                <p className="day-modal-title">{selectedDate ? formatDate(selectedDate) : '—'}</p>
-                <span className="muted" style={{ fontSize: '0.85rem' }}>
+                <p className="day-modal-title">{selectedDate ? formatDate(selectedDate) : '--'}</p>
+                <span className="muted day-modal-subtitle">
                   {tasksState.loading ? 'Loading...' : `${tasksState.data.length} action${tasksState.data.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
-              <button type="button" className="day-modal-close" onClick={closeDayModal} aria-label="Close">✕</button>
+              <button type="button" className="day-modal-close" onClick={closeDayModal} aria-label="Close">x</button>
             </div>
 
-            {/* Weather */}
             {selectedForecast ? (
-              <div>
-                <p style={{ margin: '0 0 0.6rem', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Weather
-                </p>
+              <section className="day-drawer-section">
+                <p className="day-drawer-label">Weather</p>
                 {selectedForecast.source && selectedForecast.source !== 'api' ? (
-                  <div className="inline-note" style={{ marginBottom: '0.75rem' }}>
+                  <div className="inline-note day-drawer-note">
                     Source: {weatherSourceLabel(selectedForecast.source)}
-                    {selectedForecast.source_date ? ` · based on ${formatDate(selectedForecast.source_date)}` : ''}
-                    {selectedForecast.source_city ? ` · ${selectedForecast.source_city}` : ''}
+                    {selectedForecast.source_date ? ` - based on ${formatDate(selectedForecast.source_date)}` : ''}
+                    {selectedForecast.source_city ? ` - ${selectedForecast.source_city}` : ''}
                   </div>
                 ) : null}
                 <div className="day-modal-weather">
                   <div className="weather-mini-stat">
                     <span>Low</span>
-                    <span>{safeNumber(selectedForecast.temp_min ?? selectedForecast.temperature, 1)} °C</span>
+                    <span>{safeNumber(selectedForecast.temp_min ?? selectedForecast.temperature, 1)} C</span>
                   </div>
                   <div className="weather-mini-stat">
                     <span>High</span>
-                    <span>{safeNumber(selectedForecast.temp_max ?? selectedForecast.temperature, 1)} °C</span>
+                    <span>{safeNumber(selectedForecast.temp_max ?? selectedForecast.temperature, 1)} C</span>
                   </div>
                   <div className="weather-mini-stat">
                     <span>Rain</span>
@@ -477,49 +698,48 @@ export default function PlotCalendarPage() {
                     <span>{safeNumber(selectedForecast.wind_kmh ?? 0, 1)} km/h</span>
                   </div>
                 </div>
-              </div>
+              </section>
             ) : null}
 
             {selectedDaySummary ? (
-              <div className="page-stack">
-                <p style={{ margin: '0 0 0.4rem', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Day resources
-                </p>
-                <div className="inline-note" style={selectedDaySummary.status === 'shortage' ? { color: 'var(--danger)' } : undefined}>
-                  {selectedDaySummary.status === 'shortage'
-                    ? `Resources are short for ${selectedDaySummary.shortage_count} grouped requirement${selectedDaySummary.shortage_count !== 1 ? 's' : ''}.`
-                    : selectedDaySummary.resource_count > 0
-                      ? 'All grouped resources for this day are currently covered.'
-                      : 'No inventory-backed resources are required for this day.'}
+              <section className="day-drawer-section page-stack">
+                <p className="day-drawer-label">Day resources</p>
+                <div
+                  className="inline-note"
+                  style={['partially_blocked', 'blocked'].includes(selectedDaySummary.day_inventory_status) ? { color: 'var(--danger)' } : undefined}
+                >
+                  {selectedDaySummary.summary_text
+                    ?? (selectedDaySummary.day_inventory_status === 'fully_covered'
+                      ? 'Inventory is fully covered for planned work on this day.'
+                      : 'Planned work is blocked by inventory shortages.')}
                 </div>
-                {(selectedDaySummary.resources ?? []).map((resource) => (
-                  <div key={`${selectedDate}-${resource.resource_key}`} className="meta-cluster" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                {(selectedDaySummary.grouped_resource_summary ?? selectedDaySummary.resources ?? []).map((resource) => (
+                  <div key={`${selectedDate}-${resource.resource_key}`} className="meta-cluster resource-summary-row">
                     <span>
-                      {resource.resource_name} · need {safeNumber(resource.required_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
+                      {resource.resource_name} - need {safeNumber(resource.required_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
                     </span>
                     <span style={resource.shortage_quantity > 0 ? { color: 'var(--danger)' } : undefined}>
-                      {resource.consumption_mode === 'consumable' ? 'Consumable' : 'Reusable'}
-                      {' · '}have {safeNumber(resource.available_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}
+                      {resourceTypeLabel(resource)}
+                      {' - '}have {safeNumber(resource.available_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}
                       {resource.shortage_quantity > 0
-                        ? ` · shortage ${safeNumber(resource.shortage_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}`
+                        ? ` - shortage ${safeNumber(resource.shortage_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}`
                         : ''}
                     </span>
                   </div>
                 ))}
-                {(selectedDaySummary.buy_tasks ?? []).length > 0 ? (
-                  <div className="page-stack" style={{ gap: '0.35rem' }}>
+                {(selectedDaySummary.replenishment_tasks ?? selectedDaySummary.buy_tasks ?? []).length > 0 ? (
+                  <div className="stack stack-sm">
                     <span className="muted">Generated replenishment tasks:</span>
-                    {(selectedDaySummary.buy_tasks ?? []).map((task) => (
+                    {(selectedDaySummary.replenishment_tasks ?? selectedDaySummary.buy_tasks ?? []).map((task) => (
                       <span key={`buy-summary-${task.id}`} className="muted">
-                        {task.name} · {safeNumber(task.item_quantity, 2)} {task.item ?? ''}
+                        {task.name} - {safeNumber(task.item_quantity, 2)} {task.item ?? ''}
                       </span>
                     ))}
                   </div>
                 ) : null}
-              </div>
+              </section>
             ) : null}
 
-            {/* Tasks */}
             {tasksState.loading ? <LoadingState title="Loading actions..." /> : null}
             {tasksState.error ? <ErrorState error={tasksState.error} onRetry={tasksState.reload} /> : null}
 
@@ -530,128 +750,167 @@ export default function PlotCalendarPage() {
             {!tasksState.loading && !tasksState.error ? (
               <div className="task-groups">
                 {error ? <span className="field-error">{error}</span> : null}
-                {tasksState.data.map((task) => (
-                  (() => {
-                    const missingResources = (task.required_resources ?? []).filter((resource) => resource.is_shortage)
-                    const hasInventoryShortage = task.status === 'pending' && missingResources.length > 0
+                {tasksState.data.map((task) => {
+                  const missingResources = (task.inventory_shortages ?? task.required_resources ?? [])
+                    .filter((resource) => resource.is_shortage ?? resource.shortage_quantity > 0)
+                  const isReplenishmentTask = task.is_replenishment_task || task.inventory_mode === 'replenishment' || task.type === 'buy'
+                  const hasInventoryShortage = task.status === 'pending' && !isReplenishmentTask && missingResources.length > 0
+                  const taskFocus = describeTaskFocus(task, missingResources, isReplenishmentTask)
+                  const inventorySummary = summarizeInventoryContext(task, isReplenishmentTask)
+                  const resourceRequirements = task.resource_requirements ?? task.required_resources ?? []
+                  const quickFacts = [
+                    task.actual_condition ? `Actual ${task.actual_condition}` : null,
+                    task.simulated_phase ? `Expected ${task.simulated_phase}` : null,
+                    task.lifecycle_transition?.is_transition_day
+                      ? `${task.lifecycle_transition.from} -> ${task.lifecycle_transition.to}`
+                      : null,
+                    ...(
+                      isReplenishmentTask
+                        ? missingResources.map((resource) => `Missing ${safeNumber(resource.shortage_quantity, 2)} ${formatInventoryUnit(resource.unit)} of ${resource.name ?? resource.resource_name}${resource.blocked_task_count ? ` for ${resource.blocked_task_count} blocked task${resource.blocked_task_count === 1 ? '' : 's'}` : ''}`)
+                        : []
+                    ),
+                  ].filter(Boolean)
+                  const taskDetails = [
+                    task.reason && taskFocus.detail !== task.reason ? { label: 'Scheduling rule', value: task.reason } : null,
+                    task.comment && taskFocus.detail !== task.comment ? { label: 'Operator note', value: task.comment } : null,
+                    task.type ? { label: 'Task type', value: task.type } : null,
+                    !isReplenishmentTask && task.item
+                      ? { label: 'Material', value: task.item_quantity ? `${task.item} x ${safeNumber(task.item_quantity, 2)}` : task.item }
+                      : null,
+                    inventorySummary ? { label: 'Inventory context', value: inventorySummary } : null,
+                  ].filter(Boolean)
 
-                    return (
-                      <article key={task.id} className="task-item panel" style={{ gap: '0.75rem' }}>
-                    <div className="task-item-head">
-                      <div className="stack">
-                        <strong>{task.name}</strong>
-                        <span className="muted">
-                          {task.plant_name || 'Plot-level'} · {task.zone_name || 'No zone'}
-                        </span>
-                      </div>
-                      <div className="meta-cluster">
-                        <Badge tone={priorityTone(task.priority)}>{task.priority || 'medium'}</Badge>
-                        <Badge tone={statusTone(task.status)}>{task.status}</Badge>
-                      </div>
-                    </div>
-
-                    <div className="meta-cluster">
-                      <span>{task.type || 'General'}</span>
-                      {task.item ? <span>{task.item}</span> : null}
-                      {task.item_quantity ? <span>× {safeNumber(task.item_quantity, task.type === 'buy' ? 2 : 2)}</span> : null}
-                      {task.simulated_state?.state_label ? <span>{task.simulated_state.state_label}</span> : null}
-                    </div>
-
-                    {task.reason ? <div className="inline-note">{task.reason}</div> : null}
-                    {task.comment ? <span className="muted">{task.comment}</span> : null}
-
-                    {task.inventory_context ? (
-                      <div className="meta-cluster" style={{ fontSize: '0.85rem' }}>
-                        <span>Inventory {task.inventory_context.status}</span>
-                        {task.inventory_context.shortage_count > 0
-                          ? <span style={{ color: 'var(--danger)' }}>Shortages {task.inventory_context.shortage_count}</span>
-                          : null}
-                        {(task.inventory_context.buy_task_ids ?? []).length > 0
-                          ? <span>Replenishment task linked</span>
-                          : null}
-                        {(task.inventory_context.open_buy_task_ids ?? []).length > 0
-                          ? <span>Open purchase task already exists</span>
-                          : null}
-                      </div>
-                    ) : null}
-
-                    {(task.required_resources ?? []).length > 0 ? (
-                      <div className="page-stack">
-                        <div className="inline-note" style={{ fontSize: '0.85rem' }}>
-                          Completing this task will deduct consumables and only verify reusable resources without deducting them.
+                  return (
+                    <article key={task.id} className="task-item day-task-card">
+                      <div className="day-task-card-head">
+                        <div className="day-task-card-title-block">
+                          <strong className="day-task-card-title">{task.name}</strong>
+                          <span className="day-task-card-context">
+                            {task.plant_name || 'Plot-level'} - {task.zone_name || 'No zone'}
+                          </span>
                         </div>
-                        {(task.required_resources ?? []).map((resource) => (
-                          <div key={`${task.id}-${resource.id}`} className="meta-cluster" style={{ justifyContent: 'space-between' }}>
-                            <span>
-                              {resource.name} · need {safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
-                            </span>
-                            <span>
-                              {resource.consumption_mode === 'consumable' ? 'Consumable' : 'Reusable'}
-                              {resource.available_quantity !== null && resource.available_quantity !== undefined
-                                ? ` · have ${safeNumber(resource.available_quantity, resource.type === 'tool' ? 0 : 2)}`
-                                : ''}
-                              {resource.is_shortage
-                                ? ` · shortage ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)}`
-                                : ''}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {hasInventoryShortage ? (
-                      <div className="page-stack">
-                        <div className="inline-note" style={{ color: 'var(--danger)' }}>
-                          Task completion is blocked until the missing inventory is replenished.
+                        <div className="day-task-card-badges">
+                          <StatusBadge kind="status" tone={statusTone(task.status)}>{formatStatusLabel(task.status)}</StatusBadge>
+                          <StatusBadge kind="severity" tone={priorityTone(task.priority)}>{formatPriorityLabel(task.priority)}</StatusBadge>
                         </div>
-                        <div className="page-stack" style={{ gap: '0.35rem' }}>
-                          {missingResources.map((resource) => (
-                            <span key={`${task.id}-missing-${resource.id}`} className="muted">
-                              Missing {resource.name}: {safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
-                            </span>
+                      </div>
+
+                      <div className={`task-focus-banner task-focus-banner-${taskFocus.tone}`.trim()}>
+                        <span className="task-focus-label">{taskFocus.label}</span>
+                        <p>{taskFocus.detail}</p>
+                      </div>
+
+                      {quickFacts.length > 0 ? (
+                        <div className="day-task-card-facts">
+                          {quickFacts.map((fact) => (
+                            <span key={`${task.id}-${fact}`} className="day-task-card-fact">{fact}</span>
                           ))}
                         </div>
-                        <Link
-                          to={buildInventoryLink(task, {
-                            plotId,
-                            calendarId: selectedCalendarId,
-                            date: selectedDate,
-                          })}
-                        >
-                          <Button variant="secondary">Go to inventory</Button>
-                        </Link>
-                      </div>
-                    ) : null}
+                      ) : null}
 
-                    {canEdit && task.status === 'pending' && task.type === 'buy' ? (
-                      <div className="inline-note" style={{ fontSize: '0.85rem' }}>
-                        This is a replenishment reminder. After purchase, update the inventory entry and then mark this task as completed.
-                      </div>
-                    ) : null}
+                      <div className="day-task-card-actions">
+                        {hasInventoryShortage ? (
+                          <Link
+                            to={buildInventoryLink(task, {
+                              plotId,
+                              calendarId: selectedCalendarId,
+                              date: selectedDate,
+                            })}
+                          >
+                            <Button variant="secondary">Go to inventory</Button>
+                          </Link>
+                        ) : null}
 
-                    {canEdit && task.status === 'pending' && task.type === 'harvest' && task.plant_id ? (
-                      <Link to={`/plots/${plotId}/harvests?plantId=${task.plant_id}&taskId=${task.id}&date=${task.date || ''}`}>
-                        <Button variant="secondary">Register harvest</Button>
-                      </Link>
-                    ) : null}
+                        {canEdit && task.status === 'pending' && task.workflow_context?.kind === 'lifecycle_review' && task.plant_id ? (
+                          <Link
+                            to={`/plots/${plotId}/plants/${task.plant_id}`}
+                            state={{
+                              pendingReviewTask: task,
+                              backTo: buildCalendarReturnPath(plotId, selectedCalendarId, selectedDate),
+                              backLabel: selectedDate ? `Back to ${formatDate(selectedDate)}` : 'Back to calendar',
+                            }}
+                          >
+                            <Button variant="secondary">Open plant review</Button>
+                          </Link>
+                        ) : null}
 
-                    {canEdit && task.status === 'pending' ? (
-                      <div className="row-actions">
-                        <Button
-                          onClick={() => handleTaskAction(task.id, 'complete')}
-                          disabled={submitting || hasInventoryShortage || task.can_complete === false}
-                        >
-                          Complete
-                        </Button>
-                        <Button variant="danger" onClick={() => handleTaskAction(task.id, 'reject')} disabled={submitting}>
-                          Reject
-                        </Button>
+                        {canEdit && task.status === 'pending' && task.type === 'harvest' && task.plant_id ? (
+                          <Link to={`/plots/${plotId}/harvests?plantId=${task.plant_id}&taskId=${task.id}&date=${task.date || ''}`}>
+                            <Button variant="secondary">Register harvest</Button>
+                          </Link>
+                        ) : null}
+
+                        {canEdit && task.status === 'pending' && task.workflow_context?.kind !== 'lifecycle_review' && task.type !== 'harvest' ? (
+                          <ActionRow>
+                            <Button
+                              onClick={() => handleTaskAction(task.id, 'complete')}
+                              disabled={submitting || hasInventoryShortage || task.can_complete === false}
+                            >
+                              Complete
+                            </Button>
+                            <Button variant="danger" onClick={() => handleTaskAction(task.id, 'reject')} disabled={submitting}>
+                              Reject
+                            </Button>
+                          </ActionRow>
+                        ) : null}
                       </div>
-                    ) : null}
-                      </article>
-                    )
-                  })()
-                ))}
+
+                      {(taskDetails.length > 0 || resourceRequirements.length > 0 || missingResources.length > 0) ? (
+                        <details className="task-card-details">
+                          <summary>Details</summary>
+                          <div className="task-card-detail-stack">
+                            {taskDetails.length > 0 ? (
+                              <div className="task-card-detail-list">
+                                {taskDetails.map((detail) => (
+                                  <div key={`${task.id}-${detail.label}`} className="task-card-detail-row">
+                                    <span>{detail.label}</span>
+                                    <strong>{detail.value}</strong>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
+
+                            {resourceRequirements.length > 0 ? (
+                              <div className="task-card-detail-block">
+                                <strong>Resource requirements</strong>
+                                <div className="task-card-resource-list">
+                                  {resourceRequirements.map((resource) => (
+                                    <div key={`${task.id}-${resource.id ?? resource.name}`} className="task-card-resource-row">
+                                      <span>{resource.name ?? resource.resource_name}</span>
+                                      <span>
+                                        Need {safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
+                                        {resource.available_quantity !== null && resource.available_quantity !== undefined
+                                          ? ` - have ${safeNumber(resource.available_quantity, resource.type === 'tool' ? 0 : 2)}`
+                                          : ''}
+                                        {resource.is_shortage || resource.shortage_quantity > 0
+                                          ? ` - shortage ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)}`
+                                          : ''}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {missingResources.length > 0 ? (
+                              <div className="task-card-detail-block">
+                                <strong>Shortages</strong>
+                                <div className="task-card-resource-list">
+                                  {missingResources.map((resource) => (
+                                    <div key={`${task.id}-missing-${resource.id ?? resource.resource_name}`} className="task-card-resource-row">
+                                      <span>{resource.name ?? resource.resource_name}</span>
+                                      <span>{safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)} short</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        </details>
+                      ) : null}
+                    </article>
+                  )
+                })}
               </div>
             ) : null}
           </div>

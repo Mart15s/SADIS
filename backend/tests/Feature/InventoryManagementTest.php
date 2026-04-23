@@ -12,6 +12,7 @@ use App\Models\Plot;
 use App\Models\Profile;
 use App\Models\Task;
 use App\Models\TaskCalendar;
+use App\Models\TaskResourceRequirement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -53,22 +54,19 @@ class InventoryManagementTest extends TestCase
             'quantity' => 12.5,
             'type' => 'material',
             'unit' => 'kg',
-            'minimum_quantity' => 2,
         ]);
 
         $response->assertCreated()
             ->assertJsonPath('data.name', 'Trasos')
             ->assertJsonPath('data.quantity', 12.5)
             ->assertJsonPath('data.type', 'material')
-            ->assertJsonPath('data.unit', 'kg')
-            ->assertJsonPath('data.minimum_quantity', 2);
+            ->assertJsonPath('data.unit', 'kg');
 
         $this->assertDatabaseHas('inventory_items', [
             'name' => 'Trasos',
             'quantity' => 12.5,
             'type' => 'material',
             'unit' => 'kg',
-            'minimum_quantity' => 2,
         ]);
 
         $itemId = $response->json('data.id');
@@ -151,15 +149,13 @@ class InventoryManagementTest extends TestCase
             'quantity' => 0,
             'type' => 'tool',
             'unit' => 'unit',
-            'minimum_quantity' => 1,
         ]);
 
         $response->assertOk()
             ->assertJsonPath('data.name', 'Naujos trasos')
             ->assertJsonPath('data.quantity', 0)
             ->assertJsonPath('data.type', 'tool')
-            ->assertJsonPath('data.unit', 'unit')
-            ->assertJsonPath('data.minimum_quantity', 1);
+            ->assertJsonPath('data.unit', 'unit');
 
         $this->assertDatabaseHas('inventory_items', [
             'id' => $item->id,
@@ -167,7 +163,49 @@ class InventoryManagementTest extends TestCase
             'quantity' => 0,
             'type' => 'tool',
             'unit' => 'unit',
-            'minimum_quantity' => 1,
+        ]);
+    }
+
+    public function test_task_context_overrides_manual_type_and_unit_with_requirement_metadata(): void
+    {
+        [$user, $owner, $plot] = $this->createOwnedPlotContext();
+        Sanctum::actingAs($user);
+
+        $task = $this->createTaskForPlot($plot, [
+            'name' => 'Buy protective cover',
+            'type' => 'buy',
+            'task_type' => 'buy',
+        ]);
+
+        $requirement = TaskResourceRequirement::query()->create([
+            'task_id' => $task->id,
+            'resource_name' => 'Protective cover',
+            'normalized_name' => 'protective cover',
+            'inventory_item_type' => InventoryItemType::Tool,
+            'unit' => InventoryUnit::Unit,
+            'required_quantity' => 2,
+            'shortage_quantity' => 2,
+            'is_consumed' => false,
+        ]);
+
+        $response = $this->postJson('/api/inventory', [
+            'name' => 'Protective cover',
+            'quantity' => 2,
+            'type' => 'material',
+            'unit' => 'kg',
+            'source_task_id' => $task->id,
+            'source_requirement_id' => $requirement->id,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.type', 'tool')
+            ->assertJsonPath('data.unit', 'unit');
+
+        $this->assertDatabaseHas('inventory_items', [
+            'garden_owner_id' => $owner->id,
+            'name' => 'Protective cover',
+            'type' => 'tool',
+            'unit' => 'unit',
         ]);
     }
 
@@ -302,7 +340,6 @@ class InventoryManagementTest extends TestCase
             'name' => 'Trasos',
             'normalized_name' => 'trasos',
             'quantity' => 10,
-            'minimum_quantity' => 0,
             'type' => $normalizedType,
             'inventory_item_type' => $normalizedType,
             'unit' => $unit,

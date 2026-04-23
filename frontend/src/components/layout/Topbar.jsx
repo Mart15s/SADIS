@@ -1,44 +1,38 @@
 import { useAuth } from '../../context/AuthContext.jsx'
-import Badge from '../ui/Badge.jsx'
 import { Link } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
-
-function getInitials(name) {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
+import StatusBadge from '../ui/StatusBadge.jsx'
 
 export default function Topbar() {
-  const { displayName, isAdmin, isAuthenticated, user } = useAuth()
+  const { isAdmin, isAuthenticated } = useAuth()
 
   return (
     <header className="topbar">
       <div className="topbar-left">
-        <div className="topbar-status">
-          <span className={`status-dot ${isAuthenticated ? 'status-dot-success' : 'status-dot-warning'}`} />
-          <span>{isAuthenticated ? 'Connected' : 'Guest mode'}</span>
+        <div className="topbar-copy">
+          <strong className="topbar-title">Personal Garden Information System</strong>
+          <span className="topbar-subtitle">Clearer workflows, denser layout, and stronger planning context.</span>
         </div>
-        {isAdmin ? <Badge tone="warning">Admin</Badge> : null}
       </div>
 
-      <div className="topbar-user">
+      <div className="topbar-actions">
+        <StatusBadge kind="connection" tone={isAuthenticated ? 'success' : 'warning'}>
+          {isAuthenticated ? 'Connected' : 'Guest mode'}
+        </StatusBadge>
+        {isAdmin ? <StatusBadge kind="ownership" tone="warning">Admin</StatusBadge> : null}
         {isAuthenticated ? (
           <>
-            <div className="topbar-user-info">
-              <strong>{displayName}</strong>
-              <span>{user?.email}</span>
-            </div>
-            <span className="user-avatar user-avatar-sm" aria-hidden="true">{getInitials(displayName)}</span>
+            <Link to="/account">
+              <Button variant="ghost" size="sm">Account</Button>
+            </Link>
           </>
         ) : (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="action-row action-row-end">
             <Link to="/login">
-              <Button variant="ghost">Sign in</Button>
+              <Button variant="ghost" size="sm">Sign in</Button>
             </Link>
             <Link to="/register">
-              <Button variant="primary">Create account</Button>
+              <Button size="sm">Create account</Button>
             </Link>
           </div>
         )}

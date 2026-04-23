@@ -67,6 +67,12 @@ class HarvestService
                     'task_id' => ['Pasirinkta uzduotis nesutampa su pasirinktu augalu.'],
                 ]);
             }
+
+            if (HarvestRecord::query()->where('task_id', $task->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'task_id' => ['Pasirinktai derliaus uzduociai irasas jau egzistuoja.'],
+                ]);
+            }
         }
 
         return DB::transaction(function () use ($plot, $owner, $plant, $task, $data) {
@@ -82,5 +88,24 @@ class HarvestService
 
             return $record->fresh(['plant.plantZone', 'task']);
         });
+    }
+
+    public function registerForTask(Task $task, GardenOwner $owner, array $data): HarvestRecord
+    {
+        $task->loadMissing('taskCalendar.plot', 'plant');
+
+        $plot = $task->taskCalendar?->plot;
+        $plant = $task->plant;
+
+        if (! $plot || ! $plant) {
+            throw ValidationException::withMessages([
+                'task' => ['Derliaus uzduotis neturi susieto sklypo arba augalo.'],
+            ]);
+        }
+
+        return $this->registerForPlot($plot, $owner, array_merge($data, [
+            'plant_id' => $plant->id,
+            'task_id' => $task->id,
+        ]));
     }
 }

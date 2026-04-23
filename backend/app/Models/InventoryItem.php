@@ -21,7 +21,6 @@ class InventoryItem extends Model
         'name',
         'normalized_name',
         'quantity',
-        'minimum_quantity',
         'inventory_item_type',
         'type',
         'unit',
@@ -31,7 +30,6 @@ class InventoryItem extends Model
     {
         return [
             'quantity' => 'decimal:2',
-            'minimum_quantity' => 'decimal:2',
             'inventory_item_type' => InventoryItemType::class,
             'type' => InventoryItemType::class,
             'unit' => InventoryUnit::class,
@@ -47,7 +45,6 @@ class InventoryItem extends Model
                 : $inventoryItem->inventory_item_type;
             $inventoryItem->normalized_name = mb_strtolower(trim((string) $inventoryItem->name));
             $inventoryItem->unit ??= InventoryUnit::Unit;
-            $inventoryItem->minimum_quantity ??= 0;
         });
     }
 

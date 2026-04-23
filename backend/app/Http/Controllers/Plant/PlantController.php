@@ -17,6 +17,7 @@ use App\Services\AccessService;
 use App\Services\CatalogPlantService;
 use App\Services\PerenualService;
 use App\Services\PlantCareService;
+use App\Services\PlantLifecycleService;
 use App\Services\PlotSnapshotService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -212,7 +213,8 @@ class PlantController extends Controller
         Request $request,
         Plant $plant,
         AccessService $accessService,
-        PlantCareService $plantCareService
+        PlantCareService $plantCareService,
+        PlantLifecycleService $plantLifecycleService,
     ): JsonResponse {
         $plot = $plant->plot()->firstOrFail();
 
@@ -222,9 +224,14 @@ class PlantController extends Controller
             $plantCareService->ensureLinkedCareProfile($plant);
         }
 
-        return response()->json(
-            PlantResource::make($plant->fresh(['plot', 'plantZone', 'catalogPlant.plantCare']))->resolve()
-        );
+        $plant = $plant->fresh(['plot', 'plantZone', 'catalogPlant.plantCare', 'conditionHistory', 'harvestRecords']);
+        $care = $plant->effectivePlantCare();
+
+        if ($care) {
+            $plant->setAttribute('lifecycle_summary', $plantLifecycleService->buildSummary($plant, $care));
+        }
+
+        return response()->json(PlantResource::make($plant)->resolve());
     }
 
     public function show(
@@ -232,7 +239,8 @@ class PlantController extends Controller
         Plot $plot,
         Plant $plant,
         AccessService $accessService,
-        PlantCareService $plantCareService
+        PlantCareService $plantCareService,
+        PlantLifecycleService $plantLifecycleService,
     ): JsonResponse {
         $this->authorizePlantView($request, $plot, $plant, $accessService);
 
@@ -240,9 +248,14 @@ class PlantController extends Controller
             $plantCareService->ensureLinkedCareProfile($plant);
         }
 
-        return response()->json(
-            PlantResource::make($plant->fresh(['plot', 'plantZone', 'catalogPlant.plantCare']))->resolve()
-        );
+        $plant = $plant->fresh(['plot', 'plantZone', 'catalogPlant.plantCare', 'conditionHistory', 'harvestRecords']);
+        $care = $plant->effectivePlantCare();
+
+        if ($care) {
+            $plant->setAttribute('lifecycle_summary', $plantLifecycleService->buildSummary($plant, $care));
+        }
+
+        return response()->json(PlantResource::make($plant)->resolve());
     }
 
     public function updateGlobal(

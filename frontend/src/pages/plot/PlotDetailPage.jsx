@@ -10,8 +10,9 @@ import {
   ProcessingState,
   SuccessToast,
 } from '../../components/shared/StatusView.jsx'
-import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
+import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
 import {
   ACCESS_ROLES,
@@ -69,7 +70,6 @@ export default function PlotDetailPage() {
   const [rotationBusy, setRotationBusy] = useState(false)
   const [layoutSaving, setLayoutSaving] = useState(false)
   const [layoutSaveFeedback, setLayoutSaveFeedback] = useState({ type: 'idle', message: '' })
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
 
   const pageState = useAsyncData(
@@ -564,46 +564,109 @@ export default function PlotDetailPage() {
   }
 
   const selectedZone = pageState.data.zones.find((zone) => String(zone.id) === String(selectedZoneId)) ?? null
+  const selectedZonePlants = selectedZone
+    ? pageState.data.plants.filter((plant) => (
+      String(plant.fk_plant_zone_id ?? plant.plant_zone_id ?? plant.plant_zone?.id ?? plant.plantZone?.id ?? '')
+        === String(selectedZone.id)
+    ))
+    : []
   const workspaceBusy = zoneBusy || boundaryBusy || layoutSaving
   const plotMeta = [
-    <Badge key="city" tone="soft">{pageState.data.plot.city}</Badge>,
-    <Badge key="size" tone="neutral">{safeNumber(pageState.data.plot.plot_size, 1)} m2</Badge>,
-    <Badge key="role" tone={canEdit ? 'success' : 'warning'}>{pageState.data.accessRole ?? 'viewer'}</Badge>,
-    <Badge key="share" tone={pageState.data.plot.share ? 'success' : 'neutral'}>{pageState.data.plot.share ? 'Shared to community' : 'Private'}</Badge>,
-    <Badge key="zones" tone="neutral">{pageState.data.zones.length} zones</Badge>,
-    <Badge key="plants" tone="neutral">{pageState.data.plants.length} plants</Badge>,
+    <StatusBadge key="city" kind="ownership">{pageState.data.plot.city}</StatusBadge>,
+    <StatusBadge key="size" kind="selection" tone="neutral">{safeNumber(pageState.data.plot.plot_size, 1)} m2</StatusBadge>,
+    <StatusBadge key="role" kind="status" tone={canEdit ? 'success' : 'warning'}>{pageState.data.accessRole ?? 'viewer'}</StatusBadge>,
+    <StatusBadge key="share" kind="connection" tone={pageState.data.plot.share ? 'success' : 'neutral'}>{pageState.data.plot.share ? 'Shared to community' : 'Private'}</StatusBadge>,
+  ]
+  const plotModules = [
+    {
+      key: 'calendar',
+      title: 'Calendar',
+      description: 'Generate recommendation-based work from weather, care intervals, and current plot state.',
+      action: 'Open planning workspace',
+      to: `/plots/${plotId}/calendar`,
+      primary: true,
+      kicker: 'Core module',
+    },
+    {
+      key: 'history',
+      title: 'History',
+      description: 'Review planning snapshots and the record of meaningful plot changes over time.',
+      action: 'Review snapshots',
+      to: `/plots/${plotId}/history`,
+      primary: false,
+      kicker: 'Planning record',
+    },
+    {
+      key: 'harvests',
+      title: 'Harvests',
+      description: 'Track harvest output and connect day-level work back to real garden results.',
+      action: 'Open harvest log',
+      to: `/plots/${plotId}/harvests`,
+      primary: false,
+      kicker: 'Yield tracking',
+    },
+    {
+      key: 'analytics',
+      title: 'Analytics',
+      description: 'Inspect plot-level performance signals, workload patterns, and productivity trends.',
+      action: 'View analytics',
+      to: `/plots/${plotId}/analytics`,
+      primary: false,
+      kicker: 'Insights',
+    },
   ]
 
   return (
-    <div className="page-stack workspace-page workspace-page--locked" data-testid="workspace-page">
+    <div className="page-stack workspace-page workspace-page--canvas-first" data-testid="workspace-page">
       <PageHeader
         eyebrow="Plot workspace"
         title={pageState.data.plot.name}
-        description="Design the plot visually, manage zone metadata, place plants, and keep planning, sharing, and rotation actions in one focused workspace."
+        description="A focused workspace where the canvas stays dominant, live zone context stays on the right, and planning tools drop into a calmer lower dock."
         meta={plotMeta}
         actions={(
           <>
-            <Button onClick={handleExport}>Export PDF</Button>
-            <Link to={`/plots/${plotId}/calendar`}>
-              <Button variant="secondary">Calendar</Button>
-            </Link>
-            <Link to={`/plots/${plotId}/history`}>
-              <Button variant="secondary">History</Button>
-            </Link>
-            <Link to={`/plots/${plotId}/harvests`}>
-              <Button variant="secondary">Harvests</Button>
-            </Link>
-            <Link to={`/plots/${plotId}/analytics`}>
-              <Button variant="secondary">Analytics</Button>
-            </Link>
+            <Button variant="secondary" onClick={handleExport}>Export PDF</Button>
             {canEdit ? (
               <Link to={`/plots/${plotId}/edit`}>
-                <Button variant="secondary">Edit metadata</Button>
+                <Button variant="ghost">Edit metadata</Button>
               </Link>
             ) : null}
           </>
         )}
       />
+
+      <section className="panel workspace-overview-band">
+        <div className="workspace-overview-copy">
+          <span className="workspace-overview-kicker">Live editor workspace</span>
+          <h2 className="workspace-overview-title">Edit the plot on canvas first, then drop into planning and collaboration without breaking flow.</h2>
+          <p className="section-copy">
+            The canvas owns the page. The right rail only carries active zone work, while modules, plants, sharing, and rotation live together below as a secondary workspace.
+          </p>
+        </div>
+
+        <div className="workspace-overview-stats">
+          <article className="workspace-overview-stat">
+            <span className="workspace-overview-stat-label">Zones</span>
+            <strong className="workspace-overview-stat-value">{pageState.data.zones.length}</strong>
+            <span className="workspace-overview-stat-note">Mapped editing targets</span>
+          </article>
+          <article className="workspace-overview-stat">
+            <span className="workspace-overview-stat-label">Plants</span>
+            <strong className="workspace-overview-stat-value">{pageState.data.plants.length}</strong>
+            <span className="workspace-overview-stat-note">Placed records in this plot</span>
+          </article>
+          <article className="workspace-overview-stat">
+            <span className="workspace-overview-stat-label">Created</span>
+            <strong className="workspace-overview-stat-value">{formatDate(pageState.data.plot.creation_date)}</strong>
+            <span className="workspace-overview-stat-note">Original plot snapshot</span>
+          </article>
+          <article className="workspace-overview-stat">
+            <span className="workspace-overview-stat-label">Visibility</span>
+            <strong className="workspace-overview-stat-value">{pageState.data.plot.share ? 'Shared' : 'Private'}</strong>
+            <span className="workspace-overview-stat-note">Community state</span>
+          </article>
+        </div>
+      </section>
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
@@ -624,20 +687,21 @@ export default function PlotDetailPage() {
         />
       ) : null}
 
-      <div className={`plot-workspace plot-workspace--locked ${sidebarCollapsed ? 'plot-workspace-sidebar-collapsed' : ''}`.trim()}>
-        <section className="panel plot-workspace-main plot-workspace-main--locked page-stack">
-          <div className="list-head">
+      <div className="plot-editor-layout">
+        <section className="panel plot-editor-main plot-workspace-main--canvas-first page-stack">
+          <div className="plot-editor-head">
             <div className="page-stack">
+              <span className="workspace-section-eyebrow">Canvas editor</span>
               <h3 className="section-title">Plot designer</h3>
               <p className="section-copy">
-                The canvas stays front and center while zone editing, placement, and sharing details remain nearby but secondary.
+                The designer keeps the geometry workspace dominant on desktop, with only active editing context sitting beside it.
               </p>
             </div>
             <div className="workspace-status">
-              {selectedZone ? <Badge tone="soft">Active zone: {selectedZone.name}</Badge> : <Badge tone="neutral">No zone selected</Badge>}
-              {zoneBusy ? <Badge tone="warning">Syncing zones</Badge> : null}
-              {boundaryBusy ? <Badge tone="warning">Syncing plot bounds</Badge> : null}
-              {layoutSaveFeedback?.type === 'success' ? <Badge tone="success">{layoutSaveFeedback.message}</Badge> : null}
+              {selectedZone ? <StatusBadge kind="selection">Active zone: {selectedZone.name}</StatusBadge> : <StatusBadge kind="selection" tone="neutral">No zone selected</StatusBadge>}
+              {zoneBusy ? <StatusBadge kind="status" tone="warning">Syncing zones</StatusBadge> : null}
+              {boundaryBusy ? <StatusBadge kind="status" tone="warning">Syncing plot bounds</StatusBadge> : null}
+              {layoutSaveFeedback?.type === 'success' ? <StatusBadge kind="status" tone="success">{layoutSaveFeedback.message}</StatusBadge> : null}
             </div>
           </div>
 
@@ -647,6 +711,7 @@ export default function PlotDetailPage() {
           <PlotDesignerCanvas
             ref={designerCanvasRef}
             plotId={plotId}
+            plotName={pageState.data.plot.name}
             plotSize={pageState.data.plot.plot_size}
             plotGeometry={pageState.data.plot.geometry}
             zones={pageState.data.zones}
@@ -664,35 +729,96 @@ export default function PlotDetailPage() {
           />
         </section>
 
-        <aside className="plot-workspace-sidebar plot-workspace-sidebar--locked page-stack">
-          <section className="panel page-stack">
-            <div className="list-head">
+        <aside className="plot-context-rail page-stack plot-workspace-sidebar--canvas-first">
+          <section className="panel page-stack workspace-context-card">
+            <div className="workspace-context-card-head">
               <div className="page-stack">
-                <h3 className="section-title">Workspace controls</h3>
+                <span className="workspace-section-eyebrow">Context rail</span>
+                <h3 className="section-title">{selectedZone ? selectedZone.name : 'Zone context'}</h3>
                 <p className="section-copy">
-                  Keep the canvas spacious on desktop or open the full management stack when you need to edit metadata in depth.
+                  Read-only context stays here so you can orient quickly before editing the zone form or planting into the active area.
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setSidebarCollapsed((current) => !current)}>
-                {sidebarCollapsed ? 'Expand panel' : 'Collapse panel'}
-              </Button>
+              <StatusBadge kind="selection" tone={selectedZone ? 'soft' : canEdit ? 'warning' : 'neutral'}>
+                {selectedZone ? 'Zone active' : canEdit ? 'Select or draw a zone' : 'Read-only selection'}
+              </StatusBadge>
             </div>
-            <div className="meta-cluster">
-              <Badge tone="neutral">{pageState.data.zones.length} mapped zones</Badge>
-              <Badge tone={selectedZone ? 'soft' : 'warning'}>
-                {selectedZone ? `Editing ${selectedZone.name}` : 'Select a zone'}
-              </Badge>
-            </div>
+
+            {selectedZone ? (
+              <>
+                <div className="workspace-context-stats workspace-context-stats-compact">
+                  <article className="workspace-context-stat">
+                    <span className="workspace-context-stat-label">Area</span>
+                    <strong className="workspace-context-stat-value">{safeNumber(selectedZone.zone_size, 2)} m2</strong>
+                  </article>
+                  <article className="workspace-context-stat">
+                    <span className="workspace-context-stat-label">Plants</span>
+                    <strong className="workspace-context-stat-value">{selectedZonePlants.length}</strong>
+                  </article>
+                  <article className="workspace-context-stat">
+                    <span className="workspace-context-stat-label">Last planted</span>
+                    <strong className="workspace-context-stat-value">{selectedZone.last_planting_date ? formatDate(selectedZone.last_planting_date) : 'Not set'}</strong>
+                  </article>
+                </div>
+
+                <div className="inline-note inline-note-compact">
+                  Editable fields such as soil type, rotation stage, and planting date stay in the form below so the summary here stays quick to scan.
+                </div>
+
+                {selectedZonePlants.length > 0 ? (
+                  <div className="workspace-context-list">
+                    <span className="workspace-context-list-label">Current placement</span>
+                    <div className="workspace-context-list-items">
+                      {selectedZonePlants.slice(0, 4).map((plant) => (
+                        <span key={plant.id} className="workspace-context-pill">
+                          {plant.name}
+                        </span>
+                      ))}
+                      {selectedZonePlants.length > 4 ? (
+                        <span className="workspace-context-pill workspace-context-pill--muted">
+                          +{selectedZonePlants.length - 4} more
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
+                  <EmptyStatePanel
+                    title="Nothing planted in this zone yet"
+                    description="Use the planting panel below to place the next plant directly into the active zone."
+                    tone="subtle"
+                  />
+                )}
+              </>
+            ) : (
+              <EmptyStatePanel
+                title={canEdit ? 'Select or draw a zone' : 'Select a zone to inspect it'}
+                description={canEdit
+                  ? 'Click an existing zone on the canvas, or switch the designer into Draw zone mode to create a new editable area.'
+                  : 'Zone geometry and metadata stay visible here once you pick a zone on the canvas.'}
+                tone="subtle"
+                action={canEdit ? (
+                  <Button onClick={handleZoneCreateFromForm} disabled={zoneBusy}>
+                    {zoneBusy ? 'Preparing zone...' : 'Create zone from current form'}
+                  </Button>
+                ) : null}
+              />
+            )}
           </section>
 
-          <details className="panel page-stack workspace-sidebar-section" open>
-            <summary className="workspace-sidebar-summary">
-              <span>
-                <strong>Zone details</strong>
-                <small>{selectedZoneId ? 'Update the selected zone metadata' : 'Create a new zone draft'}</small>
-              </span>
-              <Badge tone={selectedZoneId ? 'soft' : 'neutral'}>{selectedZoneId ? 'Edit mode' : 'Create mode'}</Badge>
-            </summary>
+          <section className="panel page-stack workspace-context-card">
+            <div className="list-head">
+              <div className="page-stack">
+                <h3 className="section-title">Editable details</h3>
+                <p className="section-copy">
+                  {selectedZoneId
+                    ? 'Update zone metadata here while geometry stays visible on the canvas.'
+                    : 'Prepare the next zone draft here, then place it on the canvas when you are ready.'}
+                </p>
+              </div>
+              <StatusBadge kind="selection" tone={selectedZoneId ? 'soft' : 'neutral'}>
+                {selectedZoneId ? 'Edit mode' : 'Create mode'}
+              </StatusBadge>
+            </div>
 
             <form className="input-grid" onSubmit={handleZoneSubmit}>
               <div className="field">
@@ -702,16 +828,8 @@ export default function PlotDetailPage() {
                   value={zoneForm.name}
                   onChange={(event) => setZoneForm((current) => ({ ...current, name: event.target.value }))}
                   placeholder="North bed, Herb strip..."
-                  required={Boolean(selectedZoneId)}
-                />
-              </div>
-
-              <div className="field">
-                <label htmlFor="zone-size">Zone area</label>
-                <input
-                  id="zone-size"
-                  value={zoneForm.zone_size ? `${safeNumber(zoneForm.zone_size, 2)} m2` : 'Calculated from canvas geometry'}
-                  disabled
+                  required={Boolean(selectedZoneId) && canEdit}
+                  disabled={!canEdit}
                 />
               </div>
 
@@ -721,6 +839,7 @@ export default function PlotDetailPage() {
                   id="soil-type"
                   value={zoneForm.soil_type}
                   onChange={(event) => setZoneForm((current) => ({ ...current, soil_type: event.target.value }))}
+                  disabled={!canEdit}
                 >
                   {SOIL_TYPES.map((soil) => (
                     <option key={soil} value={soil}>
@@ -738,21 +857,34 @@ export default function PlotDetailPage() {
                   min="0"
                   value={zoneForm.rotation_stage}
                   onChange={(event) => setZoneForm((current) => ({ ...current, rotation_stage: event.target.value }))}
+                  disabled={!canEdit}
                 />
               </div>
 
-              <div className="field">
+              <div className="field field-span-2">
                 <label htmlFor="zone-last-planting">Last planting date</label>
                 <input
                   id="zone-last-planting"
                   type="date"
                   value={zoneForm.last_planting_date}
                   onChange={(event) => setZoneForm((current) => ({ ...current, last_planting_date: event.target.value }))}
+                  disabled={!canEdit}
                 />
               </div>
 
+              <div className="inline-note inline-note-compact field-span-2">
+                Zone area follows the canvas geometry automatically, so there is only one source of truth for layout size.
+              </div>
+
+              {zoneError ? <span className="field-error">{zoneError}</span> : null}
+              {!canEdit ? (
+                <div className="inline-note inline-note-compact">
+                  Your current access is read only. Select zones on the canvas to inspect them, while edits remain disabled in this rail.
+                </div>
+              ) : null}
+
               <div className="form-actions">
-                {selectedZoneId ? (
+                {selectedZoneId && canEdit ? (
                   <>
                     <Button type="submit" disabled={zoneBusy}>
                       {zoneBusy ? 'Saving...' : 'Save zone changes'}
@@ -764,30 +896,91 @@ export default function PlotDetailPage() {
                       Delete zone
                     </Button>
                   </>
-                ) : (
+                ) : null}
+
+                {!selectedZoneId && canEdit ? (
                   <>
-                    <Button onClick={handleZoneCreateFromForm} disabled={zoneBusy || !canEdit}>
+                    <Button onClick={handleZoneCreateFromForm} disabled={zoneBusy}>
                       {zoneBusy ? 'Adding...' : 'Add a new zone'}
                     </Button>
                     <Button variant="secondary" onClick={() => setZoneForm(emptyZoneForm)} disabled={zoneBusy}>
                       Clear form
                     </Button>
                   </>
-                )}
+                ) : null}
               </div>
             </form>
-          </details>
+          </section>
 
-          <details className="panel page-stack workspace-sidebar-section" open>
-            <summary className="workspace-sidebar-summary">
-              <span>
-                <strong>Plants</strong>
-                <small>Add plants directly into zones and review current placements</small>
-              </span>
-              <Badge tone="neutral">{pageState.data.plants.length}</Badge>
-            </summary>
+          {canEdit ? (
+            <div className="page-stack">
+              {plantError ? <span className="field-error">{plantError}</span> : null}
+              <PlotPlantingDrawer
+                selectedZone={selectedZone}
+                canEdit={canEdit}
+                busy={busy}
+                onCreatePlant={handlePlantCreate}
+              />
+            </div>
+          ) : null}
+        </aside>
+      </div>
+
+      <section className="panel workspace-dock workspace-dock-shell page-stack">
+        <div className="workspace-dock-header">
+          <div className="page-stack">
+            <span className="workspace-section-eyebrow">Secondary workspace</span>
+            <h3 className="section-title">Planning, tracking, and collaboration live together below the canvas.</h3>
+            <p className="section-copy">
+              These tools stay easy to scan and close at hand, but they no longer compete with the live editing rail.
+            </p>
+          </div>
+        </div>
+
+        <section className="workspace-module-panel">
+          <div className="list-head">
+            <div className="page-stack">
+              <span className="workspace-action-group-label">Plot modules</span>
+              <h3 className="section-title">Core plot navigation</h3>
+              <p className="section-copy">
+                Calendar leads this set because it is one of the strongest plot workflows, while history, harvests, and analytics stay one click away.
+              </p>
+            </div>
+            <StatusBadge kind="selection" tone="neutral">{plotModules.length} modules</StatusBadge>
+          </div>
+
+          <div className="workspace-module-grid">
+            {plotModules.map((module) => (
+              <Link
+                key={module.key}
+                to={module.to}
+                className={`workspace-module-card ${module.primary ? 'workspace-module-card-primary' : ''}`.trim()}
+              >
+                <span className="workspace-module-kicker">{module.kicker}</span>
+                <strong className="workspace-module-title">{module.title}</strong>
+                <p className="workspace-module-description">{module.description}</p>
+                <span className="workspace-module-action">{module.action}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className={`workspace-secondary-grid ${isOwner ? 'workspace-secondary-grid--with-sidecard' : ''}`.trim()}>
+          <section className="page-stack workspace-dock-card workspace-dock-card--wide">
+            <div className="list-head">
+              <div className="page-stack">
+                <h3 className="section-title">Plants in this plot</h3>
+                <p className="section-copy">
+                  Review placed plants after editing, then open individual plant details only when you need deeper condition or lifecycle history.
+                </p>
+              </div>
+              <StatusBadge kind="selection" tone={selectedZone ? 'soft' : 'neutral'}>
+                {selectedZone ? `${selectedZonePlants.length} in ${selectedZone.name}` : `${pageState.data.plants.length} total`}
+              </StatusBadge>
+            </div>
+
             {pageState.data.plants.length === 0 ? (
-              <EmptyState title="No plants yet" description="Create the first plant entry for this plot." />
+              <EmptyState title="No plants yet" description="Place the first plant from the selected-zone rail to start building this plot plan." />
             ) : (
               <div className="table-wrap">
                 <table>
@@ -825,202 +1018,24 @@ export default function PlotDetailPage() {
                 </table>
               </div>
             )}
-          </details>
-
-          {canEdit ? (
-            <>
-              {plantError ? <span className="field-error">{plantError}</span> : null}
-              <PlotPlantingDrawer
-                selectedZone={selectedZone}
-                canEdit={canEdit}
-                busy={busy}
-                onCreatePlant={handlePlantCreate}
-              />
-            </>
-          ) : null}
-
-          <details className="panel page-stack workspace-sidebar-section" open>
-            <summary className="workspace-sidebar-summary">
-              <span>
-                <strong>Rotation planning</strong>
-                <small>Generate, validate, and confirm a plot-wide rotation suggestion</small>
-              </span>
-              <Badge tone={rotationDraft ? 'warning' : 'neutral'}>{rotationDraft ? 'Draft ready' : 'Idle'}</Badge>
-            </summary>
-            {canEdit ? (
-              <form className="input-grid" onSubmit={handleRotationPlanGenerate}>
-                <div className="field">
-                  <label htmlFor="rotation-planning-date">Planning date</label>
-                  <input
-                    id="rotation-planning-date"
-                    type="date"
-                    value={rotationPlanForm.planning_date}
-                    onChange={(event) => setRotationPlanForm((current) => ({ ...current, planning_date: event.target.value }))}
-                    required
-                  />
-                </div>
-                {rotationError ? <span className="field-error">{rotationError}</span> : null}
-                {rotationFeedback ? <div className="inline-note">{rotationFeedback}</div> : null}
-                <Button type="submit" loading={rotationBusy} disabled={pageState.data.plants.length === 0 || pageState.data.zones.length === 0}>
-                  {rotationBusy ? 'Generating rotation scheme' : 'Generate rotation scheme'}
-                </Button>
-              </form>
-            ) : null}
-
-            {rotationDraft ? (
-              <div className="stack" data-testid="rotation-plan-preview">
-                <div className="list-head">
-                  <div className="stack">
-                    <strong>Generated scheme preview</strong>
-                    <span className="muted">
-                      Planning date {formatDate(rotationDraft.planning_date)}
-                    </span>
-                  </div>
-                  <span className={`badge ${rotationDraft.plan?.status === 'ready' ? 'badge-soft' : 'badge-warning'}`}>
-                    {rotationDraft.plan?.status === 'ready' ? 'Ready to confirm' : 'Needs adjustments'}
-                  </span>
-                </div>
-
-                <div className="inline-note">
-                  Assigned {rotationDraft.plan?.summary?.assigned_plant_count ?? 0} of {rotationDraft.plan?.summary?.plant_count ?? 0} plants.
-                </div>
-
-                {(rotationDraft.plan?.plants ?? []).map((entry) => {
-                  const selectedTarget = entry.selected_target_zone
-                  const otherAlternatives = (entry.alternatives ?? []).filter((alternative) => alternative.zone_id !== selectedTarget?.zone_id)
-                  const blockedCandidates = (entry.candidate_zones ?? []).filter((candidate) => candidate.verdict === 'invalid')
-
-                  return (
-                    <div key={entry.plant.id} className="card">
-                      <div className="list-head">
-                        <div className="stack">
-                          <strong>{entry.plant.name}</strong>
-                          <span className="muted">
-                            Current zone: {entry.current_zone?.name ?? 'Not assigned'}
-                          </span>
-                        </div>
-                        <span className={`badge ${selectedTarget ? 'badge-soft' : 'badge-warning'}`}>
-                          {selectedTarget ? 'Target selected' : 'No valid target'}
-                        </span>
-                      </div>
-
-                      {selectedTarget ? (
-                        <div className="stack">
-                          <strong>
-                            Suggested target zone: {selectedTarget.zone_name} (score {selectedTarget.score})
-                          </strong>
-                          <span className="muted">{selectedTarget.passed_reasons?.join(' ')}</span>
-                        </div>
-                      ) : (
-                        <div className="inline-note">
-                          No valid target zone was found for this plant in the current scheme.
-                        </div>
-                      )}
-
-                      {otherAlternatives.length > 0 ? (
-                        <div className="stack">
-                          <strong>Other valid target zones</strong>
-                          {otherAlternatives.map((alternative) => (
-                            <div key={alternative.zone_id} className="card">
-                              <div className="list-head">
-                                <span>{alternative.zone_name}</span>
-                                <span>Score {alternative.score}</span>
-                              </div>
-                              <span className="muted">{alternative.passed_reasons?.join(' ')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-
-                      {blockedCandidates.length > 0 ? (
-                        <div className="stack">
-                          <strong>Rejected target zones</strong>
-                          {blockedCandidates.map((candidate) => (
-                            <div key={candidate.zone_id} className="card">
-                              <div className="list-head">
-                                <span>{candidate.zone_name}</span>
-                                <span>Score {candidate.score}</span>
-                              </div>
-                              <span className="muted">{candidate.blocking_reasons?.join(' ')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-
-                      {entry.fallback_solutions?.length ? (
-                        <div className="stack">
-                          <strong>Fallback solutions</strong>
-                          {entry.fallback_solutions.map((solution) => (
-                            <span key={solution} className="muted">{solution}</span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  )
-                })}
-
-                {canEdit ? (
-                <div className="form-actions">
-                  <Button
-                      onClick={handleRotationPlanConfirm}
-                      loading={rotationBusy}
-                      disabled={rotationDraft.plan?.status !== 'ready'}
-                    >
-                      {rotationBusy ? 'Saving scheme' : 'Confirm scheme'}
-                    </Button>
-                    <Button variant="secondary" onClick={handleRotationPlanReject} disabled={rotationBusy}>
-                      Reject scheme
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="stack">
-              <div>
-                <h4>Confirmed rotation history</h4>
-                <p className="section-copy">Planning history snapshots stay available from the plot history page, while confirmed rotation assignments are listed here.</p>
-              </div>
-              {pageState.data.rotations.length === 0 ? (
-                <EmptyState title="No confirmed rotation plans" description="Generate and confirm a scheme to create the first rotation history records." />
-              ) : (
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Zone</th>
-                        <th>Plant</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pageState.data.rotations.map((rotation) => (
-                        <tr key={rotation.id}>
-                          <td>{formatDate(rotation.from_date)}</td>
-                          <td>{formatDate(rotation.to_date)}</td>
-                          <td>{rotation.plant_zone?.name ?? rotation.fk_plant_zone_id}</td>
-                          <td>{rotation.plant?.name ?? rotation.fk_plant_id}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </details>
+          </section>
 
           {isOwner ? (
-            <details className="panel input-grid workspace-sidebar-section">
-              <summary className="workspace-sidebar-summary">
-                <span>
-                  <strong>Sharing</strong>
-                  <small>Grant viewer or editor access to collaborators</small>
-                </span>
-                <Badge tone={pageState.data.access.length > 0 ? 'soft' : 'neutral'}>{pageState.data.access.length}</Badge>
-              </summary>
+            <section className="page-stack workspace-dock-card workspace-dock-card--side">
+              <div className="list-head">
+                <div className="page-stack">
+                  <h3 className="section-title">Sharing</h3>
+                  <p className="section-copy">
+                    Invite collaborators after the layout is in good shape, without pulling access management into the live editing rail.
+                  </p>
+                </div>
+                <StatusBadge kind="selection" tone={pageState.data.access.length > 0 ? 'soft' : 'neutral'}>
+                  {pageState.data.access.length}
+                </StatusBadge>
+              </div>
+
               <form className="input-grid" onSubmit={handleShareSubmit}>
-                <div className="field">
+                <div className="field field-span-2">
                   <label htmlFor="recipient-email">Recipient email</label>
                   <input
                     id="recipient-email"
@@ -1029,7 +1044,7 @@ export default function PlotDetailPage() {
                     required
                   />
                 </div>
-                <div className="field">
+                <div className="field field-span-2">
                   <label htmlFor="share-role">Role</label>
                   <select
                     id="share-role"
@@ -1050,7 +1065,7 @@ export default function PlotDetailPage() {
               </form>
 
               <div className="inline-note">
-                Owners can revoke access directly from this list.
+                Owners can grant viewer or editor access here and revoke it below.
               </div>
 
               {pageState.data.access.length > 0 ? (
@@ -1061,7 +1076,6 @@ export default function PlotDetailPage() {
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th>Granted</th>
                         <th />
                       </tr>
                     </thead>
@@ -1071,7 +1085,6 @@ export default function PlotDetailPage() {
                           <td>{entry.name || 'Unknown'}</td>
                           <td>{entry.email}</td>
                           <td>{entry.role}</td>
-                          <td>{formatDate(entry.granted_at)}</td>
                           <td>
                             <Button
                               variant="danger"
@@ -1089,10 +1102,190 @@ export default function PlotDetailPage() {
               ) : (
                 <EmptyState title="No shared users" description="Only the owner currently has access to this plot." />
               )}
-            </details>
+            </section>
           ) : null}
-        </aside>
-      </div>
+        </div>
+
+        <section className="page-stack workspace-dock-card workspace-dock-card--full">
+          <div className="list-head">
+            <div className="page-stack">
+              <h3 className="section-title">Rotation planning</h3>
+              <p className="section-copy">
+                Generate plot-wide rotation suggestions here after finishing geometry edits, then confirm or reject the draft without crowding the editor rail.
+              </p>
+            </div>
+            <StatusBadge kind="status" tone={rotationDraft ? 'warning' : 'neutral'}>
+              {rotationDraft ? 'Draft ready' : 'Idle'}
+            </StatusBadge>
+          </div>
+
+          {canEdit ? (
+            <form className="input-grid workspace-rotation-form" onSubmit={handleRotationPlanGenerate}>
+              <div className="field">
+                <label htmlFor="rotation-planning-date">Planning date</label>
+                <input
+                  id="rotation-planning-date"
+                  type="date"
+                  value={rotationPlanForm.planning_date}
+                  onChange={(event) => setRotationPlanForm((current) => ({ ...current, planning_date: event.target.value }))}
+                  required
+                />
+              </div>
+              {rotationError ? <span className="field-error">{rotationError}</span> : null}
+              {rotationFeedback ? <div className="inline-note">{rotationFeedback}</div> : null}
+              <div className="form-actions">
+                <Button type="submit" loading={rotationBusy} disabled={pageState.data.plants.length === 0 || pageState.data.zones.length === 0}>
+                  {rotationBusy ? 'Generating rotation scheme' : 'Generate rotation scheme'}
+                </Button>
+              </div>
+            </form>
+          ) : null}
+
+          {rotationDraft ? (
+            <div className="stack workspace-rotation-preview" data-testid="rotation-plan-preview">
+              <div className="list-head">
+                <div className="stack">
+                  <strong>Generated scheme preview</strong>
+                  <span className="muted">
+                    Planning date {formatDate(rotationDraft.planning_date)}
+                  </span>
+                </div>
+                <span className={`badge ${rotationDraft.plan?.status === 'ready' ? 'badge-soft' : 'badge-warning'}`}>
+                  {rotationDraft.plan?.status === 'ready' ? 'Ready to confirm' : 'Needs adjustments'}
+                </span>
+              </div>
+
+              <div className="inline-note">
+                Assigned {rotationDraft.plan?.summary?.assigned_plant_count ?? 0} of {rotationDraft.plan?.summary?.plant_count ?? 0} plants.
+              </div>
+
+              {(rotationDraft.plan?.plants ?? []).map((entry) => {
+                const selectedTarget = entry.selected_target_zone
+                const otherAlternatives = (entry.alternatives ?? []).filter((alternative) => alternative.zone_id !== selectedTarget?.zone_id)
+                const blockedCandidates = (entry.candidate_zones ?? []).filter((candidate) => candidate.verdict === 'invalid')
+
+                return (
+                  <div key={entry.plant.id} className="card workspace-rotation-entry">
+                    <div className="list-head">
+                      <div className="stack">
+                        <strong>{entry.plant.name}</strong>
+                        <span className="muted">
+                          Current zone: {entry.current_zone?.name ?? 'Not assigned'}
+                        </span>
+                      </div>
+                      <span className={`badge ${selectedTarget ? 'badge-soft' : 'badge-warning'}`}>
+                        {selectedTarget ? 'Target selected' : 'No valid target'}
+                      </span>
+                    </div>
+
+                    {selectedTarget ? (
+                      <div className="stack">
+                        <strong>
+                          Suggested target zone: {selectedTarget.zone_name} (score {selectedTarget.score})
+                        </strong>
+                        <span className="muted">{selectedTarget.passed_reasons?.join(' ')}</span>
+                      </div>
+                    ) : (
+                      <div className="inline-note">
+                        No valid target zone was found for this plant in the current scheme.
+                      </div>
+                    )}
+
+                    {otherAlternatives.length > 0 ? (
+                      <div className="stack">
+                        <strong>Other valid target zones</strong>
+                        {otherAlternatives.map((alternative) => (
+                          <div key={alternative.zone_id} className="card workspace-rotation-subcard">
+                            <div className="list-head">
+                              <span>{alternative.zone_name}</span>
+                              <span>Score {alternative.score}</span>
+                            </div>
+                            <span className="muted">{alternative.passed_reasons?.join(' ')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {blockedCandidates.length > 0 ? (
+                      <div className="stack">
+                        <strong>Rejected target zones</strong>
+                        {blockedCandidates.map((candidate) => (
+                          <div key={candidate.zone_id} className="card workspace-rotation-subcard">
+                            <div className="list-head">
+                              <span>{candidate.zone_name}</span>
+                              <span>Score {candidate.score}</span>
+                            </div>
+                            <span className="muted">{candidate.blocking_reasons?.join(' ')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {entry.fallback_solutions?.length ? (
+                      <div className="stack">
+                        <strong>Fallback solutions</strong>
+                        {entry.fallback_solutions.map((solution) => (
+                          <span key={solution} className="muted">{solution}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
+
+              {canEdit ? (
+                <div className="form-actions">
+                  <Button
+                    onClick={handleRotationPlanConfirm}
+                    loading={rotationBusy}
+                    disabled={rotationDraft.plan?.status !== 'ready'}
+                  >
+                    {rotationBusy ? 'Saving scheme' : 'Confirm scheme'}
+                  </Button>
+                  <Button variant="secondary" onClick={handleRotationPlanReject} disabled={rotationBusy}>
+                    Reject scheme
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="workspace-history-block">
+            <div>
+              <h4>Confirmed rotation history</h4>
+              <p className="section-copy">
+                Planning history snapshots remain available from the history page, while confirmed rotation assignments stay previewable here.
+              </p>
+            </div>
+            {pageState.data.rotations.length === 0 ? (
+              <EmptyState title="No confirmed rotation plans" description="Generate and confirm a scheme to create the first rotation history records." />
+            ) : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Zone</th>
+                      <th>Plant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageState.data.rotations.map((rotation) => (
+                      <tr key={rotation.id}>
+                        <td>{formatDate(rotation.from_date)}</td>
+                        <td>{formatDate(rotation.to_date)}</td>
+                        <td>{rotation.plant_zone?.name ?? rotation.fk_plant_zone_id}</td>
+                        <td>{rotation.plant?.name ?? rotation.fk_plant_id}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </section>
     </div>
   )
 }

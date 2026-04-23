@@ -9,7 +9,7 @@ const baseLinks = [
 
 const authLinks = [
   { to: '/account', label: 'Account', icon: 'account' },
-  { to: '/community', label: 'Community', icon: 'community' },
+  { to: '/community', label: 'Community', icon: 'community', badge: { tone: 'soft', text: 'Shared' } },
   { to: '/plots', label: 'Plots', icon: 'plots' },
   { to: '/plants', label: 'Plants', icon: 'plants' },
   { to: '/inventory', label: 'Inventory', icon: 'inventory' },
@@ -88,7 +88,7 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
   const links = [
     ...baseLinks,
     ...(isAuthenticated ? authLinks : []),
-    ...(isAdmin ? [{ to: '/admin/users', label: 'Admin', icon: 'admin' }] : []),
+    ...(isAdmin ? [{ to: '/admin/users', label: 'Admin', icon: 'admin', badge: { tone: 'warning', text: 'Admin' } }] : []),
     ...(!isAuthenticated
       ? [
           { to: '/login', label: 'Sign in', icon: 'auth' },
@@ -112,7 +112,10 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
             <path d="M10.2 8c.3-2.7 2-4.2 5-4.5.1 3-1.6 4.7-5 4.5Z" />
           </svg>
         </span>
-        <span className="brand-title">SAD<em>iS</em></span>
+        <span className="brand-copy">
+          <span className="brand-title">SAD<em>iS</em></span>
+          <span className="brand-subtitle">Garden planning workspace</span>
+        </span>
       </div>
 
       <nav className="sidebar-nav" aria-label="Primary">
@@ -125,10 +128,13 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
           >
             <span className="sidebar-link-main">
               <SidebarIcon name={link.icon} />
-              <span>{link.label}</span>
+              <span className="sidebar-link-label">{link.label}</span>
             </span>
-            {link.to === '/community' ? <Badge tone="soft">Shared</Badge> : null}
-            {link.to === '/admin/users' ? <Badge tone="warning">Admin</Badge> : null}
+            {link.badge ? (
+              <span className="sidebar-link-trailing">
+                <Badge tone={link.badge.tone} size="sm" className="sidebar-nav-badge">{link.badge.text}</Badge>
+              </span>
+            ) : null}
           </NavLink>
         ))}
       </nav>
@@ -143,7 +149,7 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
                 <span className="sidebar-user-email">{user?.email}</span>
               </div>
             </div>
-            <Button variant="ghost" onClick={handleLogout} style={{ width: '100%' }}>
+            <Button variant="ghost" onClick={handleLogout} fullWidth>
               Log out
             </Button>
           </>

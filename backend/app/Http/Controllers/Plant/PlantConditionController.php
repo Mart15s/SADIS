@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Plant;
 use App\Enums\ConditionType;
 use App\Http\Controllers\Concerns\AuthorizesPlotAccess;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Plant\PlantConditionHistoryResource;
 use App\Models\Plant;
-use App\Models\PlantConditionHistory;
 use App\Models\Plot;
 use App\Services\AccessService;
 use App\Services\PlantConditionHistoryService;
@@ -18,7 +18,13 @@ class PlantConditionController extends Controller
 {
     use AuthorizesPlotAccess;
 
-    public function store(Request $request, Plot $plot, Plant $plant, AccessService $accessService): JsonResponse
+    public function store(
+        Request $request,
+        Plot $plot,
+        Plant $plant,
+        AccessService $accessService,
+        PlantConditionHistoryService $plantConditionHistoryService
+    ): JsonResponse
     {
         $this->authorizePlantEdit($request, $plot, $plant, $accessService);
 
@@ -35,22 +41,19 @@ class PlantConditionController extends Controller
             ? (bool) $validated['disease']
             : ($condition === ConditionType::Diseased->value);
 
-        $history = PlantConditionHistory::create([
-            'measured_at' => $validated['measured_at'],
-            'notes' => $validated['notes'] ?? null,
-            'photo_url' => $validated['photo_url'] ?? null,
-            'condition' => $condition,
-            'condition_type' => $condition,
-            'plant_id' => $plant->id,
-            'fk_plant_id' => $plant->id,
-        ]);
+        $history = $plantConditionHistoryService->record(
+            $plant,
+            $condition,
+            $validated['measured_at'],
+            $validated['notes'] ?? null,
+            $validated['photo_url'] ?? null,
+            $hasDisease,
+        );
 
-        $plant->update([
-            'condition' => $condition,
-            'disease' => $hasDisease,
-        ]);
-
-        return response()->json($history, 201);
+        return response()->json(
+            PlantConditionHistoryResource::make($history)->resolve(),
+            201
+        );
     }
 
     public function index(
@@ -63,7 +66,9 @@ class PlantConditionController extends Controller
         $this->authorizePlantView($request, $plot, $plant, $accessService);
 
         return response()->json(
-            $plantConditionHistoryService->listForPlant($plant)
+            PlantConditionHistoryResource::collection(
+                $plantConditionHistoryService->listForPlant($plant)
+            )->resolve()
         );
     }
 

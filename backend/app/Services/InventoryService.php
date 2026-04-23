@@ -9,6 +9,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryUsageLog;
 use App\Models\Task;
 use App\Models\TaskResourceRequirement;
+use App\ValueObjects\NormalizedTaskResource;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -19,6 +20,11 @@ use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
+    public function __construct(
+        private readonly TaskInventoryCoverageService $taskInventoryCoverageService,
+    ) {
+    }
+
     /**
      * @return EloquentCollection<int, InventoryItem>
      */
@@ -132,16 +138,28 @@ class InventoryService
             : null;
 
         if ($dayTasks instanceof \Illuminate\Support\Collection && $dayTasks->isNotEmpty()) {
-            $summariesByDate = $this->buildDateInventorySummaries($owner, $dayTasks, false);
+            $summariesByDate = $this->taskInventoryCoverageService->summarizeTasksByDate($owner, $dayTasks, false);
 
             return $summariesByDate[$this->taskDateKey($task)]['tasks'][$task->id]['inventory_context']
                 ?? [
                     'status' => 'not_required',
+                    'inventory_mode' => 'not_required',
                     'is_actionable' => true,
                     'shortage_count' => 0,
                     'requirements' => [],
                     'missing_resources' => [],
                 ];
+        }
+
+        if (($task->task_type ?? $task->type) === 'buy') {
+            return [
+                'status' => 'replenishment',
+                'inventory_mode' => 'replenishment',
+                'is_actionable' => true,
+                'shortage_count' => 0,
+                'requirements' => [],
+                'missing_resources' => [],
+            ];
         }
 
         $snapshots = $this->prepareTaskRequirementSnapshots($owner, $task, false);
@@ -154,13 +172,14 @@ class InventoryService
      */
     public function attachLiveTaskInventory(?GardenOwner $owner, iterable $tasks): array
     {
-        $summariesByDate = $this->buildDateInventorySummaries($owner, $tasks, false);
+        $summariesByDate = $this->taskInventoryCoverageService->summarizeTasksByDate($owner, $tasks, false);
 
         foreach ($tasks as $task) {
             $dateKey = $this->taskDateKey($task);
             $taskSummary = $summariesByDate[$dateKey]['tasks'][$task->id] ?? null;
             $context = $taskSummary['inventory_context'] ?? [
                 'status' => 'not_required',
+                'inventory_mode' => 'not_required',
                 'is_actionable' => true,
                 'shortage_count' => 0,
                 'requirements' => [],
@@ -204,12 +223,8 @@ class InventoryService
      */
     public function summarizeTasksByDate(?GardenOwner $owner, iterable $tasks): array
     {
-        return collect($this->buildDateInventorySummaries($owner, $tasks, false))
-            ->map(function (array $summary): array {
-                unset($summary['tasks']);
-
-                return $summary;
-            })
+        return collect($this->taskInventoryCoverageService->summarizeTasksByDate($owner, $tasks, false))
+            ->map(fn (array $summary): array => collect($summary)->except('tasks')->all())
             ->all();
     }
 
@@ -219,11 +234,23 @@ class InventoryService
      */
     public function assertTaskCanBeCompletedForDay(GardenOwner $owner, Task $task, ?iterable $dayTasks = null): array
     {
+        if (($task->task_type ?? $task->type) === 'buy') {
+            return [
+                'status' => 'replenishment',
+                'inventory_mode' => 'replenishment',
+                'is_actionable' => true,
+                'shortage_count' => 0,
+                'requirements' => [],
+                'missing_resources' => [],
+            ];
+        }
+
         $dateKey = $this->taskDateKey($task);
 
         if ($dateKey === null) {
             return [
                 'status' => 'not_required',
+                'inventory_mode' => 'not_required',
                 'is_actionable' => true,
                 'shortage_count' => 0,
                 'requirements' => [],
@@ -239,10 +266,11 @@ class InventoryService
             $taskCollection = $taskCollection->push($task)->values();
         }
 
-        $summariesByDate = $this->buildDateInventorySummaries($owner, $taskCollection, true);
+        $summariesByDate = $this->taskInventoryCoverageService->summarizeTasksByDate($owner, $taskCollection, true);
         $taskSummary = $summariesByDate[$dateKey]['tasks'][$task->id] ?? null;
         $context = $taskSummary['inventory_context'] ?? [
             'status' => 'not_required',
+            'inventory_mode' => 'not_required',
             'is_actionable' => true,
             'shortage_count' => 0,
             'requirements' => [],
@@ -261,6 +289,10 @@ class InventoryService
      */
     public function consumeTaskRequirements(GardenOwner $owner, Task $task): array
     {
+        if (($task->task_type ?? $task->type) === 'buy') {
+            return [];
+        }
+
         $task->loadMissing('requiredResources');
         $snapshots = $this->prepareTaskRequirementSnapshots($owner, $task, true);
         $context = $this->buildTaskInventoryContext($snapshots);
@@ -351,38 +383,7 @@ class InventoryService
      */
     public function buildPlanningLedger(?GardenOwner $owner): array
     {
-        if (! $owner) {
-            return [];
-        }
-
-        return $this->listForOwner($owner)
-            ->groupBy(fn (InventoryItem $item) => $this->ledgerKey(
-                $this->normalizeInventoryName($item->name),
-                $item->inventory_item_type instanceof InventoryItemType ? $item->inventory_item_type : InventoryItemType::from($item->type),
-                $item->unit instanceof InventoryUnit ? $item->unit : InventoryUnit::from((string) $item->unit),
-            ))
-            ->map(function (Collection $items): array {
-                $first = $items->first();
-                $availableQuantity = round((float) $items->sum('quantity'), 2);
-                $type = $first?->inventory_item_type instanceof InventoryItemType
-                    ? $first->inventory_item_type
-                    : InventoryItemType::from((string) ($first?->type ?? InventoryItemType::Material->value));
-                $unit = $first?->unit instanceof InventoryUnit
-                    ? $first->unit
-                    : InventoryUnit::from((string) ($first?->unit ?? InventoryUnit::Unit->value));
-
-                return [
-                    'normalized_name' => $first?->normalized_name ?? $this->normalizeInventoryName((string) $first?->name),
-                    'display_name' => $first?->name ?? '',
-                    'available_quantity' => $availableQuantity,
-                    'remaining_quantity' => $availableQuantity,
-                    'planned_used_quantity' => 0.0,
-                    'type' => $type->value,
-                    'unit' => $unit->value,
-                    'minimum_quantity' => round((float) ($first?->minimum_quantity ?? 0), 2),
-                ];
-            })
-            ->all();
+        return $this->taskInventoryCoverageService->buildPlanningLedger($owner);
     }
 
     /**
@@ -391,74 +392,7 @@ class InventoryService
      */
     public function reserveRequirementForPlan(array &$ledger, array $requirement): array
     {
-        $normalizedRequirement = $this->normalizeRequirement($requirement);
-        $normalizedName = $normalizedRequirement['normalized_name'];
-        $expectedTypeValue = $normalizedRequirement['inventory_item_type']->value;
-        $unitValue = $normalizedRequirement['unit']->value;
-        $isConsumed = $normalizedRequirement['is_consumed'];
-        $quantity = $normalizedRequirement['required_quantity'];
-
-        if ($normalizedName === '' || $quantity <= 0) {
-            return [
-                'status' => 'invalid',
-                'resource_name' => $normalizedRequirement['resource_name'],
-                'expected_item_type' => $expectedTypeValue,
-                'unit' => $unitValue,
-                'required_quantity' => $quantity,
-                'available_before' => 0.0,
-                'reserved_quantity' => 0.0,
-                'shortage_quantity' => max(0, $quantity),
-                'remaining_after' => 0.0,
-                'is_consumed' => $isConsumed,
-            ];
-        }
-
-        $ledgerKey = $this->ledgerKey(
-            $normalizedName,
-            $normalizedRequirement['inventory_item_type'],
-            $normalizedRequirement['unit'],
-        );
-
-        if (! isset($ledger[$ledgerKey])) {
-            $ledger[$ledgerKey] = [
-                'normalized_name' => $normalizedName,
-                'display_name' => $normalizedRequirement['resource_name'],
-                'available_quantity' => 0.0,
-                'remaining_quantity' => 0.0,
-                'planned_used_quantity' => 0.0,
-                'type' => $expectedTypeValue,
-                'unit' => $unitValue,
-                'minimum_quantity' => 0.0,
-            ];
-        }
-
-        $availableBefore = round((float) $ledger[$ledgerKey]['remaining_quantity'], 2);
-        $reservedQuantity = $isConsumed
-            ? round(min($availableBefore, $quantity), 2)
-            : round(min($availableBefore, $quantity), 2);
-        $shortageQuantity = round(max(0, $quantity - $reservedQuantity), 2);
-
-        if ($isConsumed) {
-            $ledger[$ledgerKey]['remaining_quantity'] = round($availableBefore - $reservedQuantity, 2);
-            $ledger[$ledgerKey]['planned_used_quantity'] = round(
-                (float) $ledger[$ledgerKey]['planned_used_quantity'] + $reservedQuantity,
-                2
-            );
-        }
-
-        return [
-            'status' => $shortageQuantity > 0 ? 'shortage' : ($isConsumed ? 'reserved' : 'available'),
-            'resource_name' => $ledger[$ledgerKey]['display_name'],
-            'expected_item_type' => $expectedTypeValue,
-            'unit' => $unitValue,
-            'available_before' => $availableBefore,
-            'required_quantity' => round($quantity, 2),
-            'reserved_quantity' => $reservedQuantity,
-            'shortage_quantity' => $shortageQuantity,
-            'remaining_after' => round((float) $ledger[$ledgerKey]['remaining_quantity'], 2),
-            'is_consumed' => $isConsumed,
-            'minimum_quantity' => round((float) $ledger[$ledgerKey]['minimum_quantity'], 2),
-        ];
+        return $this->taskInventoryCoverageService->reserveRequirementForPlan($ledger, $requirement);
     }
 
     /**
@@ -932,21 +866,30 @@ class InventoryService
     private function prepareInventoryPayload(array $data, ?InventoryItem $currentItem = null): array
     {
         $payload = $data;
+        $sourceRequirement = $this->resolveSourceRequirement($payload);
+        $sourceType = $sourceRequirement?->inventory_item_type?->value ?? $sourceRequirement?->inventory_item_type;
+        $sourceUnit = $sourceRequirement?->unit?->value ?? $sourceRequirement?->unit;
+        $sourceName = $sourceRequirement?->resource_name;
         $type = $payload['inventory_item_type'] ?? $payload['type'] ?? $currentItem?->inventory_item_type?->value ?? $currentItem?->type;
         $unit = $payload['unit'] ?? $currentItem?->unit?->value ?? $currentItem?->unit ?? InventoryUnit::Unit->value;
+
+        if ($sourceRequirement) {
+            $type = $sourceType ?? $type;
+            $unit = $sourceUnit ?? $unit;
+            $payload['name'] = $payload['name'] ?? $sourceName;
+        }
 
         $payload['inventory_item_type'] = $type;
         $payload['type'] = $type;
         $payload['unit'] = $unit;
-        $payload['minimum_quantity'] = array_key_exists('minimum_quantity', $payload)
-            ? round((float) $payload['minimum_quantity'], 2)
-            : round((float) ($currentItem?->minimum_quantity ?? 0), 2);
 
         if (array_key_exists('name', $payload)) {
             $payload['normalized_name'] = $this->normalizeInventoryName((string) $payload['name']);
         }
 
-        return $payload;
+        return collect($payload)
+            ->except(['source_task_id', 'source_requirement_id'])
+            ->all();
     }
 
     private function ledgerKey(string $normalizedName, InventoryItemType $type, InventoryUnit $unit): string
@@ -957,5 +900,27 @@ class InventoryService
     private function normalizeInventoryName(string $name): string
     {
         return Str::of($name)->trim()->lower()->value();
+    }
+
+    private function resolveSourceRequirement(array $payload): ?TaskResourceRequirement
+    {
+        $requirementId = $payload['source_requirement_id'] ?? null;
+        $taskId = $payload['source_task_id'] ?? null;
+
+        if ($requirementId === null && $taskId === null) {
+            return null;
+        }
+
+        $query = TaskResourceRequirement::query();
+
+        if ($requirementId !== null) {
+            $query->whereKey($requirementId);
+        }
+
+        if ($taskId !== null) {
+            $query->where('task_id', $taskId);
+        }
+
+        return $query->first();
     }
 }

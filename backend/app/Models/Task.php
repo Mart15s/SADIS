@@ -30,6 +30,7 @@ class Task extends Model
         'weather_context',
         'inventory_context',
         'simulated_state',
+        'workflow_context',
         'state',
         'status',
         'task_calendar_id',
@@ -50,6 +51,7 @@ class Task extends Model
             'weather_context' => 'array',
             'inventory_context' => 'array',
             'simulated_state' => 'array',
+            'workflow_context' => 'array',
             'state' => TaskState::class,
             'status' => 'string',
         ];

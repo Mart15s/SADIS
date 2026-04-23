@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\TaskState;
 use App\Enums\TaskType;
+use App\Models\HarvestRecord;
+use App\Models\PlantConditionHistory;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -12,16 +14,32 @@ class TaskWorkflowService
 {
     public function __construct(
         private readonly InventoryService $inventoryService,
+        private readonly HarvestService $harvestService,
+        private readonly PlantCareService $plantCareService,
+        private readonly PlantLifecycleService $plantLifecycleService,
     ) {
     }
 
-    public function complete(Task $task, ?array $materialsUsed = null): Task
-    {
-        return DB::transaction(function () use ($task, $materialsUsed) {
+    /**
+     * @return array{task: Task, harvest_record: HarvestRecord|null, condition_history_entry: PlantConditionHistory|null}
+     */
+    public function complete(
+        Task $task,
+        ?array $materialsUsed = null,
+        ?array $conditionReview = null,
+        ?array $harvest = null,
+    ): array {
+        return DB::transaction(function () use ($task, $materialsUsed, $conditionReview, $harvest) {
             $task = Task::query()
                 ->whereKey($task->id)
                 ->lockForUpdate()
-                ->with(['requiredResources', 'taskCalendar.plot.gardenOwner'])
+                ->with([
+                    'requiredResources',
+                    'taskCalendar.plot.gardenOwner',
+                    'plant.catalogPlant.plantCare',
+                    'plant.conditionHistory',
+                    'plant.harvestRecords',
+                ])
                 ->firstOrFail();
 
             $this->ensureTaskPending($task, 'ivykdyti');
@@ -62,16 +80,77 @@ class TaskWorkflowService
                 }
             }
 
+            $harvestRecord = null;
+            $conditionHistoryEntry = null;
+            $workflowComments = [];
+
+            if (($task->workflow_context['kind'] ?? null) === 'lifecycle_review') {
+                if ($conditionReview === null) {
+                    throw ValidationException::withMessages([
+                        'condition_review' => ['Bukles perziuros uzduociai reikia perziuros sprendimo.'],
+                    ]);
+                }
+
+                $reviewResult = $this->plantLifecycleService->completeReviewTask($task, $conditionReview);
+                $conditionHistoryEntry = $reviewResult['history_entry'];
+                $workflowComments[] = sprintf(
+                    'Condition review applied: %s.',
+                    $reviewResult['applied_condition']
+                );
+            }
+
+            if (($task->task_type ?? $task->type) === TaskType::Harvest->value) {
+                if ($harvest === null) {
+                    throw ValidationException::withMessages([
+                        'harvest' => ['Derliaus uzduoties uzbaigimui reikia derliaus duomenu.'],
+                    ]);
+                }
+
+                if (! $inventoryOwner) {
+                    throw ValidationException::withMessages([
+                        'harvest' => ['Derliaus uzduotis neturi inventoriaus savininko.'],
+                    ]);
+                }
+
+                $harvestRecord = $this->harvestService->registerForTask($task, $inventoryOwner, $harvest);
+                $workflowComments[] = sprintf(
+                    'Harvest recorded: %s on %s.',
+                    number_format((float) $harvestRecord->quantity, 2, '.', ''),
+                    $harvestRecord->harvested_on?->toDateString()
+                );
+
+                if ($task->plant) {
+                    $care = $this->plantCareService->resolveEffectivePlantCare($task->plant);
+                    $conditionHistoryEntry = $this->plantLifecycleService->recordPostHarvestCondition(
+                        $task->plant,
+                        $care,
+                        $harvest['harvested_on'],
+                        $harvest['notes'] ?? 'Harvest workflow completed.',
+                    );
+                    $workflowComments[] = sprintf(
+                        'Post-harvest condition confirmed: %s.',
+                        $conditionHistoryEntry->condition_type?->value ?? $conditionHistoryEntry->condition
+                    );
+                }
+            }
+
             $task->update([
                 'state' => TaskState::Completed,
                 'status' => 'completed',
                 'comment' => $this->appendComment(
                     $task->comment,
-                    $this->buildCompletionComment($summary)
+                    implode(PHP_EOL, array_filter([
+                        $this->buildCompletionComment($summary),
+                        $workflowComments === [] ? null : implode(PHP_EOL, $workflowComments),
+                    ]))
                 ),
             ]);
 
-            return $task->fresh(['plant.plantZone', 'taskCalendar', 'requiredResources']);
+            return [
+                'task' => $task->fresh(['plant.plantZone', 'taskCalendar', 'requiredResources']),
+                'harvest_record' => $harvestRecord?->fresh(['plant.plantZone', 'task']),
+                'condition_history_entry' => $conditionHistoryEntry?->fresh(),
+            ];
         });
     }
 
@@ -122,14 +201,14 @@ class TaskWorkflowService
             return null;
         }
 
-            $parts = collect($summary)
-                ->map(function (array $entry): string {
-                    $quantity = number_format((float) ($entry['quantity'] ?? 0), 2, '.', '');
-                    $unit = $entry['unit'] ? ' '.$entry['unit'] : '';
-                    $prefix = ($entry['consumed'] ?? false) ? 'Panaudota' : 'Patikrintas resursas';
+        $parts = collect($summary)
+            ->map(function (array $entry): string {
+                $quantity = number_format((float) ($entry['quantity'] ?? 0), 2, '.', '');
+                $unit = $entry['unit'] ? ' '.$entry['unit'] : '';
+                $prefix = ($entry['consumed'] ?? false) ? 'Panaudota' : 'Patikrintas resursas';
 
-                    return sprintf('%s: %s (%s%s)', $prefix, $entry['name'], $quantity, $unit);
-                })
+                return sprintf('%s: %s (%s%s)', $prefix, $entry['name'], $quantity, $unit);
+            })
             ->all();
 
         return implode(PHP_EOL, $parts);

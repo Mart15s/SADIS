@@ -625,7 +625,7 @@ class InventoryCalendarWorkflowTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame(
-            'Short by 2 unit for Protect Bean from frost.',
+            'Missing 2 unit for 1 blocked task.',
             $buyTask->comment
         );
     }
@@ -682,7 +682,6 @@ class InventoryCalendarWorkflowTest extends TestCase
             'name' => $name,
             'normalized_name' => mb_strtolower(trim($name)),
             'quantity' => 10,
-            'minimum_quantity' => 0,
             'type' => $normalizedType,
             'inventory_item_type' => $normalizedType,
             'unit' => $unit,

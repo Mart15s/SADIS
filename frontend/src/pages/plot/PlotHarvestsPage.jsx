@@ -57,13 +57,21 @@ export default function PlotHarvestsPage() {
     setSuccess('')
 
     try {
-      const created = await api.createHarvest(plotId, {
-        plant_id: Number(form.plant_id),
-        task_id: form.task_id ? Number(form.task_id) : null,
-        quantity: Number(form.quantity),
-        harvested_on: form.harvested_on,
-        notes: form.notes || null,
-      })
+      const created = form.task_id
+        ? (await api.completeTask(Number(form.task_id), {
+          harvest: {
+            quantity: Number(form.quantity),
+            harvested_on: form.harvested_on,
+            notes: form.notes || null,
+          },
+        })).harvest_record
+        : await api.createHarvest(plotId, {
+          plant_id: Number(form.plant_id),
+          task_id: null,
+          quantity: Number(form.quantity),
+          harvested_on: form.harvested_on,
+          notes: form.notes || null,
+        })
 
       pageState.setData((current) => ({
         ...current,
@@ -71,7 +79,7 @@ export default function PlotHarvestsPage() {
       }))
       setForm(createEmptyForm(new URLSearchParams()))
       setSearchParams({})
-      setSuccess('Harvest record registered successfully.')
+      setSuccess(form.task_id ? 'Harvest recorded and task completed successfully.' : 'Harvest record registered successfully.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {

@@ -8,6 +8,8 @@ use App\Http\Requests\Calendar\CompleteTaskRequest;
 use App\Http\Requests\Calendar\ListCalendarTasksRequest;
 use App\Http\Requests\Calendar\RejectTaskRequest;
 use App\Http\Resources\Calendar\TaskResource;
+use App\Http\Resources\Harvest\HarvestRecordResource;
+use App\Http\Resources\Plant\PlantConditionHistoryResource;
 use App\Models\Task;
 use App\Models\TaskCalendar;
 use App\Services\AccessService;
@@ -25,8 +27,7 @@ class TaskController extends Controller
         TaskCalendar $calendar,
         AccessService $accessService,
         InventoryService $inventoryService,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->authorizeCalendarView($request, $calendar, $accessService);
         $calendar->loadMissing('plot.gardenOwner');
 
@@ -58,14 +59,22 @@ class TaskController extends Controller
     ): JsonResponse {
         $this->authorizeTaskEdit($request, $task, $accessService);
 
-        $updatedTask = $service->complete(
+        $completion = $service->complete(
             $task,
-            $request->validated('materials_used')
+            $request->validated('materials_used'),
+            $request->validated('condition_review'),
+            $request->validated('harvest'),
         );
 
         return response()->json([
             'message' => 'Veiksmas sėkmingai įvykdytas',
-            'task' => TaskResource::make($updatedTask),
+            'task' => TaskResource::make($completion['task']),
+            'harvest_record' => $completion['harvest_record']
+                ? HarvestRecordResource::make($completion['harvest_record'])->resolve()
+                : null,
+            'condition_history_entry' => $completion['condition_history_entry']
+                ? PlantConditionHistoryResource::make($completion['condition_history_entry'])->resolve()
+                : null,
         ]);
     }
 
@@ -92,8 +101,7 @@ class TaskController extends Controller
         Request $request,
         TaskCalendar $calendar,
         AccessService $accessService
-    ): void
-    {
+    ): void {
         $calendar->loadMissing('plot');
         abort_unless($calendar->plot, 404);
 

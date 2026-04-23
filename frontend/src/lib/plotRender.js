@@ -1,13 +1,13 @@
-import { getZoneLabelConfig } from './plotCanvasLabels.js'
+import { getZoneLabelLayout } from './plotCanvasLabels.js'
 import {
   buildBoundaryFromGeometry,
   buildZoneLayoutsFromGeometry,
-  createViewportToFit,
   estimateBoundaryFromArea,
-  getShapeBounds,
+  getCombinedBounds,
   getShapePoints,
   isNormalizedGeometry,
   mergeZoneLayouts,
+  roundTo,
 } from './plotDesigner.js'
 
 export const ZONE_COLORS = [
@@ -27,6 +27,11 @@ const DEFAULT_PLOT_GEOMETRY = {
     { x: 0.94, y: 0.92 },
     { x: 0.06, y: 0.92 },
   ],
+}
+
+export const STANDARD_PREVIEW_VIEWBOX = {
+  width: 160,
+  height: 120,
 }
 
 function round(value, digits = 2) {
@@ -97,22 +102,86 @@ export function shapePointsToSvg(shape, viewport) {
 }
 
 export function createPreviewViewport(boundary, layouts, {
-  width = 100,
-  height = 100,
-  paddingRatio = 0.82,
+  width = STANDARD_PREVIEW_VIEWBOX.width,
+  height = STANDARD_PREVIEW_VIEWBOX.height,
+  padding = 12,
+  occupancy = 0.84,
 } = {}) {
-  return createViewportToFit(boundary, layouts, { width, height }, paddingRatio)
+  const contentBounds = getCombinedBounds([boundary, ...Object.values(layouts ?? {})])
+  const widthScale = ((Math.max(width - (padding * 2), 1)) * occupancy) / Math.max(contentBounds.width, 1)
+  const heightScale = ((Math.max(height - (padding * 2), 1)) * occupancy) / Math.max(contentBounds.height, 1)
+  const scale = roundTo(Math.min(widthScale, heightScale), 4)
+
+  return {
+    scale,
+    x: roundTo((width / 2) - (contentBounds.centerX * scale), 2),
+    y: roundTo((height / 2) - (contentBounds.centerY * scale), 2),
+  }
 }
 
-export function getProjectedLabelConfig(zoneName, shape, viewport) {
-  const projectedBounds = getShapeBounds({
-    kind: 'polygon',
-    points: projectShape(shape, viewport),
-  })
-
-  return getZoneLabelConfig(zoneName, projectedBounds, 1, {
-    allowCompact: true,
-    compactCenter: true,
+export function getProjectedLabelConfig(zoneName, shape, viewport, {
+  context = 'preview',
+  isSelected = false,
+  markerText = '',
+  viewportBounds = null,
+} = {}) {
+  return getZoneLabelLayout({
+    zoneName,
+    screenPoints: projectShape(shape, viewport),
+    context,
+    isSelected,
+    markerText,
+    viewportBounds,
   })
 }
 
+export function buildPreviewModel({
+  plotGeometry,
+  plotSize,
+  zones = [],
+  viewBox = STANDARD_PREVIEW_VIEWBOX,
+} = {}) {
+  const renderModel = buildPlotRenderModel({
+    plotGeometry,
+    plotSize,
+    zones,
+  })
+  const viewport = createPreviewViewport(renderModel.boundary, renderModel.layouts, viewBox)
+  const previewZones = zones
+    .map((zone, index) => {
+      const shape = renderModel.layouts[String(zone.id)] ?? renderModel.layouts[zone.id]
+
+      if (!shape) {
+        return null
+      }
+
+      const color = getZoneColor(index)
+
+      return {
+        id: zone.id ?? index,
+        index: index + 1,
+        name: zone.name ?? 'Zone',
+        color,
+        points: shapePointsToSvg(shape, viewport),
+        label: getProjectedLabelConfig(zone.name, shape, viewport, {
+          context: 'preview',
+          markerText: index + 1,
+        }),
+      }
+    })
+    .filter(Boolean)
+
+  return {
+    viewBox,
+    plot: shapePointsToSvg(renderModel.boundary, viewport),
+    zones: previewZones,
+    legend: previewZones.map((zone) => ({
+      id: zone.id,
+      index: zone.index,
+      name: zone.name,
+      color: zone.color,
+      usesFallback: zone.label?.mode === 'marker' || !zone.label,
+    })),
+    source: renderModel.source,
+  }
+}

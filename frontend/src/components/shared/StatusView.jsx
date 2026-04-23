@@ -1,4 +1,5 @@
 import Button from '../ui/Button.jsx'
+import EmptyStatePanel from '../ui/EmptyStatePanel.jsx'
 
 function SparkIcon() {
   return (
@@ -103,14 +104,16 @@ export function EmptyState({
   const Icon = icon === 'success' ? CheckIcon : SearchIcon
 
   return (
-    <section className="empty-state empty-state-polished">
-      <div className="empty-state-icon">
+    <EmptyStatePanel
+      title={title}
+      description={description}
+      action={action}
+      className="empty-state empty-state-polished"
+    >
+      <span className="empty-state-icon" aria-hidden="true">
         <Icon />
-      </div>
-      <strong className="empty-state-title">{title}</strong>
-      <p className="empty-state-copy">{description}</p>
-      {action ? <div className="empty-state-action">{action}</div> : null}
-    </section>
+      </span>
+    </EmptyStatePanel>
   )
 }
 

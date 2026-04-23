@@ -111,7 +111,7 @@ describe('PlotDetailPage workspace layout', () => {
     })
   })
 
-  it('renders the locked workspace classes used to avoid the old double-scroll layout', async () => {
+  it('renders the canvas-first workspace classes used for the relaxed single-scroll layout', async () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/plots/5']}>
         <Routes>
@@ -124,9 +124,9 @@ describe('PlotDetailPage workspace layout', () => {
       expect(screen.getByText('North Plot')).toBeInTheDocument()
     })
 
-    expect(screen.getByTestId('workspace-page')).toHaveClass('workspace-page--locked')
-    expect(container.querySelector('.plot-workspace-main--locked')).not.toBeNull()
-    expect(container.querySelector('.plot-workspace-sidebar--locked')).not.toBeNull()
+    expect(screen.getByTestId('workspace-page')).toHaveClass('workspace-page--canvas-first')
+    expect(container.querySelector('.plot-workspace-main--canvas-first')).not.toBeNull()
+    expect(container.querySelector('.plot-workspace-sidebar--canvas-first')).not.toBeNull()
   })
 
   it('shows rejected target zones without any passed-checks copy', async () => {

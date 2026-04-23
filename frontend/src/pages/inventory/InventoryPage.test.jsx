@@ -50,6 +50,7 @@ describe('InventoryPage task replenishment flow', () => {
     expect(screen.getByRole('heading', { name: /Add inventory item/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/Name/i)).toHaveValue('Protective cover')
     expect(screen.getByLabelText(/Type/i)).toHaveValue('tool')
+    expect(screen.getByLabelText(/Type/i)).toBeDisabled()
     expect(screen.getByLabelText(/Quantity/i)).toHaveValue(23)
     expect(screen.getAllByRole('link', { name: /Back to calendar day/i })[0]).toHaveAttribute(
       'href',
@@ -65,8 +66,7 @@ describe('InventoryPage task replenishment flow', () => {
         type: 'tool',
         unit: 'unit',
         quantity: 1,
-        minimum_quantity: 0,
-        is_below_minimum: false,
+        is_available: true,
       },
     ])
 

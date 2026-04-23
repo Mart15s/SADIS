@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState } from '../shared/StatusView.jsx'
+import EmptyStatePanel from '../ui/EmptyStatePanel.jsx'
 import Button from '../ui/Button.jsx'
 import { api } from '../../lib/api.js'
 import { CONDITION_TYPES, safeNumber } from '../../lib/constants.js'
@@ -159,7 +160,7 @@ export default function PlotPlantingDrawer({
             disabled={!canEdit || !selectedZone}
             data-testid="open-plant-drawer"
           >
-            {selectedZone ? `Add plant to ${selectedZone.name}` : 'Select a zone first'}
+            {selectedZone ? `Add plant to ${selectedZone.name}` : 'Zone required'}
           </Button>
         </div>
 
@@ -172,9 +173,10 @@ export default function PlotPlantingDrawer({
             soil {selectedZone.soil_type}
           </div>
         ) : (
-          <EmptyState
+          <EmptyStatePanel
             title="Select a zone first"
-            description="Choose a zone on the canvas or in the zone list, then start planting directly from this page."
+            description="Choose a zone on the canvas to unlock planting. The rest of the workspace stays visible so the next step is clear without looking like a clickable CTA."
+            tone="subtle"
           />
         )}
       </section>
