@@ -47,6 +47,8 @@ LOG_LEVEL=info
 DB_CONNECTION=pgsql
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 RUN_MIGRATIONS=true
+RUN_DEMO_SEEDER=false
+DEMO_SEEDER_CLASS=CurrentVersionDemoSeeder
 
 SESSION_DRIVER=file
 SESSION_SECURE_COOKIE=true
@@ -96,22 +98,42 @@ php artisan migrate --force
 
 If registration or login returns HTTP 500 immediately after deployment, check Render logs for missing table errors such as `users`, `profiles`, `garden_owners`, or `personal_access_tokens`, then run the migration command above or enable `RUN_MIGRATIONS=true` and redeploy.
 
-## 6. Load demo data
+## 6. Load current demo data without Render Shell
 
-If demo data is needed for the defense demonstration, use the existing seeders only after migrations:
+Render Shell is not required. The Docker startup script can run the current idempotent demo seeder during redeploy.
 
-```bash
-cd /var/www/html
-php artisan db:seed --force
+For a demo environment, set these Render environment variables:
+
+```env
+RUN_MIGRATIONS=true
+RUN_DEMO_SEEDER=true
+DEMO_SEEDER_CLASS=CurrentVersionDemoSeeder
 ```
 
-For the fuller prepared demo flow, the repository also contains:
+Then trigger a manual redeploy. Render logs should show:
 
-```bash
-php artisan db:seed --class=FullFlowDemoAccountSeeder --force
+```text
+RUN_MIGRATIONS=true; running Laravel migrations...
+Laravel migrations completed.
+RUN_DEMO_SEEDER=true; running demo seeder [CurrentVersionDemoSeeder]...
+Demo seeder [CurrentVersionDemoSeeder] completed.
 ```
 
-Check the existing local demo documentation for the accounts created by those seeders. Do not place demo passwords in Render environment variables or public documentation.
+After the seed succeeds, set `RUN_DEMO_SEEDER=false` and redeploy again for normal operation. The seeder is idempotent and cleans only the known demo accounts' owned records before recreating them, but leaving demo seeding enabled on every production restart is not recommended.
+
+Demo seeding is intended for demonstration databases only. Do not run it against a real production database containing real users unless you intentionally want the demo accounts and catalog examples added.
+
+Current demo accounts all use password `password`:
+
+| Account | Email |
+| --- | --- |
+| Owner | `demo.owner@example.test` |
+| Editor | `demo.editor@example.test` |
+| Viewer | `demo.viewer@example.test` |
+| Neighbor | `demo.neighbor@example.test` |
+| Community member | `demo.community@example.test` |
+
+The older `DemoDataSeeder` and `FullFlowDemoAccountSeeder` class names remain as compatibility aliases, but `CurrentVersionDemoSeeder` is the maintained deployment seeder.
 
 ## 7. Verify the deployment
 

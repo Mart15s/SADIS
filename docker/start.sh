@@ -26,6 +26,7 @@ php artisan config:cache --no-interaction
 php artisan view:cache --no-interaction
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+    echo "RUN_MIGRATIONS=true; running Laravel migrations..."
     attempts=0
 
     until php artisan migrate --force --no-interaction; do
@@ -39,6 +40,15 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
         echo "Database migrations failed; retrying in 5 seconds..." >&2
         sleep 5
     done
+
+    echo "Laravel migrations completed."
+fi
+
+if [ "${RUN_DEMO_SEEDER:-false}" = "true" ]; then
+    DEMO_SEEDER_CLASS="${DEMO_SEEDER_CLASS:-CurrentVersionDemoSeeder}"
+    echo "RUN_DEMO_SEEDER=true; running demo seeder [${DEMO_SEEDER_CLASS}]..."
+    php artisan db:seed --class="${DEMO_SEEDER_CLASS}" --force --no-interaction
+    echo "Demo seeder [${DEMO_SEEDER_CLASS}] completed."
 fi
 
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf

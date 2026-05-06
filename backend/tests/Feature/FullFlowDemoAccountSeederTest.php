@@ -46,16 +46,16 @@ class FullFlowDemoAccountSeederTest extends TestCase
         ]);
 
         $this->assertSame($firstCounts, $secondCounts);
-        $this->assertSame(4, $secondCounts['plots']);
-        $this->assertSame(8, $secondCounts['zones']);
-        $this->assertSame(12, $secondCounts['plants']);
-        $this->assertSame(11, $secondCounts['catalog_plants']);
-        $this->assertSame(11, $secondCounts['inventory_items']);
+        $this->assertSame(2, $secondCounts['plots']);
+        $this->assertSame(16, $secondCounts['zones']);
+        $this->assertSame(27, $secondCounts['plants']);
+        $this->assertSame(31, $secondCounts['catalog_plants']);
+        $this->assertSame(12, $secondCounts['inventory_items']);
         $this->assertSame(2, $secondCounts['shared_access_records']);
         $this->assertSame(1, $secondCounts['rotation_drafts']);
-        $this->assertSame(3, $secondCounts['harvest_records']);
-        $this->assertGreaterThanOrEqual(8, $secondCounts['condition_history_records']);
-        $this->assertGreaterThan(0, $secondCounts['tasks']);
+        $this->assertSame(8, $secondCounts['harvest_records']);
+        $this->assertGreaterThanOrEqual(15, $secondCounts['condition_history_records']);
+        $this->assertGreaterThanOrEqual(18, $secondCounts['tasks']);
 
         $this->assertTrue(
             Task::query()
@@ -79,7 +79,7 @@ class FullFlowDemoAccountSeederTest extends TestCase
 
         $this->assertTrue(
             CatalogPlant::query()
-                ->where('canonical_name', 'demo-krapai')
+                ->where('canonical_name', 'garlic')
                 ->whereDoesntHave('plants')
                 ->exists()
         );
@@ -91,7 +91,7 @@ class FullFlowDemoAccountSeederTest extends TestCase
     private function demoCounts(): array
     {
         $demoUser = User::query()
-            ->where('email', 'demo.garden@example.test')
+            ->where('email', 'demo.owner@example.test')
             ->firstOrFail();
 
         $demoOwner = GardenOwner::query()
@@ -107,7 +107,7 @@ class FullFlowDemoAccountSeederTest extends TestCase
             'zones' => PlantZone::query()->whereIn('plot_id', $plotIds)->count(),
             'plants' => Plant::query()->whereIn('fk_plot_id', $plotIds)->count(),
             'catalog_plants' => CatalogPlant::query()
-                ->where('source_provider', 'demo')
+                ->where('source_provider', 'current-version-demo')
                 ->count(),
             'inventory_items' => InventoryItem::query()
                 ->where('garden_owner_id', $demoOwner->id)

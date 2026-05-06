@@ -15,7 +15,7 @@ export const INVENTORY_UNITS = ['unit', 'g', 'kg', 'ml', 'l', 'bag', 'pack', 'm3
 export const MATERIAL_UNITS = INVENTORY_UNITS
 export const TOOL_UNITS = ['unit']
 export const INVENTORY_UNIT_LABELS = {
-  unit: 'vnt.',
+  unit: 'unit',
   g: 'g',
   kg: 'kg',
   ml: 'ml',
@@ -27,7 +27,7 @@ export const INVENTORY_UNIT_LABELS = {
 export const ACCESS_ROLES = ['viewer', 'editor']
 export const USER_ROLES = ['owner', 'admin']
 
-const DISPLAY_LOCALE = 'lt-LT'
+const DISPLAY_LOCALE = 'en-US'
 const NUMBER_LOCALE = 'en-US'
 const DATE_FORMATTER = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   year: 'numeric',
@@ -101,7 +101,7 @@ export function formatTemperatureC(value, digits = 1, fallback = 'Not set') {
     return fallback
   }
 
-  return `${formatCompactNumber(value, digits)} °C`
+  return `${formatCompactNumber(value, digits)} deg C`
 }
 
 export function formatSquareMetersValue(value, digits = 2, fallback = 'Not set') {
@@ -109,7 +109,7 @@ export function formatSquareMetersValue(value, digits = 2, fallback = 'Not set')
     return fallback
   }
 
-  return `${formatCompactNumber(value, digits)} m²`
+  return `${formatCompactNumber(value, digits)} sq m`
 }
 
 export function formatNumberWithUnit(value, unit, digits = 0, fallback = 'Not set') {
@@ -121,7 +121,7 @@ export function formatNumberWithUnit(value, unit, digits = 0, fallback = 'Not se
 }
 
 export function formatInventoryUnit(unit) {
-  return INVENTORY_UNIT_LABELS[unit] ?? unit ?? 'vnt.'
+  return INVENTORY_UNIT_LABELS[unit] ?? unit ?? 'unit'
 }
 
 export function formatMonthYear(value) {

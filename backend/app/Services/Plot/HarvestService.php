@@ -38,7 +38,7 @@ class HarvestService
 
         if (! $plant) {
             throw ValidationException::withMessages([
-                'plant_id' => ['Pasirinktas augalas nepriklauso siam sklypui.'],
+                'plant_id' => ['The selected plant does not belong to this plot.'],
             ]);
         }
 
@@ -52,25 +52,25 @@ class HarvestService
 
             if (! $task) {
                 throw ValidationException::withMessages([
-                    'task_id' => ['Pasirinkta uzduotis nepriklauso siam sklypui.'],
+                    'task_id' => ['The selected task does not belong to this plot.'],
                 ]);
             }
 
             if (($task->task_type ?? $task->type) !== 'harvest') {
                 throw ValidationException::withMessages([
-                    'task_id' => ['Su derliaus irasu galima sieti tik derliaus uzduoti.'],
+                    'task_id' => ['Only harvest tasks can be linked to a harvest record.'],
                 ]);
             }
 
             if ((int) ($task->plant_id ?? $task->fk_plant_id) !== (int) $plant->id) {
                 throw ValidationException::withMessages([
-                    'task_id' => ['Pasirinkta uzduotis nesutampa su pasirinktu augalu.'],
+                    'task_id' => ['The selected task does not match the selected plant.'],
                 ]);
             }
 
             if (HarvestRecord::query()->where('task_id', $task->id)->exists()) {
                 throw ValidationException::withMessages([
-                    'task_id' => ['Pasirinktai derliaus uzduociai irasas jau egzistuoja.'],
+                    'task_id' => ['A harvest record already exists for the selected harvest task.'],
                 ]);
             }
         }
@@ -99,7 +99,7 @@ class HarvestService
 
         if (! $plot || ! $plant) {
             throw ValidationException::withMessages([
-                'task' => ['Derliaus uzduotis neturi susieto sklypo arba augalo.'],
+                'task' => ['The harvest task is not linked to a plot or plant.'],
             ]);
         }
 

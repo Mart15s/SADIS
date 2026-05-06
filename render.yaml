@@ -17,6 +17,10 @@ services:
         value: pgsql
       - key: RUN_MIGRATIONS
         value: true
+      - key: RUN_DEMO_SEEDER
+        value: false
+      - key: DEMO_SEEDER_CLASS
+        value: CurrentVersionDemoSeeder
       - key: APP_KEY
         sync: false
       - key: APP_URL

@@ -11,6 +11,7 @@ import {
 } from '../../components/shared/StatusView.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { Dialog, DialogBody, DialogFooter, DialogHeader } from '../../components/ui/Dialog.jsx'
 import FilterBar from '../../components/ui/FilterBar.jsx'
 import FormField from '../../components/ui/FormField.jsx'
 import { StatRow } from '../../components/ui/DefinitionList.jsx'
@@ -56,6 +57,7 @@ export default function CommunityPage() {
   const [search, setSearch] = useState('')
   const [selectedPlotId, setSelectedPlotId] = useState('')
   const [form, setForm] = useState(initialPostForm)
+  const [createOpen, setCreateOpen] = useState(false)
   const [createError, setCreateError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -104,6 +106,7 @@ export default function CommunityPage() {
       })
       postsState.setData((current) => [created, ...current])
       setForm(initialPostForm)
+      setCreateOpen(false)
       setToastMessage('Community post published.')
     } catch (error) {
       setCreateError(error.message)
@@ -135,6 +138,11 @@ export default function CommunityPage() {
             <Badge tone="soft">{filteredPosts.length} visible posts</Badge>
             <Badge tone={isAuthenticated ? 'success' : 'warning'}>{isAuthenticated ? 'Signed in' : 'Guest browsing'}</Badge>
           </>
+        )}
+        actions={(
+          <Button onClick={() => setCreateOpen(true)}>
+            Create post
+          </Button>
         )}
       />
 
@@ -179,6 +187,115 @@ export default function CommunityPage() {
           </FormField>
         ) : null}
       </FilterBar>
+
+      <Dialog
+        open={createOpen}
+        onClose={() => {
+          if (!submitting) {
+            setCreateOpen(false)
+            setCreateError('')
+          }
+        }}
+        labelledBy="community-create-title"
+        describedBy="community-create-subtitle"
+        size="md"
+        className="community-create-dialog"
+      >
+        <DialogHeader
+          title="Create community post"
+          subtitle="Share a garden update and optionally attach one of your plots."
+          titleId="community-create-title"
+          subtitleId="community-create-subtitle"
+          onClose={() => {
+            if (!submitting) {
+              setCreateOpen(false)
+              setCreateError('')
+            }
+          }}
+          closeLabel="Close create post"
+        />
+        {!isAuthenticated ? (
+          <>
+            <DialogBody>
+              <EmptyState
+                title="Sign in to post"
+                description="Guests can browse public community posts, but creating a post requires authentication."
+              />
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <form onSubmit={handleCreatePost}>
+            <DialogBody className="community-create-body">
+              <FormField id="post-name" label="Title">
+                <input id="post-name" name="name" value={form.name} onChange={handleFormChange} required />
+              </FormField>
+              <FormField id="post-text" label="Text">
+                <textarea id="post-text" name="text" value={form.text} onChange={handleFormChange} required rows={6} />
+              </FormField>
+              <div className="community-create-options">
+                <FormField id="post-plot" label="Link to plot">
+                  <select id="post-plot" name="fk_plot_id" value={form.fk_plot_id} onChange={handleFormChange}>
+                    <option value="">No plot</option>
+                    {plotsState.data.map((plot) => (
+                      <option key={plot.id} value={plot.id}>
+                        {plot.name}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+                <FormField id="post-share" label="Visibility">
+                  <select
+                    id="post-share"
+                    name="share"
+                    value={String(form.share)}
+                    onChange={(event) => {
+                      setForm((current) => ({
+                        ...current,
+                        share: event.target.value === 'true',
+                      }))
+                    }}
+                  >
+                    <option value="true">Shared</option>
+                    <option value="false">Private</option>
+                  </select>
+                </FormField>
+              </div>
+
+              {createError ? <span className="field-error">{createError}</span> : null}
+
+              {submitting ? (
+                <ProcessingState
+                  title="Publishing post"
+                  description="Preparing the post payload and attaching the latest plot preview."
+                  steps={['Validating content', 'Publishing post', 'Refreshing feed']}
+                  compact
+                />
+              ) : null}
+            </DialogBody>
+            <DialogFooter>
+              <Button type="submit" loading={submitting}>
+                {submitting ? 'Posting update' : 'Create post'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setCreateOpen(false)
+                  setCreateError('')
+                }}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </Dialog>
 
       <div className="community-grid">
         <section className="post-stack">
@@ -231,69 +348,6 @@ export default function CommunityPage() {
             </ResponsiveList>
           )}
         </section>
-
-        <aside className="panel input-grid">
-          <div className="page-stack" style={{ gap: '0.4rem' }}>
-            <h3 style={{ margin: 0 }}>Create community post</h3>
-            <p className="section-copy">Share a polished update, optionally attach one of your plots, and keep the feed useful for other gardeners.</p>
-          </div>
-          {!isAuthenticated ? (
-            <EmptyState
-              title="Sign in to post"
-              description="Guests can browse public community posts, but creating a post requires authentication."
-            />
-          ) : (
-            <form className="input-grid" onSubmit={handleCreatePost}>
-              <FormField id="post-name" label="Title">
-                <input id="post-name" name="name" value={form.name} onChange={handleFormChange} required />
-              </FormField>
-              <FormField id="post-text" label="Text">
-                <textarea id="post-text" name="text" value={form.text} onChange={handleFormChange} required />
-              </FormField>
-              <FormField id="post-plot" label="Link to plot">
-                <select id="post-plot" name="fk_plot_id" value={form.fk_plot_id} onChange={handleFormChange}>
-                  <option value="">No plot</option>
-                  {plotsState.data.map((plot) => (
-                    <option key={plot.id} value={plot.id}>
-                      {plot.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField id="post-share" label="Visibility">
-                <select
-                  id="post-share"
-                  name="share"
-                  value={String(form.share)}
-                  onChange={(event) => {
-                    setForm((current) => ({
-                      ...current,
-                      share: event.target.value === 'true',
-                    }))
-                  }}
-                >
-                  <option value="true">Shared</option>
-                  <option value="false">Private</option>
-                </select>
-              </FormField>
-
-              {createError ? <span className="field-error">{createError}</span> : null}
-
-              {submitting ? (
-                <ProcessingState
-                  title="Publishing post"
-                  description="Preparing the post payload and attaching the latest plot preview."
-                  steps={['Validating content', 'Publishing post', 'Refreshing feed']}
-                  compact
-                />
-              ) : null}
-
-              <Button type="submit" loading={submitting}>
-                {submitting ? 'Posting update' : 'Create post'}
-              </Button>
-            </form>
-          )}
-        </aside>
       </div>
     </div>
   )

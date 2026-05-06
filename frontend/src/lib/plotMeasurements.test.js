@@ -17,7 +17,7 @@ describe('plotMeasurements', () => {
     expect(metrics.sideSummary).toContain('K2: 8')
   })
 
-  it('hides labels that are too short at the current zoom', () => {
+  it('renders a label for every side even when edges are short at the current zoom', () => {
     const labels = createDimensionLabels({
       shape: createRectShape({
         x: 0,
@@ -30,7 +30,8 @@ describe('plotMeasurements', () => {
       idPrefix: 'tiny',
     })
 
-    expect(labels).toEqual([])
+    expect(labels).toHaveLength(4)
+    expect(labels.map((label) => label.id)).toEqual(['tiny-0', 'tiny-1', 'tiny-2', 'tiny-3'])
   })
 
   it('places visible labels at edge midpoints and rotates them along the edge', () => {
@@ -46,7 +47,7 @@ describe('plotMeasurements', () => {
       idPrefix: 'rect',
     })
 
-    expect(labels.length).toBeGreaterThanOrEqual(2)
+    expect(labels).toHaveLength(4)
     expect(labels[0]).toMatchObject({
       text: expect.stringContaining('m'),
       x: 120,

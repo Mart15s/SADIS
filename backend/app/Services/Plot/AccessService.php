@@ -21,13 +21,13 @@ class AccessService
 
         if (! $accessRole) {
             throw ValidationException::withMessages([
-                'role' => ['Nurodyta netinkama prieigos role.'],
+                'role' => ['The selected access role is invalid.'],
             ]);
         }
 
         if ($this->sameOwner($grantor, $recipient)) {
             throw ValidationException::withMessages([
-                'recipient_email' => ['Negalima suteikti prieigos sau.'],
+                'recipient_email' => ['You cannot share access with yourself.'],
             ]);
         }
 
@@ -35,13 +35,13 @@ class AccessService
             $lockedPlot = Plot::query()->whereKey($plot->id)->lockForUpdate()->first();
 
             if (! $lockedPlot || ! $this->userIsOwner($grantor, $lockedPlot)) {
-                throw new AuthorizationException('Tik sklypo savininkas gali suteikti prieiga.');
+                throw new AuthorizationException('Only the plot owner can grant access.');
             }
 
             if ($this->userIsOwner($recipient, $lockedPlot)
                 || $this->sharedAccessQuery($recipient, $lockedPlot)->lockForUpdate()->exists()) {
                 throw ValidationException::withMessages([
-                    'recipient_email' => ['Naudotojas jau turi prieiga prie sio sklypo.'],
+                    'recipient_email' => ['The user already has access to this plot.'],
                 ]);
             }
 
@@ -65,7 +65,7 @@ class AccessService
     {
         if ($this->sameOwner($grantor, $recipient)) {
             throw ValidationException::withMessages([
-                'recipient' => ['Savininko prieigos panaikinti negalima.'],
+                'recipient' => ['Owner access cannot be revoked.'],
             ]);
         }
 
@@ -73,7 +73,7 @@ class AccessService
             $lockedPlot = Plot::query()->whereKey($plot->id)->lockForUpdate()->first();
 
             if (! $lockedPlot || ! $this->userIsOwner($grantor, $lockedPlot)) {
-                throw new AuthorizationException('Tik sklypo savininkas gali panaikinti prieiga.');
+                throw new AuthorizationException('Only the plot owner can revoke access.');
             }
 
             $accessRight = $this->sharedAccessQuery($recipient, $lockedPlot)
@@ -82,7 +82,7 @@ class AccessService
 
             if (! $accessRight) {
                 throw ValidationException::withMessages([
-                    'recipient' => ['Naudotojui si prieiga nesuteikta.'],
+                    'recipient' => ['This access has not been granted to the user.'],
                 ]);
             }
 
@@ -100,14 +100,14 @@ class AccessService
 
             if (! $lockedAccessRight) {
                 throw ValidationException::withMessages([
-                    'access_right_id' => ['Prieigos irasas nerastas.'],
+                    'access_right_id' => ['Access record was not found.'],
                 ]);
             }
 
             $plot = Plot::query()->find($lockedAccessRight->fk_plot_id);
 
             if (! $plot || ! $this->userIsOwner($grantor, $plot)) {
-                throw new AuthorizationException('Tik sklypo savininkas gali panaikinti prieiga.');
+                throw new AuthorizationException('Only the plot owner can revoke access.');
             }
 
             $lockedAccessRight->delete();

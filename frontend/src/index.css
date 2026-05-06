@@ -8908,9 +8908,1957 @@ tbody tr:hover td {
     display: none;
   }
 
-  .designer-bottom-hud .plot-scale-copy span {
+.designer-bottom-hud .plot-scale-copy span {
     max-width: 18ch;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+/* Final demo polish */
+
+.modal-surface {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.community-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.community-create-dialog form {
+  display: contents;
+}
+
+.community-create-body {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.community-create-body input,
+.community-create-body select,
+.community-create-body textarea {
+  width: 100%;
+}
+
+.community-create-body textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.community-create-options {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plot-page-header.plot-compact-nav {
+  grid-template-columns: minmax(220px, 0.75fr) minmax(180px, 0.55fr) minmax(430px, 1fr) max-content;
+  gap: var(--space-2);
+  align-items: center;
+  overflow: visible;
+}
+
+.plot-page-header-main {
+  min-width: 0;
+}
+
+.plot-page-header-meta {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.plot-page-header-meta:empty {
+  min-height: 1px;
+}
+
+.plot-page-header-tabs {
+  min-width: 0;
+}
+
+.plot-page-header .plot-compact-tabs,
+.plot-page-header .plot-section-nav {
+  width: 100%;
+}
+
+.plot-page-header .plot-compact-actions,
+.plot-workspace-actions {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.plot-workspace-nav:not(.plot-compact-nav) {
+  grid-template-columns: minmax(240px, 0.85fr) minmax(180px, 0.55fr) minmax(430px, 1fr) max-content;
+  align-items: center;
+}
+
+.plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-nav-head {
+  display: contents;
+}
+
+.plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-title-block {
+  grid-column: 1;
+}
+
+.plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-meta {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+.plot-workspace-nav:not(.plot-compact-nav) .plot-section-tabs-scroll {
+  grid-column: 3;
+  grid-row: 1;
+  margin: 0;
+  padding: 0;
+}
+
+.plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-actions {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+.plot-context-rail .inspector-panel-body {
+  gap: var(--space-4);
+}
+
+.plot-context-rail .inspector-section {
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid rgba(83, 61, 39, 0.12);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.plot-context-rail .inspector-section + .inspector-section,
+.plot-context-rail .plant-placement-card {
+  margin-top: var(--space-1);
+}
+
+.plot-context-rail .inspector-section-head {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(83, 61, 39, 0.1);
+}
+
+.plot-context-rail .input-grid {
+  gap: var(--space-3);
+}
+
+.plot-context-rail .form-actions {
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(83, 61, 39, 0.1);
+}
+
+.plot-context-rail .form-actions .button-danger {
+  margin-left: auto;
+}
+
+.plant-placement-card .list-head {
+  align-items: stretch;
+}
+
+.plant-placement-card .button {
+  align-self: center;
+  white-space: nowrap;
+}
+
+.plant-flow-panel {
+  max-height: 100vh;
+}
+
+.plant-flow-catalog-grid {
+  max-height: min(42vh, 430px);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.designer-dimension-label {
+  z-index: 7;
+}
+
+@media (max-width: 1320px) {
+  .plot-page-header.plot-compact-nav,
+  .plot-workspace-nav:not(.plot-compact-nav) {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1fr);
+  }
+
+  .plot-page-header-meta,
+  .plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-meta {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
+  .plot-page-header-tabs,
+  .plot-workspace-nav:not(.plot-compact-nav) .plot-section-tabs-scroll {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .plot-page-header .plot-compact-actions,
+  .plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 760px) {
+  .community-create-options,
+  .plot-page-header.plot-compact-nav,
+  .plot-workspace-nav:not(.plot-compact-nav) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plot-page-header-meta,
+  .plot-page-header-tabs,
+  .plot-page-header .plot-compact-actions,
+  .plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-meta,
+  .plot-workspace-nav:not(.plot-compact-nav) .plot-section-tabs-scroll,
+  .plot-workspace-nav:not(.plot-compact-nav) .plot-workspace-actions {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+  }
+
+  .plot-page-header .plot-compact-actions,
+  .plot-workspace-actions {
+    justify-content: flex-start;
+  }
+
+  .plant-placement-card .list-head {
+    display: grid;
+  }
+}
+
+.plot-compact-nav.plot-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: grid;
+  grid-template-columns: minmax(360px, max-content) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+
+  overflow: hidden;
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 14px;
+  background: rgba(250, 248, 242, 0.96);
+  backdrop-filter: blur(16px);
+}
+
+.plot-compact-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plot-compact-back {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 12px;
+  background: #fffefa;
+  color: #3e3a32;
+  text-decoration: none;
+}
+
+.plot-compact-back:hover {
+  background: #fff7ed;
+  border-color: rgba(234, 88, 12, 0.25);
+  color: #c2410c;
+}
+
+.plot-compact-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.plot-compact-title-block {
+  min-width: 150px;
+  max-width: 260px;
+}
+
+.plot-compact-kicker {
+  display: block;
+  margin-bottom: 2px;
+
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #686257;
+}
+
+.plot-compact-title {
+  margin: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 19px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #1f1b16;
+}
+
+.plot-compact-meta {
+  min-width: 0;
+  max-width: 360px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+
+  overflow: hidden;
+}
+
+.plot-compact-meta > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.plot-page-header-tabs {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.plot-page-header-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-tabs {
+  width: max-content;
+  max-width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 4px;
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.95);
+}
+
+.plot-section-link.plot-compact-tab {
+  flex: 0 0 auto;
+
+  height: 38px;
+  padding: 0 13px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  color: #5f5a50;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.plot-section-link.plot-compact-tab:hover {
+  color: #c2410c;
+  background: rgba(234, 88, 12, 0.08);
+}
+
+.plot-section-link.plot-compact-tab.is-active {
+  color: #c2410c;
+  background: #fff1e7;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.18);
+}
+
+.plot-compact-actions {
+  min-width: 0;
+  max-width: 560px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.plot-compact-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-actions > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Jeigu action mygtukai paveldi skirtingus aukščius iš kitų vietų */
+.plot-compact-actions button,
+.plot-compact-actions a {
+  min-height: 42px;
+  border-radius: 10px;
+}
+
+/* Vidutiniai ekranai: title/meta mažinami, bet tab'ai vis tiek lieka tvarkingi */
+@media (max-width: 1380px) {
+  .plot-compact-nav.plot-page-header {
+    grid-template-columns: minmax(280px, 0.85fr) minmax(260px, 1fr) max-content;
+  }
+
+  .plot-compact-identity {
+    gap: 10px;
+  }
+
+  .plot-compact-meta {
+    max-width: 260px;
+  }
+
+  .plot-compact-title-block {
+    max-width: 210px;
+  }
+
+  .plot-compact-actions {
+    max-width: 460px;
+  }
+}
+
+/* Mažesni ekranai: veiksmai keliauja į antrą eilutę, vietoje to kad laužytų navbarą */
+@media (max-width: 1100px) {
+  .plot-compact-nav.plot-page-header {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, max-content);
+    grid-template-areas:
+      "identity tabs"
+      "actions actions";
+    align-items: center;
+  }
+
+  .plot-compact-left {
+    grid-area: identity;
+  }
+
+  .plot-page-header-tabs {
+    grid-area: tabs;
+  }
+
+  .plot-compact-actions {
+    grid-area: actions;
+    max-width: 100%;
+    justify-content: flex-end;
+  }
+
+  .plot-compact-meta {
+    max-width: 220px;
+  }
+}
+
+/* Mobilus vaizdas: viskas lieka naudojama, bet nebesigrūda į vieną eilutę */
+@media (max-width: 720px) {
+  .plot-compact-nav.plot-page-header {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "identity"
+      "tabs"
+      "actions";
+    gap: 10px;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .plot-compact-identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .plot-compact-meta {
+    max-width: 100%;
+  }
+
+  .plot-page-header-tabs,
+  .plot-compact-actions {
+    width: 100%;
+  }
+
+  .plot-compact-actions {
+    justify-content: flex-start;
+  }
+}
+
+.plot-compact-nav.plot-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: grid;
+  grid-template-columns: minmax(520px, 0.95fr) minmax(360px, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 14px;
+
+  overflow: hidden;
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 14px;
+  background: rgba(250, 248, 242, 0.96);
+  backdrop-filter: blur(16px);
+}
+
+.plot-compact-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.plot-compact-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.plot-compact-title-block {
+  flex: 0 1 230px;
+  min-width: 150px;
+}
+
+.plot-compact-title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 21px;
+  line-height: 1.05;
+  font-weight: 850;
+  color: #1f1b16;
+}
+
+.plot-compact-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.plot-compact-meta::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-meta > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.plot-page-header-tabs {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.plot-compact-tabs {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+
+  padding: 4px;
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.95);
+}
+
+.plot-section-link.plot-compact-tab {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  height: 38px;
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  color: #5f5a50;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.plot-section-link.plot-compact-tab.is-active {
+  color: #c2410c;
+  background: #fff1e7;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.18);
+}
+
+.plot-compact-actions {
+  min-width: 0;
+  max-width: 560px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  overflow: hidden;
+}
+
+.plot-compact-actions > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.plot-compact-actions button,
+.plot-compact-actions a {
+  min-height: 40px;
+  padding-inline: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 1550px) {
+  .plot-compact-nav.plot-page-header {
+    grid-template-columns: minmax(430px, 0.85fr) minmax(330px, 1fr) max-content;
+    gap: 10px;
+  }
+
+  .plot-compact-title-block {
+    flex-basis: 210px;
+  }
+
+  .plot-compact-title {
+    font-size: 19px;
+  }
+
+  .plot-section-link.plot-compact-tab {
+    padding-inline: 8px;
+    font-size: 13px;
+  }
+
+  .plot-compact-actions button,
+  .plot-compact-actions a {
+    padding-inline: 11px;
+    font-size: 13px;
+  }
+}
+
+
+@media (max-width: 1280px) {
+  .plot-compact-nav.plot-page-header {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, max-content);
+    grid-template-areas:
+      "left tabs"
+      "actions actions";
+    gap: 10px;
+  }
+
+  .plot-compact-left {
+    grid-area: left;
+  }
+
+  .plot-page-header-tabs {
+    grid-area: tabs;
+  }
+
+  .plot-compact-actions {
+    grid-area: actions;
+    max-width: 100%;
+    justify-content: flex-end;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .plot-compact-actions::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.plot-compact-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  gap: 6px 8px;
+  flex-wrap: wrap;
+  max-height: 58px;
+  overflow: hidden;
+}
+
+.plot-compact-meta > * {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  white-space: nowrap;
+  min-height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 11.5px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.plot-compact-title-block {
+  flex: 0 1 210px;
+  min-width: 140px;
+  max-width: 210px;
+}
+
+.plot-compact-title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+  line-height: 1.05;
+  font-weight: 850;
+}
+
+.plot-compact-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.plot-compact-actions > * {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+}
+
+.plot-compact-actions button,
+.plot-compact-actions a {
+  margin: 0 !important;
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  padding-block: 0 !important;
+}
+
+.plot-compact-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 260px;
+
+  display: flex;
+  align-items: center;
+  align-content: center;
+  gap: 5px 6px;
+  flex-wrap: wrap;
+
+  max-height: 48px;
+  overflow: hidden;
+}
+
+.plot-compact-meta > * {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  white-space: nowrap;
+
+  height: 22px;
+  min-height: 22px;
+  padding: 0 9px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  font-size: 10.5px;
+  line-height: 1;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+}
+
+.plot-compact-meta > * {
+  height: 20px;
+  min-height: 20px;
+  padding: 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+/* Force compact plot header badges */
+.plot-compact-nav.plot-page-header .plot-compact-meta {
+  flex: 0 1 190px !important;
+  width: 190px !important;
+  max-width: 190px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  align-content: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+
+  gap: 4px 5px !important;
+  max-height: 42px !important;
+  overflow: hidden !important;
+}
+
+/* Target badge wrappers AND actual inner badge/chip/pill elements */
+.plot-compact-nav.plot-page-header .plot-compact-meta > *,
+.plot-compact-nav.plot-page-header .plot-compact-meta > * > *,
+.plot-compact-nav.plot-page-header .plot-compact-meta :is(
+  .badge,
+  .chip,
+  .pill,
+  .meta-badge,
+  .plot-badge,
+  .status-badge,
+  .plot-meta-badge,
+  .plot-status-pill,
+  [class*="badge"],
+  [class*="Badge"],
+  [class*="chip"],
+  [class*="Chip"],
+  [class*="pill"],
+  [class*="Pill"]
+) {
+  box-sizing: border-box !important;
+
+  height: 19px !important;
+  min-height: 19px !important;
+  max-height: 19px !important;
+
+  padding: 0 7px !important;
+  margin: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 999px !important;
+
+  font-size: 9.5px !important;
+  line-height: 1 !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.045em !important;
+  white-space: nowrap !important;
+}
+
+/* If badge text is inside span/strong/etc. */
+.plot-compact-nav.plot-page-header .plot-compact-meta * {
+  font-size: 9.5px !important;
+  line-height: 1 !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-meta {
+  flex-basis: 175px !important;
+  width: 175px !important;
+  max-width: 175px !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-title-block {
+  flex: 0 1 190px !important;
+  min-width: 150px !important;
+  max-width: 190px !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-title {
+  font-size: 18px !important;
+  line-height: 1.05 !important;
+}
+
+/* Final plot navbar layout stabilization */
+.plot-compact-nav.plot-page-header {
+  grid-template-columns:
+    minmax(420px, max-content)
+    minmax(520px, 1fr)
+    minmax(420px, max-content) !important;
+  column-gap: 14px !important;
+  overflow: hidden !important;
+}
+
+/* Left side should not steal extra width */
+.plot-compact-nav.plot-page-header .plot-compact-left {
+  width: max-content !important;
+  max-width: 520px !important;
+  min-width: 0 !important;
+}
+
+/* Center tabs must not compress text into overlap */
+.plot-compact-nav.plot-page-header .plot-page-header-tabs {
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-page-header-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-tabs {
+  width: max-content !important;
+  min-width: max-content !important;
+  max-width: none !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+}
+
+/* Critical fix: tabs cannot flex-shrink into each other */
+.plot-compact-nav.plot-page-header .plot-section-link.plot-compact-tab {
+  flex: 0 0 auto !important;
+  min-width: auto !important;
+
+  height: 38px !important;
+  padding: 0 11px !important;
+
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Right actions: keep aligned and avoid clipping */
+.plot-compact-nav.plot-page-header .plot-compact-actions {
+  min-width: 0 !important;
+  max-width: 580px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  padding-right: 2px !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-actions::-webkit-scrollbar {
+  display: none !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-actions button,
+.plot-compact-nav.plot-page-header .plot-compact-actions a {
+  flex: 0 0 auto !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 1500px) {
+  .plot-compact-nav.plot-page-header {
+    grid-template-columns:
+      minmax(360px, max-content)
+      minmax(460px, 1fr)
+      minmax(360px, max-content) !important;
+    column-gap: 10px !important;
+  }
+
+  .plot-compact-nav.plot-page-header .plot-section-link.plot-compact-tab {
+    padding: 0 9px !important;
+    font-size: 13px !important;
+  }
+
+  .plot-compact-nav.plot-page-header .plot-compact-actions button,
+  .plot-compact-nav.plot-page-header .plot-compact-actions a {
+    padding: 0 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Stable compact navbar layout */
+.plot-compact-nav.plot-page-header {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 430px) minmax(0, 1fr) max-content !important;
+  align-items: center !important;
+  column-gap: 14px !important;
+
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Left block stays compact */
+.plot-compact-nav.plot-page-header .plot-compact-left {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 430px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  overflow: hidden !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-identity {
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-title-block {
+  flex: 0 1 210px !important;
+  min-width: 145px !important;
+  max-width: 210px !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-title {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Center tabs: scroll inside own column, never overlap actions */
+.plot-compact-nav.plot-page-header .plot-page-header-tabs {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-page-header-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-tabs {
+  width: max-content !important;
+  min-width: max-content !important;
+  max-width: none !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-section-link.plot-compact-tab {
+  flex: 0 0 auto !important;
+
+  height: 38px !important;
+  padding: 0 10px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Right actions: always stay above tab scroll area */
+.plot-compact-nav.plot-page-header .plot-compact-actions {
+  min-width: max-content !important;
+  max-width: none !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+
+  overflow: visible !important;
+
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-actions > * {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+.plot-compact-nav.plot-page-header .plot-compact-actions button,
+.plot-compact-nav.plot-page-header .plot-compact-actions a {
+  flex: 0 0 auto !important;
+
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 14px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+/* Tabs shell with left/right scroll arrows */
+.plot-tabs-shell {
+  min-width: 0;
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 8px;
+}
+
+.plot-tabs-viewport {
+  min-width: 0;
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.plot-tabs-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-tabs-scroll-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #5f5a50;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+.plot-tabs-scroll-btn:hover:not(:disabled) {
+  background: #fff1e7;
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.22);
+}
+
+.plot-tabs-scroll-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.plot-tabs-scroll-btn span {
+  line-height: 1;
+  font-size: 14px;
+}
+
+/* Tabs container itself */
+.plot-page-header-tabs {
+  min-width: 0;
+  width: 100%;
+}
+
+.plot-compact-tabs {
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  padding: 4px;
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.96);
+}
+
+/* Important: tabs must not shrink into each other */
+.plot-section-link.plot-compact-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Optional: on very small widths, smaller arrows */
+@media (max-width: 1280px) {
+  .plot-tabs-shell {
+    grid-template-columns: 32px minmax(0, 1fr) 32px;
+    gap: 6px;
+  }
+
+  .plot-tabs-scroll-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+}
+
+/* =========================================================
+   PREMIUM SCROLLABLE TABS
+   Replace older tabs-scroll styles with this block
+   ========================================================= */
+
+.plot-page-header-tabs,
+.plot-section-tabs-scroll {
+  min-width: 0;
+  width: 100%;
+}
+
+.plot-tabs-shell {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  height: 58px;
+  padding: 0;
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.96);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* soft fade masks on both sides */
+.plot-tabs-shell::before,
+.plot-tabs-shell::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 54px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 1;
+}
+
+.plot-tabs-shell::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255, 254, 250, 1) 35%,
+    rgba(255, 254, 250, 0.92) 55%,
+    rgba(255, 254, 250, 0)
+  );
+}
+
+.plot-tabs-shell::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(255, 254, 250, 1) 35%,
+    rgba(255, 254, 250, 0.92) 55%,
+    rgba(255, 254, 250, 0)
+  );
+}
+
+.plot-tabs-shell.has-left-overflow::before {
+  opacity: 1;
+}
+
+.plot-tabs-shell.has-right-overflow::after {
+  opacity: 1;
+}
+
+.plot-tabs-viewport {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  padding: 0 42px; /* room for overlay arrow buttons */
+}
+
+.plot-tabs-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* nav strip inside viewport */
+.plot-compact-tabs,
+.plot-section-nav {
+  min-width: max-content;
+  width: max-content;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  background: transparent;
+  border: 0;
+}
+
+/* arrow buttons live INSIDE pill shell */
+.plot-tabs-scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 253, 250, 0.96);
+  color: #665f55;
+  box-shadow: 0 1px 2px rgba(30, 26, 20, 0.05);
+  cursor: pointer;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.plot-tabs-scroll-btn-left {
+  left: 8px;
+}
+
+.plot-tabs-scroll-btn-right {
+  right: 8px;
+}
+
+.plot-tabs-scroll-btn.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.plot-tabs-scroll-btn:hover:not(:disabled) {
+  background: #fff1e7;
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.24);
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.12);
+}
+
+.plot-tabs-scroll-btn:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.97);
+}
+
+.plot-tabs-scroll-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.plot-tabs-scroll-btn span {
+  font-size: 18px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+/* tabs */
+.plot-section-link.plot-compact-tab,
+.plot-section-link.plot-regular-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 999px;
+
+  color: #5f5a50;
+  font-size: 14px;
+  font-weight: 750;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.plot-section-link.plot-compact-tab:hover,
+.plot-section-link.plot-regular-tab:hover {
+  color: #c2410c;
+  background: rgba(234, 88, 12, 0.08);
+}
+
+.plot-section-link.plot-compact-tab.is-active,
+.plot-section-link.plot-regular-tab.is-active {
+  color: #c2410c;
+  background: #fff1e7;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.16);
+}
+
+/* optional compact tuning */
+.plot-tabs-shell.is-compact {
+  height: 58px;
+}
+
+/* smaller screens */
+@media (max-width: 1400px) {
+  .plot-tabs-viewport {
+    padding: 0 40px;
+  }
+
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    height: 40px;
+    padding: 0 13px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .plot-tabs-shell {
+    height: 54px;
+  }
+
+  .plot-tabs-scroll-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  .plot-tabs-scroll-btn-left {
+    left: 6px;
+  }
+
+  .plot-tabs-scroll-btn-right {
+    right: 6px;
+  }
+
+  .plot-tabs-viewport {
+    padding: 0 38px;
+  }
+
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   CLEAN SCROLLABLE PLOT TABS — NO CLIPPED EDGES
+   ========================================================= */
+
+.plot-page-header-tabs,
+.plot-section-tabs-scroll {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.plot-tabs-shell {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+
+  height: 56px;
+  padding: 4px;
+
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 4px;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.96);
+
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* No overlay fades, because they were visually cutting the tabs */
+.plot-tabs-shell::before,
+.plot-tabs-shell::after {
+  display: none !important;
+  content: none !important;
+}
+
+.plot-tabs-viewport {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+
+  display: flex;
+  align-items: center;
+
+  box-sizing: border-box;
+}
+
+.plot-tabs-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-tabs,
+.plot-section-nav {
+  width: max-content;
+  min-width: max-content;
+  height: 100%;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.plot-section-link.plot-compact-tab,
+.plot-section-link.plot-regular-tab {
+  flex: 0 0 auto;
+
+  height: 42px;
+  padding: 0 15px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  color: #5f5a50;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 750;
+  white-space: nowrap;
+
+  box-sizing: border-box;
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.plot-section-link.plot-compact-tab:hover,
+.plot-section-link.plot-regular-tab:hover {
+  color: #c2410c;
+  background: rgba(234, 88, 12, 0.08);
+}
+
+.plot-section-link.plot-compact-tab.is-active,
+.plot-section-link.plot-regular-tab.is-active {
+  color: #c2410c;
+  background: #fff1e7;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.18);
+}
+
+/* Arrows are now normal grid items, not overlays */
+.plot-tabs-scroll-btn {
+  position: static !important;
+  transform: none !important;
+  z-index: auto;
+
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #665f55;
+  box-shadow: 0 1px 2px rgba(30, 26, 20, 0.05);
+
+  cursor: pointer;
+  box-sizing: border-box;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.plot-tabs-scroll-btn.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.plot-tabs-scroll-btn:hover:not(:disabled) {
+  background: #fff1e7;
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.12);
+}
+
+.plot-tabs-scroll-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.plot-tabs-scroll-btn span {
+  font-size: 18px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+/* Compact tuning */
+@media (max-width: 1400px) {
+  .plot-tabs-shell {
+    height: 54px;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+  }
+
+  .plot-tabs-scroll-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    height: 40px;
+    padding: 0 13px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .plot-tabs-shell {
+    height: 52px;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    gap: 3px;
+  }
+
+  .plot-tabs-scroll-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plot-tabs-viewport {
+    scroll-behavior: auto;
+  }
+
+  .plot-tabs-scroll-btn,
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   COMPACT SCROLLABLE PLOT TABS — NO WASTED EDGE SPACE
+   ========================================================= */
+
+.plot-page-header-tabs,
+.plot-section-tabs-scroll {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Default: when all tabs fit, shell shrinks to content */
+.plot-tabs-shell {
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+
+  height: 54px;
+  padding: 4px 5px;
+
+  display: grid;
+  grid-template-areas: "left viewport right";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.96);
+
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* When overflow exists, shell uses available column width */
+.plot-tabs-shell.has-left-overflow,
+.plot-tabs-shell.has-right-overflow {
+  width: 100%;
+}
+
+/* Remove old overlay fades completely */
+.plot-tabs-shell::before,
+.plot-tabs-shell::after {
+  display: none !important;
+  content: none !important;
+}
+
+.plot-tabs-viewport {
+  grid-area: viewport;
+
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+}
+
+.plot-tabs-shell.has-left-overflow .plot-tabs-viewport,
+.plot-tabs-shell.has-right-overflow .plot-tabs-viewport {
+  justify-content: flex-start;
+}
+
+.plot-tabs-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-tabs,
+.plot-section-nav {
+  width: max-content;
+  min-width: max-content;
+  height: 100%;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 0 2px;
+  margin: 0;
+
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.plot-section-link.plot-compact-tab,
+.plot-section-link.plot-regular-tab {
+  flex: 0 0 auto;
+
+  height: 40px;
+  padding: 0 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  color: #5f5a50;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 750;
+  white-space: nowrap;
+
+  box-sizing: border-box;
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.plot-section-link.plot-compact-tab:hover,
+.plot-section-link.plot-regular-tab:hover {
+  color: #c2410c;
+  background: rgba(234, 88, 12, 0.08);
+}
+
+.plot-section-link.plot-compact-tab.is-active,
+.plot-section-link.plot-regular-tab.is-active {
+  color: #c2410c;
+  background: #fff1e7;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.18);
+}
+
+/* Arrows take space ONLY when visible */
+.plot-tabs-scroll-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(40, 36, 28, 0.1);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #665f55;
+  box-shadow: 0 1px 2px rgba(30, 26, 20, 0.05);
+
+  cursor: pointer;
+  box-sizing: border-box;
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.plot-tabs-scroll-btn-left {
+  grid-area: left;
+}
+
+.plot-tabs-scroll-btn-right {
+  grid-area: right;
+}
+
+.plot-tabs-scroll-btn.is-visible {
+  display: inline-flex;
+}
+
+.plot-tabs-scroll-btn:hover:not(:disabled) {
+  background: #fff1e7;
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.12);
+}
+
+.plot-tabs-scroll-btn:disabled {
+  display: none;
+}
+
+.plot-tabs-scroll-btn span {
+  font-size: 18px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+/* Slightly tighter on medium screens */
+@media (max-width: 1400px) {
+  .plot-tabs-shell {
+    height: 52px;
+    padding: 4px;
+    gap: 3px;
+  }
+
+  .plot-tabs-scroll-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .plot-tabs-shell {
+    height: 50px;
+  }
+
+  .plot-tabs-scroll-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+  }
+
+  .plot-section-link.plot-compact-tab,
+  .plot-section-link.plot-regular-tab {
+    height: 36px;
+    padding: 0 11px;
+    font-size: 13px;
   }
 }

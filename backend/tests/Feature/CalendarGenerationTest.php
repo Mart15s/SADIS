@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\CalendarGenerationException;
 use App\Enums\ConditionType;
 use App\Enums\InventoryItemType;
 use App\Enums\InventoryUnit;
@@ -63,7 +64,7 @@ class CalendarGenerationTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonPath('message', 'Šiam planui generuoti rekomendacinio veiksmų kalendoriaus negalima — plane nėra augalų.');
+            ->assertJsonPath('message', CalendarGenerationException::noPlants()->getMessage());
     }
 
     public function test_growth_stage_uses_generation_date_instead_of_today(): void

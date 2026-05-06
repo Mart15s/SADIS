@@ -140,7 +140,7 @@ export default function DashboardPage() {
       <section className="dashboard-context-grid">
         <SectionCard
           title="Active plots"
-          description="Plot plans stay as the main work object instead of being reduced to identical metric cards."
+          description=""
           actions={(
             <Link to="/plots">
               <Button variant="ghost">View all plots</Button>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
         </SectionCard>
 
         <div className="dashboard-side-stack">
-          <SectionCard title="Today's garden work" description="Operational entry points for care tasks, condition checks, and stock blockers.">
+          <SectionCard title="Today's garden work" description="">
             <div className="dashboard-task-lane">
               {data.plots.slice(0, 3).map((plot) => (
                 <Link key={`task-${plot.id}`} to={`/plots/${plot.id}/calendar`} className="dashboard-task-row">
@@ -212,7 +212,7 @@ export default function DashboardPage() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Weather influence" description="Calendar generation uses Meteo.lt data and stored forecast fallback.">
+          <SectionCard title="Weather influence" description="">
             <div className="dashboard-weather-stack">
               <span className="weather-rule-chip">Rain can skip watering</span>
               <span className="weather-rule-chip">Frost adds protection tasks</span>
@@ -224,7 +224,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="dashboard-context-grid dashboard-context-grid-secondary">
-        <SectionCard title="Plant statuses" description="Plants are shown as living records attached to plots and zones, not just rows in a database.">
+        <SectionCard title="Plant statuses" description="">
           {visiblePlants.length > 0 ? (
             <div className="dashboard-plant-list">
               {visiblePlants.map((plant) => (
@@ -242,7 +242,7 @@ export default function DashboardPage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Planning history summary" description="Recent plot and stock changes are presented as a planning timeline.">
+        <SectionCard title="Planning history summary" description="">
           <GardenTimeline
             items={timelineItems}
             emptyText="Create a plot, draw zones, or adjust inventory to start building a planning trail."

@@ -71,7 +71,7 @@ class CommunityService
         $this->ensureOwnerCanAccessPlot(
             $owner,
             $plot,
-            'Neturite teises perziureti sio sklypo bendruomenes irasu.'
+            'You do not have permission to view community posts for this plot.'
         );
 
         return $this->baseQuery()
@@ -84,7 +84,7 @@ class CommunityService
         $plot = $this->resolveAccessiblePlot(
             $owner,
             $data['fk_plot_id'] ?? null,
-            'Neturite teises kurti iraso siam sklypui.'
+            'You do not have permission to create a post for this plot.'
         );
 
         $post = DB::transaction(function () use ($owner, $profile, $data, $plot) {
@@ -106,13 +106,13 @@ class CommunityService
 
     public function updatePost(GardenOwner $owner, CommunityPost $post, array $data): CommunityPost
     {
-        $this->ensurePostOwnership($owner, $post, 'Tik iraso autorius gali redaguoti irasa.');
+        $this->ensurePostOwnership($owner, $post, 'Only the post author can edit this post.');
 
         if (array_key_exists('fk_plot_id', $data)) {
             $plot = $this->resolveAccessiblePlot(
                 $owner,
                 $data['fk_plot_id'],
-                'Neturite teises priskirti iraso siam sklypui.'
+                'You do not have permission to assign this post to the selected plot.'
             );
 
             $data['fk_plot_id'] = $plot?->id;
@@ -127,7 +127,7 @@ class CommunityService
 
     public function deletePost(GardenOwner $owner, CommunityPost $post): void
     {
-        $this->ensurePostOwnership($owner, $post, 'Tik iraso autorius gali pasalinti irasa.');
+        $this->ensurePostOwnership($owner, $post, 'Only the post author can delete this post.');
 
         $post->delete();
     }

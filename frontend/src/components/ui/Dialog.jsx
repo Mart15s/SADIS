@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 const focusableSelector = [
   'a[href]',
@@ -97,7 +98,7 @@ function ModalFrame({
     }
   }
 
-  return (
+  const frame = (
     <div
       className={`modal-layer modal-layer-${placement}`.trim()}
       onMouseDown={handleOverlayMouseDown}
@@ -115,6 +116,8 @@ function ModalFrame({
       </div>
     </div>
   )
+
+  return typeof document === 'undefined' ? frame : createPortal(frame, document.body)
 }
 
 export function Dialog(props) {
