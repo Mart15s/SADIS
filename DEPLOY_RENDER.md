@@ -46,6 +46,7 @@ LOG_LEVEL=info
 
 DB_CONNECTION=pgsql
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+RUN_MIGRATIONS=true
 
 SESSION_DRIVER=file
 SESSION_SECURE_COOKIE=true
@@ -84,16 +85,16 @@ Copy the output into Render as `APP_KEY`.
 
 ## 5. Run migrations
 
-Migrations are not executed automatically on container startup. This avoids changing the production database unexpectedly during every deploy.
+When `RUN_MIGRATIONS=true`, the Render container runs pending Laravel migrations on startup with `php artisan migrate --force`. This is recommended for this project because authentication uses Laravel Sanctum and both registration and login require the `personal_access_tokens` table to exist.
 
-After the first successful deploy, open Render Shell and run:
+If you keep `RUN_MIGRATIONS=false`, run migrations manually after the first successful deploy and after future deploys that include new migrations:
 
 ```bash
 cd /var/www/html
 php artisan migrate --force
 ```
 
-Run the same command after future deploys that include new migrations.
+If registration or login returns HTTP 500 immediately after deployment, check Render logs for missing table errors such as `users`, `profiles`, `garden_owners`, or `personal_access_tokens`, then run the migration command above or enable `RUN_MIGRATIONS=true` and redeploy.
 
 ## 6. Load demo data
 
