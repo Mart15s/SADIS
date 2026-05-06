@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Augalų ir katalogo posistemio klasių diagrama</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #526070;
+      --line: #334155;
+      --paper: #ffffff;
+      --page: #f5f7fb;
+      --view: #dcecff;
+      --control: #ffe1e7;
+      --entity: #fff2bf;
+      --external: #ece7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    main {
+      width: min(1860px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid #d5dbe7;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+    .comment {
+      border-left: 4px solid #8aa5d6;
+      background: #f7faff;
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      color: #334155;
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    .legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 16px; height: 12px; border: 1px solid #64748b; display: inline-block; }
+    .canvas { overflow: auto; border: 1px solid #dbe3ef; background: #fff; }
+    svg { display: block; max-width: none; background: #fff; }
+    .uml-title { font-size: 18px; font-weight: 700; }
+    .pkg-title, .lane-title { font-size: 15px; font-weight: 700; }
+    .stereo { font-size: 11px; fill: #5b6472; font-style: italic; }
+    .class-name { font-size: 13px; font-weight: 700; }
+    .member { font-size: 11px; fill: #172033; }
+    .small { font-size: 10px; fill: #374151; }
+    .edge-label { font-size: 11px; fill: #1f2937; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 13px; }
+    th, td { border: 1px solid #d9e1ee; padding: 7px 8px; vertical-align: top; }
+    th { background: #eef3ff; text-align: left; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+    ul { margin-top: 6px; }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; border: 0; box-shadow: none; }
+      .canvas { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Augalų ir katalogo posistemio klasių diagrama</h1>
+  <div class="meta">Sugeneruota: 2026-04-29. Šaltinis: faktinė Laravel + React codebase būsena.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#dcecff"></i> Views / boundaries</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> Controllers / services</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> Models / entities / types</span>
+    <span><i class="swatch" style="background:#ece7ff"></i> External systems / boundaries</span>
+  </div>
+  <div class="comment">Augalų katalogas realizuotas kaip atskiras naudotojo modulis. Perenual integracija ir PlantCareNormalizer čia rodomi kaip control/boundary klasės, ne kaip atskiri naudotojo PA.</div>
+  <div class="canvas"><svg width="1780" height="980" role="img" aria-label="Augalų ir katalogo posistemio klasių diagrama">
+    <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#334155"></path>
+    </marker>
+    <marker id="openArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8" fill="none" stroke="#334155" stroke-width="1.5"></path>
+    </marker>
+    <marker id="diamond" markerWidth="12" markerHeight="10" refX="2" refY="5" orient="auto">
+      <path d="M2,5 L6,1 L10,5 L6,9 z" fill="#334155" stroke="#334155"></path>
+    </marker>
+  </defs>
+    <text x="24" y="30" class="uml-title">Augalų ir katalogo posistemio klasių diagrama</text>
+    <rect x="30" y="60" width="1720" height="160" fill="#eef3ff" stroke="#7b89a8" opacity="0.58"></rect>
+    <text x="890" y="83" text-anchor="middle" class="lane-title">Views / Boundaries</text>
+<rect x="30" y="255" width="1720" height="390" fill="#eef3ff" stroke="#7b89a8" opacity="0.58"></rect>
+    <text x="890" y="278" text-anchor="middle" class="lane-title">Controllers / Services</text>
+<rect x="30" y="685" width="1720" height="250" fill="#eef3ff" stroke="#7b89a8" opacity="0.58"></rect>
+    <text x="890" y="708" text-anchor="middle" class="lane-title">Models / Entities</text>
+    <polyline points="142.5,188 160,310" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="151.25" y="244" text-anchor="middle" class="edge-label">/plants</text>
+<polyline points="332.5,188 160,310" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="246.25" y="244" text-anchor="middle" class="edge-label">/plants</text>
+<polyline points="527.5,197 250,382" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="388.75" y="284.5" text-anchor="middle" class="edge-label">/plants/{id}</text>
+<polyline points="527.5,197 660,315" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="593.75" y="251" text-anchor="middle" class="edge-label">/conditions</text>
+<polyline points="730,174 505,379" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="617.5" y="271.5" text-anchor="middle" class="edge-label">/catalog-plants</text>
+<polyline points="845,141 505,379" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="675" y="255" text-anchor="middle" class="edge-label">/perenual/search, /species</text>
+<polyline points="1075,137 505,379" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="790" y="253" text-anchor="middle" class="edge-label">/catalog-plants/{id}</text>
+<polyline points="1305,137 505,379" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="905" y="253" text-anchor="middle" class="edge-label">catalog options</text>
+<polyline points="402.5,458 402.5,505" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="402.5" y="476.5" text-anchor="middle" class="edge-label">delegates</text>
+<polyline points="505,556 1530,556" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1017.5" y="551" text-anchor="middle" class="edge-label">imports</text>
+<polyline points="505,556 815,549" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="660" y="547.5" text-anchor="middle" class="edge-label">normalizes</text>
+<polyline points="1020,549 1065,557" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1042.5" y="548" text-anchor="middle" class="edge-label">fallback profiles</text>
+<polyline points="760,556 815,549" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="787.5" y="547.5" text-anchor="middle" class="edge-label">normalizes care</text>
+<polyline points="1617.5,505 1610,202" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1613.75" y="348.5" text-anchor="middle" class="edge-label">HTTP API</text>
+<polyline points="765,359 1265,556" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1015" y="452.5" text-anchor="middle" class="edge-label">delegates</text>
+<polyline points="250,382 555,556" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="402.5" y="464" text-anchor="middle" class="edge-label">syncs care</text>
+<polyline points="250,382 402.5,505" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="326.25" y="438.5" text-anchor="middle" class="edge-label">catalog assignment</text>
+<polyline points="402.5,607 397.5,735" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="400" y="666" text-anchor="middle" class="edge-label">writes</text>
+<polyline points="402.5,607 650,710" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="526.25" y="653.5" text-anchor="middle" class="edge-label">writes</text>
+<polyline points="160,454 165,735" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="162.5" y="589.5" text-anchor="middle" class="edge-label">CRUD</text>
+<polyline points="1377.5,607 1000,793" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1188.75" y="695" text-anchor="middle" class="edge-label">records</text>
+<polyline points="250,807 310,800" fill="none" stroke="#334155" stroke-width="1.25"></polyline><text x="280" y="798.5" text-anchor="middle" class="edge-label">0..* -- 0..1</text>
+<polyline points="485,800 545,789" fill="none" stroke="#334155" stroke-width="1.25"></polyline><text x="515" y="789.5" text-anchor="middle" class="edge-label">0..* -- 0..1</text>
+<polyline points="250,807 800,793" fill="none" stroke="#334155" stroke-width="1.25"></polyline><text x="525" y="795" text-anchor="middle" class="edge-label">1 -- 0..*</text>
+<polyline points="1045,793 250,807" fill="none" stroke="#334155" stroke-width="1.25"></polyline><text x="647.5" y="795" text-anchor="middle" class="edge-label">1 -- 0..*</text>
+<polyline points="1260,779 250,807" fill="none" stroke="#334155" stroke-width="1.25"></polyline><text x="755" y="788" text-anchor="middle" class="edge-label">1 -- 0..*</text>
+<polyline points="250,807 1460,779" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="855" y="788" text-anchor="middle" class="edge-label">typed by</text>
+    <rect x="60" y="100" width="165" height="88" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="142.5" y="116" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="142.5" y="133" text-anchor="middle" class="class-name">PlantsPage</text>
+<line x1="60" y1="143" x2="225" y2="143" stroke="#4f7fb8"></line>
+<line x1="60" y1="151" x2="225" y2="151" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="68" y="157" class="member">+ listManagedPlants()</text>
+<text x="68" y="171" class="member">+ listCatalogPlants()</text>
+<rect x="250" y="100" width="165" height="88" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="332.5" y="116" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="332.5" y="133" text-anchor="middle" class="class-name">PlantFormPage</text>
+<line x1="250" y1="143" x2="415" y2="143" stroke="#4f7fb8"></line>
+<line x1="250" y1="151" x2="415" y2="151" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="258" y="157" class="member">+ createManagedPlant()</text>
+<text x="258" y="171" class="member">+ updateManagedPlant()</text>
+<rect x="440" y="95" width="175" height="102" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="527.5" y="111" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="527.5" y="128" text-anchor="middle" class="class-name">PlantDetailPage</text>
+<line x1="440" y1="138" x2="615" y2="138" stroke="#4f7fb8"></line>
+<line x1="440" y1="146" x2="615" y2="146" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="448" y="152" class="member">+ getPlant()</text>
+<text x="448" y="166" class="member">+ createPlantCondition()</text>
+<text x="448" y="180" class="member">+ completeTask()</text>
+<rect x="640" y="100" width="180" height="74" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="730" y="116" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="730" y="133" text-anchor="middle" class="class-name">CatalogPlantsPage</text>
+<line x1="640" y1="143" x2="820" y2="143" stroke="#4f7fb8"></line>
+<line x1="640" y1="151" x2="820" y2="151" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="648" y="157" class="member">+ listCatalogPlants()</text>
+<rect x="845" y="90" width="205" height="102" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="947.5" y="106" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="947.5" y="123" text-anchor="middle" class="class-name">CatalogPlantFormPage</text>
+<line x1="845" y1="133" x2="1050" y2="133" stroke="#4f7fb8"></line>
+<line x1="845" y1="141" x2="1050" y2="141" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="853" y="147" class="member">+ searchPerenualPlants()</text>
+<text x="853" y="161" class="member">+ previewPerenualCatalogPlant()</text>
+<text x="853" y="175" class="member">+ createCatalogPlant()</text>
+<rect x="1075" y="100" width="205" height="74" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="1177.5" y="116" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="1177.5" y="133" text-anchor="middle" class="class-name">CatalogPlantDetailPage</text>
+<line x1="1075" y1="143" x2="1280" y2="143" stroke="#4f7fb8"></line>
+<line x1="1075" y1="151" x2="1280" y2="151" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="1083" y="157" class="member">+ getCatalogPlant()</text>
+<rect x="1305" y="100" width="180" height="74" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="1395" y="116" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="1395" y="133" text-anchor="middle" class="class-name">PlotPlantingDrawer</text>
+<line x1="1305" y1="143" x2="1485" y2="143" stroke="#4f7fb8"></line>
+<line x1="1305" y1="151" x2="1485" y2="151" stroke="#4f7fb8" opacity="0.75"></line>
+<text x="1313" y="157" class="member">+ listCatalogPlants()</text>
+<rect x="1530" y="100" width="160" height="102" rx="4" fill="#ece7ff" stroke="#7962bd" stroke-width="1.4"></rect>
+<text x="1610" y="116" text-anchor="middle" class="stereo">«external system»</text>
+<text x="1610" y="133" text-anchor="middle" class="class-name">Perenual API</text>
+<line x1="1530" y1="143" x2="1690" y2="143" stroke="#7962bd"></line>
+<line x1="1530" y1="151" x2="1690" y2="151" stroke="#7962bd" opacity="0.75"></line>
+<text x="1538" y="157" class="member">+ species-list</text>
+<text x="1538" y="171" class="member">+ species/details</text>
+<text x="1538" y="185" class="member">+ care-guide-list</text>
+<rect x="70" y="310" width="180" height="144" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="160" y="326" text-anchor="middle" class="stereo">«control»</text>
+<text x="160" y="343" text-anchor="middle" class="class-name">PlantController</text>
+<line x1="70" y1="353" x2="250" y2="353" stroke="#bf5a6b"></line>
+<line x1="70" y1="361" x2="250" y2="361" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="78" y="367" class="member">+ listAll()</text>
+<text x="78" y="381" class="member">+ index()</text>
+<text x="78" y="395" class="member">+ storeGlobal()</text>
+<text x="78" y="409" class="member">+ showGlobal()</text>
+<text x="78" y="423" class="member">+ updateGlobal()</text>
+<text x="78" y="437" class="member">+ destroyGlobal()</text>
+<rect x="300" y="300" width="205" height="158" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="402.5" y="316" text-anchor="middle" class="stereo">«control»</text>
+<text x="402.5" y="333" text-anchor="middle" class="class-name">CatalogPlantController</text>
+<line x1="300" y1="343" x2="505" y2="343" stroke="#bf5a6b"></line>
+<line x1="300" y1="351" x2="505" y2="351" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="308" y="357" class="member">+ index()</text>
+<text x="308" y="371" class="member">+ show()</text>
+<text x="308" y="385" class="member">+ store()</text>
+<text x="308" y="399" class="member">+ update()</text>
+<text x="308" y="413" class="member">+ destroy()</text>
+<text x="308" y="427" class="member">+ searchPerenual()</text>
+<text x="308" y="441" class="member">+ previewPerenualSpecies()</text>
+<rect x="555" y="315" width="210" height="88" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="660" y="331" text-anchor="middle" class="stereo">«control»</text>
+<text x="660" y="348" text-anchor="middle" class="class-name">PlantConditionController</text>
+<line x1="555" y1="358" x2="765" y2="358" stroke="#bf5a6b"></line>
+<line x1="555" y1="366" x2="765" y2="366" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="563" y="372" class="member">+ index()</text>
+<text x="563" y="386" class="member">+ store()</text>
+<rect x="815" y="315" width="205" height="102" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="917.5" y="331" text-anchor="middle" class="stereo">«dev boundary»</text>
+<text x="917.5" y="348" text-anchor="middle" class="class-name">PlantCareDebugController</text>
+<line x1="815" y1="358" x2="1020" y2="358" stroke="#bf5a6b"></line>
+<line x1="815" y1="366" x2="1020" y2="366" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="823" y="372" class="member">+ search()</text>
+<text x="823" y="386" class="member">+ species()</text>
+<text x="823" y="400" class="member">+ weather()</text>
+<rect x="300" y="505" width="205" height="102" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="402.5" y="521" text-anchor="middle" class="stereo">«service»</text>
+<text x="402.5" y="538" text-anchor="middle" class="class-name">CatalogPlantService</text>
+<line x1="300" y1="548" x2="505" y2="548" stroke="#bf5a6b"></line>
+<line x1="300" y1="556" x2="505" y2="556" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="308" y="562" class="member">+ saveCatalogPlant()</text>
+<text x="308" y="576" class="member">+ assignCatalogPlantToPlant()</text>
+<text x="308" y="590" class="member">+ buildPerenualDraft()</text>
+<rect x="555" y="505" width="205" height="102" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="657.5" y="521" text-anchor="middle" class="stereo">«service»</text>
+<text x="657.5" y="538" text-anchor="middle" class="class-name">PlantCareService</text>
+<line x1="555" y1="548" x2="760" y2="548" stroke="#bf5a6b"></line>
+<line x1="555" y1="556" x2="760" y2="556" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="563" y="562" class="member">+ syncPlantCareConfiguration()</text>
+<text x="563" y="576" class="member">+ resolveEffectivePlantCare()</text>
+<text x="563" y="590" class="member">+ previewLinkedCareProfile()</text>
+<rect x="815" y="505" width="205" height="88" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="917.5" y="521" text-anchor="middle" class="stereo">«service»</text>
+<text x="917.5" y="538" text-anchor="middle" class="class-name">PlantCareNormalizer</text>
+<line x1="815" y1="548" x2="1020" y2="548" stroke="#bf5a6b"></line>
+<line x1="815" y1="556" x2="1020" y2="556" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="823" y="562" class="member">+ normalize()</text>
+<text x="823" y="576" class="member">+ normalizeWithTrace()</text>
+<rect x="1065" y="520" width="175" height="74" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="1152.5" y="536" text-anchor="middle" class="stereo">«service»</text>
+<text x="1152.5" y="553" text-anchor="middle" class="class-name">PlantCareDefaults</text>
+<line x1="1065" y1="563" x2="1240" y2="563" stroke="#bf5a6b"></line>
+<line x1="1065" y1="571" x2="1240" y2="571" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="1073" y="577" class="member">+ forPlant()</text>
+<rect x="1265" y="505" width="225" height="102" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="1377.5" y="521" text-anchor="middle" class="stereo">«service»</text>
+<text x="1377.5" y="538" text-anchor="middle" class="class-name">PlantConditionHistoryService</text>
+<line x1="1265" y1="548" x2="1490" y2="548" stroke="#bf5a6b"></line>
+<line x1="1265" y1="556" x2="1490" y2="556" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="1273" y="562" class="member">+ listForPlant()</text>
+<text x="1273" y="576" class="member">+ listForPlot()</text>
+<text x="1273" y="590" class="member">+ record()</text>
+<rect x="70" y="505" width="190" height="88" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="165" y="521" text-anchor="middle" class="stereo">«service»</text>
+<text x="165" y="538" text-anchor="middle" class="class-name">PlantLifecycleService</text>
+<line x1="70" y1="548" x2="260" y2="548" stroke="#bf5a6b"></line>
+<line x1="70" y1="556" x2="260" y2="556" stroke="#bf5a6b" opacity="0.75"></line>
+<text x="78" y="562" class="member">+ buildSummary()</text>
+<text x="78" y="576" class="member">+ completeReviewTask()</text>
+<rect x="1530" y="505" width="175" height="102" rx="4" fill="#ece7ff" stroke="#7962bd" stroke-width="1.4"></rect>
+<text x="1617.5" y="521" text-anchor="middle" class="stereo">«boundary»</text>
+<text x="1617.5" y="538" text-anchor="middle" class="class-name">PerenualService</text>
+<line x1="1530" y1="548" x2="1705" y2="548" stroke="#7962bd"></line>
+<line x1="1530" y1="556" x2="1705" y2="556" stroke="#7962bd" opacity="0.75"></line>
+<text x="1538" y="562" class="member">+ searchPlants()</text>
+<text x="1538" y="576" class="member">+ fetchSpeciesSeed()</text>
+<text x="1538" y="590" class="member">+ debugLoadSpecies()</text>
+<rect x="80" y="735" width="170" height="144" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="165" y="751" text-anchor="middle" class="stereo">«entity»</text>
+<text x="165" y="768" text-anchor="middle" class="class-name">Plant</text>
+<line x1="80" y1="778" x2="250" y2="778" stroke="#b58b26"></line>
+<text x="88" y="792" class="member">+ name</text>
+<text x="88" y="806" class="member">+ plant_date</text>
+<text x="88" y="820" class="member">+ condition</text>
+<text x="88" y="834" class="member">+ reusable</text>
+<line x1="80" y1="842" x2="250" y2="842" stroke="#b58b26" opacity="0.75"></line>
+<text x="88" y="848" class="member">+ effectivePlantCare()</text>
+<text x="88" y="862" class="member">+ conditionHistory()</text>
+<rect x="310" y="735" width="175" height="130" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="397.5" y="751" text-anchor="middle" class="stereo">«entity»</text>
+<text x="397.5" y="768" text-anchor="middle" class="class-name">CatalogPlant</text>
+<line x1="310" y1="778" x2="485" y2="778" stroke="#b58b26"></line>
+<text x="318" y="792" class="member">+ name</text>
+<text x="318" y="806" class="member">+ canonical_name</text>
+<text x="318" y="820" class="member">+ source_provider</text>
+<line x1="310" y1="828" x2="485" y2="828" stroke="#b58b26" opacity="0.75"></line>
+<text x="318" y="834" class="member">+ plantCare()</text>
+<text x="318" y="848" class="member">+ plants()</text>
+<rect x="545" y="710" width="210" height="158" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="650" y="726" text-anchor="middle" class="stereo">«entity»</text>
+<text x="650" y="743" text-anchor="middle" class="class-name">PlantCare</text>
+<line x1="545" y1="753" x2="755" y2="753" stroke="#b58b26"></line>
+<text x="553" y="767" class="member">+ plant_name</text>
+<text x="553" y="781" class="member">+ watering_interval_days</text>
+<text x="553" y="795" class="member">+ fertilizing_interval_days</text>
+<text x="553" y="809" class="member">+ pest_check_interval_days</text>
+<text x="553" y="823" class="member">+ source_quality</text>
+<line x1="545" y1="831" x2="755" y2="831" stroke="#b58b26" opacity="0.75"></line>
+<text x="553" y="837" class="member">+ catalogPlants()</text>
+<text x="553" y="851" class="member">+ plants()</text>
+<rect x="800" y="735" width="200" height="116" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="900" y="751" text-anchor="middle" class="stereo">«entity»</text>
+<text x="900" y="768" text-anchor="middle" class="class-name">PlantConditionHistory</text>
+<line x1="800" y1="778" x2="1000" y2="778" stroke="#b58b26"></line>
+<text x="808" y="792" class="member">+ measured_at</text>
+<text x="808" y="806" class="member">+ condition</text>
+<text x="808" y="820" class="member">+ notes</text>
+<line x1="800" y1="828" x2="1000" y2="828" stroke="#b58b26" opacity="0.75"></line>
+<text x="808" y="834" class="member">+ plant()</text>
+<rect x="1045" y="735" width="170" height="116" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1130" y="751" text-anchor="middle" class="stereo">«entity»</text>
+<text x="1130" y="768" text-anchor="middle" class="class-name">PlantZone</text>
+<line x1="1045" y1="778" x2="1215" y2="778" stroke="#b58b26"></line>
+<text x="1053" y="792" class="member">+ name</text>
+<text x="1053" y="806" class="member">+ soil_type</text>
+<text x="1053" y="820" class="member">+ geometry</text>
+<line x1="1045" y1="828" x2="1215" y2="828" stroke="#b58b26" opacity="0.75"></line>
+<text x="1053" y="834" class="member">+ plants()</text>
+<rect x="1260" y="735" width="150" height="88" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1335" y="751" text-anchor="middle" class="stereo">«entity»</text>
+<text x="1335" y="768" text-anchor="middle" class="class-name">Plot</text>
+<line x1="1260" y1="778" x2="1410" y2="778" stroke="#b58b26"></line>
+<text x="1268" y="792" class="member">+ name</text>
+<text x="1268" y="806" class="member">+ city</text>
+<rect x="1460" y="735" width="220" height="88" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1570" y="751" text-anchor="middle" class="stereo">«enum»</text>
+<text x="1570" y="768" text-anchor="middle" class="class-name">PlantType / ConditionType</text>
+<line x1="1460" y1="778" x2="1680" y2="778" stroke="#b58b26"></line>
+<text x="1468" y="792" class="member">+ vegetable, herb, tree...</text>
+<text x="1468" y="806" class="member">+ planted, growing, mature...</text>
+    
+  </svg></div>
+</main>
+</body>
+</html>

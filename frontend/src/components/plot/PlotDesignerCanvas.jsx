@@ -1,9 +1,16 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Layer, Line, Rect, Stage } from 'react-konva'
+import { MapLayerControl, MeasurementBadge, PlotScaleControl } from '../garden/GardenControls.jsx'
 import Button from '../ui/Button.jsx'
 import ModeToggleGroup from '../ui/ModeToggleGroup.jsx'
 import { safeNumber } from '../../lib/constants.js'
 import { getBoundaryLabelLayout } from '../../lib/plotCanvasLabels.js'
+import {
+  buildShapeMetrics,
+  createDimensionLabels,
+  formatMeters,
+  formatSquareMeters,
+} from '../../lib/plotMeasurements.js'
 import { getProjectedLabelConfig, getZoneColor, projectShape } from '../../lib/plotRender.js'
 import {
   GRID_SIZE,
@@ -11,22 +18,28 @@ import {
   MIN_BOUNDARY_EDGE,
   MIN_ZOOM,
   MIN_ZONE_EDGE,
+  ZONE_VERTEX_HANDLES,
   buildDesignerStateFromPersistence,
   calculateArea,
   clearDesignerState,
   createDefaultZoneShape,
   createRectShape,
   createViewportToFit,
+  doShapesOverlap,
   estimateBoundaryFromArea,
   fitShapeInsideBoundary,
-  getConstrainedTranslation,
   getConstrainedVertexMove,
+  getShapeEdgeMidpoints,
   getShapeBounds,
   getShapePoints,
+  insertShapePoint,
+  pointInPolygon,
   isShapeInsideBoundary,
+  isZonePlacementValid,
   loadDesignerState,
   mergeZoneLayouts,
   projectPointToPolygon,
+  resolveTranslatedShape,
   sanitizeBoundary,
   sanitizeShape,
   saveDesignerState,
@@ -40,10 +53,75 @@ const HANDLE_RADIUS_PIXELS = 8
 const HANDLE_HIT_PIXELS = 22
 const SHAPE_HIT_PIXELS = 26
 const POINTER_SLOP_PIXELS = 6
+const DIMENSIONS_STORAGE_KEY = 'sad-plot-designer-show-dimensions'
+const INTERACTION_MODES = {
+  idle: 'idle',
+  drawingBoundary: 'drawingBoundary',
+  editingBoundary: 'editingBoundary',
+  drawingZone: 'drawingZone',
+  movingZone: 'movingZone',
+  editingZone: 'editingZone',
+  addingBoundaryPoint: 'addingBoundaryPoint',
+}
+
+function nodeHasAnyName(node, names) {
+  if (!node) {
+    return false
+  }
+
+  if (typeof node.hasName === 'function') {
+    return names.some((name) => node.hasName(name))
+  }
+
+  const nodeNames = typeof node.name === 'function' ? String(node.name() ?? '').split(/\s+/) : []
+  return names.some((name) => nodeNames.includes(name))
+}
+
+function targetHasNamedAncestor(target, names) {
+  const stage = target?.getStage?.()
+  let current = target
+
+  while (current) {
+    if (nodeHasAnyName(current, names)) {
+      return true
+    }
+
+    if (current === stage) {
+      break
+    }
+
+    current = current.getParent?.()
+  }
+
+  return false
+}
+
+export function classifyDesignerTarget(target) {
+  if (!target || target === target.getStage?.()) {
+    return 'background'
+  }
+
+  if (targetHasNamedAncestor(target, ['zone-handle'])) {
+    return 'zone-handle'
+  }
+
+  if (targetHasNamedAncestor(target, ['zone-node', 'zone-shape'])) {
+    return 'zone'
+  }
+
+  if (targetHasNamedAncestor(target, ['boundary-handle'])) {
+    return 'boundary-handle'
+  }
+
+  if (targetHasNamedAncestor(target, ['boundary-node', 'boundary-shape'])) {
+    return 'boundary'
+  }
+
+  return 'background'
+}
 
 function isStageBackground(target) {
-  const name = target?.name?.() ?? ''
-  return !target || target === target.getStage() || name === 'canvas-hit-area' || name === 'grid-line'
+  return classifyDesignerTarget(target) === 'background'
 }
 
 function flattenPoints(points) {
@@ -58,6 +136,27 @@ function roundViewport(viewport) {
   }
 }
 
+function loadDimensionPreference() {
+  if (typeof window === 'undefined') {
+    return true
+  }
+
+  return window.localStorage.getItem(DIMENSIONS_STORAGE_KEY) !== 'false'
+}
+
+function labelToBox(label) {
+  if (!label) {
+    return null
+  }
+
+  return {
+    left: label.x,
+    right: label.x + label.width,
+    top: label.y,
+    bottom: label.y + label.height,
+  }
+}
+
 export default memo(forwardRef(function PlotDesignerCanvas({
   plotId,
   plotName,
@@ -67,12 +166,15 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   plants,
   canEdit,
   activeZoneId,
+  persistState = true,
+  showSaveAction = true,
   isLayoutSaveDisabled,
   isLayoutSaving,
   layoutSaveFeedback,
   onSaveLayout,
   onSelectZone,
   onCreateZone,
+  onZoneCreateBlocked,
   onZoneGeometryCommit,
   onBoundaryCommit,
 }, ref) {
@@ -81,7 +183,10 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   const panRef = useRef(null)
   const backgroundPointerRef = useRef(null)
   const zoneDragSessionRef = useRef(null)
+  const zoneResizeSessionRef = useRef(null)
   const viewportRef = useRef({ x: 0, y: 0, scale: 1 })
+  const hasUserViewportRef = useRef(false)
+  const initializedPlotRef = useRef(null)
   const draftSessionRef = useRef(null)
   const liveBoundaryRef = useRef(null)
   const liveLayoutsRef = useRef({})
@@ -95,8 +200,9 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     zones,
     storedState: loadDesignerState(plotId),
   }))
-  const [mode, setMode] = useState('select')
-  const [snapEnabled, setSnapEnabled] = useState(true)
+  const [interactionMode, setInteractionMode] = useState(INTERACTION_MODES.idle)
+  const [snapEnabled, setSnapEnabled] = useState(false)
+  const [showDimensions, setShowDimensions] = useState(loadDimensionPreference)
   const [selectedTarget, setSelectedTarget] = useState({ type: 'none', id: null })
   const [draftZone, setDraftZone] = useState(null)
   const [hoveredZoneId, setHoveredZoneId] = useState(null)
@@ -118,6 +224,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   const boundary = designerState.boundary
   const layouts = designerState.layouts
+  const isDrawingZoneMode = interactionMode === INTERACTION_MODES.drawingZone
 
   const renderedBoundary = liveBoundaryRef.current ?? boundary
   const renderedLayouts = liveLayoutsRef.current ?? layouts
@@ -230,18 +337,26 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     applyViewport(nextViewport)
   }
 
+  function handleFitView() {
+    hasUserViewportRef.current = false
+    fitView()
+  }
+
   function selectBoundary() {
+    setInteractionMode(INTERACTION_MODES.editingBoundary)
     setSelectedTarget({ type: 'boundary', id: null })
     onSelectZone(null)
   }
 
   function clearSelection() {
+    setInteractionMode(INTERACTION_MODES.idle)
     setSelectedTarget({ type: 'none', id: null })
     onSelectZone(null)
   }
 
   function selectZone(zoneId) {
     const zone = zonesById[String(zoneId)]
+    setInteractionMode(INTERACTION_MODES.editingZone)
     setSelectedTarget({ type: 'zone', id: String(zoneId) })
     if (zone) {
       onSelectZone(zone)
@@ -257,17 +372,53 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     })
   }
 
-  function resolveZoneShape(shape, boundaryShape = boundary) {
-    const snappedShape = snapEnabled ? snapShapeToGrid(shape, boundaryShape) : shape
-    return sanitizeShape(snappedShape, boundaryShape, shape)
+  function resolveZoneShape(shape, boundaryShape = boundary, fallbackShape = shape, options = {}) {
+    const snappedShape = options.allowSnap && snapEnabled ? snapShapeToGrid(shape, boundaryShape) : shape
+    return sanitizeShape(snappedShape, boundaryShape, fallbackShape)
+  }
+
+  function zoneOverlapsOther(zoneId, shape, candidateLayouts = liveLayoutsRef.current ?? renderedLayouts) {
+    return Object.entries(candidateLayouts).some(([otherZoneId, otherShape]) => (
+      String(otherZoneId) !== String(zoneId) && doShapesOverlap(shape, otherShape)
+    ))
+  }
+
+  function reportZoneCreateBlocked(message = 'No available non-overlapping space was found for a new zone.') {
+    if (onZoneCreateBlocked) {
+      onZoneCreateBlocked(message)
+    }
+  }
+
+  function resolveNewZoneShape(shape, boundaryShape = boundary) {
+    if (!shape) {
+      return null
+    }
+
+    const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
+    const existingShapes = Object.values(activeLayouts)
+    const snappedShape = resolveZoneShape(shape, boundaryShape, shape, { allowSnap: true })
+
+    if (isZonePlacementValid(snappedShape, boundaryShape, existingShapes)) {
+      return snappedShape
+    }
+
+    const unsnappedShape = resolveZoneShape(shape, boundaryShape, shape)
+
+    if (isZonePlacementValid(unsnappedShape, boundaryShape, existingShapes)) {
+      return unsnappedShape
+    }
+
+    return null
   }
 
   function commitZoneLayout(zoneId, shape, boundaryShape = boundary) {
-    const adjusted = resolveZoneShape(shape, boundaryShape)
     const activeLayouts = liveLayoutsRef.current ?? layouts
+    const fallbackShape = activeLayouts[zoneId] ?? shape
+    const adjusted = resolveZoneShape(shape, boundaryShape, fallbackShape)
+    const safeShape = zoneOverlapsOther(zoneId, adjusted, activeLayouts) ? fallbackShape : adjusted
     const nextLayouts = {
       ...activeLayouts,
-      [zoneId]: adjusted,
+      [zoneId]: safeShape,
     }
 
     liveLayoutsRef.current = nextLayouts
@@ -275,11 +426,31 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       ...current,
       layouts: {
         ...current.layouts,
-        [zoneId]: adjusted,
+        [zoneId]: safeShape,
       },
     }))
 
-    onZoneGeometryCommit(zoneId, adjusted, boundaryShape)
+    onZoneGeometryCommit(zoneId, safeShape, boundaryShape)
+  }
+
+  function insertBoundaryPoint(edgeIndex, point) {
+    const activeBoundary = liveBoundaryRef.current ?? renderedBoundary
+    const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
+    const nextBoundary = insertShapePoint(
+      activeBoundary,
+      edgeIndex,
+      point,
+      activeBoundary,
+      MIN_BOUNDARY_EDGE * MIN_BOUNDARY_EDGE * 0.55,
+    )
+
+    if (!Object.values(activeLayouts).every((shape) => isShapeInsideBoundary(shape, nextBoundary))) {
+      return
+    }
+
+    setInteractionMode(INTERACTION_MODES.addingBoundaryPoint)
+    commitBoundaryLayout(nextBoundary, activeLayouts)
+    setSelectedTarget({ type: 'boundary', id: null })
   }
 
   function commitBoundaryLayout(nextBoundaryShape, nextLayoutsShape) {
@@ -290,7 +461,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     const adjustedLayouts = Object.fromEntries(
       Object.entries(nextLayoutsShape).map(([zoneId, shape]) => [
         zoneId,
-        resolveZoneShape(fitShapeInsideBoundary(shape, snappedBoundary), snappedBoundary),
+        resolveZoneShape(fitShapeInsideBoundary(shape, snappedBoundary), snappedBoundary, shape, { allowSnap: true }),
       ]),
     )
 
@@ -306,7 +477,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     replaceDesignerState(freshBoundary, freshLayouts)
     setSelectedTarget({ type: 'none', id: null })
     onSelectZone(null)
-    setMode('select')
+    setInteractionMode(INTERACTION_MODES.idle)
     setFitSeed((current) => current + 1)
   }
 
@@ -370,9 +541,10 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   }
 
   async function createZoneFromShape(shape, boundaryShape = liveBoundaryRef.current ?? boundary) {
-    const nextShape = resolveZoneShape(shape, boundaryShape)
+    const nextShape = resolveNewZoneShape(shape, boundaryShape)
 
-    if (calculateArea(nextShape) < MIN_ZONE_EDGE * MIN_ZONE_EDGE * 0.6) {
+    if (!nextShape || calculateArea(nextShape) < MIN_ZONE_EDGE * MIN_ZONE_EDGE * 0.6) {
+      reportZoneCreateBlocked()
       return null
     }
 
@@ -388,7 +560,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       ...current,
       layouts: nextLayouts,
     }))
-    setMode('select')
+    setInteractionMode(INTERACTION_MODES.editingZone)
     selectZone(created.id)
 
     return created
@@ -407,10 +579,13 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       zoneId,
       boundary: activeBoundary,
       originShape: activeShape,
+      lastValidShape: activeShape,
       anchorPoint: toWorldPoint(pointer),
       moved: false,
     }
+    setInteractionMode(INTERACTION_MODES.movingZone)
     selectZone(zoneId)
+    setInteractionMode(INTERACTION_MODES.movingZone)
     updateCursor('grabbing')
   }
 
@@ -418,7 +593,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     const session = zoneDragSessionRef.current
 
     if (!session) {
-      return
+      return null
     }
 
     const currentPoint = toWorldPoint(pointer)
@@ -426,24 +601,103 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       x: currentPoint.x - session.anchorPoint.x,
       y: currentPoint.y - session.anchorPoint.y,
     }
-    const constrainedOffset = getConstrainedTranslation(
+    const nextShape = resolveTranslatedShape(
       session.originShape,
       session.boundary,
       requestedOffset,
+      session.lastValidShape,
+      (candidateShape) => !zoneOverlapsOther(session.zoneId, candidateShape),
     )
-    const nextShape = translateShape(session.originShape, constrainedOffset)
     const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
+    const didMove = JSON.stringify(getShapePoints(nextShape)) !== JSON.stringify(getShapePoints(session.originShape))
+    const acceptedCandidate = JSON.stringify(getShapePoints(nextShape)) !== JSON.stringify(getShapePoints(session.lastValidShape))
 
     zoneDragSessionRef.current = {
       ...session,
-      moved: session.moved || Math.abs(constrainedOffset.x) > 0.01 || Math.abs(constrainedOffset.y) > 0.01,
+      moved: session.moved || didMove,
       currentShape: nextShape,
+      lastValidShape: acceptedCandidate ? nextShape : session.lastValidShape,
     }
     liveLayoutsRef.current = {
       ...activeLayouts,
       [session.zoneId]: nextShape,
     }
     requestVisualRefresh()
+
+    return nextShape
+  }
+
+  function beginZoneResize(zoneId, pointIndex, pointer) {
+    const activeBoundary = liveBoundaryRef.current ?? renderedBoundary
+    const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
+    const activeShape = activeLayouts[zoneId]
+
+    if (!activeShape) {
+      return
+    }
+
+    zoneResizeSessionRef.current = {
+      zoneId,
+      pointIndex,
+      boundary: activeBoundary,
+      pointer,
+      currentShape: activeShape,
+      moved: false,
+    }
+    setInteractionMode(INTERACTION_MODES.editingZone)
+    selectZone(zoneId)
+    updateCursor('grabbing')
+  }
+
+  function updateZoneResize(pointer) {
+    const session = zoneResizeSessionRef.current
+
+    if (!session) {
+      return
+    }
+
+    const targetPoint = toWorldPoint(pointer)
+    const nextPoint = getConstrainedVertexMove(
+      session.currentShape,
+      session.pointIndex,
+      targetPoint,
+      session.boundary,
+      MIN_ZONE_EDGE * MIN_ZONE_EDGE * 0.35,
+      (candidateShape) => !zoneOverlapsOther(session.zoneId, candidateShape),
+    )
+    const nextShape = updateShapePoint(session.currentShape, session.pointIndex, nextPoint)
+    const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
+    const authoritativePoint = getShapePoints(nextShape)[session.pointIndex]
+
+    zoneResizeSessionRef.current = {
+      ...session,
+      currentShape: nextShape,
+      moved: session.moved || pointerMovedEnough(session.pointer, pointer),
+    }
+    liveLayoutsRef.current = {
+      ...activeLayouts,
+      [session.zoneId]: nextShape,
+    }
+    requestVisualRefresh()
+
+    return authoritativePoint
+  }
+
+  function finishZoneResize() {
+    const session = zoneResizeSessionRef.current
+    zoneResizeSessionRef.current = null
+
+    if (!session) {
+      return false
+    }
+
+    if (!session.moved || !session.currentShape) {
+      return true
+    }
+
+    commitZoneLayout(session.zoneId, session.currentShape, session.boundary)
+    setInteractionMode(INTERACTION_MODES.editingZone)
+    return true
   }
 
   function finishZoneDrag() {
@@ -459,6 +713,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     }
 
     commitZoneLayout(session.zoneId, session.currentShape, session.boundary)
+    setInteractionMode(INTERACTION_MODES.editingZone)
     return true
   }
 
@@ -491,7 +746,12 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   }, [])
 
   useEffect(() => {
-    const storedState = loadDesignerState(plotId)
+    const storedState = persistState
+      ? loadDesignerState(plotId)
+      : {
+        boundary: liveBoundaryRef.current ?? boundary,
+        layouts: liveLayoutsRef.current ?? layouts,
+      }
     const nextState = buildDesignerStateFromPersistence({
       plotSize,
       plotGeometry,
@@ -500,9 +760,13 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     })
 
     replaceDesignerState(nextState.boundary, nextState.layouts)
-    setMode('select')
-    setFitSeed((current) => current + 1)
-  }, [geometrySignature, plotId, plotSize])
+    setInteractionMode(INTERACTION_MODES.idle)
+    if (initializedPlotRef.current !== plotId) {
+      initializedPlotRef.current = plotId
+      hasUserViewportRef.current = false
+      setFitSeed((current) => current + 1)
+    }
+  }, [geometrySignature, persistState, plotId, plotSize])
 
   useEffect(() => {
     setDesignerState((current) => ({
@@ -513,6 +777,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   useEffect(() => {
     if (activeZoneId) {
+      setInteractionMode(INTERACTION_MODES.editingZone)
       setSelectedTarget({ type: 'zone', id: String(activeZoneId) })
       return
     }
@@ -530,13 +795,24 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   }, [boundary, layouts])
 
   useEffect(() => {
+    if (!persistState) {
+      return
+    }
+
     saveDesignerState(plotId, designerState)
-  }, [designerState, plotId])
+  }, [designerState, persistState, plotId])
 
   useEffect(() => {
     const signature = `${fitSeed}:${canvasSize.width}:${canvasSize.height}`
 
-    if (!canvasSize.width || !canvasSize.height || autoFitSignatureRef.current === signature) {
+    if (
+      !canvasSize.width
+      || !canvasSize.height
+      || autoFitSignatureRef.current === signature
+      || hasUserViewportRef.current
+      || zoneDragSessionRef.current
+      || zoneResizeSessionRef.current
+    ) {
       return
     }
 
@@ -549,8 +825,14 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   }, [viewport])
 
   useEffect(() => {
-    updateCursor(mode === 'draw-zone' ? 'crosshair' : isPanning ? 'grabbing' : 'grab')
-  }, [isPanning, mode])
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(DIMENSIONS_STORAGE_KEY, String(showDimensions))
+    }
+  }, [showDimensions])
+
+  useEffect(() => {
+    updateCursor(isDrawingZoneMode ? 'crosshair' : isPanning ? 'grabbing' : 'grab')
+  }, [isDrawingZoneMode, isPanning])
 
   useEffect(() => () => {
     if (redrawFrameRef.current) {
@@ -560,6 +842,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   function handleWheel(event) {
     event.evt.preventDefault()
+    hasUserViewportRef.current = true
 
     const pointer = stageRef.current?.getPointerPosition()
 
@@ -582,6 +865,34 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     })
   }
 
+  function beginDraftZone(pointer) {
+    if (!canEdit) {
+      return false
+    }
+
+    const worldPoint = toWorldPoint(pointer)
+
+    if (!pointInPolygon(worldPoint, renderedBoundary)) {
+      reportZoneCreateBlocked('Draw zones by starting inside the plot boundary.')
+      return false
+    }
+
+    const initialShape = createRectShape({
+      x: worldPoint.x,
+      y: worldPoint.y,
+      width: MIN_ZONE_EDGE,
+      height: MIN_ZONE_EDGE,
+    })
+
+    draftSessionRef.current = {
+      anchor: worldPoint,
+      shape: initialShape,
+    }
+    setDraftZone(initialShape)
+    setInteractionMode(INTERACTION_MODES.drawingZone)
+    return true
+  }
+
   function handleStageMouseDown(event) {
     const stage = event.target.getStage()
     const pointer = stage?.getPointerPosition()
@@ -590,20 +901,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       return
     }
 
-    if (mode === 'draw-zone' && canEdit && isStageBackground(event.target)) {
-      const worldPoint = projectPointToPolygon(toWorldPoint(pointer), renderedBoundary)
-      const initialShape = createRectShape({
-        x: worldPoint.x,
-        y: worldPoint.y,
-        width: MIN_ZONE_EDGE,
-        height: MIN_ZONE_EDGE,
-      })
-
-      draftSessionRef.current = {
-        anchor: worldPoint,
-        shape: initialShape,
-      }
-      setDraftZone(initialShape)
+    if (isDrawingZoneMode) {
+      beginDraftZone(pointer)
       return
     }
 
@@ -644,6 +943,11 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       return
     }
 
+    if (zoneResizeSessionRef.current) {
+      updateZoneResize(pointer)
+      return
+    }
+
     if (panRef.current) {
       const dx = pointer.x - panRef.current.pointer.x
       const dy = pointer.y - panRef.current.pointer.y
@@ -660,12 +964,14 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         x: panRef.current.viewport.x + dx,
         y: panRef.current.viewport.y + dy,
       }, false)
+      hasUserViewportRef.current = true
     }
   }
 
   async function handleStageMouseUp() {
     const backgroundPointer = backgroundPointerRef.current
     const zoneWasDragging = Boolean(zoneDragSessionRef.current)
+    const zoneWasResizing = Boolean(zoneResizeSessionRef.current)
 
     backgroundPointerRef.current = null
 
@@ -677,12 +983,17 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       try {
         await createZoneFromShape(nextShape, liveBoundaryRef.current ?? renderedBoundary)
       } catch {
-        setMode('select')
+        setInteractionMode(INTERACTION_MODES.idle)
       }
     }
 
     if (zoneWasDragging) {
       finishZoneDrag()
+      updateCursor('grab')
+    }
+
+    if (zoneWasResizing) {
+      finishZoneResize()
       updateCursor('grab')
     }
 
@@ -693,11 +1004,11 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     panRef.current = null
     setIsPanning(false)
 
-    if (backgroundPointer && !backgroundPointer.moved && !draftSessionRef.current && !zoneWasDragging) {
+    if (backgroundPointer && !backgroundPointer.moved && !draftSessionRef.current && !zoneWasDragging && !zoneWasResizing) {
       clearSelection()
     }
 
-    updateCursor(mode === 'draw-zone' ? 'crosshair' : 'grab')
+    updateCursor(isDrawingZoneMode ? 'crosshair' : 'grab')
   }
 
   const selectedZone = selectedTarget.type === 'zone'
@@ -711,7 +1022,6 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       : null
 
   const selectedBounds = selectedShape ? getShapeBounds(selectedShape) : null
-  const boundaryBounds = getShapeBounds(renderedBoundary)
   const strokeWidth = Math.max(2 / viewport.scale, 0.08)
   const activeStrokeWidth = Math.max(4.25 / viewport.scale, 0.13)
   const handleRadius = Math.max(HANDLE_RADIUS_PIXELS / viewport.scale, 0.16)
@@ -728,7 +1038,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         : null
   const plotBoundaryLabel = getBoundaryLabelLayout({
     plotName: plotName?.trim() || 'Plot boundary',
-    areaText: `${safeNumber(calculateArea(renderedBoundary), 1)} m2`,
+    areaText: formatSquareMeters(calculateArea(renderedBoundary), 1),
     screenPoints: projectShape(renderedBoundary, viewport),
     viewportBounds,
     isSelected: selectedTarget.type === 'boundary',
@@ -762,20 +1072,66 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       label,
     }
   }).filter(Boolean)
+  const plotMetrics = buildShapeMetrics(renderedBoundary)
+  const selectedMetrics = selectedShape ? buildShapeMetrics(selectedShape) : null
+  const occupiedDimensionBoxes = [
+    labelToBox(plotBoundaryLabel),
+    ...screenLabels.map(({ label }) => labelToBox(label)),
+  ].filter(Boolean)
+  const dimensionLabels = showDimensions
+    ? [
+      ...createDimensionLabels({
+        shape: renderedBoundary,
+        viewport,
+        viewportBounds,
+        idPrefix: 'plot-edge',
+        occupiedBoxes: occupiedDimensionBoxes,
+        minScreenLength: 64,
+      }).map((label) => ({ ...label, scope: 'plot' })),
+      ...zones.flatMap((zone) => {
+        const zoneId = String(zone.id)
+        const shape = renderedLayouts[zoneId]
+
+        if (!shape) {
+          return []
+        }
+
+        return createDimensionLabels({
+          shape,
+          viewport,
+          viewportBounds,
+          idPrefix: `zone-${zoneId}-edge`,
+          occupiedBoxes: occupiedDimensionBoxes,
+          minScreenLength: 58,
+        }).map((label) => ({
+          ...label,
+          scope: selectedTarget.type === 'zone' && selectedTarget.id === zoneId ? 'zone-active' : 'zone',
+        }))
+      }),
+    ]
+    : []
   const toolbarStatusTitle = selectedZone
     ? `${selectedZone.name} selected`
     : selectedTarget.type === 'boundary'
       ? 'Plot boundary selected'
-      : mode === 'draw-zone'
+      : isDrawingZoneMode
         ? 'Zone drawing mode'
-        : 'Selection mode'
+        : interactionMode === INTERACTION_MODES.addingBoundaryPoint
+          ? 'Adding boundary corner'
+          : 'Selection mode'
   const toolbarStatusHint = selectedZone
     ? `${plantCountsByZoneId[selectedTarget.id] ?? 0} plants in zone`
     : selectedTarget.type === 'boundary'
-      ? 'Drag the boundary or corner handles to reshape the plot'
-      : mode === 'draw-zone'
-        ? 'Drag inside the plot to create a new zone'
+      ? 'Drag corners to reshape, or use the small + handles on edges to add a corner'
+      : isDrawingZoneMode
+        ? 'Click and drag inside the plot. Clicks outside the boundary are ignored.'
         : 'Click a zone to edit it, or drag the background to pan'
+  const layerItems = [
+    { id: 'boundary', label: 'Plot boundary', active: true, color: '#47633b' },
+    { id: 'zones', label: `${zones.length} zones`, active: zones.length > 0, color: '#b9683f' },
+    { id: 'grid', label: 'Grid', active: true, color: '#8c7c66' },
+    { id: 'dimensions', label: 'Dimensions', active: showDimensions, color: '#ef6d22' },
+  ]
 
   return (
     <div className="designer-panel">
@@ -783,17 +1139,21 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         <div className="designer-toolbar-group designer-toolbar-group--controls">
           <ModeToggleGroup
             ariaLabel="Plot designer modes"
-            value={mode}
+            value={isDrawingZoneMode ? INTERACTION_MODES.drawingZone : INTERACTION_MODES.idle}
             onChange={(nextMode) => {
-              setMode((current) => (nextMode === 'draw-zone' && current === 'draw-zone' ? 'select' : nextMode))
+              setInteractionMode((current) => (
+                nextMode === INTERACTION_MODES.drawingZone && current === INTERACTION_MODES.drawingZone
+                  ? INTERACTION_MODES.idle
+                  : nextMode
+              ))
             }}
             options={[
-              { value: 'select', label: 'Select' },
-              ...(canEdit ? [{ value: 'draw-zone', label: 'Draw zone' }] : []),
+              { value: INTERACTION_MODES.idle, label: 'Select / edit' },
+              ...(canEdit ? [{ value: INTERACTION_MODES.drawingZone, label: 'Draw zone' }] : []),
             ]}
           />
-          <Button variant="ghost" onClick={fitView}>Fit to view</Button>
-          {canEdit ? <Button variant="secondary" onClick={resetDesignerLayout}>Reset layout</Button> : null}
+          <Button variant="ghost" onClick={handleFitView} title="Fit the full plot and all zones into view">Fit to view</Button>
+          {canEdit ? <Button variant="secondary" onClick={resetDesignerLayout} title="Reset the visual plot layout to the default shape">Reset layout</Button> : null}
         </div>
 
         <div className="designer-toolbar-group designer-toolbar-group--status">
@@ -802,7 +1162,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         </div>
 
         <div className="designer-toolbar-group designer-toolbar-group--actions">
-          {canEdit ? (
+          {canEdit && showSaveAction ? (
             <Button onClick={onSaveLayout} disabled={isLayoutSaveDisabled || isLayoutSaving}>
               {isLayoutSaving ? 'Saving layout...' : 'Save plot layout'}
             </Button>
@@ -816,35 +1176,35 @@ export default memo(forwardRef(function PlotDesignerCanvas({
             />
             <span>Snap to grid</span>
           </label>
+          <label className="designer-toggle">
+            <input
+              type="checkbox"
+              checked={showDimensions}
+              onChange={(event) => setShowDimensions(event.target.checked)}
+            />
+            <span>Show dimensions</span>
+          </label>
         </div>
       </div>
 
-      <div className="designer-meta-grid">
-        <article className="designer-stat-card">
-          <span className="designer-stat-label">Plot area</span>
-          <strong className="designer-stat-value">{safeNumber(calculateArea(renderedBoundary), 1)} m2</strong>
-        </article>
-        <article className="designer-stat-card">
-          <span className="designer-stat-label">Bounds</span>
-          <strong className="designer-stat-value">
-            {safeNumber(boundaryBounds.width, 1)}m x {safeNumber(boundaryBounds.height, 1)}m
-          </strong>
-        </article>
-        <article className="designer-stat-card">
-          <span className="designer-stat-label">Viewport</span>
-          <strong className="designer-stat-value">Zoom {zoomLabel}</strong>
-        </article>
-        <article className="designer-stat-card">
-          <span className="designer-stat-label">Mapped zones</span>
-          <strong className="designer-stat-value">
-            {selectedZone
-              ? `${plantCountsByZoneId[selectedTarget.id] ?? 0} plants in ${selectedZone.name}`
-              : `${zones.length} total`}
-          </strong>
-        </article>
+      <div className="designer-map-console">
+        <MapLayerControl title="Visible layers" items={layerItems} />
+        <PlotScaleControl zoom={zoomLabel} snapEnabled={snapEnabled} dimensionsVisible={showDimensions} />
       </div>
 
-      <div ref={containerRef} className={`designer-stage ${mode === 'draw-zone' ? 'is-drawing' : ''}`}>
+      <div className="designer-meta-grid">
+        <MeasurementBadge label="Plot area" value={formatSquareMeters(calculateArea(renderedBoundary), 1)} tone="field" className="designer-measurement" />
+        <MeasurementBadge label="Plot perimeter" value={formatMeters(plotMetrics.perimeter)} tone="earth" className="designer-measurement" />
+        <MeasurementBadge label="Side lengths" value={plotMetrics.sideSummary || 'No geometry'} tone="amber" className="designer-measurement designer-measurement-wide" />
+        <MeasurementBadge
+          label={selectedZone ? 'Selected zone' : 'Mapped zones'}
+          value={selectedZone && selectedMetrics ? `${formatMeters(selectedMetrics.perimeter)} perimeter` : `${zones.length} total`}
+          tone="leaf"
+          className="designer-measurement"
+        />
+      </div>
+
+      <div ref={containerRef} className={`designer-stage ${isDrawingZoneMode ? 'is-drawing' : ''}`}>
         <Stage
           ref={stageRef}
           width={canvasSize.width}
@@ -872,9 +1232,14 @@ export default memo(forwardRef(function PlotDesignerCanvas({
             {gridLines}
 
             <Group
-              draggable={canEdit && selectedTarget.type === 'boundary' && mode !== 'draw-zone'}
+              name="boundary-node"
+              listening={!isDrawingZoneMode}
+              draggable={canEdit && selectedTarget.type === 'boundary' && !isDrawingZoneMode}
               onClick={(event) => {
                 event.cancelBubble = true
+                if (isDrawingZoneMode) {
+                  return
+                }
                 selectBoundary()
               }}
               onTap={selectBoundary}
@@ -888,8 +1253,10 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                 updateCursor('grab')
 
                 if (offset.x || offset.y) {
-                  const nextBoundary = translateShape(boundary, offset)
-                  const nextLayouts = translateLayouts(layouts, offset)
+                  const activeBoundary = liveBoundaryRef.current ?? renderedBoundary
+                  const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
+                  const nextBoundary = translateShape(activeBoundary, offset)
+                  const nextLayouts = translateLayouts(activeLayouts, offset)
                   commitBoundaryLayout(nextBoundary, nextLayouts)
                 }
               }}
@@ -898,6 +1265,12 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                 points={flattenPoints(getShapePoints(renderedBoundary))}
                 closed
                 fill="rgba(255, 250, 242, 0.82)"
+                listening={false}
+              />
+              <Line
+                name="boundary-shape"
+                points={flattenPoints(getShapePoints(renderedBoundary))}
+                closed
                 stroke={selectedTarget.type === 'boundary' ? '#b9683f' : '#47633b'}
                 strokeWidth={selectedTarget.type === 'boundary' ? activeStrokeWidth : strokeWidth}
                 hitStrokeWidth={hitStrokeWidth}
@@ -925,10 +1298,12 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               return (
                 <Group
                   key={zone.id}
+                  name="zone-node"
+                  listening={!isDrawingZoneMode}
                   onMouseDown={(event) => {
                     event.cancelBubble = true
 
-                    if (!canEdit || mode === 'draw-zone') {
+                    if (!canEdit || isDrawingZoneMode) {
                       return
                     }
 
@@ -940,19 +1315,27 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                   }}
                   onClick={(event) => {
                     event.cancelBubble = true
+                    if (isDrawingZoneMode) {
+                      return
+                    }
                     selectZone(zone.id)
                   }}
-                  onTap={() => selectZone(zone.id)}
+                  onTap={() => {
+                    if (!isDrawingZoneMode) {
+                      selectZone(zone.id)
+                    }
+                  }}
                   onMouseEnter={() => {
                     setHoveredZoneId(zoneId)
                     updateCursor(canEdit ? 'grab' : 'pointer')
                   }}
                   onMouseLeave={() => {
                     setHoveredZoneId(null)
-                    updateCursor(mode === 'draw-zone' ? 'crosshair' : isPanning ? 'grabbing' : 'grab')
+                    updateCursor(isDrawingZoneMode ? 'crosshair' : isPanning ? 'grabbing' : 'grab')
                   }}
                 >
                   <Line
+                    name="zone-shape"
                     points={flattenPoints(points)}
                     closed
                     fill={colors.fill}
@@ -992,10 +1375,11 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               />
             ) : null}
 
-            {canEdit && selectedTarget.type === 'boundary'
+            {canEdit && !isDrawingZoneMode && selectedTarget.type === 'boundary'
               ? getShapePoints(renderedBoundary).map((point, index) => (
                 <Circle
                   key={`boundary-handle-${index}`}
+                  name="boundary-handle"
                   x={point.x}
                   y={point.y}
                   radius={handleRadius}
@@ -1040,10 +1424,63 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               ))
               : null}
 
-            {canEdit && selectedTarget.type === 'zone' && selectedTarget.id && selectedShape
-              ? getShapePoints(selectedShape).map((point, index) => (
+            {canEdit && !isDrawingZoneMode && selectedTarget.type === 'boundary'
+              ? getShapeEdgeMidpoints(renderedBoundary).map((edge) => {
+                const iconSize = Math.max(5.5 / viewport.scale, 0.12)
+
+                return (
+                  <Group
+                    key={`boundary-edge-add-${edge.index}`}
+                    name="boundary-handle boundary-edge-add"
+                    x={edge.point.x}
+                    y={edge.point.y}
+                    onMouseEnter={() => updateCursor('copy')}
+                    onMouseLeave={() => updateCursor(isDrawingZoneMode ? 'crosshair' : 'grab')}
+                    onMouseDown={(event) => {
+                      event.cancelBubble = true
+                    }}
+                    onClick={(event) => {
+                      event.cancelBubble = true
+                      insertBoundaryPoint(edge.index, edge.point)
+                    }}
+                    onTap={() => insertBoundaryPoint(edge.index, edge.point)}
+                  >
+                    <Circle
+                      radius={Math.max(6.5 / viewport.scale, 0.16)}
+                      fill="#fffdf9"
+                      stroke="#47633b"
+                      strokeWidth={strokeWidth}
+                      hitStrokeWidth={handleHitWidth}
+                    />
+                    <Line
+                      points={[-iconSize, 0, iconSize, 0]}
+                      stroke="#47633b"
+                      strokeWidth={Math.max(2 / viewport.scale, 0.05)}
+                      listening={false}
+                    />
+                    <Line
+                      points={[0, -iconSize, 0, iconSize]}
+                      stroke="#47633b"
+                      strokeWidth={Math.max(2 / viewport.scale, 0.05)}
+                      listening={false}
+                    />
+                  </Group>
+                )
+              })
+              : null}
+
+            {canEdit && !isDrawingZoneMode && selectedTarget.type === 'zone' && selectedTarget.id && selectedShape
+              ? ZONE_VERTEX_HANDLES.map((pointIndex) => {
+                const point = getShapePoints(selectedShape)[pointIndex]
+
+                if (!point) {
+                  return null
+                }
+
+                return (
                 <Circle
-                  key={`zone-handle-${selectedTarget.id}-${index}`}
+                  key={`zone-handle-${selectedTarget.id}-${pointIndex}`}
+                  name="zone-handle"
                   x={point.x}
                   y={point.y}
                   radius={handleRadius}
@@ -1055,38 +1492,37 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                   onMouseDown={(event) => {
                     event.cancelBubble = true
                   }}
-                  onDragStart={() => updateCursor('grabbing')}
-                  onDragMove={(event) => {
-                    const activeLayouts = liveLayoutsRef.current ?? renderedLayouts
-                    const activeShape = liveLayoutsRef.current?.[selectedTarget.id] ?? selectedShape
-                    const nextPoint = getConstrainedVertexMove(
-                      activeShape,
-                      index,
-                      { x: event.target.x(), y: event.target.y() },
-                      renderedBoundary,
-                    )
-                    const nextShape = updateShapePoint(activeShape, index, nextPoint)
-                    event.target.position(nextPoint)
-                    liveLayoutsRef.current = {
-                      ...activeLayouts,
-                      [selectedTarget.id]: nextShape,
+                  onDragStart={(event) => {
+                    const pointer = event.target.getStage()?.getPointerPosition()
+                    if (pointer) {
+                      beginZoneResize(selectedTarget.id, pointIndex, pointer)
                     }
-                    requestVisualRefresh()
+                  }}
+                  onDragMove={(event) => {
+                    const pointer = event.target.getStage()?.getPointerPosition()
+                    if (pointer) {
+                      const nextPoint = updateZoneResize(pointer)
+                      if (nextPoint) {
+                        event.target.position(nextPoint)
+                      }
+                    }
                   }}
                   onDragEnd={(event) => {
-                    const activeShape = liveLayoutsRef.current?.[selectedTarget.id] ?? selectedShape
-                    const nextPoint = getConstrainedVertexMove(
-                      activeShape,
-                      index,
-                      { x: event.target.x(), y: event.target.y() },
-                      renderedBoundary,
-                    )
-                    const nextShape = updateShapePoint(activeShape, index, nextPoint)
+                    const session = zoneResizeSessionRef.current
+                    const currentPoint = session?.currentShape
+                      ? getShapePoints(session.currentShape)[session.pointIndex]
+                      : null
+
+                    if (currentPoint) {
+                      event.target.position(currentPoint)
+                    }
+
                     updateCursor('grab')
-                    commitZoneLayout(selectedTarget.id, nextShape, renderedBoundary)
+                    finishZoneResize()
                   }}
                 />
-              ))
+                )
+              })
               : null}
 
             {selectedBounds ? (
@@ -1157,6 +1593,22 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               }}
             >
               <span className="designer-zone-label-text">{label.text}</span>
+            </div>
+          ))}
+          {dimensionLabels.map((label) => (
+            <div
+              key={label.id}
+              className={`designer-dimension-label designer-dimension-label--${label.scope}`}
+              title={label.title}
+              style={{
+                left: `${label.x}px`,
+                top: `${label.y}px`,
+                width: `${label.width}px`,
+                height: `${label.height}px`,
+                transform: `translate(-50%, -50%) rotate(${label.angle}deg)`,
+              }}
+            >
+              {label.text}
             </div>
           ))}
         </div>

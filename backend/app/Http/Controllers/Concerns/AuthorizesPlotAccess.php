@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Models\GardenOwner;
 use App\Models\Plot;
-use App\Services\AccessService;
+use App\Services\Plot\AccessService;
 use Illuminate\Http\Request;
 
 trait AuthorizesPlotAccess

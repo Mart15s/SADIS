@@ -16,8 +16,8 @@ use App\Models\Plot;
 use App\Models\Task;
 use App\Models\TaskCalendar;
 use App\Models\TaskResourceRequirement;
-use App\Services\InventoryService;
-use App\Services\TaskCalendarService;
+use App\Services\Inventory\InventoryService;
+use App\Services\Calendar\TaskCalendarService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -308,6 +308,114 @@ class InventoryCalendarWorkflowTest extends TestCase
             'id' => $inventoryItem->id,
             'quantity' => 1,
         ]);
+    }
+
+    public function test_completing_buy_task_replenishes_inventory_for_the_missing_resource(): void
+    {
+        [$user, $owner, $plot] = $this->createPlotContext();
+        Sanctum::actingAs($user);
+
+        $zone = $this->createZoneForPlot($plot);
+        $plant = $this->createPlantForPlot($plot, $zone);
+        [$buyTask] = $this->createTaskWithRequirement($plot, $plant, [
+            'resource_name' => 'Fertilizer',
+            'inventory_item_type' => InventoryItemType::Material,
+            'unit' => InventoryUnit::Kilogram,
+            'required_quantity' => 2,
+            'shortage_quantity' => 2,
+            'is_consumed' => false,
+            'type' => 'buy',
+            'name' => 'Buy Fertilizer',
+        ]);
+
+        $inventoryItem = $this->createInventoryItemForOwner($owner, [
+            'name' => 'Fertilizer',
+            'quantity' => 1,
+            'type' => InventoryItemType::Material,
+            'unit' => InventoryUnit::Kilogram,
+        ]);
+
+        $this->patchJson("/api/tasks/{$buyTask->id}/complete")
+            ->assertOk()
+            ->assertJsonPath('task.status', 'completed');
+
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $inventoryItem->id,
+            'quantity' => 3,
+        ]);
+
+        $this->assertDatabaseHas('inventory_usage_logs', [
+            'inventory_item_id' => $inventoryItem->id,
+            'task_id' => $buyTask->id,
+            'garden_owner_id' => $owner->id,
+            'change_type' => 'replenished',
+            'quantity_before' => 1,
+            'quantity_delta' => 2,
+            'quantity_after' => 3,
+            'unit' => InventoryUnit::Kilogram->value,
+        ]);
+    }
+
+    public function test_completed_buy_task_stops_presenting_as_active_replenishment_and_unblocks_the_day(): void
+    {
+        [$user, $owner, $plot] = $this->createPlotContext();
+        Sanctum::actingAs($user);
+
+        $calendar = $this->createCalendarForPlot($plot, [
+            'start_date' => '2026-03-20',
+            'end_date' => '2026-03-20',
+        ]);
+        $zone = $this->createZoneForPlot($plot);
+        $plant = $this->createPlantForPlot($plot, $zone, ['name' => 'Tomato']);
+
+        $feedTask = $this->createTaskForExistingCalendarWithRequirement($calendar, $plant, [
+            'name' => 'Fertilize Tomato',
+            'type' => 'fertilize',
+            'resource_name' => 'Fertilizer',
+            'inventory_item_type' => InventoryItemType::Material,
+            'unit' => InventoryUnit::Kilogram,
+            'required_quantity' => 1,
+            'is_consumed' => true,
+        ])[0];
+
+        $buyTask = $this->createTaskForExistingCalendarWithRequirement($calendar, null, [
+            'name' => 'Buy Fertilizer',
+            'type' => 'buy',
+            'resource_name' => 'Fertilizer',
+            'inventory_item_type' => InventoryItemType::Material,
+            'unit' => InventoryUnit::Kilogram,
+            'required_quantity' => 1,
+            'shortage_quantity' => 1,
+            'is_consumed' => false,
+        ])[0];
+
+        $beforeResponse = $this->getJson("/api/calendars/{$calendar->id}/tasks?date=2026-03-20");
+        $beforeResponse->assertOk()
+            ->assertJsonPath('data.0.can_complete', false)
+            ->assertJsonPath('data.1.status', 'pending');
+
+        $this->patchJson("/api/tasks/{$buyTask->id}/complete")
+            ->assertOk()
+            ->assertJsonPath('task.status', 'completed')
+            ->assertJsonPath('task.can_complete', false)
+            ->assertJsonPath('task.inventory_mode', 'not_required');
+
+        $afterResponse = $this->getJson("/api/calendars/{$calendar->id}/tasks?date=2026-03-20");
+        $afterResponse->assertOk()
+            ->assertJsonPath('data.0.id', $feedTask->id)
+            ->assertJsonPath('data.0.can_complete', true)
+            ->assertJsonPath('data.0.inventory_context.status', 'available')
+            ->assertJsonPath('data.1.id', $buyTask->id)
+            ->assertJsonPath('data.1.status', 'completed')
+            ->assertJsonPath('data.1.can_complete', false)
+            ->assertJsonPath('data.1.inventory_mode', 'not_required')
+            ->assertJsonPath('data.1.inventory_shortages', []);
+
+        $calendarResponse = $this->getJson("/api/plots/{$plot->id}/calendars/{$calendar->id}");
+        $calendarResponse->assertOk()
+            ->assertJsonPath('day_resource_summary.2026-03-20.day_inventory_status', 'fully_covered')
+            ->assertJsonPath('day_resource_summary.2026-03-20.blocked_task_count', 0)
+            ->assertJsonPath('day_resource_summary.2026-03-20.replenishment_tasks', []);
     }
 
     public function test_completion_with_insufficient_inventory_fails_without_negative_balance(): void

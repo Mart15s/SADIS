@@ -1,17 +1,19 @@
 <?php
 
-use App\Http\Controllers\Api\Calendar\CalendarController;
-use App\Http\Controllers\Api\Calendar\TaskController as CalendarTaskController;
-use App\Http\Controllers\Api\Admin\AccountController;
-use App\Http\Controllers\Api\Admin\AuditLogController;
-use App\Http\Controllers\Api\Community\CommunityController;
-use App\Http\Controllers\Api\Dev\PlantCareDebugController;
-use App\Http\Controllers\Api\Inventory\InventoryController;
-use App\Http\Controllers\Api\Plot\AnalyticsController;
-use App\Http\Controllers\Api\Plot\ExportController;
-use App\Http\Controllers\Api\Plot\HarvestController;
-use App\Http\Controllers\Api\Plot\HistoryController;
-use App\Http\Controllers\Api\Plot\ShareController;
+use App\Http\Controllers\Calendar\CalendarController;
+use App\Http\Controllers\Calendar\TaskController as CalendarTaskController;
+use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Community\CommunityController;
+use App\Http\Controllers\Plant\PlantCareDebugController;
+use App\Http\Controllers\Inventory\InventoryController;
+use App\Http\Controllers\Location\ReverseGeocodeController;
+use App\Http\Controllers\Plot\AnalyticsController;
+use App\Http\Controllers\Plot\ExportController;
+use App\Http\Controllers\Plot\HarvestController;
+use App\Http\Controllers\Plot\HistoryController;
+use App\Http\Controllers\Plot\ShareController;
+use App\Http\Controllers\Plot\WorkspaceController;
 use App\Http\Controllers\User\AccountController as UserAccountController;
 use App\Http\Controllers\User\LoginController;
 use App\Http\Controllers\User\CurrentUserController;
@@ -37,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LogoutController::class, 'destroy']);
     Route::delete('/access/{accessRight}', [ShareController::class, 'destroyById']);
     Route::get('/community', [CommunityController::class, 'index']);
+    Route::get('/geocode/reverse', [ReverseGeocodeController::class, 'show']);
     Route::prefix('dev')->middleware('dev.only')->group(function () {
         Route::get('/plant-care-test/search', [PlantCareDebugController::class, 'search']);
         Route::get('/plant-care-test/species/{speciesId}', [PlantCareDebugController::class, 'species']);
@@ -58,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/plots/{plot}/analytics', [AnalyticsController::class, 'show']);
     Route::post('/plots/{plot}/analytics', [AnalyticsController::class, 'store']);
     Route::get('/plots/{plot}/history', [HistoryController::class, 'index']);
+    Route::put('/plots/{plot}/workspace', [WorkspaceController::class, 'update']);
     Route::get('/plots/{plot}/export/pdf', [ExportController::class, 'pdf']);
     Route::get('/plots/{plot}/community', [CommunityController::class, 'plotFeed']);
     Route::get('/plots/{plot}/plant-zones', [SchemeController::class, 'index']);

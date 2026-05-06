@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\AccessRole;
-use App\Services\PdfExportService;
+use App\Services\Plot\PdfExportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\Feature\Concerns\CreatesGardenData;

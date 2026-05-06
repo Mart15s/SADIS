@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagramų audito ataskaita</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #526070;
+      --line: #334155;
+      --paper: #ffffff;
+      --page: #f5f7fb;
+      --view: #dcecff;
+      --control: #ffe1e7;
+      --entity: #fff2bf;
+      --external: #ece7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    main {
+      width: min(1500px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid #d5dbe7;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+    .comment {
+      border-left: 4px solid #8aa5d6;
+      background: #f7faff;
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      color: #334155;
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    .legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 16px; height: 12px; border: 1px solid #64748b; display: inline-block; }
+    .canvas { overflow: auto; border: 1px solid #dbe3ef; background: #fff; }
+    svg { display: block; max-width: none; background: #fff; }
+    .uml-title { font-size: 18px; font-weight: 700; }
+    .pkg-title, .lane-title { font-size: 15px; font-weight: 700; }
+    .stereo { font-size: 11px; fill: #5b6472; font-style: italic; }
+    .class-name { font-size: 13px; font-weight: 700; }
+    .member { font-size: 11px; fill: #172033; }
+    .small { font-size: 10px; fill: #374151; }
+    .edge-label { font-size: 11px; fill: #1f2937; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 13px; }
+    th, td { border: 1px solid #d9e1ee; padding: 7px 8px; vertical-align: top; }
+    th { background: #eef3ff; text-align: left; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+    ul { margin-top: 6px; }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; border: 0; box-shadow: none; }
+      .canvas { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagramų audito ataskaita</h1>
+  <div class="meta">Sugeneruota: 2026-04-29. Šaltinis: faktinė Laravel + React codebase būsena.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#dcecff"></i> Views / boundaries</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> Controllers / services</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> Models / entities / types</span>
+    <span><i class="swatch" style="background:#ece7ff"></i> External systems / boundaries</span>
+  </div>
+  <div class="comment">Ataskaita sujungia faktinę codebase inventorizaciją, PA pakeitimus, traceability ir neatitikimus su senais diagramų pavyzdžiais.</div>
+  
+    <h2>Codebase analizės santrauka</h2>
+    <p>Projektas realizuotas kaip React SPA ir Laravel REST API. Backend dabar turi loginius controllerių ir servisų katalogus: <code>Admin</code>, <code>Calendar</code>, <code>Community</code>, <code>Inventory</code>, <code>Plant</code>, <code>Plot</code>, <code>User</code>. Eloquent modeliai yra bendrame <code>app/Models</code> kataloge, enumai - <code>app/Enums</code>. PostgreSQL schemos pokyčiai aprašyti migracijomis.</p>
+    <h2>Rasti frontend puslapiai</h2><ul><li><code>AdminUsersPage</code></li><li><code>PlotCalendarPage</code></li><li><code>CommunityPage</code></li><li><code>InventoryPage</code></li><li><code>CatalogPlantDetailPage</code></li><li><code>CatalogPlantFormPage</code></li><li><code>CatalogPlantsPage</code></li><li><code>PlantDetailPage</code></li><li><code>PlantFormPage</code></li><li><code>PlantsPage</code></li><li><code>PlotAnalyticsPage</code></li><li><code>PlotDetailPage</code></li><li><code>PlotEditPage</code></li><li><code>PlotHarvestsPage</code></li><li><code>PlotHistoryPage</code></li><li><code>PlotRotationPage</code></li><li><code>PlotSharingPage</code></li><li><code>PlotsPage</code></li><li><code>AccountPage</code></li><li><code>DashboardPage</code></li><li><code>ForgotPasswordPage</code></li><li><code>LoginPage</code></li><li><code>RegisterPage</code></li><li><code>ResetPasswordPage</code></li></ul>
+    <h2>Rasti backend controlleriai</h2><ul><li><code>Admin\AccountController</code></li><li><code>Admin\AuditLogController</code></li><li><code>Calendar\CalendarController</code></li><li><code>Calendar\TaskController</code></li><li><code>Community\CommunityController</code></li><li><code>Inventory\InventoryController</code></li><li><code>Plant\CatalogPlantController</code></li><li><code>Plant\PlantCareDebugController</code></li><li><code>Plant\PlantConditionController</code></li><li><code>Plant\PlantController</code></li><li><code>Plot\AnalyticsController</code></li><li><code>Plot\ExportController</code></li><li><code>Plot\HarvestController</code></li><li><code>Plot\HistoryController</code></li><li><code>Plot\PlotController</code></li><li><code>Plot\RotationController</code></li><li><code>Plot\SchemeController</code></li><li><code>Plot\ShareController</code></li><li><code>Plot\WorkspaceController</code></li><li><code>User\AccountController</code></li><li><code>User\CurrentUserController</code></li><li><code>User\LoginController</code></li><li><code>User\LogoutController</code></li><li><code>User\PasswordResetController</code></li><li><code>User\SignUpController</code></li></ul>
+    <h2>Rasti servisai</h2><ul><li><code>AdminService</code></li><li><code>EmailServerBoundary</code></li><li><code>CalendarGenerationService</code></li><li><code>TaskCalendarService</code></li><li><code>TaskInventoryCoverageService</code></li><li><code>TaskWorkflowService</code></li><li><code>WeatherForecastRepairService</code></li><li><code>WeatherService</code></li><li><code>CommunityService</code></li><li><code>MeteoLtClient</code></li><li><code>PerenualService</code></li><li><code>InventoryPlanningRepairService</code></li><li><code>InventoryService</code></li><li><code>CatalogPlantService</code></li><li><code>PlantCareDefaults</code></li><li><code>PlantCareNormalizer</code></li><li><code>PlantCareRepairService</code></li><li><code>PlantCareService</code></li><li><code>PlantConditionHistoryService</code></li><li><code>PlantLifecyclePhaseService</code></li><li><code>PlantLifecycleService</code></li><li><code>PlantStateService</code></li><li><code>AccessService</code></li><li><code>AnalyticsService</code></li><li><code>CropRotationClassifier</code></li><li><code>HarvestService</code></li><li><code>PdfExportService</code></li><li><code>PlotSnapshotService</code></li><li><code>PlotWorkspaceService</code></li><li><code>RotationPlannerService</code></li><li><code>AccountService</code></li></ul>
+    <h2>Rasti modeliai</h2><ul><li><code>AccessRight</code></li><li><code>AuditLog</code></li><li><code>CatalogPlant</code></li><li><code>CommunityPost</code></li><li><code>GardenOwner</code></li><li><code>HarvestRecord</code></li><li><code>HasInventory</code></li><li><code>HasPlot</code></li><li><code>InventoryItem</code></li><li><code>InventoryUsageLog</code></li><li><code>Plant</code></li><li><code>PlantCare</code></li><li><code>PlantConditionHistory</code></li><li><code>PlantZone</code></li><li><code>Plot</code></li><li><code>Profile</code></li><li><code>RotationHistory</code></li><li><code>RotationPlanDraft</code></li><li><code>Task</code></li><li><code>TaskCalendar</code></li><li><code>TaskResourceRequirement</code></li><li><code>UsedOn</code></li><li><code>User</code></li><li><code>WeatherForecast</code></li><li><code>plot_snapshots (DB table without Eloquent model)</code></li><li><code>password_reset_tokens (DB table)</code></li><li><code>personal_access_tokens (Sanctum DB table)</code></li></ul>
+    <h2>Rastos išorinės integracijos</h2><ul><li><code>Meteo.lt per MeteoLtClient ir WeatherService</code></li><li><code>Perenual per PerenualService, CatalogPlantService ir PlantCareNormalizer</code></li><li><code>El. pašto serveris per EmailServerBoundary</code></li><li><code>Server-side PDF per PdfExportService</code></li><li><code>Laravel Sanctum tokenai per personal_access_tokens</code></li></ul>
+    <h2>Kokie PA buvo pridėti, pašalinti arba pervadinti</h2>
+    <p>Pridėti / iškelti pagal faktinį kodą: augalų katalogo peržiūra, katalogo paieška, Perenual informacijos gavimas, augalo pridėjimas iš katalogo, inventoriaus padengimo patikrinimas, bendruomenės įrašų CRUD dalis, admin rolės keitimas ir naudotojo šalinimas. Pašalinti kaip PA: vidiniai servisai ir helperiai, pvz. <code>PlantCareNormalizer</code>, <code>TaskInventoryCoverageService</code> kaip savarankiški naudotojo veiksmai. Jie palikti klasių diagramose kaip service klasės.</p>
+    <h2>Kodėl PlantCareNormalizerService rodomas / nerodomas PA diagramoje</h2>
+    <p><code>PlantCareNormalizer</code> kode yra <code>App\Services\Plant</code> service klasė su metodais <code>normalize()</code> ir <code>normalizeWithTrace()</code>. Ją kviečia <code>CatalogPlantService</code> ir <code>PlantCareService</code>; vartotojas jos tiesiogiai neinicializuoja kaip savarankiško scenarijaus. Todėl PA diagramoje ji nerodoma, bet <code>classes-plant.html</code> diagramoje ji yra control/service klasė tarp Perenual duomenų ir <code>PlantCare</code>.</p>
+    <h2>Klasių diagramų išskaidymo logika</h2>
+    <p>Diagramos skaidytos pagal realizuotus posistemius, kad nebūtų vienos neįskaitomos schemos: user, admin, calendar, plot, plant, inventory, community, external boundaries ir logical architecture. Kiekvienoje diagramoje viršuje laikomi React boundary/view elementai, viduryje Laravel controlleriai ir servisai, apačioje Eloquent modeliai, enumai arba svarbios DB lentelės.</p>
+    <h2>Neatitikimai tarp senų diagramų ir realios realizacijos</h2>
+    <ul>
+      <li>Senuose pavyzdžiuose rodyti <code>*_router</code> elementai realiame Laravel kode neegzistuoja; juos pakeičia <code>routes/api.php</code> ir controllerių metodai.</li>
+      <li>Senuose kalendoriaus controlleriuose buvo metodų pavadinimai kaip <code>validate_forecast()</code> ar <code>calculate_days()</code>; realiame kode šios atsakomybės išskaidytos į <code>CalendarGenerationService</code>, <code>WeatherService</code>, <code>PlantLifecyclePhaseService</code> ir <code>InventoryService</code>.</li>
+      <li>Augalų katalogas ir <code>CatalogPlant</code> realiai egzistuoja, todėl jis pridėtas į PA ir plant klasių diagramas.</li>
+      <li><code>plot_snapshots</code> yra migracijoje ir naudojama <code>PlotSnapshotService</code>, bet neturi Eloquent modelio; diagramose rodoma kaip DB entity/table.</li>
+      <li><code>AuditLogController</code> backend kode yra, tačiau React audito žurnalo puslapis nerastas; jis paliktas admin klasių diagramoje ir traceability pažymėtas kaip partial, ne kaip pilnas PA diagramoje.</li>
+    </ul>
+    <h2>Traceability</h2><table><thead><tr><th>PA kodas</th><th>PA pavadinimas</th><th>Frontend</th><th>Route</th><th>Controlleris</th><th>Servisas</th><th>Modeliai</th><th>Statusas</th></tr></thead><tbody><tr><td>PA1</td><td>Registruotis</td><td>RegisterPage/AuthContext</td><td>POST /api/register</td><td>SignUpController@store</td><td>-</td><td>User, Profile, GardenOwner</td><td>implemented</td></tr><tr><td>PA2</td><td>Prisijungti</td><td>LoginPage/AuthContext</td><td>POST /api/login</td><td>LoginController@store</td><td>-</td><td>User, Profile, personal_access_tokens</td><td>implemented</td></tr><tr><td>PA3</td><td>Atsijungti</td><td>AuthContext/Sidebar</td><td>POST /api/logout</td><td>LogoutController@destroy</td><td>-</td><td>User tokens</td><td>implemented</td></tr><tr><td>PA4</td><td>Atkurti slaptažodį</td><td>ForgotPasswordPage, ResetPasswordPage</td><td>POST /api/forgot-password; POST /api/reset-password</td><td>PasswordResetController@forgot/reset</td><td>EmailServerBoundary</td><td>User, password_reset_tokens</td><td>implemented</td></tr><tr><td>PA5</td><td>Redaguoti paskyros duomenis</td><td>AccountPage/AuthContext</td><td>PATCH /api/me</td><td>User\AccountController@update</td><td>AccountService</td><td>User, Profile</td><td>implemented</td></tr><tr><td>PA6</td><td>Peržiūrėti pradinį skydelį</td><td>DashboardPage</td><td>GET /api/plots; GET /api/inventory</td><td>PlotController@index; InventoryController@index</td><td>AccessService, InventoryService</td><td>Plot, InventoryItem</td><td>implemented</td></tr><tr><td>PA7</td><td>Valdyti sklypus</td><td>PlotsPage, PlotEditPage</td><td>apiResource /api/plots</td><td>PlotController</td><td>AccessService, PlotSnapshotService</td><td>Plot, GardenOwner</td><td>implemented</td></tr><tr><td>PA8</td><td>Valdyti sklypo planą</td><td>PlotDetailPage, PlotDesignerCanvas</td><td>PUT /api/plots/{plot}/workspace</td><td>WorkspaceController@update</td><td>PlotWorkspaceService, PlotSnapshotService</td><td>Plot, PlantZone, Plant, plot_snapshots</td><td>implemented</td></tr><tr><td>PA9</td><td>Valdyti zonas</td><td>PlotDetailPage</td><td>/api/plots/{plot}/plant-zones</td><td>SchemeController</td><td>AccessService, PlotSnapshotService</td><td>PlantZone, Plot</td><td>implemented</td></tr><tr><td>PA10</td><td>Eksportuoti sklypą PDF</td><td>PlotDetailPage</td><td>GET /api/plots/{plot}/export/pdf</td><td>ExportController@pdf</td><td>PdfExportService</td><td>Plot, PlantZone, Plant</td><td>implemented</td></tr><tr><td>PA11</td><td>Peržiūrėti planavimo istoriją</td><td>PlotHistoryPage</td><td>GET /api/plots/{plot}/history</td><td>HistoryController@index</td><td>PlotSnapshotService</td><td>plot_snapshots</td><td>implemented</td></tr><tr><td>PA12</td><td>Valdyti sklypo prieigą</td><td>PlotSharingPage</td><td>/api/plots/{plot}/share; /api/plots/{plot}/access</td><td>ShareController</td><td>AccessService, PlotSnapshotService</td><td>AccessRight, User, GardenOwner</td><td>implemented</td></tr><tr><td>PA13</td><td>Planuoti augalų rotaciją</td><td>PlotRotationPage</td><td>/api/plots/{plot}/rotations*</td><td>RotationController</td><td>RotationPlannerService, CropRotationClassifier</td><td>RotationHistory, RotationPlanDraft, Plant, PlantZone</td><td>implemented</td></tr><tr><td>PA14</td><td>Registruoti derlių</td><td>PlotHarvestsPage, PlantDetailPage, PlotCalendarPage</td><td>POST /api/plots/{plot}/harvests; PATCH /api/tasks/{task}/complete</td><td>HarvestController; TaskController</td><td>HarvestService, TaskWorkflowService</td><td>HarvestRecord, Task, Plant</td><td>implemented</td></tr><tr><td>PA15</td><td>Analizuoti sklypo rezultatus</td><td>PlotAnalyticsPage</td><td>GET/POST /api/plots/{plot}/analytics</td><td>AnalyticsController</td><td>AnalyticsService</td><td>Plot, Task, HarvestRecord, PlantConditionHistory</td><td>implemented</td></tr><tr><td>PA16</td><td>Peržiūrėti augalus</td><td>PlantsPage</td><td>GET /api/plants; GET /api/plots/{plot}/plants</td><td>PlantController</td><td>AccessService</td><td>Plant, CatalogPlant, Plot</td><td>implemented</td></tr><tr><td>PA17</td><td>Valdyti augalus</td><td>PlantFormPage, PlotDetailPage</td><td>/api/plants; /api/plots/{plot}/plants</td><td>PlantController</td><td>CatalogPlantService, PlantCareService, PlotSnapshotService</td><td>Plant, CatalogPlant, PlantCare</td><td>implemented</td></tr><tr><td>PA18</td><td>Peržiūrėti augalo informaciją</td><td>PlantDetailPage</td><td>GET /api/plants/{plant}; GET /api/plots/{plot}/plants/{plant}</td><td>PlantController@showGlobal/show</td><td>PlantLifecycleService</td><td>Plant, PlantCare, PlantConditionHistory</td><td>implemented</td></tr><tr><td>PA19</td><td>Įrašyti augalo būklę</td><td>PlantDetailPage</td><td>POST /api/plots/{plot}/plants/{plant}/conditions</td><td>PlantConditionController@store</td><td>PlantConditionHistoryService</td><td>PlantConditionHistory, Plant</td><td>implemented</td></tr><tr><td>PA20</td><td>Peržiūrėti būklės istoriją</td><td>PlantDetailPage</td><td>GET /api/plots/{plot}/plants/{plant}/conditions</td><td>PlantConditionController@index</td><td>PlantConditionHistoryService</td><td>PlantConditionHistory</td><td>implemented</td></tr><tr><td>PA21</td><td>Peržiūrėti augalų katalogą</td><td>CatalogPlantsPage, PlantsPage</td><td>GET /api/catalog-plants</td><td>CatalogPlantController@index</td><td>-</td><td>CatalogPlant, PlantCare</td><td>implemented</td></tr><tr><td>PA22</td><td>Ieškoti augalo kataloge</td><td>CatalogPlantsPage, PlotPlantingDrawer</td><td>GET /api/catalog-plants/search</td><td>CatalogPlantController@index</td><td>-</td><td>CatalogPlant</td><td>implemented</td></tr><tr><td>PA23</td><td>Peržiūrėti priežiūros informaciją</td><td>CatalogPlantDetailPage, PlantDetailPage</td><td>GET /api/catalog-plants/{catalogPlant}</td><td>CatalogPlantController@show</td><td>-</td><td>CatalogPlant, PlantCare</td><td>implemented</td></tr><tr><td>PA24</td><td>Pridėti augalą iš katalogo</td><td>PlantFormPage, PlotPlantingDrawer, PlotDetailPage</td><td>POST /api/plants; PUT /api/plots/{plot}/workspace</td><td>PlantController; WorkspaceController</td><td>CatalogPlantService, PlantCareService</td><td>Plant, CatalogPlant, PlantCare</td><td>implemented</td></tr><tr><td>PA25</td><td>Gauti Perenual augalo informaciją</td><td>CatalogPlantFormPage</td><td>GET /api/catalog-plants/perenual/search; /species/{speciesId}</td><td>CatalogPlantController</td><td>PerenualService, CatalogPlantService, PlantCareNormalizer</td><td>CatalogPlant, PlantCare</td><td>implemented</td></tr><tr><td>PA26</td><td>Generuoti rekomendacinį kalendorių</td><td>PlotCalendarPage</td><td>POST /api/plots/{plot}/calendars</td><td>CalendarController@store</td><td>TaskCalendarService, CalendarGenerationService</td><td>TaskCalendar, Task, WeatherForecast</td><td>implemented</td></tr><tr><td>PA27</td><td>Peržiūrėti kalendorių ir užduotis</td><td>PlotCalendarPage</td><td>GET /api/plots/{plot}/calendars; GET /api/calendars/{calendar}/tasks</td><td>CalendarController@index/show; TaskController@index</td><td>InventoryService</td><td>TaskCalendar, Task</td><td>implemented</td></tr><tr><td>PA28</td><td>Pažymėti užduotį atlikta</td><td>PlotCalendarPage, PlantDetailPage, PlotHarvestsPage</td><td>PATCH /api/tasks/{task}/complete</td><td>TaskController@complete</td><td>TaskWorkflowService, InventoryService, HarvestService</td><td>Task, InventoryUsageLog, HarvestRecord</td><td>implemented</td></tr><tr><td>PA29</td><td>Atšaukti užduotį</td><td>PlotCalendarPage</td><td>PATCH /api/tasks/{task}/reject</td><td>TaskController@reject</td><td>TaskWorkflowService</td><td>Task</td><td>implemented</td></tr><tr><td>PA30</td><td>Gauti orų prognozes</td><td>Calendar generation flow</td><td>internal during POST /api/plots/{plot}/calendars</td><td>CalendarController@store</td><td>WeatherService, MeteoLtClient</td><td>WeatherForecast</td><td>implemented</td></tr><tr><td>PA31</td><td>Patikrinti inventoriaus padengimą</td><td>PlotCalendarPage</td><td>calendar/task endpoints</td><td>CalendarController, TaskController</td><td>InventoryService, TaskInventoryCoverageService</td><td>InventoryItem, TaskResourceRequirement</td><td>implemented</td></tr><tr><td>PA32</td><td>Peržiūrėti inventorių</td><td>InventoryPage</td><td>GET /api/inventory</td><td>InventoryController@index</td><td>InventoryService</td><td>InventoryItem</td><td>implemented</td></tr><tr><td>PA33</td><td>Papildyti inventorių</td><td>InventoryPage</td><td>POST /api/inventory</td><td>InventoryController@store</td><td>InventoryService</td><td>InventoryItem</td><td>implemented</td></tr><tr><td>PA34</td><td>Redaguoti inventoriaus elementą</td><td>InventoryPage</td><td>PATCH /api/inventory/{inventoryItem}</td><td>InventoryController@update</td><td>InventoryService</td><td>InventoryItem</td><td>implemented</td></tr><tr><td>PA35</td><td>Šalinti inventoriaus elementą</td><td>InventoryPage</td><td>DELETE /api/inventory/{inventoryItem}</td><td>InventoryController@destroy</td><td>InventoryService</td><td>InventoryItem</td><td>implemented</td></tr><tr><td>PA36</td><td>Pažymėti sunaudotus resursus</td><td>PlotCalendarPage/PlantDetailPage completion modal</td><td>PATCH /api/tasks/{task}/complete</td><td>TaskController@complete</td><td>TaskWorkflowService, InventoryService</td><td>InventoryUsageLog, InventoryItem</td><td>implemented</td></tr><tr><td>PA37</td><td>Peržiūrėti bendruomenės įrašus</td><td>CommunityPage</td><td>GET /api/community; GET /api/plots/{plot}/community</td><td>CommunityController@index/plotFeed</td><td>CommunityService, AccessService</td><td>CommunityPost, Plot</td><td>implemented</td></tr><tr><td>PA38</td><td>Kurti bendruomenės įrašą</td><td>CommunityPage</td><td>POST /api/community</td><td>CommunityController@store</td><td>CommunityService</td><td>CommunityPost</td><td>implemented</td></tr><tr><td>PA39</td><td>Redaguoti bendruomenės įrašą</td><td>Frontend UI nerasta</td><td>PATCH /api/community/{post}</td><td>CommunityController@update</td><td>CommunityService</td><td>CommunityPost</td><td>partial: backend route exists, React edit UI nerasta</td></tr><tr><td>PA40</td><td>Šalinti bendruomenės įrašą</td><td>Frontend UI nerasta</td><td>DELETE /api/community/{post}</td><td>CommunityController@destroy</td><td>CommunityService</td><td>CommunityPost</td><td>partial: backend route exists, React delete UI nerasta</td></tr><tr><td>PA41</td><td>Valdyti naudotojus</td><td>AdminUsersPage</td><td>GET /api/admin/users; GET /api/admin/users/{user}</td><td>Admin\AccountController@index/show</td><td>AdminService</td><td>User, Profile, GardenOwner</td><td>implemented</td></tr><tr><td>PA42</td><td>Keisti naudotojo rolę</td><td>AdminUsersPage</td><td>PATCH /api/admin/users/{user}/role</td><td>Admin\AccountController@updateRole</td><td>AdminService</td><td>User, AuditLog</td><td>implemented</td></tr><tr><td>PA43</td><td>Šalinti naudotoją</td><td>AdminUsersPage</td><td>DELETE /api/admin/users/{user}</td><td>Admin\AccountController@destroy</td><td>AdminService</td><td>User, AuditLog, Plot, InventoryItem</td><td>implemented</td></tr><tr><td>-</td><td>Peržiūrėti audito žurnalą</td><td>Frontend UI nerasta</td><td>GET /api/admin/audit-logs</td><td>AuditLogController@index</td><td>-</td><td>AuditLog</td><td>partial: backend route yra, PA diagramoje nerodyta kaip pilnai realizuota funkcija</td></tr></tbody></table>
+    <h2>Failų sąrašas</h2><ul><li><code>diagrams/classes-admin.html</code></li><li><code>diagrams/classes-calendar.html</code></li><li><code>diagrams/classes-community.html</code></li><li><code>diagrams/classes-external-boundaries.html</code></li><li><code>diagrams/classes-inventory.html</code></li><li><code>diagrams/classes-plant.html</code></li><li><code>diagrams/classes-plot.html</code></li><li><code>diagrams/classes-user.html</code></li><li><code>diagrams/diagram-audit-report.html</code></li><li><code>diagrams/logical-architecture.html</code></li><li><code>diagrams/use-case.html</code></li></ul>
+    <h2>Rekomendacijos, ką įtraukti į BBP tekstą</h2>
+    <ul>
+      <li>Aprašyti, kad augalų priežiūros duomenys dabar eina per <code>CatalogPlant -> PlantCare</code>, o <code>Plant</code> naudoja efektyvų care profilį per katalogo ryšį.</li>
+      <li>Pažymėti, kad Perenual normalizavimas yra vidinis service žingsnis, o ne naudotojo PA.</li>
+      <li>Įtraukti Meteo.lt fallback seką: live API, stored city/date, stored other city/date, seasonal fallback.</li>
+      <li>Aprašyti planavimo istorijos realizaciją per <code>plot_snapshots</code> be atskiro Eloquent modelio.</li>
+      <li>Admin audito žurnalą aprašyti kaip backend dalinę realizaciją, kol nėra dedikuoto frontend puslapio.</li>
+    </ul>
+    <h2>Kokybės patikra</h2>
+    <p>Patikrinta, kad visi privalomi HTML failai egzistuoja, turi savarankišką <code>&lt;!doctype html&gt;</code> struktūrą, o diagramų failai turi SVG sritį. Automatinėje paieškoje nerasta sugadintų koordinačių, vandens ženklų, netinkamos orų integracijos pavadinimų ar senų controllerių kelių. Programos testai ir migracijos nepaleisti, nes buvo kuriami tik dokumentaciniai HTML failai ir sistemos funkcionalumas, DB schema bei UI elgsena nebuvo keičiami.</p>
+
+</main>
+</body>
+</html>

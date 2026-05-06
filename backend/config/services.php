@@ -44,4 +44,9 @@ return [
         'base_url' => env('METEO_LT_BASE_URL', 'https://api.meteo.lt/v1'),
     ],
 
+    'nominatim' => [
+        'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
+        'user_agent' => env('NOMINATIM_USER_AGENT', 'SAD-Garden-System/1.0 (reverse-geocoding)'),
+    ],
+
 ];

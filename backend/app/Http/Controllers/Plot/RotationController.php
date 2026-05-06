@@ -10,9 +10,9 @@ use App\Models\PlantZone;
 use App\Models\Plot;
 use App\Models\RotationHistory;
 use App\Models\RotationPlanDraft;
-use App\Services\AccessService;
-use App\Services\PlotSnapshotService;
-use App\Services\RotationPlannerService;
+use App\Services\Plot\AccessService;
+use App\Services\Plot\PlotSnapshotService;
+use App\Services\Plot\RotationPlannerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

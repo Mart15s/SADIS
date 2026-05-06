@@ -708,7 +708,7 @@ export default function CatalogPlantFormPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-frost">Frost threshold (C)</label>
+              <label htmlFor="catalog-care-frost">Frost threshold (°C)</label>
               <input
                 id="catalog-care-frost"
                 type="number"
@@ -719,7 +719,7 @@ export default function CatalogPlantFormPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-heat">Heat extra-water threshold (C)</label>
+              <label htmlFor="catalog-care-heat">Heat extra-water threshold (°C)</label>
               <input
                 id="catalog-care-heat"
                 type="number"

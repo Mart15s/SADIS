@@ -1,10 +1,11 @@
 import { memo } from 'react'
+import Surface from './Surface.jsx'
 
-function Card({ children, className = '', tone = 'default' }) {
+function Card({ children, className = '', tone = 'default', as = 'article' }) {
   return (
-    <article className={`card card-${tone} ${className}`.trim()}>
+    <Surface as={as} tone={tone} className={`card card-${tone} ${className}`.trim()}>
       {children}
-    </article>
+    </Surface>
   )
 }
 

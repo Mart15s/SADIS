@@ -6,6 +6,8 @@ use Closure;
 
 final class NormalizedGeometry
 {
+    private const MIN_POINT_COUNT = 3;
+
     public static function validationRule(): Closure
     {
         return static function (string $attribute, mixed $value, Closure $fail): void {
@@ -21,8 +23,8 @@ final class NormalizedGeometry
 
             $points = $value['points'] ?? null;
 
-            if (! is_array($points) || count($points) !== 4) {
-                $fail('The '.$attribute.' field must contain exactly 4 points.');
+            if (! is_array($points) || count($points) < self::MIN_POINT_COUNT) {
+                $fail('The '.$attribute.' field must contain at least 3 points.');
 
                 return;
             }
@@ -49,11 +51,6 @@ final class NormalizedGeometry
                     return;
                 }
 
-                if ($index > 3) {
-                    $fail('The '.$attribute.' field must contain exactly 4 points.');
-
-                    return;
-                }
             }
         };
     }
@@ -66,7 +63,7 @@ final class NormalizedGeometry
 
         $points = $geometry['points'] ?? null;
 
-        if (! is_array($points) || count($points) !== 4) {
+        if (! is_array($points) || count($points) < self::MIN_POINT_COUNT) {
             return false;
         }
 

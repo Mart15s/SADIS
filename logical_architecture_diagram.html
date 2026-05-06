@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loginė architektūra - BCE UML paketų diagrama</title>
+  <style>
+    :root {
+      --page: #f7f7f4;
+      --pkg: #eef3fb;
+      --pkg-alt: #fbfcff;
+      --tab: #dfe8f6;
+      --line: #6f7b91;
+      --text: #111827;
+      --muted: #4b5563;
+      --boundary: #1f5f8b;
+      --control: #7a4b12;
+      --entity: #245f37;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 1900px;
+      background: var(--page);
+      color: var(--text);
+      font-family: "Times New Roman", Times, serif;
+    }
+
+    .canvas {
+      position: relative;
+      width: 1900px;
+      height: 1420px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #fff 0%, #f2f5f8 100%);
+      transform: scale(0.68);
+      transform-origin: top left;
+    }
+
+    h1 {
+      position: absolute;
+      top: 18px;
+      left: 30px;
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .note {
+      position: absolute;
+      top: 50px;
+      left: 32px;
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    svg.links {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .package {
+      position: absolute;
+      z-index: 2;
+      border: 2px solid var(--line);
+      background: var(--pkg);
+    }
+
+    .package::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: -2px;
+      width: 128px;
+      height: 18px;
+      border: 2px solid var(--line);
+      border-bottom: 0;
+      background: var(--tab);
+    }
+
+    .title {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #b5c0d3;
+      background: #e6edf7;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .body {
+      position: relative;
+      height: calc(100% - 30px);
+      padding: 14px;
+      background: linear-gradient(135deg, var(--pkg) 0%, var(--pkg-alt) 100%);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .subpackage {
+      position: absolute;
+      border: 1.4px solid #8792a8;
+      background: #fbfcff;
+    }
+
+    .subpackage::before {
+      content: "";
+      position: absolute;
+      top: -13px;
+      left: -1.4px;
+      width: 62px;
+      height: 13px;
+      border: 1.4px solid #8792a8;
+      border-bottom: 0;
+      background: #e3eaf5;
+    }
+
+    .subtitle {
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #c4ccda;
+      background: #eff4fb;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    ul {
+      list-style: none;
+      margin: 7px 8px 8px;
+      padding: 0;
+    }
+
+    li {
+      position: relative;
+      margin: 2px 0;
+      padding-left: 12px;
+      white-space: nowrap;
+    }
+
+    li::before {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: 0;
+      width: 7px;
+      height: 7px;
+      border: 1px solid #738096;
+      border-radius: 50%;
+      background: #dce5f2;
+    }
+
+    .tiny li { font-size: 11px; margin: 1px 0; }
+    .boundary { color: var(--boundary); }
+    .control { color: var(--control); }
+    .entity { color: var(--entity); }
+    .muted { color: var(--muted); }
+
+    .relationship-label {
+      position: absolute;
+      z-index: 3;
+      padding: 2px 5px;
+      border: 1px solid #c9ced8;
+      background: rgba(250, 250, 247, 0.94);
+      color: #374151;
+      font-size: 12px;
+    }
+
+    .legend {
+      position: absolute;
+      left: 32px;
+      bottom: 26px;
+      z-index: 2;
+      width: 760px;
+      padding: 10px 12px;
+      border: 1.5px solid #8792a8;
+      background: #fbfcff;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+  <main class="canvas" aria-label="BCE UML package diagram">
+    <h1>Asmeninio sodo / daržo IS - loginė BCE architektūra</h1>
+    <p class="note">Sudaryta pagal realų codebase: React pages, Client API, Laravel routes/controllers/services, Eloquent models, enumus ir migracijas.</p>
+
+    <svg class="links" viewBox="0 0 1900 1420" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="#6b7280"></path>
+        </marker>
+      </defs>
+      <path d="M470 260 C530 260, 530 250, 590 250" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M760 250 C835 250, 835 250, 910 250" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1130 250 C1190 250, 1190 250, 1250 250" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1260 610 C1180 610, 1180 610, 1100 610" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1320 770 C1320 870, 1120 870, 1120 970" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1545 770 C1545 870, 1340 870, 1340 970" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1540 705 C1650 705, 1650 420, 1760 420" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1260 1090 C1170 1090, 1170 1090, 1080 1090" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 7" fill="none" marker-end="url(#arrow)"></path>
+    </svg>
+
+    <div class="relationship-label" style="left: 500px; top: 224px;">Pages «boundary» → Client API</div>
+    <div class="relationship-label" style="left: 785px; top: 224px;">Axios /api → routes</div>
+    <div class="relationship-label" style="left: 1145px; top: 224px;">Route → controller</div>
+    <div class="relationship-label" style="left: 1115px; top: 584px;">Controllers → services</div>
+    <div class="relationship-label" style="left: 1218px; top: 858px;">Control → entity</div>
+    <div class="relationship-label" style="left: 1608px; top: 510px;">Services → adapters</div>
+    <div class="relationship-label" style="left: 1138px; top: 1068px;">Models → migrations</div>
+
+    <section class="package" style="left: 30px; top: 110px; width: 820px; height: 740px;">
+      <div class="title">Frontend SPA</div>
+      <div class="body">
+        <div class="subpackage" style="left: 14px; top: 20px; width: 445px; height: 675px;">
+          <div class="subtitle">Pages <span class="boundary">&nbsp;«boundary»</span></div>
+          <ul class="tiny">
+            <li><b>admin</b>: AdminUsersPage</li>
+            <li><b>calendar</b>: PlotCalendarPage</li>
+            <li><b>community</b>: CommunityPage</li>
+            <li><b>dev</b>: PlantCareDebugPage</li>
+            <li><b>inventory</b>: InventoryPage</li>
+            <li><b>plant</b>: CatalogPlantDetailPage</li>
+            <li><b>plant</b>: CatalogPlantFormPage</li>
+            <li><b>plant</b>: CatalogPlantsPage</li>
+            <li><b>plant</b>: PlantDetailPage</li>
+            <li><b>plant</b>: PlantFormPage</li>
+            <li><b>plant</b>: PlantsPage</li>
+            <li><b>plot</b>: PlotAnalyticsPage</li>
+            <li><b>plot</b>: PlotDetailPage</li>
+            <li><b>plot</b>: PlotEditPage</li>
+            <li><b>plot</b>: PlotHarvestsPage</li>
+            <li><b>plot</b>: PlotHistoryPage</li>
+            <li><b>plot</b>: PlotRotationPage</li>
+            <li><b>plot</b>: PlotSharingPage</li>
+            <li><b>plot</b>: PlotsPage</li>
+            <li><b>user</b>: AccountPage</li>
+            <li><b>user</b>: DashboardPage</li>
+            <li><b>user</b>: ForgotPasswordPage</li>
+            <li><b>user</b>: LoginPage</li>
+            <li><b>user</b>: NotFoundPage</li>
+            <li><b>user</b>: RegisterPage</li>
+            <li><b>user</b>: ResetPasswordPage</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 480px; top: 20px; width: 300px; height: 170px;">
+          <div class="subtitle">Client API <span class="boundary">&nbsp;«boundary»</span></div>
+          <ul>
+            <li>api.js</li>
+            <li>apiClient: Axios baseURL "/api"</li>
+            <li>downloadBlob()</li>
+            <li>auth.js</li>
+            <li>localStorage token helpers</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 480px; top: 220px; width: 300px; height: 180px;">
+          <div class="subtitle">Components <span class="boundary">&nbsp;«boundary»</span></div>
+          <ul>
+            <li>AppShell</li>
+            <li>ProtectedRoute</li>
+            <li>AdminRoute</li>
+            <li>AuthContext</li>
+            <li>PlotDesignerCanvas</li>
+            <li>PlotPlantingDrawer</li>
+            <li>PlotSectionNav</li>
+            <li>StatusView</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 480px; top: 430px; width: 300px; height: 210px;">
+          <div class="subtitle">React Routing</div>
+          <ul>
+            <li>App.jsx</li>
+            <li>public: /login, /register</li>
+            <li>public: /forgot-password</li>
+            <li>public: /reset-password</li>
+            <li>protected: /plots, /plants</li>
+            <li>protected: /plots/:plotId/calendar</li>
+            <li>protected: /inventory</li>
+            <li>admin: /admin/users</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="package" style="left: 910px; top: 110px; width: 660px; height: 740px;">
+      <div class="title">Backend API</div>
+      <div class="body">
+        <div class="subpackage" style="left: 14px; top: 20px; width: 300px; height: 205px;">
+          <div class="subtitle">Routes / Middleware</div>
+          <ul>
+            <li>routes/api.php</li>
+            <li>bootstrap/app.php</li>
+            <li>auth:sanctum</li>
+            <li>AdminMiddleware</li>
+            <li>DevOnlyMiddleware</li>
+            <li>AuthorizesPlotAccess trait</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 335px; top: 20px; width: 290px; height: 420px;">
+          <div class="subtitle">Controllers <span class="control">&nbsp;«control»</span></div>
+          <ul class="tiny">
+            <li><b>Api/Admin</b>: AccountController</li>
+            <li><b>Api/Admin</b>: AuditLogController</li>
+            <li><b>Api/Calendar</b>: CalendarController</li>
+            <li><b>Api/Calendar</b>: TaskController</li>
+            <li><b>Api/Community</b>: CommunityController</li>
+            <li><b>Api/Dev</b>: PlantCareDebugController</li>
+            <li><b>Api/Inventory</b>: InventoryController</li>
+            <li><b>Api/Plot</b>: AnalyticsController</li>
+            <li><b>Api/Plot</b>: ExportController</li>
+            <li><b>Api/Plot</b>: HarvestController</li>
+            <li><b>Api/Plot</b>: HistoryController</li>
+            <li><b>Api/Plot</b>: ShareController</li>
+            <li><b>Api/Plot</b>: WorkspaceController</li>
+            <li><b>Plant</b>: CatalogPlantController</li>
+            <li><b>Plant</b>: PlantConditionController</li>
+            <li><b>Plant</b>: PlantController</li>
+            <li><b>Plot</b>: PlotController</li>
+            <li><b>Plot</b>: RotationController</li>
+            <li><b>Plot</b>: SchemeController</li>
+            <li><b>User</b>: AccountController</li>
+            <li><b>User</b>: CurrentUserController</li>
+            <li><b>User</b>: LoginController</li>
+            <li><b>User</b>: LogoutController</li>
+            <li><b>User</b>: PasswordResetController</li>
+            <li><b>User</b>: SignUpController</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 14px; top: 260px; width: 300px; height: 180px;">
+          <div class="subtitle">Requests / Resources</div>
+          <ul class="tiny">
+            <li>Admin: UpdateUserRoleRequest, UserResource</li>
+            <li>Calendar: CompleteTaskRequest, GenerateCalendarRequest</li>
+            <li>Calendar: TaskCalendarResource, TaskResource</li>
+            <li>Community: Store/UpdateCommunityPostRequest</li>
+            <li>Harvest: StoreHarvestRecordRequest</li>
+            <li>Inventory: Store/UpdateInventoryItemRequest</li>
+            <li>Plant: CatalogPlantResource, PlantResource</li>
+            <li>Plot: GenerateAnalyticsRequest, StoreShareRequest</li>
+            <li>User: UpdateAccountRequest, AuthenticatedUserResource</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 14px; top: 475px; width: 610px; height: 210px;">
+          <div class="subtitle">Services <span class="control">&nbsp;«control»</span></div>
+          <ul class="tiny">
+            <li><b>Access / Auth / Account</b>: AccessService, AccountService, AdminService</li>
+            <li><b>Plot / Workspace / Rotation / Snapshot</b>: PlotSnapshotService, PlotWorkspaceService, RotationPlannerService, CropRotationClassifier</li>
+            <li><b>Plant / Catalog / Care / Lifecycle</b>: CatalogPlantService, PlantCareDefaults, PlantCareNormalizer, PlantCareRepairService, PlantCareService, PlantConditionHistoryService, PlantLifecyclePhaseService, PlantLifecycleService, PlantStateService</li>
+            <li><b>Calendar / Tasks / Weather</b>: CalendarGenerationService, TaskCalendarService, TaskInventoryCoverageService, TaskWorkflowService, WeatherForecastRepairService, WeatherService</li>
+            <li><b>Inventory</b>: InventoryService, InventoryPlanningRepairService</li>
+            <li><b>Community</b>: CommunityService</li>
+            <li><b>Analytics / Harvest / Export</b>: AnalyticsService, HarvestService, PdfExportService</li>
+            <li><b>External integration services</b>: MeteoLtClient, PerenualService, EmailServerBoundary</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="package" style="left: 1010px; top: 955px; width: 555px; height: 395px;">
+      <div class="title">Data Model</div>
+      <div class="body">
+        <div class="subpackage" style="left: 14px; top: 20px; width: 305px; height: 320px;">
+          <div class="subtitle">Models <span class="entity">&nbsp;«entity»</span></div>
+          <ul class="tiny">
+            <li>AccessRight, AuditLog, CatalogPlant</li>
+            <li>CommunityPost, GardenOwner, HarvestRecord</li>
+            <li>HasInventory, HasPlot, InventoryItem</li>
+            <li>InventoryUsageLog, Plant, PlantCare</li>
+            <li>PlantConditionHistory, PlantZone, Plot</li>
+            <li>Profile, RotationHistory, RotationPlanDraft</li>
+            <li>Task, TaskCalendar, TaskResourceRequirement</li>
+            <li>UsedOn, User, WeatherForecast</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 340px; top: 20px; width: 180px; height: 160px;">
+          <div class="subtitle">Domain Enumerations</div>
+          <ul class="tiny">
+            <li>AccessRole</li>
+            <li>AnalysisType</li>
+            <li>ConditionType</li>
+            <li>InventoryItemType</li>
+            <li>InventoryUnit</li>
+            <li>PlantType</li>
+            <li>SoilType</li>
+            <li>TaskPriority</li>
+            <li>TaskState</li>
+            <li>TaskType</li>
+            <li>UserRole</li>
+          </ul>
+        </div>
+
+        <div class="subpackage" style="left: 340px; top: 215px; width: 180px; height: 125px;">
+          <div class="subtitle">PostgreSQL schema / migrations</div>
+          <ul class="tiny">
+            <li>database/migrations</li>
+            <li>Foreign keys</li>
+            <li>Check constraints</li>
+            <li>JSON / JSONB fields</li>
+            <li>Sanctum tokens table</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="package" style="left: 1610px; top: 215px; width: 250px; height: 360px;">
+      <div class="title">External Boundaries / Adapters</div>
+      <div class="body">
+        <ul>
+          <li>MeteoLtClient</li>
+          <li>Meteo.lt API</li>
+          <li>PerenualService</li>
+          <li>Perenual Plant API</li>
+          <li>EmailServerBoundary</li>
+          <li>Mail / password reset</li>
+          <li>PdfExportService</li>
+          <li>Dompdf + Blade PDF view</li>
+        </ul>
+      </div>
+    </section>
+
+    <aside class="legend">
+      <b>Stereotypes:</b>
+      React pages, route guards, AuthContext ir Client API yra pagrindiniai naudotojo sąsajos / API kliento <span class="boundary">«boundary»</span> elementai.
+      Laravel controlleriai ir service klasės yra <span class="control">«control»</span> elementai.
+      Eloquent modeliai yra <span class="entity">«entity»</span> elementai.
+      Ryšiai diagramoje rodo pagrindinį sekų diagramų kelią: page → api.js/auth.js → routes/middleware → controller → service → model/migrations arba external adapter.
+      Detalus endpointų, metodų, importų ir modelių ryšių pagrindimas pateiktas faile <b>logical_architecture_bce_traceability.md</b>.
+    </aside>
+  </main>
+</body>
+</html>

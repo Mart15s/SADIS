@@ -1,3 +1,6 @@
+import SectionHeader from './SectionHeader.jsx'
+import Surface from './Surface.jsx'
+
 export default function SectionCard({
   title,
   description,
@@ -8,17 +11,9 @@ export default function SectionCard({
   compact = false,
 }) {
   return (
-    <section className={`section-card section-card-${tone} ${compact ? 'section-card-compact' : ''} ${className}`.trim()}>
-      {(title || description || actions) ? (
-        <header className="section-card-header">
-          <div className="section-card-copy">
-            {title ? <h2 className="section-card-title">{title}</h2> : null}
-            {description ? <p className="section-card-description">{description}</p> : null}
-          </div>
-          {actions ? <div className="section-card-actions">{actions}</div> : null}
-        </header>
-      ) : null}
+    <Surface as="section" tone={tone} className={`section-card section-card-${tone} ${compact ? 'section-card-compact' : ''} ${className}`.trim()}>
+      <SectionHeader title={title} description={description} actions={actions} className="section-card-header" />
       {children ? <div className="section-card-body">{children}</div> : null}
-    </section>
+    </Surface>
   )
 }

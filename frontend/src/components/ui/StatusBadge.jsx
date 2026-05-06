@@ -2,9 +2,9 @@ import Badge from './Badge.jsx'
 
 const KIND_TO_TONE = {
   status: 'success',
-  ownership: 'soft',
-  connection: 'neutral',
-  selection: 'warning',
+  ownership: 'neutral',
+  connection: 'info',
+  selection: 'info',
   severity: 'danger',
 }
 

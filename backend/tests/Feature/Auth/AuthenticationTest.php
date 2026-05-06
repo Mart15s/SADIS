@@ -3,10 +3,12 @@
 namespace Tests\Feature\Auth;
 
 use App\Enums\UserRole;
+use App\Mail\PasswordResetLinkMail;
 use App\Models\GardenOwner;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -116,7 +118,7 @@ class AuthenticationTest extends TestCase
             ->assertUnauthorized();
     }
 
-    public function test_user_can_request_and_use_password_reset_code(): void
+    public function test_user_can_request_and_use_password_reset_link(): void
     {
         Mail::fake();
 
@@ -126,24 +128,134 @@ class AuthenticationTest extends TestCase
             'reset_code' => null,
         ]);
 
+        config(['app.frontend_url' => 'http://frontend.test']);
+
         $forgotResponse = $this->postJson('/api/forgot-password', [
             'email' => 'reset@example.com',
         ]);
 
         $forgotResponse->assertOk()
-            ->assertJsonPath('message', 'Password reset code sent successfully.');
+            ->assertJsonPath('message', 'If the email address exists, a password reset link has been sent.');
 
-        $user->refresh();
-        $this->assertNotNull($user->reset_code);
+        $resetUrl = null;
+        Mail::assertSent(PasswordResetLinkMail::class, function (PasswordResetLinkMail $mail) use (&$resetUrl) {
+            $resetUrl = $mail->resetUrl;
+
+            return str_starts_with($mail->resetUrl, 'http://frontend.test/reset-password?')
+                && str_contains($mail->resetUrl, 'token=')
+                && str_contains($mail->resetUrl, 'email=reset%40example.com');
+        });
+
+        $query = [];
+        parse_str((string) parse_url($resetUrl, PHP_URL_QUERY), $query);
+
+        $this->assertNotEmpty($query['token'] ?? null);
+        $this->assertSame('reset@example.com', $query['email'] ?? null);
+        $this->assertDatabaseHas('password_reset_tokens', [
+            'email' => 'reset@example.com',
+        ]);
+
         $resetResponse = $this->postJson('/api/reset-password', [
             'email' => 'reset@example.com',
-            'reset_code' => $user->reset_code,
+            'reset_code' => $query['token'],
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ]);
 
         $resetResponse->assertOk()
             ->assertJsonPath('message', 'Password updated successfully.');
+
+        $user->refresh();
+        $this->assertNull($user->reset_code);
+        $this->assertDatabaseMissing('password_reset_tokens', [
+            'email' => 'reset@example.com',
+        ]);
+
+        $this->postJson('/api/reset-password', [
+            'email' => 'reset@example.com',
+            'reset_code' => $query['token'],
+            'password' => 'anotherpassword123',
+            'password_confirmation' => 'anotherpassword123',
+        ])->assertUnprocessable();
+
+        $this->postJson('/api/login', [
+            'email' => 'reset@example.com',
+            'password' => 'newpassword123',
+        ])->assertOk();
+    }
+
+    public function test_password_reset_request_does_not_reveal_unknown_email(): void
+    {
+        Mail::fake();
+
+        User::factory()->create([
+            'email' => 'known@example.com',
+        ]);
+
+        $knownResponse = $this->postJson('/api/forgot-password', [
+            'email' => 'known@example.com',
+        ]);
+
+        $unknownResponse = $this->postJson('/api/forgot-password', [
+            'email' => 'unknown@example.com',
+        ]);
+
+        $knownResponse->assertOk()
+            ->assertJsonPath('message', 'If the email address exists, a password reset link has been sent.');
+
+        $unknownResponse->assertOk()
+            ->assertJsonPath('message', 'If the email address exists, a password reset link has been sent.');
+
+        Mail::assertSent(PasswordResetLinkMail::class, 1);
+    }
+
+    public function test_password_cannot_be_reset_with_invalid_or_expired_token(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'email' => 'expired-reset@example.com',
+            'password' => 'password123',
+        ]);
+
+        $this->postJson('/api/reset-password', [
+            'email' => 'expired-reset@example.com',
+            'reset_code' => 'not-a-valid-token',
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertUnprocessable()
+            ->assertJsonPath('message', 'The provided password reset token is invalid or expired.');
+
+        $this->postJson('/api/forgot-password', [
+            'email' => 'expired-reset@example.com',
+        ])->assertOk();
+
+        $resetUrl = null;
+        Mail::assertSent(PasswordResetLinkMail::class, function (PasswordResetLinkMail $mail) use (&$resetUrl) {
+            $resetUrl = $mail->resetUrl;
+
+            return true;
+        });
+
+        $query = [];
+        parse_str((string) parse_url($resetUrl, PHP_URL_QUERY), $query);
+
+        DB::table('password_reset_tokens')
+            ->where('email', 'expired-reset@example.com')
+            ->update(['created_at' => now()->subMinutes(config('auth.passwords.users.expire') + 1)]);
+
+        $this->postJson('/api/reset-password', [
+            'email' => 'expired-reset@example.com',
+            'reset_code' => $query['token'],
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertUnprocessable()
+            ->assertJsonPath('message', 'The provided password reset token is invalid or expired.');
+
+        $this->postJson('/api/login', [
+            'email' => 'expired-reset@example.com',
+            'password' => 'password123',
+        ])->assertOk();
 
         $user->refresh();
         $this->assertNull($user->reset_code);

@@ -1,3 +1,6 @@
+import SectionHeader from './SectionHeader.jsx'
+import Surface from './Surface.jsx'
+
 export default function FormSection({
   title,
   description,
@@ -6,19 +9,11 @@ export default function FormSection({
   className = '',
 }) {
   return (
-    <section className={`section-card form-section ${className}`.trim()}>
-      {(title || description || actions) ? (
-        <header className="section-card-header">
-          <div className="section-card-copy">
-            {title ? <h2 className="section-card-title">{title}</h2> : null}
-            {description ? <p className="section-card-description">{description}</p> : null}
-          </div>
-          {actions ? <div className="section-card-actions">{actions}</div> : null}
-        </header>
-      ) : null}
+    <Surface as="section" className={`section-card form-section ${className}`.trim()}>
+      <SectionHeader title={title} description={description} actions={actions} className="section-card-header" />
       <div className="section-card-body">
         {children}
       </div>
-    </section>
+    </Surface>
   )
 }

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\PerenualService;
+use App\Services\Integrations\PerenualService;
 use ReflectionMethod;
 use Tests\TestCase;
 

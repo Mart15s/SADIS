@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BPP UML deployment diagram</title>
+<style>
+  :root {
+    --paper: #ececec;
+    --node: #dbe7d7;
+    --node2: #e8f1e4;
+    --edge: #313131;
+    --line: #6f8a6f;
+    --artifact: #efe5bc;
+    --artifact-border: #8d7d54;
+    --database: #d9e4f2;
+    --database-border: #5c7899;
+    --text: #111;
+    --muted: #4d5d4d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+  }
+  .canvas {
+    width: 1720px;
+    height: 1120px;
+    margin: 16px auto;
+    position: relative;
+    background: #e9e9e9;
+    overflow: hidden;
+  }
+  .package {
+    position: absolute;
+    inset: 8px;
+    border: 2px solid #707070;
+    background: linear-gradient(#efefef, #e8e8e8);
+  }
+  .package-tab {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    border: 1px solid #707070;
+    background: #efefef;
+    padding: 4px 10px;
+    font-size: 14px;
+    z-index: 3;
+  }
+  svg {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+  .node { fill: url(#nodeGradient); stroke: var(--line); stroke-width: 1.7; }
+  .exec { fill: url(#execGradient); stroke: var(--line); stroke-width: 1.5; }
+  .artifact { fill: var(--artifact); stroke: var(--artifact-border); stroke-width: 1.5; }
+  .database { fill: var(--database); stroke: var(--database-border); stroke-width: 1.5; }
+  .head { stroke: var(--line); stroke-width: 1.2; }
+  .artifact-head { stroke: var(--artifact-border); stroke-width: 1.2; }
+  .database-head { stroke: var(--database-border); stroke-width: 1.2; }
+  .stereo { font-size: 12px; fill: var(--text); }
+  .title { font-size: 16px; font-weight: 700; fill: var(--text); }
+  .small-title { font-size: 13px; font-weight: 700; fill: var(--text); }
+  .item { font-size: 12px; fill: var(--text); }
+  .tiny { font-size: 11px; fill: var(--text); }
+  .note { font-size: 11px; fill: var(--muted); font-style: italic; }
+  .deployed { font-size: 11px; fill: var(--muted); font-style: italic; }
+  .path { stroke: var(--edge); stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+  .dep { stroke: var(--edge); stroke-width: 1.6; stroke-dasharray: 7 5; fill: none; marker-end: url(#arrow); }
+  .label { font-size: 13px; fill: #222; }
+  .subtle-label { font-size: 12px; fill: #3d3d3d; }
+  .corner { fill: #f6efd0; stroke: var(--artifact-border); stroke-width: 1; }
+  .analysis {
+    width: 1720px;
+    margin: 0 auto 24px;
+    padding: 14px 18px;
+    border: 1px solid #a8a8a8;
+    background: #f4f4f4;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .analysis strong { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="package"></div>
+  <div class="package-tab">package <strong>Deployment</strong> [ Planned production deployment on Render ]</div>
+  <svg viewBox="0 0 1720 1120" role="img" aria-label="BPP UML deployment diagram for the SAD system production deployment">
+    <defs>
+      <linearGradient id="nodeGradient" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#e3efe0"></stop>
+        <stop offset="1" stop-color="#d7e5d3"></stop>
+      </linearGradient>
+      <linearGradient id="execGradient" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#edf5ea"></stop>
+        <stop offset="1" stop-color="#dbe8d7"></stop>
+      </linearGradient>
+      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L10,4 L0,8 z" fill="#313131"></path>
+      </marker>
+    </defs>
+
+    <!-- Runtime communication links -->
+    <path class="path" d="M332 296 H488"></path>
+    <text class="label" x="355" y="280">HTTPS /</text>
+    <text class="subtle-label" x="350" y="314">SPA, assets, /api, /sanctum</text>
+
+    <path class="path" d="M412 382 H488"></path>
+    <text class="label" x="368" y="369">same-origin HTTPS /api</text>
+
+    <path class="path" d="M770 366 H850"></path>
+    <text class="label" x="777" y="350">serve static files</text>
+
+    <path class="path" d="M667 478 V502"></path>
+    <text class="label" x="684" y="494">FastCGI 127.0.0.1:9000</text>
+
+    <path class="path" d="M1004 590 C1098 590 1118 452 1214 452"></path>
+    <text class="label" x="1088" y="518">SQL/TCP 5432</text>
+
+    <path class="path" d="M1004 606 C1110 636 1260 622 1380 524"></path>
+    <text class="label" x="1130" y="602">REST/HTTPS</text>
+
+    <path class="path" d="M1004 630 C1126 706 1268 736 1380 704"></path>
+    <text class="label" x="1138" y="710">REST/HTTPS</text>
+
+    <path class="path" d="M1004 628 C1130 818 1274 890 1380 884"></path>
+    <text class="label" x="1114" y="824">SMTP/TLS or log mailer</text>
+
+    <path class="dep" d="M1004 672 C1078 728 1050 790 956 815"></path>
+    <text class="label" x="1032" y="754">filesystem</text>
+
+    <!-- Build and deployment links -->
+    <path class="dep" d="M276 890 H488"></path>
+    <text class="label" x="302" y="872">Docker build-time</text>
+
+    <path class="dep" d="M798 926 H950"></path>
+    <text class="label" x="830" y="908">produces image</text>
+
+    <path class="dep" d="M1082 886 C1024 790 966 730 876 678"></path>
+    <text class="label" x="1022" y="784">deployed container</text>
+
+    <!-- Client device -->
+    <rect class="node" x="62" y="168" width="270" height="276"></rect>
+    <line class="head" x1="62" y1="228" x2="332" y2="228"></line>
+    <text class="stereo" x="88" y="194">&lt;&lt;device&gt;&gt;</text>
+    <text class="title" x="88" y="216">Client device</text>
+
+    <rect class="exec" x="98" y="260" width="196" height="84"></rect>
+    <line class="head" x1="98" y1="302" x2="294" y2="302"></line>
+    <text class="stereo" x="114" y="280">&lt;&lt;execution environment&gt;&gt;</text>
+    <text class="small-title" x="114" y="322">Web browser</text>
+    <text class="note" x="114" y="338">HTTPS user agent</text>
+
+    <rect class="artifact" x="98" y="360" width="196" height="58"></rect>
+    <line class="artifact-head" x1="98" y1="390" x2="294" y2="390"></line>
+    <text class="stereo" x="114" y="380">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="114" y="408">React SPA runtime</text>
+    <path class="corner" d="M276 368 L290 368 L290 382 L283 375 L276 375 Z"></path>
+
+    <!-- Render cloud hosting platform -->
+    <rect class="node" x="488" y="94" width="628" height="760"></rect>
+    <line class="head" x1="488" y1="154" x2="1116" y2="154"></line>
+    <text class="stereo" x="520" y="120">&lt;&lt;node&gt;&gt;</text>
+    <text class="title" x="520" y="142">Render Cloud</text>
+    <text class="note" x="520" y="174">single Docker-based Web Service, public access through Render HTTPS</text>
+
+    <rect class="exec" x="530" y="210" width="548" height="628"></rect>
+    <line class="head" x1="530" y1="260" x2="1078" y2="260"></line>
+    <text class="stereo" x="552" y="232">&lt;&lt;execution environment&gt;&gt;</text>
+    <text class="title" x="552" y="252">Web service / Docker container</text>
+    <text class="deployed" x="552" y="282">deployed elements</text>
+    <text class="tiny" x="552" y="300">Docker image: production stage</text>
+    <text class="tiny" x="552" y="316">render-start startup script</text>
+    <text class="tiny" x="552" y="332">nginx + PHP-FPM + Laravel + React build</text>
+
+    <rect class="exec" x="564" y="346" width="206" height="132"></rect>
+    <line class="head" x1="564" y1="392" x2="770" y2="392"></line>
+    <text class="stereo" x="582" y="368">&lt;&lt;execution environment&gt;&gt;</text>
+    <text class="title" x="582" y="388">Nginx web server</text>
+    <text class="deployed" x="582" y="414">deployed elements</text>
+    <text class="tiny" x="582" y="432">nginx.conf from template</text>
+    <text class="tiny" x="582" y="448">public/index.html</text>
+    <text class="tiny" x="582" y="464">public/assets/*</text>
+
+    <rect class="artifact" x="850" y="292" width="204" height="100"></rect>
+    <line class="artifact-head" x1="850" y1="326" x2="1054" y2="326"></line>
+    <text class="stereo" x="868" y="314">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="868" y="346">React production build</text>
+    <text class="deployed" x="868" y="364">deployed elements</text>
+    <text class="tiny" x="868" y="380">index.html</text>
+    <text class="tiny" x="868" y="396">assets/*.js, assets/*.css</text>
+    <path class="corner" d="M1036 300 L1050 300 L1050 314 L1043 307 L1036 307 Z"></path>
+
+    <rect class="artifact" x="850" y="410" width="204" height="72"></rect>
+    <line class="artifact-head" x1="850" y1="444" x2="1054" y2="444"></line>
+    <text class="stereo" x="868" y="432">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="868" y="462">Public assets</text>
+    <text class="tiny" x="868" y="476">public/storage link</text>
+    <path class="corner" d="M1036 418 L1050 418 L1050 432 L1043 425 L1036 425 Z"></path>
+
+    <rect class="exec" x="564" y="502" width="440" height="208"></rect>
+    <line class="head" x1="564" y1="552" x2="1004" y2="552"></line>
+    <text class="stereo" x="586" y="524">&lt;&lt;execution environment&gt;&gt;</text>
+    <text class="title" x="586" y="544">PHP-FPM / Laravel runtime</text>
+    <text class="deployed" x="586" y="574">deployed elements</text>
+    <text class="tiny" x="586" y="590">.env production configuration</text>
+    <text class="tiny" x="586" y="606">artisan, bootstrap/*.php, config/*.php</text>
+    <text class="tiny" x="586" y="622">public/index.php, routes/api.php, routes/web.php</text>
+    <text class="tiny" x="586" y="638">app/Http/Controllers/Api/{Admin,Calendar,Community}/*.php</text>
+    <text class="tiny" x="586" y="654">app/Http/Controllers/Api/{Inventory,Plot}/*.php</text>
+    <text class="tiny" x="586" y="670">app/Http/Controllers/{Plant,Plot,User}/*.php</text>
+    <text class="tiny" x="586" y="686">app/Models/*.php, app/Services/*/*.php</text>
+    <text class="tiny" x="586" y="702">database/migrations/*.php, resources/views/pdf/*.blade.php</text>
+
+    <rect class="artifact" x="584" y="724" width="204" height="56"></rect>
+    <line class="artifact-head" x1="584" y1="754" x2="788" y2="754"></line>
+    <text class="stereo" x="602" y="744">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="602" y="772">Laravel application</text>
+    <path class="corner" d="M770 732 L784 732 L784 746 L777 739 L770 739 Z"></path>
+
+    <rect class="artifact" x="814" y="724" width="220" height="56"></rect>
+    <line class="artifact-head" x1="814" y1="754" x2="1034" y2="754"></line>
+    <text class="stereo" x="832" y="744">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="832" y="772">.env production config</text>
+    <path class="corner" d="M1016 732 L1030 732 L1030 746 L1023 739 L1016 739 Z"></path>
+
+    <rect class="artifact" x="708" y="790" width="248" height="42"></rect>
+    <text class="stereo" x="728" y="808">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="728" y="826">storage/{logs,framework,app}</text>
+    <path class="corner" d="M938 798 L952 798 L952 812 L945 805 L938 805 Z"></path>
+
+    <!-- Managed database -->
+    <rect class="node" x="1214" y="340" width="300" height="184"></rect>
+    <line class="head" x1="1214" y1="400" x2="1514" y2="400"></line>
+    <text class="stereo" x="1242" y="366">&lt;&lt;node&gt;&gt;</text>
+    <text class="title" x="1242" y="388">Managed PostgreSQL database</text>
+    <text class="note" x="1242" y="422">Render managed database, DATABASE_URL or DB_* env</text>
+
+    <rect class="database" x="1262" y="446" width="202" height="54"></rect>
+    <line class="database-head" x1="1262" y1="474" x2="1464" y2="474"></line>
+    <text class="stereo" x="1280" y="466">&lt;&lt;database&gt;&gt;</text>
+    <text class="small-title" x="1280" y="492">sad_system</text>
+
+    <!-- External services -->
+    <rect class="node" x="1380" y="466" width="230" height="116"></rect>
+    <line class="head" x1="1380" y1="524" x2="1610" y2="524"></line>
+    <text class="stereo" x="1404" y="492">&lt;&lt;node&gt;&gt;</text>
+    <text class="title" x="1404" y="514">Meteo.lt API</text>
+    <text class="item" x="1404" y="550">https://api.meteo.lt/v1</text>
+    <text class="note" x="1404" y="568">forecast lookup and fallback source</text>
+
+    <rect class="node" x="1380" y="646" width="230" height="116"></rect>
+    <line class="head" x1="1380" y1="704" x2="1610" y2="704"></line>
+    <text class="stereo" x="1404" y="672">&lt;&lt;node&gt;&gt;</text>
+    <text class="title" x="1404" y="694">Perenual API</text>
+    <text class="item" x="1404" y="730">https://perenual.com/api</text>
+    <text class="note" x="1404" y="748">plant care enrichment</text>
+
+    <rect class="node" x="1380" y="826" width="230" height="116"></rect>
+    <line class="head" x1="1380" y1="884" x2="1610" y2="884"></line>
+    <text class="stereo" x="1404" y="852">&lt;&lt;node&gt;&gt;</text>
+    <text class="title" x="1404" y="874">Email service</text>
+    <text class="item" x="1404" y="910">SMTP provider or log mailer</text>
+    <text class="note" x="1404" y="928">password reset messages</text>
+
+    <!-- Build-time platform -->
+    <rect class="node" x="62" y="800" width="214" height="154"></rect>
+    <line class="head" x1="62" y1="858" x2="276" y2="858"></line>
+    <text class="stereo" x="88" y="826">&lt;&lt;node&gt;&gt;</text>
+    <text class="title" x="88" y="848">Git repository</text>
+    <text class="note" x="88" y="884">build-time source only</text>
+    <text class="item" x="88" y="904">backend/ Laravel code</text>
+    <text class="item" x="88" y="922">frontend/ React SPA</text>
+
+    <rect class="exec" x="488" y="870" width="310" height="168"></rect>
+    <line class="head" x1="488" y1="920" x2="798" y2="920"></line>
+    <text class="stereo" x="512" y="892">&lt;&lt;execution environment&gt;&gt;</text>
+    <text class="title" x="512" y="912">Render Docker build-time</text>
+    <text class="item" x="512" y="942">composer install --no-dev</text>
+    <text class="item" x="512" y="960">npm ci and npm run build</text>
+    <text class="item" x="512" y="978">copy frontend/dist to public/</text>
+    <text class="item" x="512" y="996">install nginx and pdo_pgsql</text>
+    <text class="item" x="512" y="1014">uses Dockerfile and render.yaml</text>
+
+    <rect class="artifact" x="950" y="870" width="192" height="82"></rect>
+    <line class="artifact-head" x1="950" y1="904" x2="1142" y2="904"></line>
+    <text class="stereo" x="968" y="892">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="small-title" x="968" y="924">Docker image</text>
+    <text class="note" x="968" y="940">production stage</text>
+    <path class="corner" d="M1124 878 L1138 878 L1138 892 L1131 885 L1124 885 Z"></path>
+
+    <!-- Production configuration callout -->
+    <rect class="artifact" x="1184" y="84" width="404" height="184"></rect>
+    <line class="artifact-head" x1="1184" y1="120" x2="1588" y2="120"></line>
+    <text class="stereo" x="1206" y="108">&lt;&lt;artifact&gt;&gt;</text>
+    <text class="title" x="1206" y="144">Important production environment</text>
+    <text class="item" x="1206" y="170">APP_ENV=production, APP_URL=https://...</text>
+    <text class="item" x="1206" y="188">APP_KEY, APP_DEBUG=false, TRUSTED_PROXIES=*</text>
+    <text class="item" x="1206" y="206">DB_CONNECTION=pgsql, DATABASE_URL or DB_*</text>
+    <text class="item" x="1206" y="224">SANCTUM_STATEFUL_DOMAINS, SESSION_SECURE_COOKIE</text>
+    <text class="item" x="1206" y="242">PERENUAL_API_KEY, METEO_LT_BASE_URL, MAIL_*</text>
+    <path class="corner" d="M1570 92 L1584 92 L1584 106 L1577 99 L1570 99 Z"></path>
+  </svg>
+</div>
+
+<div class="analysis">
+  <strong>Deployment analysis summary.</strong>
+  The diagram shows the planned production model found in the repository: a single Render Docker Web Service that serves the React SPA build from Laravel public through nginx and forwards Laravel API traffic to PHP-FPM. The concrete codebase elements are the Laravel entrypoint <code>backend/public/index.php</code>, React entrypoint <code>frontend/src/main.jsx</code>, Dockerfile, <code>render.yaml</code>, <code>docker/start.sh</code>, nginx template, Sanctum API routes, PostgreSQL configuration, Meteo.lt and Perenual service configuration, local Laravel storage, file cache/session settings, sync queue, and SMTP/log mailer configuration. Render hosting, managed PostgreSQL, Render HTTPS termination, and production environment variables are planned hosting elements from the deployment files. The previous local workstation, Vite development server, Laravel artisan server, localhost API proxy, and local database host were removed from the runtime view because they describe development execution rather than final deployment.
+</div>
+</body>
+</html>

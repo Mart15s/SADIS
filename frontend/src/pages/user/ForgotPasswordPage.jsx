@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
     <div className="page-stack auth-card">
       <PageHeader
         title="Forgot password"
-        description="This form uses the backend email reset endpoint. Enter the account email and the backend will send a reset code."
+        description="Enter the account email and the backend will send a password reset link."
       />
 
       <form className="panel input-grid" onSubmit={handleSubmit}>
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Sending...' : 'Send reset code'}
+            {submitting ? 'Sending...' : 'Send reset link'}
           </Button>
           <Link to="/reset-password">
             <Button variant="secondary">Enter reset code</Button>

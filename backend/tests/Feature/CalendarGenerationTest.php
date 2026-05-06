@@ -20,7 +20,7 @@ use App\Models\Task;
 use App\Models\TaskCalendar;
 use App\Models\TaskResourceRequirement;
 use App\Models\User;
-use App\Services\TaskCalendarService;
+use App\Services\Calendar\TaskCalendarService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Testing\RefreshDatabase;

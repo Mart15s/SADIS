@@ -1,6 +1,7 @@
 import { startTransition, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import PageHeader from '../../components/layout/PageHeader.jsx'
+import { MapLayerControl, TaskPriorityBadge } from '../../components/garden/GardenControls.jsx'
+import PlotSectionNav from '../../components/plot/PlotSectionNav.jsx'
 import {
   EmptyState,
   ErrorState,
@@ -10,11 +11,21 @@ import {
 } from '../../components/shared/StatusView.jsx'
 import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { DefinitionList, StatRow } from '../../components/ui/DefinitionList.jsx'
+import { DialogBody, DialogHeader, Drawer } from '../../components/ui/Dialog.jsx'
+import FormField from '../../components/ui/FormField.jsx'
 import FormSection from '../../components/ui/FormSection.jsx'
 import SectionCard from '../../components/ui/SectionCard.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
-import { formatDate, formatInventoryUnit, safeNumber } from '../../lib/constants.js'
+import {
+  formatDate,
+  formatInventoryUnit,
+  formatMonthYear,
+  formatNumberWithUnit,
+  formatTemperatureC,
+  safeNumber,
+} from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 function flattenCalendarTasks(calendar) {
@@ -31,12 +42,6 @@ function uniqueOptions(calendar, keyId, keyName) {
       return [...options, { id: task[keyId], name: task[keyName] }]
     }, [])
     .sort((left, right) => left.name.localeCompare(right.name))
-}
-
-function priorityTone(priority) {
-  if (priority === 'high') return 'danger'
-  if (priority === 'medium') return 'warning'
-  return 'neutral'
 }
 
 function statusTone(status) {
@@ -137,7 +142,7 @@ function summarizeInventoryContext(task, isReplenishmentTask) {
   return taskInventoryLabel(task.inventory_mode)
 }
 
-function describeTaskFocus(task, missingResources, isReplenishmentTask) {
+function describeTaskFocus(task, missingResources, isReplenishmentTask, linkedReplenishmentTask = null) {
   const firstMissing = missingResources[0]
   const firstMissingLabel = firstMissing
     ? `${firstMissing.name ?? firstMissing.resource_name}: ${safeNumber(firstMissing.shortage_quantity, firstMissing.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(firstMissing.unit)} short`
@@ -160,20 +165,24 @@ function describeTaskFocus(task, missingResources, isReplenishmentTask) {
   }
 
   if (isReplenishmentTask) {
+    const blockedTaskCount = firstMissing?.blocked_task_count ?? task.inventory_context?.replenishment?.blocked_task_count ?? 0
     return {
       tone: firstMissing ? 'warning' : 'soft',
-      label: 'Restock reminder',
+      label: 'Replenishment task',
       detail: firstMissingLabel
-        ? `This replenishment reminder does not consume inventory. ${firstMissingLabel}. Update stock, then mark this reminder complete.`
-        : 'This replenishment reminder does not consume inventory. Update stock, then mark this reminder complete.',
+        ? `Completing this task adds stock to inventory. ${firstMissingLabel}${blockedTaskCount ? ` and ${blockedTaskCount} blocked task${blockedTaskCount === 1 ? '' : 's'} will become actionable.` : '.'}`
+        : 'Completing this task adds stock to inventory and unblocks dependent usage tasks.',
     }
   }
 
   if (task.status === 'pending' && firstMissing) {
+    const dependencyLabel = linkedReplenishmentTask
+      ? `"${linkedReplenishmentTask.name}"`
+      : 'the linked replenishment task'
     return {
       tone: 'danger',
       label: 'Blocked by shortage',
-      detail: `Task completion is blocked until inventory is replenished. ${firstMissingLabel}`,
+      detail: `This task stays blocked until ${dependencyLabel} is completed. Stock is added there, not here. ${firstMissingLabel}`,
     }
   }
 
@@ -224,6 +233,16 @@ function describeTaskFocus(task, missingResources, isReplenishmentTask) {
   }
 }
 
+function getLinkedReplenishmentTask(task, tasks) {
+  const linkedIds = task.inventory_context?.buy_task_ids ?? []
+
+  if (!linkedIds.length) {
+    return null
+  }
+
+  return tasks.find((candidate) => linkedIds.some((id) => String(id) === String(candidate.id))) ?? null
+}
+
 function resourceTypeLabel(resource) {
   if (resource.resource_type_label) return resource.resource_type_label
   return (resource.resource_mode ?? resource.consumption_mode) === 'consumable' ? 'Consumable' : 'Reusable'
@@ -260,7 +279,7 @@ function shiftMonth(yearMonth, delta) {
 
 function formatMonthTitle(yearMonth) {
   const [year, month] = yearMonth.split('-').map(Number)
-  return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return formatMonthYear(new Date(year, month - 1, 1))
 }
 
 const TODAY = new Date().toISOString().slice(0, 10)
@@ -397,16 +416,13 @@ export default function PlotCalendarPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        eyebrow="Recommendation calendar"
-        title={`${pageState.data.plot?.name ?? 'Plot'} calendar`}
+      <PlotSectionNav
+        plotId={plotId}
+        plotName={pageState.data.plot?.name ?? 'Plot'}
+        sectionKey="calendar"
+        isOwner={pageState.data.accessRole === 'owner'}
         description="Plan a window, generate a recommendation calendar, and open any day for a cleaner operational task view."
         meta={selectedCalendarId ? <StatusBadge kind="selection">Calendar #{selectedCalendarId}</StatusBadge> : null}
-        actions={(
-          <Link to={`/plots/${plotId}`}>
-            <Button variant="secondary">Back to plot</Button>
-          </Link>
-        )}
       />
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
@@ -427,8 +443,7 @@ export default function PlotCalendarPage() {
                 </div>
 
                 <div className="calendar-generator-fields">
-                  <div className="field">
-                    <label htmlFor="calendar-start">Start date</label>
+                  <FormField id="calendar-start" label="Start date">
                     <input
                       id="calendar-start"
                       type="date"
@@ -436,9 +451,8 @@ export default function PlotCalendarPage() {
                       onChange={(event) => setGenerateForm((current) => ({ ...current, start_date: event.target.value }))}
                       required
                     />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="calendar-end">End date</label>
+                  </FormField>
+                  <FormField id="calendar-end" label="End date">
                     <input
                       id="calendar-end"
                       type="date"
@@ -446,7 +460,7 @@ export default function PlotCalendarPage() {
                       onChange={(event) => setGenerateForm((current) => ({ ...current, end_date: event.target.value }))}
                       required
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 {error ? <span className="field-error">{error}</span> : null}
@@ -506,8 +520,7 @@ export default function PlotCalendarPage() {
               className="calendar-rail-card"
               compact
             >
-              <div className="field">
-                <label htmlFor="calendar-plant-filter">Plant</label>
+              <FormField id="calendar-plant-filter" label="Plant">
                 <select
                   id="calendar-plant-filter"
                   value={filters.plant_id}
@@ -516,9 +529,8 @@ export default function PlotCalendarPage() {
                   <option value="">All plants</option>
                   {plantOptions.map((plant) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
                 </select>
-              </div>
-              <div className="field">
-                <label htmlFor="calendar-zone-filter">Zone</label>
+              </FormField>
+              <FormField id="calendar-zone-filter" label="Zone">
                 <select
                   id="calendar-zone-filter"
                   value={filters.zone_id}
@@ -527,12 +539,12 @@ export default function PlotCalendarPage() {
                   <option value="">All zones</option>
                   {zoneOptions.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
                 </select>
-              </div>
+              </FormField>
             </SectionCard>
           ) : null}
         </aside>
 
-        <section className="page-stack">
+        <section className="page-stack calendar-main-panel">
           {detailState.loading ? <LoadingState title="Loading calendar..." /> : null}
           {detailState.error ? <ErrorState error={detailState.error} onRetry={detailState.reload} /> : null}
 
@@ -588,6 +600,17 @@ export default function PlotCalendarPage() {
                   Weather forecast includes fallback data: {weatherSources.map(weatherSourceLabel).join(', ')}.
                 </div>
               ) : null}
+
+              <MapLayerControl
+                title="Calendar layers"
+                items={[
+                  { id: 'tasks', label: 'Tasks', active: true, color: '#49683f' },
+                  { id: 'weather', label: usingWeatherFallback ? 'Forecast fallback' : 'Meteo.lt forecast', active: true, color: '#b76d17' },
+                  { id: 'inventory', label: 'Inventory coverage', active: true, color: '#ef6d22' },
+                  { id: 'priority', label: 'Priority load', active: true, color: '#c44934' },
+                ]}
+                className="calendar-layer-control"
+              />
 
               <div className="month-nav">
                 <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, -1))}>Prev</Button>
@@ -657,22 +680,27 @@ export default function PlotCalendarPage() {
         </section>
       </div>
 
-      {dayModalOpen ? (
-        <div className="day-modal-overlay" onClick={closeDayModal}>
-          <div className="day-modal-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="day-modal-header">
-              <div>
-                <p className="day-modal-title">{selectedDate ? formatDate(selectedDate) : '--'}</p>
-                <span className="muted day-modal-subtitle">
-                  {tasksState.loading ? 'Loading...' : `${tasksState.data.length} action${tasksState.data.length !== 1 ? 's' : ''}`}
-                </span>
-              </div>
-              <button type="button" className="day-modal-close" onClick={closeDayModal} aria-label="Close">x</button>
-            </div>
+      <Drawer
+        open={dayModalOpen}
+        onClose={closeDayModal}
+        labelledBy="calendar-day-title"
+        describedBy="calendar-day-subtitle"
+        size="sm"
+        className="day-modal-panel"
+      >
+        <DialogHeader
+          title={selectedDate ? formatDate(selectedDate) : '--'}
+          subtitle={tasksState.loading ? 'Loading actions...' : `${tasksState.data.length} action${tasksState.data.length !== 1 ? 's' : ''} for the selected day`}
+          titleId="calendar-day-title"
+          subtitleId="calendar-day-subtitle"
+          onClose={closeDayModal}
+          closeLabel="Close day details"
+        />
+        <DialogBody className="day-modal-body page-stack">
 
             {selectedForecast ? (
-              <section className="day-drawer-section">
-                <p className="day-drawer-label">Weather</p>
+              <section className="dialog-section day-drawer-section">
+                <p className="dialog-section-title day-drawer-label">Weather</p>
                 {selectedForecast.source && selectedForecast.source !== 'api' ? (
                   <div className="inline-note day-drawer-note">
                     Source: {weatherSourceLabel(selectedForecast.source)}
@@ -681,29 +709,17 @@ export default function PlotCalendarPage() {
                   </div>
                 ) : null}
                 <div className="day-modal-weather">
-                  <div className="weather-mini-stat">
-                    <span>Low</span>
-                    <span>{safeNumber(selectedForecast.temp_min ?? selectedForecast.temperature, 1)} C</span>
-                  </div>
-                  <div className="weather-mini-stat">
-                    <span>High</span>
-                    <span>{safeNumber(selectedForecast.temp_max ?? selectedForecast.temperature, 1)} C</span>
-                  </div>
-                  <div className="weather-mini-stat">
-                    <span>Rain</span>
-                    <span>{safeNumber(selectedForecast.precipitation, 1)} mm</span>
-                  </div>
-                  <div className="weather-mini-stat">
-                    <span>Wind</span>
-                    <span>{safeNumber(selectedForecast.wind_kmh ?? 0, 1)} km/h</span>
-                  </div>
+                  <StatRow label="Low" value={formatTemperatureC(selectedForecast.temp_min ?? selectedForecast.temperature)} />
+                  <StatRow label="High" value={formatTemperatureC(selectedForecast.temp_max ?? selectedForecast.temperature)} />
+                  <StatRow label="Rain" value={formatNumberWithUnit(selectedForecast.precipitation, 'mm', 1)} />
+                  <StatRow label="Wind" value={formatNumberWithUnit(selectedForecast.wind_kmh ?? 0, 'km/h', 1)} />
                 </div>
               </section>
             ) : null}
 
             {selectedDaySummary ? (
-              <section className="day-drawer-section page-stack">
-                <p className="day-drawer-label">Day resources</p>
+              <section className="dialog-section day-drawer-section page-stack">
+                <p className="dialog-section-title day-drawer-label">Day resources</p>
                 <div
                   className="inline-note"
                   style={['partially_blocked', 'blocked'].includes(selectedDaySummary.day_inventory_status) ? { color: 'var(--danger)' } : undefined}
@@ -714,17 +730,18 @@ export default function PlotCalendarPage() {
                       : 'Planned work is blocked by inventory shortages.')}
                 </div>
                 {(selectedDaySummary.grouped_resource_summary ?? selectedDaySummary.resources ?? []).map((resource) => (
-                  <div key={`${selectedDate}-${resource.resource_key}`} className="meta-cluster resource-summary-row">
-                    <span>
-                      {resource.resource_name} - need {safeNumber(resource.required_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
-                    </span>
-                    <span style={resource.shortage_quantity > 0 ? { color: 'var(--danger)' } : undefined}>
-                      {resourceTypeLabel(resource)}
-                      {' - '}have {safeNumber(resource.available_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}
-                      {resource.shortage_quantity > 0
-                        ? ` - shortage ${safeNumber(resource.shortage_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}`
-                        : ''}
-                    </span>
+                  <div key={`${selectedDate}-${resource.resource_key}`} className="resource-summary-row">
+                    <StatRow
+                      label={resource.resource_name}
+                      value={`Need ${safeNumber(resource.required_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
+                    />
+                    <StatRow
+                      label={resourceTypeLabel(resource)}
+                      className={resource.shortage_quantity > 0 ? 'stat-row-danger' : ''}
+                      value={`Have ${safeNumber(resource.available_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}${resource.shortage_quantity > 0
+                        ? ` / shortage ${safeNumber(resource.shortage_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}`
+                        : ''}`}
+                    />
                   </div>
                 ))}
                 {(selectedDaySummary.replenishment_tasks ?? selectedDaySummary.buy_tasks ?? []).length > 0 ? (
@@ -748,14 +765,20 @@ export default function PlotCalendarPage() {
             ) : null}
 
             {!tasksState.loading && !tasksState.error ? (
-              <div className="task-groups">
+              <section className="dialog-section day-actions-section">
+                <div className="day-actions-header">
+                  <p className="dialog-section-title">Actions</p>
+                  <span className="muted">{tasksState.data.length} planned</span>
+                </div>
+                <div className="task-groups day-task-groups">
                 {error ? <span className="field-error">{error}</span> : null}
                 {tasksState.data.map((task) => {
                   const missingResources = (task.inventory_shortages ?? task.required_resources ?? [])
                     .filter((resource) => resource.is_shortage ?? resource.shortage_quantity > 0)
                   const isReplenishmentTask = task.is_replenishment_task || task.inventory_mode === 'replenishment' || task.type === 'buy'
+                  const linkedReplenishmentTask = isReplenishmentTask ? null : getLinkedReplenishmentTask(task, tasksState.data)
                   const hasInventoryShortage = task.status === 'pending' && !isReplenishmentTask && missingResources.length > 0
-                  const taskFocus = describeTaskFocus(task, missingResources, isReplenishmentTask)
+                  const taskFocus = describeTaskFocus(task, missingResources, isReplenishmentTask, linkedReplenishmentTask)
                   const inventorySummary = summarizeInventoryContext(task, isReplenishmentTask)
                   const resourceRequirements = task.resource_requirements ?? task.required_resources ?? []
                   const quickFacts = [
@@ -777,11 +800,14 @@ export default function PlotCalendarPage() {
                     !isReplenishmentTask && task.item
                       ? { label: 'Material', value: task.item_quantity ? `${task.item} x ${safeNumber(task.item_quantity, 2)}` : task.item }
                       : null,
+                    linkedReplenishmentTask
+                      ? { label: 'Dependency', value: `${linkedReplenishmentTask.name} must be completed first` }
+                      : null,
                     inventorySummary ? { label: 'Inventory context', value: inventorySummary } : null,
                   ].filter(Boolean)
 
                   return (
-                    <article key={task.id} className="task-item day-task-card">
+                    <article key={task.id} className="task-item day-task-card" id={`day-task-${task.id}`}>
                       <div className="day-task-card-head">
                         <div className="day-task-card-title-block">
                           <strong className="day-task-card-title">{task.name}</strong>
@@ -791,7 +817,7 @@ export default function PlotCalendarPage() {
                         </div>
                         <div className="day-task-card-badges">
                           <StatusBadge kind="status" tone={statusTone(task.status)}>{formatStatusLabel(task.status)}</StatusBadge>
-                          <StatusBadge kind="severity" tone={priorityTone(task.priority)}>{formatPriorityLabel(task.priority)}</StatusBadge>
+                          <TaskPriorityBadge priority={formatPriorityLabel(task.priority)} />
                         </div>
                       </div>
 
@@ -799,6 +825,13 @@ export default function PlotCalendarPage() {
                         <span className="task-focus-label">{taskFocus.label}</span>
                         <p>{taskFocus.detail}</p>
                       </div>
+
+                      {linkedReplenishmentTask ? (
+                        <div className="day-task-card-dependency">
+                          <span className="day-task-card-dependency-label">Depends on</span>
+                          <strong>{linkedReplenishmentTask.name}</strong>
+                        </div>
+                      ) : null}
 
                       {quickFacts.length > 0 ? (
                         <div className="day-task-card-facts">
@@ -809,6 +842,20 @@ export default function PlotCalendarPage() {
                       ) : null}
 
                       <div className="day-task-card-actions">
+                        {linkedReplenishmentTask ? (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              document.getElementById(`day-task-${linkedReplenishmentTask.id}`)?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'nearest',
+                              })
+                            }}
+                          >
+                            Jump to replenishment task
+                          </Button>
+                        ) : null}
+
                         {hasInventoryShortage ? (
                           <Link
                             to={buildInventoryLink(task, {
@@ -846,7 +893,7 @@ export default function PlotCalendarPage() {
                               onClick={() => handleTaskAction(task.id, 'complete')}
                               disabled={submitting || hasInventoryShortage || task.can_complete === false}
                             >
-                              Complete
+                              {isReplenishmentTask ? 'Complete restock' : 'Complete'}
                             </Button>
                             <Button variant="danger" onClick={() => handleTaskAction(task.id, 'reject')} disabled={submitting}>
                               Reject
@@ -860,14 +907,7 @@ export default function PlotCalendarPage() {
                           <summary>Details</summary>
                           <div className="task-card-detail-stack">
                             {taskDetails.length > 0 ? (
-                              <div className="task-card-detail-list">
-                                {taskDetails.map((detail) => (
-                                  <div key={`${task.id}-${detail.label}`} className="task-card-detail-row">
-                                    <span>{detail.label}</span>
-                                    <strong>{detail.value}</strong>
-                                  </div>
-                                ))}
-                              </div>
+                              <DefinitionList className="task-card-detail-list" items={taskDetails} />
                             ) : null}
 
                             {resourceRequirements.length > 0 ? (
@@ -875,18 +915,16 @@ export default function PlotCalendarPage() {
                                 <strong>Resource requirements</strong>
                                 <div className="task-card-resource-list">
                                   {resourceRequirements.map((resource) => (
-                                    <div key={`${task.id}-${resource.id ?? resource.name}`} className="task-card-resource-row">
-                                      <span>{resource.name ?? resource.resource_name}</span>
-                                      <span>
-                                        Need {safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
-                                        {resource.available_quantity !== null && resource.available_quantity !== undefined
-                                          ? ` - have ${safeNumber(resource.available_quantity, resource.type === 'tool' ? 0 : 2)}`
-                                          : ''}
-                                        {resource.is_shortage || resource.shortage_quantity > 0
-                                          ? ` - shortage ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)}`
-                                          : ''}
-                                      </span>
-                                    </div>
+                                    <StatRow
+                                      key={`${task.id}-${resource.id ?? resource.name}`}
+                                      className="task-card-resource-row"
+                                      label={resource.name ?? resource.resource_name}
+                                      value={`Need ${safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}${resource.available_quantity !== null && resource.available_quantity !== undefined
+                                        ? ` / have ${safeNumber(resource.available_quantity, resource.type === 'tool' ? 0 : 2)}`
+                                        : ''}${resource.is_shortage || resource.shortage_quantity > 0
+                                        ? ` / shortage ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)}`
+                                        : ''}`}
+                                    />
                                   ))}
                                 </div>
                               </div>
@@ -897,10 +935,12 @@ export default function PlotCalendarPage() {
                                 <strong>Shortages</strong>
                                 <div className="task-card-resource-list">
                                   {missingResources.map((resource) => (
-                                    <div key={`${task.id}-missing-${resource.id ?? resource.resource_name}`} className="task-card-resource-row">
-                                      <span>{resource.name ?? resource.resource_name}</span>
-                                      <span>{safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)} short</span>
-                                    </div>
+                                    <StatRow
+                                      key={`${task.id}-missing-${resource.id ?? resource.resource_name}`}
+                                      className="task-card-resource-row stat-row-danger"
+                                      label={resource.name ?? resource.resource_name}
+                                      value={`${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)} short`}
+                                    />
                                   ))}
                                 </div>
                               </div>
@@ -911,11 +951,11 @@ export default function PlotCalendarPage() {
                     </article>
                   )
                 })}
-              </div>
+                </div>
+              </section>
             ) : null}
-          </div>
-        </div>
-      ) : null}
+        </DialogBody>
+      </Drawer>
     </div>
   )
 }

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kompiuterizuojamų panaudojimo atvejų diagrama</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #526070;
+      --line: #334155;
+      --paper: #ffffff;
+      --page: #f5f7fb;
+      --view: #dcecff;
+      --control: #ffe1e7;
+      --entity: #fff2bf;
+      --external: #ece7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    main {
+      width: min(1880px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid #d5dbe7;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+    .comment {
+      border-left: 4px solid #8aa5d6;
+      background: #f7faff;
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      color: #334155;
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    .legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 16px; height: 12px; border: 1px solid #64748b; display: inline-block; }
+    .canvas { overflow: auto; border: 1px solid #dbe3ef; background: #fff; }
+    svg { display: block; max-width: none; background: #fff; }
+    .uml-title { font-size: 18px; font-weight: 700; }
+    .pkg-title, .lane-title { font-size: 15px; font-weight: 700; }
+    .stereo { font-size: 11px; fill: #5b6472; font-style: italic; }
+    .class-name { font-size: 13px; font-weight: 700; }
+    .member { font-size: 11px; fill: #172033; }
+    .small { font-size: 10px; fill: #374151; }
+    .edge-label { font-size: 11px; fill: #1f2937; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 13px; }
+    th, td { border: 1px solid #d9e1ee; padding: 7px 8px; vertical-align: top; }
+    th { background: #eef3ff; text-align: left; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+    ul { margin-top: 6px; }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; border: 0; box-shadow: none; }
+      .canvas { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Kompiuterizuojamų panaudojimo atvejų diagrama</h1>
+  <div class="meta">Sugeneruota: 2026-04-29. Šaltinis: faktinė Laravel + React codebase būsena.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#dcecff"></i> Views / boundaries</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> Controllers / services</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> Models / entities / types</span>
+    <span><i class="swatch" style="background:#ece7ff"></i> External systems / boundaries</span>
+  </div>
+  <div class="comment">PA peržiūrėti pagal React puslapius, frontend api.js metodus ir backend routes/api.php. Vidiniai normalizavimo servisai diagramoje nerodomi kaip PA; jie palikti klasių diagramose.</div>
+  <div class="canvas"><svg width="1800" height="1440" role="img" aria-label="Kompiuterizuojamų PA diagrama">
+    <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#334155"></path>
+    </marker>
+    <marker id="openArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8" fill="none" stroke="#334155" stroke-width="1.5"></path>
+    </marker>
+    <marker id="diamond" markerWidth="12" markerHeight="10" refX="2" refY="5" orient="auto">
+      <path d="M2,5 L6,1 L10,5 L6,9 z" fill="#334155" stroke="#334155"></path>
+    </marker>
+  </defs>
+    <text x="24" y="30" class="uml-title">Kompiuterizuojamų panaudojimo atvejų diagrama</text>
+    <rect x="160" y="60" width="1390" height="130" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="855" y="84" text-anchor="middle" class="pkg-title">Naudotojo paskyros valdymo posistemis</text>
+    <rect x="160" y="250" width="1400" height="230" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="860" y="274" text-anchor="middle" class="pkg-title">Sklypo valdymo posistemis</text>
+    <rect x="160" y="540" width="1230" height="235" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="775" y="564" text-anchor="middle" class="pkg-title">Augalų ir katalogo posistemis</text>
+    <rect x="160" y="835" width="1510" height="210" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="915" y="859" text-anchor="middle" class="pkg-title">Veiksmų ir priežiūros posistemis</text>
+    <rect x="160" y="1060" width="980" height="120" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="650" y="1084" text-anchor="middle" class="pkg-title">Inventoriaus posistemis</text>
+    <rect x="160" y="1215" width="1060" height="125" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="690" y="1239" text-anchor="middle" class="pkg-title">Bendruomenės / dalijimosi posistemis</text>
+    <rect x="1280" y="1060" width="470" height="190" fill="#eef3ff" stroke="#7b89a8" opacity="0.72"></rect>
+      <text x="1515" y="1084" text-anchor="middle" class="pkg-title">Administravimo posistemis</text>
+    <circle cx="60" cy="90" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="60" y1="101" x2="60" y2="135" stroke="#334155"></line>
+    <line x1="40" y1="114" x2="80" y2="114" stroke="#334155"></line>
+    <line x1="60" y1="135" x2="42" y2="162" stroke="#334155"></line>
+    <line x1="60" y1="135" x2="78" y2="162" stroke="#334155"></line>
+    <text x="60" y="184" text-anchor="middle" class="small">Svečias</text>
+    <circle cx="60" cy="365" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="60" y1="376" x2="60" y2="410" stroke="#334155"></line>
+    <line x1="40" y1="389" x2="80" y2="389" stroke="#334155"></line>
+    <line x1="60" y1="410" x2="42" y2="437" stroke="#334155"></line>
+    <line x1="60" y1="410" x2="78" y2="437" stroke="#334155"></line>
+    <text x="60" y="459" text-anchor="middle" class="small">Daržo savininkas</text>
+    <circle cx="60" cy="670" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="60" y1="681" x2="60" y2="715" stroke="#334155"></line>
+    <line x1="40" y1="694" x2="80" y2="694" stroke="#334155"></line>
+    <line x1="60" y1="715" x2="42" y2="742" stroke="#334155"></line>
+    <line x1="60" y1="715" x2="78" y2="742" stroke="#334155"></line>
+    <text x="60" y="764" text-anchor="middle" class="small">Naudotojas</text>
+    <circle cx="60" cy="1120" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="60" y1="1131" x2="60" y2="1165" stroke="#334155"></line>
+    <line x1="40" y1="1144" x2="80" y2="1144" stroke="#334155"></line>
+    <line x1="60" y1="1165" x2="42" y2="1192" stroke="#334155"></line>
+    <line x1="60" y1="1165" x2="78" y2="1192" stroke="#334155"></line>
+    <text x="60" y="1214" text-anchor="middle" class="small">Administratorius</text>
+    <circle cx="1680" cy="105" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="1680" y1="116" x2="1680" y2="150" stroke="#334155"></line>
+    <line x1="1660" y1="129" x2="1700" y2="129" stroke="#334155"></line>
+    <line x1="1680" y1="150" x2="1662" y2="177" stroke="#334155"></line>
+    <line x1="1680" y1="150" x2="1698" y2="177" stroke="#334155"></line>
+    <text x="1680" y="199" text-anchor="middle" class="small">El. pašto</text>
+<text x="1680" y="212" text-anchor="middle" class="small">serveris</text>
+    <circle cx="1680" cy="710" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="1680" y1="721" x2="1680" y2="755" stroke="#334155"></line>
+    <line x1="1660" y1="734" x2="1700" y2="734" stroke="#334155"></line>
+    <line x1="1680" y1="755" x2="1662" y2="782" stroke="#334155"></line>
+    <line x1="1680" y1="755" x2="1698" y2="782" stroke="#334155"></line>
+    <text x="1680" y="804" text-anchor="middle" class="small">Perenual API</text>
+    <circle cx="1680" cy="890" r="11" fill="#fff" stroke="#334155"></circle>
+    <line x1="1680" y1="901" x2="1680" y2="935" stroke="#334155"></line>
+    <line x1="1660" y1="914" x2="1700" y2="914" stroke="#334155"></line>
+    <line x1="1680" y1="935" x2="1662" y2="962" stroke="#334155"></line>
+    <line x1="1680" y1="935" x2="1698" y2="962" stroke="#334155"></line>
+    <text x="1680" y="984" text-anchor="middle" class="small">Meteo.lt</text>
+    <ellipse cx="275" cy="126" rx="85" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="275" y="126" text-anchor="middle" class="small">PA1 Registruotis</text>
+<ellipse cx="485" cy="126" rx="85" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="485" y="126" text-anchor="middle" class="small">PA2 Prisijungti</text>
+<ellipse cx="695" cy="126" rx="85" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="695" y="126" text-anchor="middle" class="small">PA3 Atsijungti</text>
+<ellipse cx="915" cy="126" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="915" y="126" text-anchor="middle" class="small">PA4 Atkurti slaptažodį</text>
+<ellipse cx="1150" cy="126" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1150" y="120" text-anchor="middle" class="small">PA5 Redaguoti paskyros</text>
+<text x="1150" y="133" text-anchor="middle" class="small">duomenis</text>
+<ellipse cx="1390" cy="126" rx="100" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1390" y="120" text-anchor="middle" class="small">PA6 Peržiūrėti pradinį</text>
+<text x="1390" y="133" text-anchor="middle" class="small">skydelį</text>
+<ellipse cx="275" cy="326" rx="85" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="275" y="326" text-anchor="middle" class="small">PA7 Valdyti sklypus</text>
+<ellipse cx="495" cy="326" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="495" y="326" text-anchor="middle" class="small">PA8 Valdyti sklypo planą</text>
+<ellipse cx="715" cy="326" rx="85" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="715" y="326" text-anchor="middle" class="small">PA9 Valdyti zonas</text>
+<ellipse cx="925" cy="326" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="925" y="320" text-anchor="middle" class="small">PA10 Eksportuoti sklypą</text>
+<text x="925" y="333" text-anchor="middle" class="small">PDF</text>
+<ellipse cx="1170" cy="326" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1170" y="320" text-anchor="middle" class="small">PA11 Peržiūrėti</text>
+<text x="1170" y="333" text-anchor="middle" class="small">planavimo istoriją</text>
+<ellipse cx="1425" cy="326" rx="105" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1425" y="320" text-anchor="middle" class="small">PA12 Valdyti sklypo</text>
+<text x="1425" y="333" text-anchor="middle" class="small">prieigą</text>
+<ellipse cx="290" cy="421" rx="100" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="290" y="415" text-anchor="middle" class="small">PA13 Planuoti augalų</text>
+<text x="290" y="428" text-anchor="middle" class="small">rotaciją</text>
+<ellipse cx="515" cy="421" rx="85" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="515" y="421" text-anchor="middle" class="small">PA14 Registruoti derlių</text>
+<ellipse cx="750" cy="421" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="750" y="415" text-anchor="middle" class="small">PA15 Analizuoti sklypo</text>
+<text x="750" y="428" text-anchor="middle" class="small">rezultatus</text>
+<ellipse cx="285" cy="616" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="285" y="616" text-anchor="middle" class="small">PA16 Peržiūrėti augalus</text>
+<ellipse cx="510" cy="616" rx="100" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="510" y="616" text-anchor="middle" class="small">PA17 Valdyti augalus</text>
+<ellipse cx="755" cy="616" rx="105" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="755" y="610" text-anchor="middle" class="small">PA18 Peržiūrėti augalo</text>
+<text x="755" y="623" text-anchor="middle" class="small">informaciją</text>
+<ellipse cx="995" cy="616" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="995" y="610" text-anchor="middle" class="small">PA19 Įrašyti augalo</text>
+<text x="995" y="623" text-anchor="middle" class="small">būklę</text>
+<ellipse cx="1235" cy="616" rx="115" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1235" y="610" text-anchor="middle" class="small">PA20 Peržiūrėti būklės</text>
+<text x="1235" y="623" text-anchor="middle" class="small">istoriją</text>
+<ellipse cx="300" cy="711" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="300" y="705" text-anchor="middle" class="small">PA21 Peržiūrėti augalų</text>
+<text x="300" y="718" text-anchor="middle" class="small">katalogą</text>
+<ellipse cx="550" cy="711" rx="100" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="550" y="705" text-anchor="middle" class="small">PA22 Ieškoti augalo</text>
+<text x="550" y="718" text-anchor="middle" class="small">kataloge</text>
+<ellipse cx="805" cy="711" rx="115" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="805" y="705" text-anchor="middle" class="small">PA23 Peržiūrėti</text>
+<text x="805" y="718" text-anchor="middle" class="small">priežiūros informaciją</text>
+<ellipse cx="1080" cy="711" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1080" y="705" text-anchor="middle" class="small">PA24 Pridėti augalą iš</text>
+<text x="1080" y="718" text-anchor="middle" class="small">katalogo</text>
+<ellipse cx="1345" cy="711" rx="115" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1345" y="705" text-anchor="middle" class="small">PA25 Gauti Perenual</text>
+<text x="1345" y="718" text-anchor="middle" class="small">augalo informaciją</text>
+<ellipse cx="315" cy="913" rx="125" ry="28" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="315" y="907" text-anchor="middle" class="small">PA26 Generuoti</text>
+<text x="315" y="920" text-anchor="middle" class="small">rekomendacinį kalendorių</text>
+<ellipse cx="590" cy="913" rx="110" ry="28" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="590" y="907" text-anchor="middle" class="small">PA27 Peržiūrėti</text>
+<text x="590" y="920" text-anchor="middle" class="small">kalendorių ir užduotis</text>
+<ellipse cx="835" cy="913" rx="95" ry="28" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="835" y="907" text-anchor="middle" class="small">PA28 Pažymėti užduotį</text>
+<text x="835" y="920" text-anchor="middle" class="small">atlikta</text>
+<ellipse cx="1055" cy="913" rx="85" ry="28" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1055" y="913" text-anchor="middle" class="small">PA29 Atšaukti užduotį</text>
+<ellipse cx="1280" cy="913" rx="100" ry="28" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1280" y="913" text-anchor="middle" class="small">PA30 Gauti orų prognozes</text>
+<ellipse cx="1535" cy="913" rx="115" ry="28" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1535" y="907" text-anchor="middle" class="small">PA31 Patikrinti</text>
+<text x="1535" y="920" text-anchor="middle" class="small">inventoriaus padengimą</text>
+<ellipse cx="855" cy="996" rx="115" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="855" y="990" text-anchor="middle" class="small">PA36 Pažymėti sunaudotus</text>
+<text x="855" y="1003" text-anchor="middle" class="small">resursus</text>
+<ellipse cx="285" cy="1126" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="285" y="1120" text-anchor="middle" class="small">PA32 Peržiūrėti</text>
+<text x="285" y="1133" text-anchor="middle" class="small">inventorių</text>
+<ellipse cx="515" cy="1126" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="515" y="1120" text-anchor="middle" class="small">PA33 Papildyti</text>
+<text x="515" y="1133" text-anchor="middle" class="small">inventorių</text>
+<ellipse cx="755" cy="1126" rx="105" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="755" y="1120" text-anchor="middle" class="small">PA34 Redaguoti</text>
+<text x="755" y="1133" text-anchor="middle" class="small">inventoriaus elementą</text>
+<ellipse cx="1015" cy="1126" rx="105" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1015" y="1120" text-anchor="middle" class="small">PA35 Šalinti</text>
+<text x="1015" y="1133" text-anchor="middle" class="small">inventoriaus elementą</text>
+<ellipse cx="300" cy="1286" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="300" y="1280" text-anchor="middle" class="small">PA37 Peržiūrėti</text>
+<text x="300" y="1293" text-anchor="middle" class="small">bendruomenės įrašus</text>
+<ellipse cx="565" cy="1286" rx="105" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="565" y="1280" text-anchor="middle" class="small">PA38 Kurti bendruomenės</text>
+<text x="565" y="1293" text-anchor="middle" class="small">įrašą</text>
+<ellipse cx="830" cy="1286" rx="110" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="830" y="1280" text-anchor="middle" class="small">PA39 Redaguoti</text>
+<text x="830" y="1293" text-anchor="middle" class="small">bendruomenės įrašą</text>
+<ellipse cx="1095" cy="1286" rx="105" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1095" y="1280" text-anchor="middle" class="small">PA40 Šalinti</text>
+<text x="1095" y="1293" text-anchor="middle" class="small">bendruomenės įrašą</text>
+<ellipse cx="1415" cy="1126" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1415" y="1126" text-anchor="middle" class="small">PA41 Valdyti naudotojus</text>
+<ellipse cx="1625" cy="1126" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1625" y="1120" text-anchor="middle" class="small">PA42 Keisti naudotojo</text>
+<text x="1625" y="1133" text-anchor="middle" class="small">rolę</text>
+<ellipse cx="1415" cy="1211" rx="95" ry="26" fill="#fffbd8" stroke="#8a7a26" stroke-width="1.2"></ellipse>
+      <text x="1415" y="1211" text-anchor="middle" class="small">PA43 Šalinti naudotoją</text>
+    <line x1="82" y1="125" x2="275" y2="126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="125" x2="485" y2="126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="125" x2="915" y2="126" stroke="#334155" stroke-width="1.1"></line>
+    <line x1="82" y1="400" x2="275" y2="326" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="495" y2="326" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="290" y2="421" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="515" y2="421" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="750" y2="421" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="315" y2="913" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="285" y2="1126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="400" x2="300" y2="1286" stroke="#334155" stroke-width="1.1"></line>
+    <line x1="82" y1="705" x2="695" y2="126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="705" x2="1150" y2="126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="705" x2="285" y2="616" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="705" x2="300" y2="711" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="705" x2="590" y2="913" stroke="#334155" stroke-width="1.1"></line>
+    <line x1="82" y1="1155" x2="1415" y2="1126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="1155" x2="1625" y2="1126" stroke="#334155" stroke-width="1.1"></line><line x1="82" y1="1155" x2="1415" y2="1211" stroke="#334155" stroke-width="1.1"></line>
+    <line x1="1660" y1="140" x2="915" y2="126" stroke="#334155" stroke-width="1.1"></line><line x1="1660" y1="745" x2="1345" y2="711" stroke="#334155" stroke-width="1.1"></line><line x1="1660" y1="925" x2="1280" y2="913" stroke="#334155" stroke-width="1.1"></line>
+    <line x1="495" y1="326" x2="715" y2="326" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="605" y="320" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="495" y1="326" x2="925" y2="326" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="710" y="320" text-anchor="middle" class="edge-label">«extend»</text>
+    <line x1="495" y1="326" x2="1170" y2="326" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="832.5" y="320" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="300" y1="711" x2="550" y2="711" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="425" y="705" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="755" y1="616" x2="805" y2="711" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="780" y="657.5" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="1080" y1="711" x2="1345" y2="711" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="1212.5" y="705" text-anchor="middle" class="edge-label">«extend»</text>
+    <line x1="315" y1="913" x2="1280" y2="913" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="797.5" y="907" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="315" y1="913" x2="1535" y2="913" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="925" y="907" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="835" y1="913" x2="855" y2="996" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="845" y="948.5" text-anchor="middle" class="edge-label">«extend»</text>
+    <line x1="1415" y1="1126" x2="1625" y2="1126" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="1520" y="1120" text-anchor="middle" class="edge-label">«include»</text>
+    <line x1="1415" y1="1126" x2="1415" y2="1211" stroke="#334155" stroke-dasharray="7 5" marker-end="url(#openArrow)"></line>
+      <text x="1415" y="1162.5" text-anchor="middle" class="edge-label">«include»</text>
+  </svg></div>
+</main>
+</body>
+</html>

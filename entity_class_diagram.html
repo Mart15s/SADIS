@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Esybių klasių modelis</title>
+  <style>
+    :root {
+      --ink: #1f1f1f;
+      --line: #333333;
+      --muted-line: #6d6d6d;
+      --paper: #fbfaf7;
+      --package: #ffffff;
+      --class-fill: #fff3bf;
+      --class-head: #f7dfa1;
+      --enum-fill: #fff7d6;
+      --enum-head: #f1d28a;
+      --border: #242424;
+      --shadow: rgba(0, 0, 0, 0.08);
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Times New Roman", Times, serif;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 18px;
+      border-bottom: 1px solid #d6d0c4;
+      background: rgba(251, 250, 247, 0.94);
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: 15px;
+    }
+
+    .legend {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .legend-line {
+      width: 42px;
+      border-top: 2px solid var(--line);
+    }
+
+    .legend-line.migration {
+      border-top-color: var(--muted-line);
+      border-top-style: dashed;
+    }
+
+    .canvas-wrap {
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .package {
+      position: relative;
+      width: 3560px;
+      height: 2280px;
+      background: var(--package);
+      border: 2px solid #2a2a2a;
+      box-shadow: 0 10px 24px var(--shadow);
+    }
+
+    .package-tab {
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      min-width: 430px;
+      padding: 10px 18px 9px;
+      border: 2px solid #2a2a2a;
+      border-bottom: 0;
+      background: #ffffff;
+      font-size: 23px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .package-title {
+      position: absolute;
+      top: 54px;
+      left: 26px;
+      font-size: 19px;
+      color: #303030;
+    }
+
+    #relationships {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .uml-box {
+      position: absolute;
+      z-index: 2;
+      box-sizing: border-box;
+      border: 1.6px solid var(--border);
+      background: var(--class-fill);
+      box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .uml-box.enum {
+      background: var(--enum-fill);
+    }
+
+    .uml-title {
+      border-bottom: 1.4px solid var(--border);
+      background: var(--class-head);
+      padding: 6px 8px 7px;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .uml-box.enum .uml-title {
+      background: var(--enum-head);
+    }
+
+    .stereo {
+      display: block;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.15;
+    }
+
+    .section-label {
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-style: italic;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.34);
+    }
+
+    .attributes {
+      margin: 0;
+      padding: 6px 10px 9px 16px;
+      list-style: none;
+      font-size: 14px;
+      line-height: 1.28;
+    }
+
+    .attributes li {
+      white-space: nowrap;
+    }
+
+    .connector {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 1.35;
+    }
+
+    .connector.migration {
+      stroke: var(--muted-line);
+      stroke-dasharray: 8 5;
+    }
+
+    .relationship-label,
+    .cardinality {
+      font-family: "Times New Roman", Times, serif;
+      fill: #111111;
+      paint-order: stroke;
+      stroke: #ffffff;
+      stroke-width: 4px;
+      stroke-linejoin: round;
+      font-size: 15px;
+    }
+
+    .cardinality {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    @media print {
+      .toolbar {
+        display: none;
+      }
+
+      .canvas-wrap {
+        padding: 0;
+      }
+
+      .package {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <strong>Esybių klasių modelis</strong>
+    <span class="legend"><span class="legend-line"></span> Eloquent relation / FK patvirtintas ryšys</span>
+    <span class="legend"><span class="legend-line migration"></span> migracijos FK arba schema-pagrįstas ryšys</span>
+  </div>
+
+  <main class="canvas-wrap">
+    <section class="package" id="package">
+      <div class="package-tab">package Models [ Esybių klasių modelis ]</div>
+      <div class="package-title">Laravel Eloquent esybės, enumai ir faktiniai DB ryšiai</div>
+      <svg id="relationships" width="3560" height="2280" viewBox="0 0 3560 2280" aria-hidden="true"></svg>
+    </section>
+  </main>
+
+  <script>
+    const modelClass = "«entity»";
+    const enumClass = "«enumeration»";
+
+    const boxes = [
+      {
+        id: "User", type: "entity", x: 80, y: 100, w: 270,
+        name: "User",
+        attributes: [
+          "id : BigInt",
+          "email : String",
+          "password : String {hidden}",
+          "reset_code : String? {hidden}",
+          "role : UserRole",
+          "created_at : DateTime?",
+          "updated_at : DateTime?"
+        ]
+      },
+      {
+        id: "Profile", type: "entity", x: 400, y: 100, w: 270,
+        name: "Profile",
+        attributes: [
+          "id : BigInt",
+          "user_id : BigInt?",
+          "name : String",
+          "surname : String",
+          "last_login : DateTime?"
+        ]
+      },
+      {
+        id: "GardenOwner", type: "entity", x: 720, y: 100, w: 300,
+        name: "GardenOwner",
+        attributes: [
+          "id_user : BigInt",
+          "fk_profile_id : BigInt",
+          "id : BigInt",
+          "user_id : BigInt"
+        ]
+      },
+      {
+        id: "AccessRight", type: "entity", x: 1080, y: 80, w: 360,
+        name: "AccessRight",
+        attributes: [
+          "id : BigInt",
+          "granted_at : DateTime",
+          "role : AccessRole",
+          "fk_plot_id : BigInt",
+          "plot_id : BigInt?",
+          "garden_owner_id : BigInt?",
+          "fk_grantor_owner_id : BigInt",
+          "fk_grantor_profile_id : BigInt",
+          "fk_recipient_owner_id : BigInt",
+          "fk_recipient_profile_id : BigInt"
+        ]
+      },
+      {
+        id: "AuditLog", type: "entity", x: 1490, y: 105, w: 300,
+        name: "AuditLog",
+        attributes: [
+          "id : BigInt",
+          "admin_user_id : BigInt?",
+          "action : String",
+          "target_user_id : BigInt?",
+          "context : JSON?",
+          "created_at : DateTime"
+        ]
+      },
+      {
+        id: "PlantCare", type: "entity", x: 80, y: 425, w: 390,
+        name: "PlantCare",
+        attributes: [
+          "id : BigInt",
+          "description : Text",
+          "conditions : Text?",
+          "growing_duration_days : Integer?",
+          "flowering_duration_days : Integer?",
+          "germinating_duration_days : Integer?",
+          "mature_duration_days : Integer?",
+          "mature_duration_end_days : Integer?",
+          "mature_end_duration_days : Integer?",
+          "regenerating_duration_days : Integer?",
+          "reusable : Boolean = false",
+          "plant_name : String",
+          "canonical_name : String?",
+          "task_type : TaskType",
+          "plant_type : PlantType",
+          "condition : ConditionType",
+          "watering_interval_days : Integer = 2",
+          "fertilizing_interval_days : Integer = 14",
+          "pest_check_interval_days : Integer = 7",
+          "rain_skip_threshold_mm : Decimal",
+          "frost_temp_threshold_c : Decimal",
+          "heat_extra_water_temp_c : Decimal",
+          "wind_protection_kmh : Decimal",
+          "source_provider : String?",
+          "source_quality : String?",
+          "source_perenual_species_id : BigInt?",
+          "source_common_name : String?",
+          "source_scientific_name : String?",
+          "source_family : String?",
+          "source_image_url : Text?"
+        ]
+      },
+      {
+        id: "CatalogPlant", type: "entity", x: 525, y: 455, w: 360,
+        name: "CatalogPlant",
+        attributes: [
+          "id : BigInt",
+          "name : String",
+          "canonical_name : String",
+          "plant_type : PlantType?",
+          "fk_plant_care_id : BigInt?",
+          "description : Text?",
+          "source_provider : String?",
+          "source_quality : String?",
+          "source_scientific_name : String?",
+          "source_family : String?",
+          "source_image_url : Text?",
+          "metadata : JSON?"
+        ]
+      },
+      {
+        id: "Plant", type: "entity", x: 940, y: 430, w: 395,
+        name: "Plant",
+        attributes: [
+          "id : BigInt",
+          "name : String",
+          "growing_time_days : Integer?",
+          "recommended_temperature : Decimal?",
+          "recommended_humidity : Decimal?",
+          "plant_date : Date",
+          "disease_notes : String?",
+          "disease : Boolean = false",
+          "rest_time_days : Integer?",
+          "plant_size : Decimal?",
+          "photo_url : String?",
+          "reusable : Boolean = false",
+          "type : PlantType",
+          "condition : ConditionType",
+          "fk_catalog_plant_id : BigInt?",
+          "plant_zone_id : BigInt?",
+          "fk_plant_zone_id : BigInt",
+          "fk_plot_id : BigInt"
+        ]
+      },
+      {
+        id: "PlantConditionHistory", type: "entity", x: 1390, y: 455, w: 330,
+        name: "PlantConditionHistory",
+        attributes: [
+          "id : BigInt",
+          "plant_id : BigInt?",
+          "fk_plant_id : BigInt",
+          "measured_at : DateTime",
+          "notes : Text?",
+          "photo_url : String?",
+          "condition : ConditionType",
+          "condition_type : ConditionType?"
+        ]
+      },
+      {
+        id: "Plot", type: "entity", x: 1790, y: 385, w: 335,
+        name: "Plot",
+        attributes: [
+          "id : BigInt",
+          "garden_owner_id : BigInt",
+          "name : String",
+          "city : String",
+          "plot_size : Decimal",
+          "creation_date : Date",
+          "description : Text?",
+          "share : Boolean = false",
+          "geometry : JSON?"
+        ]
+      },
+      {
+        id: "PlantZone", type: "entity", x: 2185, y: 395, w: 355,
+        name: "PlantZone",
+        attributes: [
+          "id : BigInt",
+          "plot_id : BigInt?",
+          "fk_plot_id : BigInt",
+          "name : String",
+          "zone_size : Decimal",
+          "soil_type : SoilType",
+          "rotation_stage : Integer = 0",
+          "last_planting_date : Date?",
+          "geometry : JSON?"
+        ]
+      },
+      {
+        id: "TaskCalendar", type: "entity", x: 2600, y: 385, w: 310,
+        name: "TaskCalendar",
+        attributes: [
+          "id : BigInt",
+          "creation_date : DateTime",
+          "start_date : Date",
+          "end_date : Date",
+          "fk_plot_id : BigInt",
+          "plot_id : BigInt?"
+        ]
+      },
+      {
+        id: "Task", type: "entity", x: 2965, y: 360, w: 430,
+        name: "Task",
+        attributes: [
+          "id : BigInt",
+          "date : Date",
+          "name : String",
+          "type : String?",
+          "task_type : TaskType",
+          "priority : TaskPriority?",
+          "reason : Text?",
+          "comment : Text?",
+          "item : String?",
+          "item_quantity : Decimal?",
+          "weather_context : JSON?",
+          "inventory_context : JSON?",
+          "simulated_state : JSON?",
+          "workflow_context : JSON?",
+          "status : TaskState",
+          "state : TaskState",
+          "fk_task_calendar_id : BigInt",
+          "task_calendar_id : BigInt",
+          "fk_plant_id : BigInt?",
+          "plant_id : BigInt?",
+          "plant_zone_id : BigInt?"
+        ]
+      },
+      {
+        id: "RotationHistory", type: "entity", x: 1765, y: 765, w: 360,
+        name: "RotationHistory",
+        attributes: [
+          "id : BigInt",
+          "plant_zone_id : BigInt?",
+          "from_date : Date",
+          "to_date : Date?",
+          "fk_plot_id : BigInt",
+          "fk_plant_zone_id : BigInt",
+          "fk_plot_via_zone : BigInt",
+          "fk_plant_id : BigInt"
+        ]
+      },
+      {
+        id: "RotationPlanDraft", type: "entity", x: 2180, y: 770, w: 340,
+        name: "RotationPlanDraft",
+        attributes: [
+          "id : BigInt",
+          "plot_id : BigInt",
+          "garden_owner_id : BigInt?",
+          "planning_date : Date",
+          "plan : JSON",
+          "created_at : DateTime",
+          "updated_at : DateTime"
+        ]
+      },
+      {
+        id: "WeatherForecast", type: "entity", x: 2585, y: 680, w: 350,
+        name: "WeatherForecast",
+        attributes: [
+          "id : BigInt",
+          "task_calendar_id : BigInt?",
+          "fk_task_calendar_id : BigInt",
+          "date : Date",
+          "temperature : Decimal",
+          "temp_min : Decimal?",
+          "temp_max : Decimal?",
+          "precipitation : Decimal",
+          "humidity : Decimal",
+          "wind_kmh : Decimal?",
+          "condition_code : String?",
+          "is_seasonal_fallback : Boolean",
+          "source : String?",
+          "source_date : Date?",
+          "source_city : String?",
+          "city : String"
+        ]
+      },
+      {
+        id: "TaskResourceRequirement", type: "entity", x: 2970, y: 945, w: 405,
+        name: "TaskResourceRequirement",
+        attributes: [
+          "id : BigInt",
+          "task_id : BigInt",
+          "resource_name : String",
+          "normalized_name : String",
+          "inventory_item_type : InventoryItemType",
+          "unit : InventoryUnit",
+          "required_quantity : Decimal",
+          "shortage_quantity : Decimal = 0",
+          "is_consumed : Boolean = true"
+        ]
+      },
+      {
+        id: "InventoryItem", type: "entity", x: 80, y: 1145, w: 360,
+        name: "InventoryItem",
+        attributes: [
+          "id : BigInt",
+          "garden_owner_id : BigInt",
+          "name : String",
+          "normalized_name : String",
+          "quantity : Decimal",
+          "inventory_item_type : InventoryItemType",
+          "type : InventoryItemType",
+          "unit : InventoryUnit"
+        ]
+      },
+      {
+        id: "HasInventory", type: "entity", x: 500, y: 1155, w: 285,
+        name: "HasInventory",
+        attributes: [
+          "fk_inventory_item_id : BigInt",
+          "fk_owner_id : BigInt",
+          "fk_profile_id : BigInt"
+        ]
+      },
+      {
+        id: "InventoryUsageLog", type: "entity", x: 845, y: 1115, w: 405,
+        name: "InventoryUsageLog",
+        attributes: [
+          "id : BigInt",
+          "inventory_item_id : BigInt",
+          "task_id : BigInt?",
+          "task_resource_requirement_id : BigInt?",
+          "garden_owner_id : BigInt",
+          "change_type : String",
+          "quantity_before : Decimal",
+          "quantity_delta : Decimal",
+          "quantity_after : Decimal",
+          "unit : InventoryUnit",
+          "metadata : JSON?",
+          "created_at : DateTime"
+        ]
+      },
+      {
+        id: "HarvestRecord", type: "entity", x: 1310, y: 1120, w: 340,
+        name: "HarvestRecord",
+        attributes: [
+          "id : BigInt",
+          "plot_id : BigInt",
+          "plant_id : BigInt",
+          "task_id : BigInt?",
+          "garden_owner_id : BigInt?",
+          "quantity : Float",
+          "harvested_on : Date",
+          "notes : Text?",
+          "created_at : DateTime",
+          "updated_at : DateTime"
+        ]
+      },
+      {
+        id: "HasPlot", type: "entity", x: 1700, y: 1135, w: 265,
+        name: "HasPlot",
+        attributes: [
+          "fk_plot_id : BigInt",
+          "fk_owner_id : BigInt",
+          "fk_profile_id : BigInt"
+        ]
+      },
+      {
+        id: "UsedOn", type: "entity", x: 2030, y: 1135, w: 260,
+        name: "UsedOn",
+        attributes: [
+          "fk_plant_zone_id : BigInt",
+          "fk_plot_id : BigInt",
+          "fk_task_id : BigInt"
+        ]
+      },
+      {
+        id: "CommunityPost", type: "entity", x: 2345, y: 1110, w: 360,
+        name: "CommunityPost",
+        attributes: [
+          "id : BigInt",
+          "garden_owner_id : BigInt?",
+          "plot_id : BigInt?",
+          "fk_owner_id : BigInt",
+          "fk_profile_id : BigInt",
+          "fk_plot_id : BigInt?",
+          "name : String",
+          "text : Text",
+          "share : Boolean = true",
+          "created_at : DateTime"
+        ]
+      },
+      {
+        id: "AccessRole", type: "enum", x: 80, y: 1585, w: 250,
+        name: "AccessRole",
+        attributes: ["viewer", "editor"]
+      },
+      {
+        id: "AnalysisType", type: "enum", x: 370, y: 1585, w: 260,
+        name: "AnalysisType",
+        attributes: ["planning", "plant_condition", "harvest"]
+      },
+      {
+        id: "ConditionType", type: "enum", x: 670, y: 1585, w: 280,
+        name: "ConditionType",
+        attributes: ["diseased", "dried", "flowering", "germinating", "growing", "mature", "planted", "regenerating"]
+      },
+      {
+        id: "InventoryItemType", type: "enum", x: 990, y: 1585, w: 270,
+        name: "InventoryItemType",
+        attributes: ["material", "tool"]
+      },
+      {
+        id: "InventoryUnit", type: "enum", x: 1300, y: 1585, w: 260,
+        name: "InventoryUnit",
+        attributes: ["unit", "g", "kg", "ml", "l", "bag", "pack", "m3"]
+      },
+      {
+        id: "PlantType", type: "enum", x: 1600, y: 1585, w: 280,
+        name: "PlantType",
+        attributes: ["berry", "cereal", "flower", "forage", "fruit", "herb", "legume", "oilseed", "shrub", "tree", "vegetable"]
+      },
+      {
+        id: "SoilType", type: "enum", x: 1920, y: 1585, w: 250,
+        name: "SoilType",
+        attributes: ["clay", "greasy", "peaty", "rocky", "sandy"]
+      },
+      {
+        id: "TaskPriority", type: "enum", x: 2210, y: 1585, w: 250,
+        name: "TaskPriority",
+        attributes: ["low", "medium", "high"]
+      },
+      {
+        id: "TaskState", type: "enum", x: 2500, y: 1585, w: 250,
+        name: "TaskState",
+        attributes: ["pending", "completed", "canceled"]
+      },
+      {
+        id: "TaskType", type: "enum", x: 2790, y: 1585, w: 260,
+        name: "TaskType",
+        attributes: ["buy", "fertilize", "harvest", "planting", "rest", "spray", "transplant", "watering"]
+      },
+      {
+        id: "UserRole", type: "enum", x: 3090, y: 1585, w: 250,
+        name: "UserRole",
+        attributes: ["admin", "owner"]
+      }
+    ];
+
+    const relationships = [
+      { from: "User", to: "Profile", label: "profile", fromCard: "1", toCard: "0..1" },
+      { from: "User", to: "GardenOwner", label: "gardenOwner", fromCard: "1", toCard: "0..1" },
+      { from: "User", to: "AuditLog", label: "admin", fromCard: "0..1", toCard: "0..*" },
+      { from: "User", to: "AuditLog", label: "targetUser", fromCard: "0..1", toCard: "0..*" },
+      { from: "Profile", to: "GardenOwner", label: "gardenOwner", fromCard: "1", toCard: "0..1" },
+      { from: "GardenOwner", to: "Plot", label: "ownedPlots", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "PlantZone", label: "plantZones", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "Plant", label: "plants", fromCard: "1", toCard: "0..*" },
+      { from: "PlantZone", to: "Plant", label: "plants", fromCard: "1", toCard: "0..*" },
+      { from: "PlantCare", to: "CatalogPlant", label: "plantCare", fromCard: "0..1", toCard: "0..*" },
+      { from: "CatalogPlant", to: "Plant", label: "catalogPlant", fromCard: "0..1", toCard: "0..*" },
+      { from: "Plant", to: "PlantConditionHistory", label: "conditionHistory", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "RotationHistory", label: "rotationHistory", fromCard: "1", toCard: "0..*" },
+      { from: "PlantZone", to: "RotationHistory", label: "rotationHistory", fromCard: "1", toCard: "0..*" },
+      { from: "Plant", to: "RotationHistory", label: "rotationHistory", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "RotationPlanDraft", label: "rotationPlanDrafts", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "RotationPlanDraft", label: "draft owner", fromCard: "0..1", toCard: "0..*" },
+      { from: "Plot", to: "TaskCalendar", label: "taskCalendars", fromCard: "1", toCard: "0..*" },
+      { from: "TaskCalendar", to: "Task", label: "tasks", fromCard: "1", toCard: "0..*" },
+      { from: "TaskCalendar", to: "WeatherForecast", label: "weatherForecasts", fromCard: "1", toCard: "0..*" },
+      { from: "Plant", to: "Task", label: "plant", fromCard: "0..1", toCard: "0..*" },
+      { from: "PlantZone", to: "Task", label: "plantZone", fromCard: "0..1", toCard: "0..*" },
+      { from: "Plot", to: "HasPlot", label: "plotLinks", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "HasPlot", label: "plotLinks", fromCard: "1", toCard: "0..*" },
+      { from: "Profile", to: "HasPlot", label: "plotLinks", fromCard: "1", toCard: "0..*" },
+      { from: "InventoryItem", to: "HasInventory", label: "inventoryLinks", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "HasInventory", label: "inventoryLinks", fromCard: "1", toCard: "0..*" },
+      { from: "Profile", to: "HasInventory", label: "inventoryLinks", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "InventoryItem", label: "ownedInventoryItems", fromCard: "1", toCard: "0..*" },
+      { from: "PlantZone", to: "UsedOn", label: "usedOn", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "UsedOn", label: "usedOn", fromCard: "1", toCard: "0..*" },
+      { from: "Task", to: "UsedOn", label: "usedOn", fromCard: "1", toCard: "0..*" },
+      { from: "Task", to: "TaskResourceRequirement", label: "requiredResources", fromCard: "1", toCard: "0..*" },
+      { from: "InventoryItem", to: "InventoryUsageLog", label: "usageLogs", fromCard: "1", toCard: "0..*" },
+      { from: "Task", to: "InventoryUsageLog", label: "inventoryUsageLogs", fromCard: "0..1", toCard: "0..*" },
+      { from: "TaskResourceRequirement", to: "InventoryUsageLog", label: "usageLogs", fromCard: "0..1", toCard: "0..*" },
+      { from: "GardenOwner", to: "InventoryUsageLog", label: "owner", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "HarvestRecord", label: "harvestRecords", fromCard: "1", toCard: "0..*" },
+      { from: "Plant", to: "HarvestRecord", label: "harvestRecords", fromCard: "1", toCard: "0..*" },
+      { from: "Task", to: "HarvestRecord", label: "harvestRecords", fromCard: "0..1", toCard: "0..*" },
+      { from: "GardenOwner", to: "HarvestRecord", label: "harvestRecords", fromCard: "0..1", toCard: "0..*" },
+      { from: "Plot", to: "AccessRight", label: "accessRights", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "AccessRight", label: "grantor", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "AccessRight", label: "recipient", fromCard: "1", toCard: "0..*" },
+      { from: "Profile", to: "AccessRight", label: "grantorProfile", fromCard: "1", toCard: "0..*" },
+      { from: "Profile", to: "AccessRight", label: "recipientProfile", fromCard: "1", toCard: "0..*" },
+      { from: "GardenOwner", to: "CommunityPost", label: "communityPosts", fromCard: "1", toCard: "0..*" },
+      { from: "Profile", to: "CommunityPost", label: "communityPosts", fromCard: "1", toCard: "0..*" },
+      { from: "Plot", to: "CommunityPost", label: "communityPosts", fromCard: "0..1", toCard: "0..*" }
+    ];
+
+    const packageEl = document.getElementById("package");
+    const svg = document.getElementById("relationships");
+    const boxById = new Map();
+
+    function makeBox(box) {
+      const el = document.createElement("article");
+      el.className = `uml-box ${box.type === "enum" ? "enum" : ""}`;
+      el.style.left = `${box.x}px`;
+      el.style.top = `${box.y}px`;
+      el.style.width = `${box.w}px`;
+      el.dataset.id = box.id;
+
+      const title = document.createElement("div");
+      title.className = "uml-title";
+      const stereo = document.createElement("span");
+      stereo.className = "stereo";
+      stereo.textContent = box.type === "enum" ? enumClass : modelClass;
+      title.append(stereo, document.createTextNode(box.name));
+
+      const section = document.createElement("div");
+      section.className = "section-label";
+      section.textContent = box.type === "enum" ? "enumeration literals" : "attributes";
+
+      const list = document.createElement("ul");
+      list.className = "attributes";
+      box.attributes.forEach((attribute) => {
+        const li = document.createElement("li");
+        li.textContent = box.type === "enum" ? `- ${attribute}` : attribute;
+        list.appendChild(li);
+      });
+
+      el.append(title, section, list);
+      packageEl.appendChild(el);
+      boxById.set(box.id, { ...box, el });
+    }
+
+    function center(box) {
+      return { x: box.x + box.w / 2, y: box.y + box.el.offsetHeight / 2 };
+    }
+
+    function endpoint(from, to) {
+      const a = center(from);
+      const b = center(to);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        return {
+          start: { x: dx > 0 ? from.x + from.w : from.x, y: a.y },
+          end: { x: dx > 0 ? to.x : to.x + to.w, y: b.y }
+        };
+      }
+
+      return {
+        start: { x: a.x, y: dy > 0 ? from.y + from.el.offsetHeight : from.y },
+        end: { x: b.x, y: dy > 0 ? to.y : to.y + to.el.offsetHeight }
+      };
+    }
+
+    function orthogonalPoints(start, end) {
+      const horizontal = Math.abs(end.x - start.x) >= Math.abs(end.y - start.y);
+      if (horizontal) {
+        const midX = (start.x + end.x) / 2;
+        return [start, { x: midX, y: start.y }, { x: midX, y: end.y }, end];
+      }
+
+      const midY = (start.y + end.y) / 2;
+      return [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
+    }
+
+    function svgElement(name, attributes = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attributes).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    function addText(text, x, y, className, anchor = "middle") {
+      const el = svgElement("text", { x, y, class: className, "text-anchor": anchor });
+      el.textContent = text;
+      svg.appendChild(el);
+    }
+
+    function drawRelationship(rel, index) {
+      const from = boxById.get(rel.from);
+      const to = boxById.get(rel.to);
+      if (!from || !to) {
+        return;
+      }
+
+      const { start, end } = endpoint(from, to);
+      const offset = ((index % 5) - 2) * 8;
+      const points = orthogonalPoints(
+        { x: start.x, y: start.y + offset },
+        { x: end.x, y: end.y + offset }
+      );
+
+      const polyline = svgElement("polyline", {
+        points: points.map((point) => `${point.x},${point.y}`).join(" "),
+        class: `connector ${rel.status === "VERIFIED_MIGRATION_FK" ? "migration" : ""}`
+      });
+      svg.appendChild(polyline);
+
+      const labelPoint = points[Math.floor(points.length / 2)];
+      const labelX = (points[1].x + points[2].x) / 2;
+      const labelY = (points[1].y + points[2].y) / 2 - 7;
+      addText(rel.label, Number.isFinite(labelX) ? labelX : labelPoint.x, Number.isFinite(labelY) ? labelY : labelPoint.y, "relationship-label");
+
+      const startLabelX = start.x + (end.x >= start.x ? 18 : -18);
+      const endLabelX = end.x + (end.x >= start.x ? -18 : 18);
+      addText(rel.fromCard, startLabelX, start.y + offset - 8, "cardinality");
+      addText(rel.toCard, endLabelX, end.y + offset - 8, "cardinality");
+    }
+
+    boxes.forEach(makeBox);
+    relationships.forEach(drawRelationship);
+  </script>
+</body>
+</html>

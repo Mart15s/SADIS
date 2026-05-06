@@ -1,6 +1,6 @@
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PlotPlantingDrawer from './PlotPlantingDrawer.jsx'
@@ -71,7 +71,7 @@ describe('PlotPlantingDrawer', () => {
     expect(screen.getByText(/Shared plant care preview/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Edit shared care/i })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /Save planted plant/i }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Add plant to draft/i }))
 
     await waitFor(() => {
       expect(onCreatePlant).toHaveBeenCalledWith(expect.objectContaining({

@@ -10,6 +10,8 @@ class TaskResource extends JsonResource
     public function toArray(Request $request): array
     {
         $plant = $this->relationLoaded('plant') ? $this->plant : null;
+        $taskStatus = $this->state?->value ?? $this->status;
+        $isPending = $taskStatus === 'pending';
         $inventoryContext = $this->live_inventory_context ?? $this->inventory_context;
         $isReplenishmentTask = ($this->task_type ?? $this->type) === 'buy';
         $requiredResources = $isReplenishmentTask
@@ -40,8 +42,8 @@ class TaskResource extends JsonResource
             'task_type' => $this->task_type ?? $this->type,
             'priority' => $this->priority?->value ?? $this->priority,
             'reason' => $this->reason,
-            'status' => $this->state?->value ?? $this->status,
-            'state' => $this->state?->value ?? $this->status,
+            'status' => $taskStatus,
+            'state' => $taskStatus,
             'comment' => $this->comment,
             'item' => $this->item,
             'item_quantity' => $this->item_quantity === null ? null : (float) $this->item_quantity,
@@ -49,9 +51,11 @@ class TaskResource extends JsonResource
             'resource_requirements' => $requiredResources,
             'weather_context' => $this->weather_context,
             'inventory_context' => $inventoryContext,
-            'inventory_mode' => $inventoryContext['inventory_mode']
-                ?? ($isReplenishmentTask ? 'replenishment' : (($inventoryContext['status'] ?? null) === 'not_required' ? 'not_required' : ($inventoryContext['status'] ?? 'available'))),
-            'inventory_shortages' => $isReplenishmentTask
+            'inventory_mode' => $isPending
+                ? ($inventoryContext['inventory_mode']
+                    ?? ($isReplenishmentTask ? 'replenishment' : (($inventoryContext['status'] ?? null) === 'not_required' ? 'not_required' : ($inventoryContext['status'] ?? 'available'))))
+                : 'not_required',
+            'inventory_shortages' => $isPending && $isReplenishmentTask
                 ? [[
                     'resource_name' => $this->item,
                     'shortage_quantity' => data_get($inventoryContext, 'shortage_quantity', $this->item_quantity === null ? null : (float) $this->item_quantity),
@@ -61,7 +65,7 @@ class TaskResource extends JsonResource
                 ]]
                 : ($inventoryContext['missing_resources'] ?? []),
             'is_replenishment_task' => $isReplenishmentTask,
-            'can_complete' => (bool) ($this->can_complete_now ?? ($inventoryContext['is_actionable'] ?? true)),
+            'can_complete' => $isPending && (bool) ($this->can_complete_now ?? ($inventoryContext['is_actionable'] ?? true)),
             'simulated_state' => $this->simulated_state,
             'simulated_phase' => data_get($this->simulated_state, 'simulated_phase'),
             'actual_condition' => $actualCondition,

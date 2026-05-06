@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Button from '../ui/Button.jsx'
 import EmptyStatePanel from '../ui/EmptyStatePanel.jsx'
 
@@ -144,15 +145,34 @@ export function ProcessingState({
   )
 }
 
-export function SuccessToast({ message, onDismiss }) {
+const TOAST_DURATIONS = {
+  success: 3500,
+  info: 4500,
+  warning: 7000,
+  error: 9000,
+}
+
+export function Toast({ message, type = 'success', onDismiss, duration }) {
+  const dismissDelay = duration ?? TOAST_DURATIONS[type] ?? TOAST_DURATIONS.info
+
+  useEffect(() => {
+    if (!message || !onDismiss || dismissDelay === null || dismissDelay === false) {
+      return undefined
+    }
+
+    const timeoutId = window.setTimeout(onDismiss, dismissDelay)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [dismissDelay, message, onDismiss])
+
   if (!message) {
     return null
   }
 
   return (
-    <div className="toast toast-success" role="status" aria-live="polite">
+    <div className={`toast toast-${type}`} role={type === 'error' ? 'alert' : 'status'} aria-live={type === 'error' ? 'assertive' : 'polite'}>
       <span className="toast-icon">
-        <CheckIcon />
+        {type === 'error' || type === 'warning' ? <AlertIcon /> : <CheckIcon />}
       </span>
       <span className="toast-message">{message}</span>
       {onDismiss ? (
@@ -162,4 +182,8 @@ export function SuccessToast({ message, onDismiss }) {
       ) : null}
     </div>
   )
+}
+
+export function SuccessToast(props) {
+  return <Toast {...props} type="success" />
 }

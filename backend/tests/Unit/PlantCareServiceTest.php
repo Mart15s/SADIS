@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Plant;
-use App\Services\PlantCareService;
+use App\Services\Plant\PlantCareService;
 use ReflectionMethod;
 use Tests\TestCase;
 

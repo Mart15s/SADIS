@@ -2,22 +2,21 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
-import Badge from '../../components/ui/Badge.jsx'
+import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
+import { DefinitionList, KeyValueGrid } from '../../components/ui/DefinitionList.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
+import {
+  formatDayCount,
+  formatDisplayValue,
+  formatNumberWithUnit,
+  formatTemperatureC,
+} from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
-function valueOrFallback(value, suffix = '') {
-  if (value === null || value === undefined || value === '') return null
-  return `${value}${suffix}`
-}
-
-function CareMetric({ label, value, suffix = '' }) {
-  const display = valueOrFallback(value, suffix)
+function CareMetric({ label, value }) {
   return (
-    <div className="care-metric-item">
-      <span className="care-metric-label">{label}</span>
-      <span className="care-metric-value">{display ?? <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>—</span>}</span>
-    </div>
+    <KeyValueGrid className="catalog-care-metric" items={[{ label, value }]} />
   )
 }
 
@@ -42,18 +41,27 @@ export default function CatalogPlantDetailPage() {
   return (
     <div className="page-stack">
       <PageHeader
+        eyebrow="Plant catalog"
         title={catalogPlant.name}
-        description={`${catalogPlant.plant_type ?? 'Unknown type'} · ${catalogPlant.usage_count ?? 0} planted instances`}
+        description={`${catalogPlant.plant_type ?? 'Unknown type'} / ${catalogPlant.usage_count ?? 0} planted instances`}
+        meta={(
+          <>
+            {catalogPlant.plant_type ? <StatusBadge kind="selection" tone="neutral">{catalogPlant.plant_type}</StatusBadge> : null}
+            <StatusBadge kind="selection" tone={catalogPlant.usage_count > 0 ? 'success' : 'warning'}>
+              {catalogPlant.usage_count > 0 ? `${catalogPlant.usage_count} active uses` : 'Not planted yet'}
+            </StatusBadge>
+          </>
+        )}
         actions={(
           <>
             <Link to="/plants?view=catalog">
               <Button variant="secondary">Back</Button>
             </Link>
-            <Link to={`/plants/new?catalogPlantId=${catalogPlant.id}`}>
-              <Button variant="ghost">Place in Zone</Button>
-            </Link>
             <Link to={`/plants/catalog/${catalogPlant.id}/edit`}>
-              <Button>Edit</Button>
+              <Button variant="ghost">Edit</Button>
+            </Link>
+            <Link to={`/plants/new?catalogPlantId=${catalogPlant.id}`}>
+              <Button>Place in zone</Button>
             </Link>
           </>
         )}
@@ -61,105 +69,89 @@ export default function CatalogPlantDetailPage() {
 
       {notice ? <div className="inline-note">{notice}</div> : null}
 
-      <div className="detail-grid">
-        {/* ── Left: Identity ── */}
-        <section className="panel page-stack">
-          <div>
-            <h3 className="section-title">Plant Identity</h3>
-            <p className="section-copy">Reusable plant definition shared across plots and zones.</p>
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {catalogPlant.plant_type ? <Badge tone="neutral">{catalogPlant.plant_type}</Badge> : null}
-            {catalogPlant.usage_count > 0
-              ? <Badge tone="soft">{catalogPlant.usage_count} uses</Badge>
-              : <Badge tone="warning">Not planted yet</Badge>}
+      <div className="catalog-plant-layout">
+        <section className="panel page-stack catalog-plant-identity-panel">
+          <div className="plot-page-section-head">
+            <div>
+              <h2 className="section-title">At a glance</h2>
+              <p className="section-copy">Reusable identity and shared care stay compact here so you can assess the catalog entry quickly.</p>
+            </div>
           </div>
 
           {catalogPlant.description ? (
-            <div className="card">
-              <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                {catalogPlant.description}
-              </p>
-            </div>
-          ) : null}
+            <p className="catalog-plant-description">{catalogPlant.description}</p>
+          ) : (
+            <EmptyStatePanel
+              title="No description yet"
+              description="Add a short summary on the edit form so this catalog plant is easier to identify across plots."
+              tone="subtle"
+            />
+          )}
 
-          <div className="catalog-identity-grid">
-            <div className="card">
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Canonical name</span>
-              <strong style={{ marginTop: '0.2rem', display: 'block' }}>{catalogPlant.canonical_name || '—'}</strong>
-            </div>
-            <div className="card">
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Scientific name</span>
-              <strong style={{ marginTop: '0.2rem', display: 'block', fontStyle: 'italic' }}>{catalogPlant.source_scientific_name || '—'}</strong>
-            </div>
-            <div className="card">
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Family</span>
-              <strong style={{ marginTop: '0.2rem', display: 'block' }}>{catalogPlant.source_family || '—'}</strong>
-            </div>
-            <div className="card">
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Source provider</span>
-              <strong style={{ marginTop: '0.2rem', display: 'block' }}>{catalogPlant.source_provider || '—'}</strong>
-            </div>
-            <div className="card">
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Source quality</span>
-              <strong style={{ marginTop: '0.2rem', display: 'block' }}>{catalogPlant.source_quality || '—'}</strong>
-            </div>
-          </div>
+          <DefinitionList
+            items={[
+              { label: 'Canonical name', value: formatDisplayValue(catalogPlant.canonical_name) },
+              { label: 'Scientific name', value: formatDisplayValue(catalogPlant.source_scientific_name) },
+              { label: 'Family', value: formatDisplayValue(catalogPlant.source_family) },
+              { label: 'Source provider', value: formatDisplayValue(catalogPlant.source_provider) },
+              { label: 'Source quality', value: formatDisplayValue(catalogPlant.source_quality) },
+            ]}
+          />
         </section>
 
-        {/* ── Right: Care ── */}
-        <aside className="page-stack">
-          <section className="panel page-stack">
+        <section className="panel page-stack catalog-plant-care-panel">
+          <div className="plot-page-section-head">
             <div>
-              <h3 className="section-title">Shared Plant Care</h3>
-              <p className="section-copy">Editing this care updates the shared guidance for all catalog-linked plants.</p>
+              <h2 className="section-title">Shared care</h2>
+              <p className="section-copy">Catalog-linked care is reused across planted instances, so the important intervals come first.</p>
             </div>
+            {care?.reusable ? <StatusBadge kind="status" tone="success">Reusable care</StatusBadge> : null}
+          </div>
 
-            {care ? (
-              <>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                  {care.reusable ? <Badge tone="success">Reusable</Badge> : null}
-                  {care.source_provider ? <Badge tone="neutral">{care.source_provider}</Badge> : null}
-                  {care.source_quality ? <Badge tone="soft">{care.source_quality}</Badge> : null}
-                </div>
+          {care ? (
+            <>
+              <div className="catalog-care-grid">
+                <CareMetric label="Watering" value={formatDayCount(care.watering_interval_days)} />
+                <CareMetric label="Fertilizing" value={formatDayCount(care.fertilizing_interval_days)} />
+                <CareMetric label="Pest check" value={formatDayCount(care.pest_check_interval_days)} />
+                <CareMetric label="Rain skip" value={formatNumberWithUnit(care.rain_skip_threshold_mm, 'mm', 1)} />
+                <CareMetric label="Frost threshold" value={formatTemperatureC(care.frost_temp_threshold_c)} />
+                <CareMetric label="Heat threshold" value={formatTemperatureC(care.heat_extra_water_temp_c)} />
+                <CareMetric label="Wind protection" value={formatNumberWithUnit(care.wind_protection_kmh, 'km/h', 1)} />
+                <CareMetric label="Growing duration" value={formatDayCount(care.growing_duration_days)} />
+              </div>
 
-                {care.description ? (
-                  <div className="card">
-                    <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                      {care.description}
-                    </p>
-                  </div>
-                ) : null}
+              <details className="catalog-detail-disclosure" open>
+                <summary>Growing guidance</summary>
+                <DefinitionList
+                  items={[
+                    { label: 'Conditions', value: formatDisplayValue(care.conditions) },
+                    { label: 'Description', value: formatDisplayValue(care.description) },
+                  ]}
+                />
+              </details>
 
-                {care.conditions ? (
-                  <div className="card">
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Growing conditions</span>
-                    <p style={{ margin: '0.3rem 0 0', color: 'var(--text-soft)', fontSize: '0.9rem' }}>{care.conditions}</p>
-                  </div>
-                ) : null}
-
-                <div>
-                  <p style={{ margin: '0 0 0.6rem', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    At a Glance
-                  </p>
-                  <div className="care-metrics-grid">
-                    <CareMetric label="Watering" value={care.watering_interval_days} suffix=" days" />
-                    <CareMetric label="Fertilizing" value={care.fertilizing_interval_days} suffix=" days" />
-                    <CareMetric label="Pest check" value={care.pest_check_interval_days} suffix=" days" />
-                    <CareMetric label="Rain skip" value={care.rain_skip_threshold_mm} suffix=" mm" />
-                    <CareMetric label="Frost threshold" value={care.frost_temp_threshold_c} suffix=" °C" />
-                    <CareMetric label="Heat threshold" value={care.heat_extra_water_temp_c} suffix=" °C" />
-                    <CareMetric label="Wind protection" value={care.wind_protection_kmh} suffix=" km/h" />
-                    <CareMetric label="Growing duration" value={care.growing_duration_days} suffix=" days" />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <EmptyState title="No shared care linked" description="Link or edit plant care on the catalog plant form." />
-            )}
-          </section>
-        </aside>
+              <details className="catalog-detail-disclosure">
+                <summary>Lifecycle timing</summary>
+                <DefinitionList
+                  items={[
+                    { label: 'Germinating', value: formatDayCount(care.germinating_duration_days) },
+                    { label: 'Flowering', value: formatDayCount(care.flowering_duration_days) },
+                    { label: 'Mature start', value: formatDayCount(care.mature_duration_days) },
+                    { label: 'Mature end', value: formatDayCount(care.mature_end_duration_days ?? care.mature_duration_end_days) },
+                    { label: 'Regenerating', value: formatDayCount(care.regenerating_duration_days) },
+                  ]}
+                />
+              </details>
+            </>
+          ) : (
+            <EmptyStatePanel
+              title="No shared care linked"
+              description="Link a plant care profile on the catalog plant form so the calendar and care rules can use this entry."
+              tone="subtle"
+            />
+          )}
+        </section>
       </div>
     </div>
   )

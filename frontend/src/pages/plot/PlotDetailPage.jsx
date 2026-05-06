@@ -1,31 +1,48 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ZoneInspector,
+  MeasurementBadge,
+  MapLayerControl,
+  GardenTimeline,
+  PlantStatusBadge,
+} from '../../components/garden/GardenControls.jsx'
+import {
+  Link,
+  useParams,
+} from 'react-router-dom'
 import PlotDesignerCanvas from '../../components/plot/PlotDesignerCanvas.jsx'
+import PlotLocationMap from '../../components/plot/PlotLocationMap.jsx'
 import PlotPlantingDrawer from '../../components/plot/PlotPlantingDrawer.jsx'
-import PageHeader from '../../components/layout/PageHeader.jsx'
+import PlotSectionNav from '../../components/plot/PlotSectionNav.jsx'
 import {
   EmptyState,
   ErrorState,
   LoadingState,
-  ProcessingState,
   SuccessToast,
 } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { DefinitionList } from '../../components/ui/DefinitionList.jsx'
 import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
+import InspectorPanel, { InspectorSection } from '../../components/ui/InspectorPanel.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
-import {
-  ACCESS_ROLES,
-  SOIL_TYPES,
-  formatDate,
-  safeNumber,
-} from '../../lib/constants.js'
+import { SOIL_TYPES } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
-import { calculateArea, geometryEquals, shapeToGeometry } from '../../lib/plotDesigner.js'
+import { useUnsavedChangesGuard } from '../../lib/hooks/useUnsavedChangesGuard.js'
+import {
+  clearPlotWorkspaceDraft,
+  createWorkspaceClientId,
+  createPlotWorkspaceSignature,
+  loadPlotWorkspaceDraft,
+  savePlotWorkspaceDraft,
+} from '../../lib/plotWorkspaceDraft.js'
+import { buildDesignerStateFromPersistence, calculateArea, shapeToGeometry } from '../../lib/plotDesigner.js'
+import { assertSanitizedGeometryPayload } from '../../lib/plotGeometry.js'
+import { calculateLatLngCenter } from '../../lib/geoMeasurements.js'
+import { buildShapeMetrics, formatMeters, formatSquareMeters } from '../../lib/plotMeasurements.js'
 
 const emptyZoneForm = {
   name: '',
-  zone_size: '',
   soil_type: SOIL_TYPES[0],
   rotation_stage: 0,
   last_planting_date: '',
@@ -33,63 +50,123 @@ const emptyZoneForm = {
 
 function zoneToForm(zone) {
   return {
-    name: zone.name ?? '',
-    zone_size: zone.zone_size ?? '',
-    soil_type: zone.soil_type ?? SOIL_TYPES[0],
-    rotation_stage: zone.rotation_stage ?? 0,
-    last_planting_date: zone.last_planting_date ?? '',
+    name: zone?.name ?? '',
+    soil_type: zone?.soil_type ?? SOIL_TYPES[0],
+    rotation_stage: zone?.rotation_stage ?? 0,
+    last_planting_date: zone?.last_planting_date ?? '',
   }
 }
 
-const emptyRotationPlanForm = {
-  planning_date: new Date().toISOString().slice(0, 10),
+function sameId(left, right) {
+  return String(left ?? '') === String(right ?? '')
 }
 
-const emptyShareForm = {
-  recipient_email: '',
-  role: ACCESS_ROLES[0],
+function getFiniteLatLng(point) {
+  const lat = Number(point?.lat)
+  const lng = Number(point?.lng)
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null
+  }
+
+  return { lat, lng }
+}
+
+function getMapBoundaryPoints(geometry) {
+  if (!Array.isArray(geometry?.map?.boundary)) {
+    return []
+  }
+
+  return geometry.map.boundary
+    .map(getFiniteLatLng)
+    .filter(Boolean)
+}
+
+function getMapCenter(geometry, boundaryPoints) {
+  return getFiniteLatLng(geometry?.map?.center) ?? calculateLatLngCenter(boundaryPoints)
+}
+
+function withPreservedMapGeometry(nextGeometry, currentGeometry) {
+  if (!nextGeometry) {
+    return null
+  }
+
+  return currentGeometry?.map
+    ? { ...nextGeometry, map: currentGeometry.map }
+    : nextGeometry
+}
+
+function createPersistedWorkspace(data) {
+  return {
+    plot: {
+      id: data.plot.id,
+      name: data.plot.name,
+      city: data.plot.city,
+      share: Boolean(data.plot.share),
+      plot_size: Number(data.plot.plot_size ?? 0),
+      geometry: data.plot.geometry ?? null,
+    },
+    zones: data.zones.map((zone) => ({
+      id: zone.id,
+      client_id: null,
+      name: zone.name,
+      zone_size: Number(zone.zone_size ?? 0),
+      soil_type: zone.soil_type ?? SOIL_TYPES[0],
+      rotation_stage: zone.rotation_stage ?? 0,
+      last_planting_date: zone.last_planting_date ?? '',
+      geometry: zone.geometry ?? null,
+    })),
+    plants: data.plants.map((plant) => ({
+      id: plant.id,
+      client_id: null,
+      name: plant.name,
+      type: plant.type ?? null,
+      condition: plant.condition,
+      plant_date: plant.plant_date,
+      disease: Boolean(plant.disease),
+      disease_notes: plant.disease_notes ?? '',
+      fk_catalog_plant_id: plant.fk_catalog_plant_id ?? plant.catalogPlant?.id ?? plant.catalog_plant?.id ?? null,
+      fk_plant_zone_id: plant.fk_plant_zone_id ?? plant.plant_zone_id ?? plant.plantZone?.id ?? plant.plant_zone?.id ?? null,
+      plant_zone: plant.plant_zone ?? plant.plantZone ?? null,
+      catalog_plant: plant.catalog_plant ?? plant.catalogPlant ?? null,
+    })),
+  }
+}
+
+function createEmptyFeedback() {
+  return { type: 'idle', message: '' }
 }
 
 export default function PlotDetailPage() {
   const { plotId } = useParams()
   const designerCanvasRef = useRef(null)
+  const [draftReady, setDraftReady] = useState(false)
+  const [draftPlot, setDraftPlot] = useState(null)
+  const [draftZones, setDraftZones] = useState([])
+  const [draftPlants, setDraftPlants] = useState([])
   const [selectedZoneId, setSelectedZoneId] = useState(null)
   const [zoneForm, setZoneForm] = useState(emptyZoneForm)
-  const [rotationPlanForm, setRotationPlanForm] = useState(emptyRotationPlanForm)
-  const [rotationDraft, setRotationDraft] = useState(null)
-  const [shareForm, setShareForm] = useState(emptyShareForm)
   const [zoneError, setZoneError] = useState('')
-  const [boundaryError, setBoundaryError] = useState('')
   const [plantError, setPlantError] = useState('')
-  const [rotationError, setRotationError] = useState('')
-  const [rotationFeedback, setRotationFeedback] = useState('')
-  const [shareError, setShareError] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [zoneBusy, setZoneBusy] = useState(false)
-  const [boundaryBusy, setBoundaryBusy] = useState(false)
-  const [rotationBusy, setRotationBusy] = useState(false)
-  const [layoutSaving, setLayoutSaving] = useState(false)
-  const [layoutSaveFeedback, setLayoutSaveFeedback] = useState({ type: 'idle', message: '' })
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [mapPreviewView, setMapPreviewView] = useState(null)
 
   const pageState = useAsyncData(
     async () => {
       const plots = await api.listPlots()
       const accessRole = plots.find((entry) => String(entry.id) === String(plotId))?.access_role ?? null
-      const [plot, zones, plants, rotations, access] = await Promise.all([
+      const [plot, zones, plants] = await Promise.all([
         api.getPlot(plotId),
         api.listPlantZones(plotId),
         api.listPlants(plotId),
-        api.listRotations(plotId),
-        accessRole === 'owner' ? api.listAccessRights(plotId) : Promise.resolve([]),
       ])
 
       return {
         plot,
         zones,
         plants,
-        rotations,
-        access,
         accessRole,
       }
     },
@@ -98,80 +175,130 @@ export default function PlotDetailPage() {
       plot: null,
       zones: [],
       plants: [],
-      rotations: [],
-      access: [],
       accessRole: null,
     },
   )
 
   const canEdit = ['owner', 'editor'].includes(pageState.data.accessRole)
   const isOwner = pageState.data.accessRole === 'owner'
+  const persistedWorkspace = useMemo(() => (
+    pageState.data.plot ? createPersistedWorkspace(pageState.data) : null
+  ), [pageState.data])
+  const persistedSignature = useMemo(() => (
+    persistedWorkspace ? createPlotWorkspaceSignature(persistedWorkspace) : ''
+  ), [persistedWorkspace])
+  const draftSignature = useMemo(() => (
+    draftReady && draftPlot
+      ? createPlotWorkspaceSignature({
+        plot: draftPlot,
+        zones: draftZones,
+        plants: draftPlants,
+      })
+      : ''
+  ), [draftPlants, draftPlot, draftReady, draftZones])
+  const isDirty = Boolean(draftReady && persistedSignature && draftSignature && draftSignature !== persistedSignature)
+  const measurementState = useMemo(() => (
+    draftPlot
+      ? buildDesignerStateFromPersistence({
+        plotSize: draftPlot.plot_size,
+        plotGeometry: draftPlot.geometry,
+        zones: draftZones,
+        storedState: null,
+      })
+      : null
+  ), [draftPlot, draftZones])
+  const plotMeasurements = useMemo(() => (
+    measurementState?.boundary ? buildShapeMetrics(measurementState.boundary) : null
+  ), [measurementState])
+  const mapBoundaryPoints = useMemo(() => getMapBoundaryPoints(draftPlot?.geometry), [draftPlot?.geometry])
+  const mapBoundaryCenter = useMemo(
+    () => getMapCenter(draftPlot?.geometry, mapBoundaryPoints),
+    [draftPlot?.geometry, mapBoundaryPoints],
+  )
+
+  useUnsavedChangesGuard({
+    when: isDirty,
+    message: 'You have unsaved plot changes. Leave without saving this draft?',
+  })
 
   useEffect(() => {
-    setLayoutSaving(false)
-    setLayoutSaveFeedback({ type: 'idle', message: '' })
-    setRotationDraft(null)
-    setRotationError('')
-    setRotationFeedback('')
-    setRotationPlanForm(emptyRotationPlanForm)
-  }, [plotId])
-
-  useEffect(() => {
-    if (!toastMessage) {
-      return undefined
+    if (!persistedWorkspace) {
+      return
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage('')
-    }, 2600)
+    const restoredDraft = loadPlotWorkspaceDraft(plotId, persistedSignature)
+    const nextWorkspace = restoredDraft ?? persistedWorkspace
+    const nextSelectedZone = nextWorkspace.zones.find((zone) => sameId(zone.id, selectedZoneId))
 
-    return () => window.clearTimeout(timeoutId)
-  }, [toastMessage])
+    setDraftPlot(nextWorkspace.plot)
+    setDraftZones(nextWorkspace.zones)
+    setDraftPlants(nextWorkspace.plants)
+    setSelectedZoneId(nextSelectedZone?.id ?? nextWorkspace.zones[0]?.id ?? null)
+    setZoneForm(zoneToForm(nextSelectedZone ?? nextWorkspace.zones[0] ?? null))
+    setDraftReady(true)
+    setZoneError('')
+    setPlantError('')
+    setSaveError('')
+  }, [persistedSignature, persistedWorkspace, plotId])
 
   useEffect(() => {
-    if (!pageState.data.zones.length) {
+    if (!draftPlot?.geometry?.map) {
+      setMapPreviewView(null)
+      return
+    }
+
+    setMapPreviewView({
+      center: getMapCenter(draftPlot.geometry, getMapBoundaryPoints(draftPlot.geometry)),
+      zoom: draftPlot.geometry.map.zoom ?? 13,
+    })
+  }, [draftPlot?.id, draftPlot?.geometry?.map])
+
+  useEffect(() => {
+    if (!draftReady) {
+      return
+    }
+
+    if (!isDirty) {
+      clearPlotWorkspaceDraft(plotId)
+      return
+    }
+
+    savePlotWorkspaceDraft(plotId, persistedSignature, {
+      plot: draftPlot,
+      zones: draftZones,
+      plants: draftPlants,
+    })
+  }, [draftPlants, draftPlot, draftReady, draftZones, isDirty, persistedSignature, plotId])
+
+  useEffect(() => {
+    if (!draftReady) {
+      return
+    }
+
+    if (!selectedZoneId) {
+      setZoneForm(emptyZoneForm)
+      return
+    }
+
+    const selectedZone = draftZones.find((zone) => sameId(zone.id, selectedZoneId)) ?? null
+
+    if (!selectedZone) {
       setSelectedZoneId(null)
       setZoneForm(emptyZoneForm)
       return
     }
 
-    const selectedZone = pageState.data.zones.find((zone) => zone.id === selectedZoneId)
+    setZoneForm(zoneToForm(selectedZone))
+  }, [draftReady, draftZones, selectedZoneId])
 
-    if (selectedZoneId && !selectedZone) {
-      setSelectedZoneId(null)
-      setZoneForm(emptyZoneForm)
-    }
-  }, [pageState.data.zones, selectedZoneId])
-
-  function updateStateKey(key, updater) {
-    pageState.setData((current) => ({
-      ...current,
-      [key]: updater(current[key]),
-    }))
-  }
-
-  function syncSelectedZone(updatedZone) {
-    if (String(updatedZone.id) === String(selectedZoneId)) {
-      setZoneForm(zoneToForm(updatedZone))
-    }
-  }
-
-  function applyZoneUpdate(updatedZone) {
-    updateStateKey('zones', (zones) => zones.map((zone) => (
-      zone.id === updatedZone.id ? updatedZone : zone
-    )))
-    syncSelectedZone(updatedZone)
-  }
-
-  function beginNewZoneDraft() {
-    setSelectedZoneId(null)
-    setZoneForm(emptyZoneForm)
-    setZoneError('')
+  function createTempId(prefix, existingItems) {
+    return createWorkspaceClientId(prefix, existingItems)
   }
 
   function handleZoneSelect(zone) {
     if (!zone) {
-      beginNewZoneDraft()
+      setSelectedZoneId(null)
+      setZoneForm(emptyZoneForm)
       return
     }
 
@@ -180,32 +307,25 @@ export default function PlotDetailPage() {
   }
 
   async function handleCanvasZoneCreate(shape, boundaryShape) {
-    setZoneBusy(true)
-    setZoneError('')
-    setLayoutSaveFeedback({ type: 'idle', message: '' })
-
-    try {
-      const created = await api.createPlantZone(plotId, {
-        name: zoneForm.name.trim() || `Zone ${pageState.data.zones.length + 1}`,
-        zone_size: calculateArea(shape),
-        soil_type: zoneForm.soil_type,
-        rotation_stage: Number(zoneForm.rotation_stage || 0),
-        last_planting_date: zoneForm.last_planting_date || null,
-        geometry: shapeToGeometry(shape, boundaryShape),
-      })
-
-      updateStateKey('zones', (zones) => [...zones, created])
-      setSelectedZoneId(created.id)
-      setZoneForm(zoneToForm(created))
-      setToastMessage(`Created ${created.name}.`)
-
-      return created
-    } catch (requestError) {
-      setZoneError(requestError.message)
-      throw requestError
-    } finally {
-      setZoneBusy(false)
+    const clientId = createTempId('draft-zone', draftZones)
+    const createdZone = {
+      id: clientId,
+      client_id: clientId,
+      name: zoneForm.name.trim() || `Zone ${draftZones.length + 1}`,
+      zone_size: calculateArea(shape),
+      soil_type: zoneForm.soil_type,
+      rotation_stage: Number(zoneForm.rotation_stage || 0),
+      last_planting_date: zoneForm.last_planting_date || '',
+      geometry: shapeToGeometry(shape, boundaryShape),
     }
+
+    setZoneError('')
+    setDraftZones((current) => [...current, createdZone])
+    setSelectedZoneId(createdZone.id)
+    setZoneForm(zoneToForm(createdZone))
+    setToastMessage(`Added ${createdZone.name} to the draft.`)
+
+    return createdZone
   }
 
   async function handleZoneCreateFromForm() {
@@ -219,1073 +339,568 @@ export default function PlotDetailPage() {
     try {
       await designerCanvasRef.current.createZoneFromForm()
     } catch {
-      // The canvas create flow already reports request errors through page state.
+      // Canvas create flow reports the error through page state.
     }
   }
 
-  async function handleZoneSubmit(event) {
+  function handleZoneApply(event) {
     event.preventDefault()
 
     if (!selectedZoneId) {
       return
     }
 
-    setZoneBusy(true)
     setZoneError('')
-
-    try {
-      const updated = await api.updatePlantZone(plotId, selectedZoneId, {
-        name: zoneForm.name,
-        soil_type: zoneForm.soil_type,
-        rotation_stage: Number(zoneForm.rotation_stage || 0),
-        last_planting_date: zoneForm.last_planting_date || null,
-      })
-
-      applyZoneUpdate(updated)
-      setToastMessage(`Saved ${updated.name}.`)
-    } catch (requestError) {
-      setZoneError(requestError.message)
-    } finally {
-      setZoneBusy(false)
-    }
+    setDraftZones((current) => current.map((zone) => (
+      sameId(zone.id, selectedZoneId)
+        ? {
+          ...zone,
+          name: zoneForm.name.trim() || zone.name,
+          soil_type: zoneForm.soil_type,
+          rotation_stage: Number(zoneForm.rotation_stage || 0),
+          last_planting_date: zoneForm.last_planting_date || '',
+        }
+        : zone
+    )))
+    setToastMessage('Zone details updated in the draft.')
   }
 
-  async function handleZoneDelete() {
+  function handleZoneDelete() {
     if (!selectedZoneId) {
       return
     }
 
-    setZoneBusy(true)
-    setZoneError('')
-    setLayoutSaveFeedback({ type: 'idle', message: '' })
+    const plantsInZone = draftPlants.filter((plant) => sameId(plant.fk_plant_zone_id, selectedZoneId))
 
-    try {
-      await api.deletePlantZone(plotId, selectedZoneId)
-      updateStateKey('zones', (zones) => zones.filter((zone) => zone.id !== selectedZoneId))
-      beginNewZoneDraft()
-      setToastMessage('Zone removed.')
-    } catch (requestError) {
-      setZoneError(requestError.message)
-    } finally {
-      setZoneBusy(false)
-    }
-  }
-
-  async function handleZoneGeometryCommit(zoneId, shape, boundaryShape) {
-    const currentZone = pageState.data.zones.find((zone) => String(zone.id) === String(zoneId))
-    const nextArea = calculateArea(shape)
-    const nextGeometry = shapeToGeometry(shape, boundaryShape)
-
-    if (
-      !currentZone
-      || (
-        Math.abs(Number(currentZone.zone_size) - nextArea) < 0.01
-        && geometryEquals(currentZone.geometry, nextGeometry)
-      )
-    ) {
+    if (plantsInZone.length > 0) {
+      setZoneError('Remove the plants in this zone before deleting it from the draft.')
       return
     }
 
-    setZoneBusy(true)
     setZoneError('')
-    setLayoutSaveFeedback({ type: 'idle', message: '' })
-
-    try {
-      const updated = await api.updatePlantZone(plotId, zoneId, {
-        zone_size: nextArea,
-        geometry: nextGeometry,
-      })
-
-      applyZoneUpdate(updated)
-    } catch (requestError) {
-      setZoneError(requestError.message)
-    } finally {
-      setZoneBusy(false)
-    }
+    setDraftZones((current) => current.filter((zone) => !sameId(zone.id, selectedZoneId)))
+    setSelectedZoneId(null)
+    setZoneForm(emptyZoneForm)
+    setToastMessage('Zone removed from the draft.')
   }
 
-  async function handleBoundaryCommit(nextBoundary, nextLayouts) {
-    setBoundaryBusy(true)
-    setBoundaryError('')
-    setLayoutSaveFeedback({ type: 'idle', message: '' })
-
-    try {
-      const nextPlotSize = calculateArea(nextBoundary)
-      const nextPlotGeometry = shapeToGeometry(nextBoundary)
-      const plotChanged = (
-        Math.abs(Number(pageState.data.plot.plot_size) - nextPlotSize) >= 0.01
-        || !geometryEquals(pageState.data.plot.geometry, nextPlotGeometry)
-      )
-      const zonesToUpdate = pageState.data.zones
-        .map((zone) => {
-          const nextShape = nextLayouts[String(zone.id)]
-
-          if (!nextShape) {
-            return null
-          }
-
-          const nextZoneArea = calculateArea(nextShape)
-          const nextZoneGeometry = shapeToGeometry(nextShape, nextBoundary)
-          const changed = (
-            Math.abs(Number(zone.zone_size) - nextZoneArea) >= 0.01
-            || !geometryEquals(zone.geometry, nextZoneGeometry)
-          )
-
-          return changed
-            ? {
-              zone,
-              payload: {
-                zone_size: nextZoneArea,
-                geometry: nextZoneGeometry,
-              },
-            }
-            : null
-        })
-        .filter(Boolean)
-
-      const [updatedPlot, updatedZones] = await Promise.all([
-        plotChanged
-          ? api.updatePlot(plotId, {
-            plot_size: nextPlotSize,
-            geometry: nextPlotGeometry,
-          })
-          : Promise.resolve(pageState.data.plot),
-        Promise.all(
-          zonesToUpdate.map(async ({ zone, payload }) => api.updatePlantZone(plotId, zone.id, payload)),
-        ),
-      ])
-
-      const updatedZonesById = Object.fromEntries(updatedZones.map((zone) => [zone.id, zone]))
-
-      pageState.setData((current) => ({
-        ...current,
-        plot: updatedPlot,
-        zones: current.zones.map((zone) => updatedZonesById[zone.id] ?? zone),
-      }))
-
-      if (selectedZoneId && updatedZonesById[selectedZoneId]) {
-        syncSelectedZone(updatedZonesById[selectedZoneId])
-      }
-
-      setToastMessage('Plot boundary and zones synchronized.')
-    } catch (requestError) {
-      setBoundaryError(requestError.message)
-    } finally {
-      setBoundaryBusy(false)
-    }
+  function handleZoneGeometryCommit(zoneId, shape, boundaryShape) {
+    setZoneError('')
+    setDraftZones((current) => current.map((zone) => (
+      sameId(zone.id, zoneId)
+        ? {
+          ...zone,
+          zone_size: calculateArea(shape),
+          geometry: shapeToGeometry(shape, boundaryShape),
+        }
+        : zone
+    )))
   }
 
-  async function handleLayoutSave() {
-    setLayoutSaving(true)
-    setLayoutSaveFeedback({ type: 'idle', message: '' })
-    setBoundaryError('')
-    setZoneError('')
+  function handleBoundaryCommit(nextBoundary, nextLayouts) {
+    setSaveError('')
+    setDraftPlot((current) => current ? {
+      ...current,
+      plot_size: calculateArea(nextBoundary),
+      geometry: withPreservedMapGeometry(shapeToGeometry(nextBoundary), current.geometry),
+    } : current)
+    setDraftZones((current) => current.map((zone) => {
+      const nextShape = nextLayouts[String(zone.id)]
 
-    try {
-      const [updatedPlot, updatedZones] = await Promise.all([
-        api.updatePlot(plotId, {
-          plot_size: Number(pageState.data.plot.plot_size),
-          geometry: pageState.data.plot.geometry ?? null,
-        }),
-        Promise.all(
-          pageState.data.zones.map((zone) => api.updatePlantZone(plotId, zone.id, {
-            zone_size: Number(zone.zone_size),
-            geometry: zone.geometry ?? null,
-          })),
-        ),
-      ])
-
-      const updatedZonesById = Object.fromEntries(updatedZones.map((zone) => [zone.id, zone]))
-
-      pageState.setData((current) => ({
-        ...current,
-        plot: updatedPlot,
-        zones: current.zones.map((zone) => updatedZonesById[zone.id] ?? zone),
-      }))
-
-      if (selectedZoneId && updatedZonesById[selectedZoneId]) {
-        syncSelectedZone(updatedZonesById[selectedZoneId])
+      if (!nextShape) {
+        return zone
       }
 
-      setLayoutSaveFeedback({ type: 'success', message: 'Plot layout saved' })
-      setToastMessage('Layout saved successfully.')
-    } catch (requestError) {
-      setLayoutSaveFeedback({ type: 'error', message: requestError.message })
-    } finally {
-      setLayoutSaving(false)
-    }
+      return {
+        ...zone,
+        zone_size: calculateArea(nextShape),
+        geometry: shapeToGeometry(nextShape, nextBoundary),
+      }
+    }))
   }
 
   async function handlePlantCreate(payload) {
-    setBusy(true)
-    setPlantError('')
-
-    try {
-      const created = await api.createPlant(plotId, payload)
-
-      updateStateKey('plants', (plants) => [created, ...plants])
-      setToastMessage(`Added ${created.name}.`)
-
-      return created
-    } catch (requestError) {
-      setPlantError(requestError.message)
-      throw requestError
-    } finally {
-      setBusy(false)
+    const clientId = createTempId('draft-plant', draftPlants)
+    const nextPlant = {
+      ...payload,
+      id: clientId,
+      client_id: clientId,
+      fk_plant_zone_id: payload.fk_plant_zone_id,
     }
+
+    setPlantError('')
+    setDraftPlants((current) => [nextPlant, ...current])
+    setToastMessage(`Added ${payload.name} to the draft.`)
+
+    return nextPlant
   }
 
-  async function handlePlantDelete(plantId) {
-    setBusy(true)
+  function handlePlantDelete(plantId) {
     setPlantError('')
-
-    try {
-      await api.deletePlant(plotId, plantId)
-      updateStateKey('plants', (plants) => plants.filter((plant) => plant.id !== plantId))
-      setToastMessage('Plant removed.')
-    } catch (requestError) {
-      setPlantError(requestError.message)
-    } finally {
-      setBusy(false)
-    }
+    setDraftPlants((current) => current.filter((plant) => !sameId(plant.id, plantId)))
+    setToastMessage('Plant removed from the draft.')
   }
 
-  async function handleRotationPlanGenerate(event) {
-    event.preventDefault()
-    setRotationBusy(true)
-    setRotationError('')
-    setRotationFeedback('')
+  function resetDraftToPersisted() {
+    if (!persistedWorkspace) {
+      return
+    }
 
-    try {
-      const created = await api.createRotationPlan(plotId, {
-        planning_date: rotationPlanForm.planning_date,
+    clearPlotWorkspaceDraft(plotId)
+    setDraftPlot(persistedWorkspace.plot)
+    setDraftZones(persistedWorkspace.zones)
+    setDraftPlants(persistedWorkspace.plants)
+    setSelectedZoneId(persistedWorkspace.zones[0]?.id ?? null)
+    setZoneForm(zoneToForm(persistedWorkspace.zones[0] ?? null))
+    setZoneError('')
+    setPlantError('')
+    setSaveError('')
+  }
+
+  function handleDiscardDraft() {
+    if (!isDirty) {
+      return
+    }
+
+    const confirmed = window.confirm('Discard all unsaved plot changes?')
+
+    if (!confirmed) {
+      return
+    }
+
+    resetDraftToPersisted()
+    setToastMessage('Unsaved draft changes were discarded.')
+  }
+
+  async function handleSave() {
+    if (!draftPlot) {
+      return
+    }
+
+    setSaveError('')
+    setZoneError('')
+    setPlantError('')
+
+    const selectedZone = draftZones.find((zone) => sameId(zone.id, selectedZoneId)) ?? null
+    const sanitizedPlotGeometry = assertSanitizedGeometryPayload('Plot geometry', draftPlot.geometry ?? null)
+
+    if (sanitizedPlotGeometry.error) {
+      setSaveError(sanitizedPlotGeometry.error)
+      return
+    }
+
+    const sanitizedZones = []
+
+    for (const zone of draftZones) {
+      const sanitizedZoneGeometry = assertSanitizedGeometryPayload(`Zone "${zone.name}" geometry`, zone.geometry ?? null)
+
+      if (sanitizedZoneGeometry.error) {
+        setSaveError(sanitizedZoneGeometry.error)
+        return
+      }
+
+      sanitizedZones.push({
+        ...zone,
+        geometry: sanitizedZoneGeometry.geometry,
       })
-      setRotationDraft(created.draft)
-      setRotationFeedback('Rotation scheme generated. Review the preview before confirming it.')
-    } catch (requestError) {
-      setRotationError(requestError.message)
-    } finally {
-      setRotationBusy(false)
-    }
-  }
-
-  async function handleRotationPlanConfirm() {
-    if (!rotationDraft?.id) {
-      return
     }
 
-    setRotationBusy(true)
-    setRotationError('')
-    setRotationFeedback('')
+    setSaving(true)
 
     try {
-      const confirmed = await api.confirmRotationPlan(plotId, rotationDraft.id)
-      updateStateKey('plants', () => confirmed.plants ?? [])
-      updateStateKey('zones', () => confirmed.plant_zones ?? [])
-      updateStateKey('rotations', () => confirmed.rotation_history ?? [])
-      setRotationDraft(null)
-      setRotationFeedback('Rotation scheme confirmed and saved to history.')
-      setToastMessage('Rotation scheme confirmed.')
+      const response = await api.commitPlotWorkspace(plotId, {
+        plot: {
+          plot_size: draftPlot.plot_size,
+          geometry: sanitizedPlotGeometry.geometry,
+        },
+        zones: sanitizedZones.map((zone) => ({
+          id: zone.id,
+          client_id: zone.client_id ?? (typeof zone.id === 'string' ? zone.id : null),
+          name: zone.name,
+          zone_size: zone.zone_size,
+          soil_type: zone.soil_type,
+          rotation_stage: Number(zone.rotation_stage || 0),
+          last_planting_date: zone.last_planting_date || null,
+          geometry: zone.geometry ?? null,
+        })),
+        plants: draftPlants.map((plant) => ({
+          id: plant.id,
+          client_id: plant.client_id ?? (typeof plant.id === 'string' ? plant.id : null),
+          name: plant.name,
+          type: plant.type ?? null,
+          condition: plant.condition,
+          plant_date: plant.plant_date,
+          disease: Boolean(plant.disease),
+          disease_notes: plant.disease_notes || null,
+          fk_catalog_plant_id: plant.fk_catalog_plant_id ?? null,
+          fk_plant_zone_id: plant.fk_plant_zone_id,
+        })),
+      })
+
+      pageState.setData((current) => ({
+        ...current,
+        plot: response.plot,
+        zones: response.zones,
+        plants: response.plants,
+      }))
+
+      clearPlotWorkspaceDraft(plotId)
+
+      const nextSelectedZone = response.zones.find((zone) => (
+        sameId(zone.id, selectedZone?.id)
+          || (selectedZone && typeof selectedZone.id === 'string' && zone.name === selectedZone.name)
+      )) ?? response.zones[0] ?? null
+
+      setDraftPlot({
+        id: response.plot.id,
+        name: response.plot.name,
+        city: response.plot.city,
+        share: Boolean(response.plot.share),
+        plot_size: Number(response.plot.plot_size ?? 0),
+        geometry: response.plot.geometry ?? null,
+      })
+      setDraftZones(response.zones.map((zone) => ({
+        ...zone,
+        client_id: null,
+        zone_size: Number(zone.zone_size ?? 0),
+      })))
+      setDraftPlants(response.plants.map((plant) => ({
+        ...plant,
+        client_id: null,
+        fk_plant_zone_id: plant.fk_plant_zone_id ?? plant.plant_zone_id ?? plant.plantZone?.id ?? plant.plant_zone?.id ?? null,
+      })))
+      setSelectedZoneId(nextSelectedZone?.id ?? null)
+      setZoneForm(zoneToForm(nextSelectedZone))
+      setToastMessage(response.history_entry?.label ?? 'Plot changes saved.')
     } catch (requestError) {
-      setRotationError(requestError.message)
+      setSaveError(requestError.message)
     } finally {
-      setRotationBusy(false)
+      setSaving(false)
     }
   }
 
-  async function handleRotationPlanReject() {
-    if (!rotationDraft?.id) {
-      return
-    }
-
-    setRotationBusy(true)
-    setRotationError('')
-    setRotationFeedback('')
-
-    try {
-      await api.rejectRotationPlan(plotId, rotationDraft.id)
-      setRotationDraft(null)
-      setRotationFeedback('Rotation draft rejected. The previous plot state was kept unchanged.')
-      setToastMessage('Rotation draft rejected.')
-    } catch (requestError) {
-      setRotationError(requestError.message)
-    } finally {
-      setRotationBusy(false)
-    }
-  }
-
-  async function handleShareSubmit(event) {
-    event.preventDefault()
-    setBusy(true)
-    setShareError('')
-
-    try {
-      const response = await api.sharePlot(plotId, shareForm)
-      updateStateKey('access', (access) => [response.access_right, ...access])
-      setShareForm(emptyShareForm)
-      setToastMessage('Plot access shared.')
-    } catch (requestError) {
-      setShareError(requestError.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function handleAccessRevoke(accessRightId) {
-    setBusy(true)
-    setShareError('')
-
-    try {
-      await api.revokeAccessRight(accessRightId)
-      updateStateKey('access', (access) => access.filter((entry) => entry.access_right_id !== accessRightId))
-      setToastMessage('Access revoked.')
-    } catch (requestError) {
-      setShareError(requestError.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function handleExport() {
-    await api.downloadPlotPdf(plotId, pageState.data.plot?.name)
-    setToastMessage('PDF export started.')
-  }
-
-  if (pageState.loading) {
-    return <LoadingState title="Loading plot workspace..." />
+  if (pageState.loading || !draftReady) {
+    return <LoadingState title="Loading plot editor..." />
   }
 
   if (pageState.error) {
     return <ErrorState error={pageState.error} onRetry={pageState.reload} />
   }
 
-  if (!pageState.data.plot) {
+  if (!pageState.data.plot || !draftPlot) {
     return <EmptyState title="Plot not found" description="The requested plot could not be loaded." />
   }
 
-  const selectedZone = pageState.data.zones.find((zone) => String(zone.id) === String(selectedZoneId)) ?? null
+  const selectedZone = draftZones.find((zone) => sameId(zone.id, selectedZoneId)) ?? null
   const selectedZonePlants = selectedZone
-    ? pageState.data.plants.filter((plant) => (
-      String(plant.fk_plant_zone_id ?? plant.plant_zone_id ?? plant.plant_zone?.id ?? plant.plantZone?.id ?? '')
-        === String(selectedZone.id)
-    ))
+    ? draftPlants.filter((plant) => sameId(plant.fk_plant_zone_id, selectedZone.id))
     : []
-  const workspaceBusy = zoneBusy || boundaryBusy || layoutSaving
-  const plotMeta = [
-    <StatusBadge key="city" kind="ownership">{pageState.data.plot.city}</StatusBadge>,
-    <StatusBadge key="size" kind="selection" tone="neutral">{safeNumber(pageState.data.plot.plot_size, 1)} m2</StatusBadge>,
-    <StatusBadge key="role" kind="status" tone={canEdit ? 'success' : 'warning'}>{pageState.data.accessRole ?? 'viewer'}</StatusBadge>,
-    <StatusBadge key="share" kind="connection" tone={pageState.data.plot.share ? 'success' : 'neutral'}>{pageState.data.plot.share ? 'Shared to community' : 'Private'}</StatusBadge>,
+  const selectedZoneShape = selectedZone && measurementState
+    ? measurementState.layouts[String(selectedZone.id)] ?? measurementState.layouts[selectedZone.id]
+    : null
+  const selectedZoneMeasurements = selectedZoneShape ? buildShapeMetrics(selectedZoneShape) : null
+  const formattedSelectedZoneMeasurements = selectedZoneMeasurements ? {
+    area: formatSquareMeters(calculateArea(selectedZoneShape), 1),
+    perimeter: formatMeters(selectedZoneMeasurements.perimeter ?? 0),
+    sideSummary: selectedZoneMeasurements.sideSummary,
+  } : null
+  const editorLayers = [
+    { id: 'boundary', label: 'Plot boundary', active: Boolean(measurementState?.boundary), color: '#47633b' },
+    { id: 'zones', label: `${draftZones.length} zones`, active: draftZones.length > 0, color: '#b9683f' },
+    { id: 'plants', label: `${draftPlants.length} plants`, active: draftPlants.length > 0, color: '#237d52' },
+    { id: 'measurements', label: 'Dimensions', active: true, color: '#ef6d22' },
   ]
-  const plotModules = [
-    {
-      key: 'calendar',
-      title: 'Calendar',
-      description: 'Generate recommendation-based work from weather, care intervals, and current plot state.',
-      action: 'Open planning workspace',
-      to: `/plots/${plotId}/calendar`,
-      primary: true,
-      kicker: 'Core module',
-    },
-    {
-      key: 'history',
-      title: 'History',
-      description: 'Review planning snapshots and the record of meaningful plot changes over time.',
-      action: 'Review snapshots',
-      to: `/plots/${plotId}/history`,
-      primary: false,
-      kicker: 'Planning record',
-    },
-    {
-      key: 'harvests',
-      title: 'Harvests',
-      description: 'Track harvest output and connect day-level work back to real garden results.',
-      action: 'Open harvest log',
-      to: `/plots/${plotId}/harvests`,
-      primary: false,
-      kicker: 'Yield tracking',
-    },
-    {
-      key: 'analytics',
-      title: 'Analytics',
-      description: 'Inspect plot-level performance signals, workload patterns, and productivity trends.',
-      action: 'View analytics',
-      to: `/plots/${plotId}/analytics`,
-      primary: false,
-      kicker: 'Insights',
-    },
-  ]
+  const zoneTimelineItems = draftZones.slice(0, 5).map((zone) => ({
+    id: zone.id,
+    label: zone.name,
+    meta: `${formatSquareMeters(zone.zone_size ?? 0, 1)} - ${zone.soil_type}`,
+    tone: sameId(zone.id, selectedZoneId) ? 'amber' : 'leaf',
+  }))
 
   return (
-    <div className="page-stack workspace-page workspace-page--canvas-first" data-testid="workspace-page">
-      <PageHeader
-        eyebrow="Plot workspace"
-        title={pageState.data.plot.name}
-        description="A focused workspace where the canvas stays dominant, live zone context stays on the right, and planning tools drop into a calmer lower dock."
-        meta={plotMeta}
+    <div className="page-stack workspace-page workspace-page--editor" data-testid="workspace-page">
+      <PlotSectionNav
+        plotId={plotId}
+        plotName={pageState.data.plot.name}
+        sectionKey="editor"
+        isOwner={isOwner}
+        description="Edit the plot in draft first, keep the canvas dominant, and commit one clean saved version only when the workspace is ready."
+        meta={(
+          <>
+            <StatusBadge kind="ownership">{pageState.data.plot.city}</StatusBadge>
+            <StatusBadge kind="selection" tone="neutral">{formatSquareMeters(draftPlot.plot_size, 1)}</StatusBadge>
+            <StatusBadge kind="status" tone={canEdit ? 'success' : 'warning'}>{pageState.data.accessRole ?? 'viewer'}</StatusBadge>
+            <StatusBadge kind="connection" tone={isDirty ? 'warning' : 'neutral'}>
+              {isDirty ? 'Unsaved draft' : 'Saved'}
+            </StatusBadge>
+          </>
+        )}
         actions={(
           <>
-            <Button variant="secondary" onClick={handleExport}>Export PDF</Button>
+            <Button variant="ghost" onClick={() => api.downloadPlotPdf(plotId, pageState.data.plot?.name)}>
+              Export PDF
+            </Button>
             {canEdit ? (
               <Link to={`/plots/${plotId}/edit`}>
                 <Button variant="ghost">Edit metadata</Button>
               </Link>
             ) : null}
+            {canEdit ? (
+              <Button variant="secondary" onClick={handleDiscardDraft} disabled={!isDirty || saving}>
+                Discard draft
+              </Button>
+            ) : null}
+            {canEdit ? (
+              <Button onClick={handleSave} loading={saving} disabled={!isDirty}>
+                {saving ? 'Saving plot changes' : 'Save plot changes'}
+              </Button>
+            ) : null}
           </>
         )}
       />
 
-      <section className="panel workspace-overview-band">
-        <div className="workspace-overview-copy">
-          <span className="workspace-overview-kicker">Live editor workspace</span>
-          <h2 className="workspace-overview-title">Edit the plot on canvas first, then drop into planning and collaboration without breaking flow.</h2>
+      {saveError ? <span className="field-error">{saveError}</span> : null}
+      <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
+
+      <section className="plot-editor-intro">
+        <div className="plot-editor-intro-copy">
+          <span className="workspace-section-eyebrow">Draft editing</span>
+          <h2 className="workspace-overview-title">Plot plan is the primary work surface.</h2>
           <p className="section-copy">
-            The canvas owns the page. The right rail only carries active zone work, while modules, plants, sharing, and rotation live together below as a secondary workspace.
+            Zone movement, geometry changes, and plant placement stay in draft until you commit them. The map, dimensions, and inspector stay visible as editor controls.
           </p>
         </div>
-
-        <div className="workspace-overview-stats">
-          <article className="workspace-overview-stat">
-            <span className="workspace-overview-stat-label">Zones</span>
-            <strong className="workspace-overview-stat-value">{pageState.data.zones.length}</strong>
-            <span className="workspace-overview-stat-note">Mapped editing targets</span>
-          </article>
-          <article className="workspace-overview-stat">
-            <span className="workspace-overview-stat-label">Plants</span>
-            <strong className="workspace-overview-stat-value">{pageState.data.plants.length}</strong>
-            <span className="workspace-overview-stat-note">Placed records in this plot</span>
-          </article>
-          <article className="workspace-overview-stat">
-            <span className="workspace-overview-stat-label">Created</span>
-            <strong className="workspace-overview-stat-value">{formatDate(pageState.data.plot.creation_date)}</strong>
-            <span className="workspace-overview-stat-note">Original plot snapshot</span>
-          </article>
-          <article className="workspace-overview-stat">
-            <span className="workspace-overview-stat-label">Visibility</span>
-            <strong className="workspace-overview-stat-value">{pageState.data.plot.share ? 'Shared' : 'Private'}</strong>
-            <span className="workspace-overview-stat-note">Community state</span>
-          </article>
+        <div className="plot-editor-intro-stats">
+          <MeasurementBadge label="Plot area" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
+          <MeasurementBadge label="Plot perimeter" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
+          <MeasurementBadge label="Side lengths" value={plotMeasurements?.sideSummary || 'No side lengths available.'} tone="amber" className="measurement-badge-wide" />
         </div>
       </section>
 
-      <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
+      <MapLayerControl title="Editor layers" items={editorLayers} className="plot-editor-layer-console" />
 
-      {workspaceBusy ? (
-        <ProcessingState
-          title={layoutSaving ? 'Saving workspace layout' : 'Syncing plot changes'}
-          description="Your latest geometry and metadata changes are being synchronized with the backend."
-          steps={layoutSaving ? ['Preparing geometry', 'Persisting plot layout', 'Refreshing workspace state'] : ['Updating selected zones', 'Validating plot bounds', 'Refreshing workspace data']}
-        />
-      ) : null}
-
-      {rotationBusy ? (
-        <ProcessingState
-          title={rotationDraft ? 'Finalizing rotation decision' : 'Generating rotation scheme'}
-          description="The workspace is evaluating valid zone targets and preparing a safe rotation preview."
-          steps={['Collecting plant state', 'Checking zone compatibility', 'Preparing preview']}
-          compact
+      {!canEdit ? (
+        <EmptyState
+          title="Read-only editor access"
+          description="Select zones on the canvas to inspect the layout. Saving and draft editing are reserved for owners and editors."
         />
       ) : null}
 
       <div className="plot-editor-layout">
-        <section className="panel plot-editor-main plot-workspace-main--canvas-first page-stack">
-          <div className="plot-editor-head">
-            <div className="page-stack">
-              <span className="workspace-section-eyebrow">Canvas editor</span>
-              <h3 className="section-title">Plot designer</h3>
-              <p className="section-copy">
-                The designer keeps the geometry workspace dominant on desktop, with only active editing context sitting beside it.
-              </p>
-            </div>
-            <div className="workspace-status">
-              {selectedZone ? <StatusBadge kind="selection">Active zone: {selectedZone.name}</StatusBadge> : <StatusBadge kind="selection" tone="neutral">No zone selected</StatusBadge>}
-              {zoneBusy ? <StatusBadge kind="status" tone="warning">Syncing zones</StatusBadge> : null}
-              {boundaryBusy ? <StatusBadge kind="status" tone="warning">Syncing plot bounds</StatusBadge> : null}
-              {layoutSaveFeedback?.type === 'success' ? <StatusBadge kind="status" tone="success">{layoutSaveFeedback.message}</StatusBadge> : null}
-            </div>
-          </div>
-
-          {zoneError ? <span className="field-error">{zoneError}</span> : null}
-          {boundaryError ? <span className="field-error">{boundaryError}</span> : null}
-
+        <section className="plot-editor-main">
           <PlotDesignerCanvas
             ref={designerCanvasRef}
             plotId={plotId}
             plotName={pageState.data.plot.name}
-            plotSize={pageState.data.plot.plot_size}
-            plotGeometry={pageState.data.plot.geometry}
-            zones={pageState.data.zones}
-            plants={pageState.data.plants}
+            plotSize={draftPlot.plot_size}
+            plotGeometry={draftPlot.geometry}
+            zones={draftZones}
+            plants={draftPlants}
             canEdit={canEdit}
             activeZoneId={selectedZoneId}
-            isLayoutSaveDisabled={layoutSaving || zoneBusy || boundaryBusy}
-            isLayoutSaving={layoutSaving}
-            layoutSaveFeedback={layoutSaveFeedback}
-            onSaveLayout={handleLayoutSave}
+            persistState={false}
+            showSaveAction={false}
+            isLayoutSaveDisabled={!isDirty}
+            isLayoutSaving={saving}
+            layoutSaveFeedback={createEmptyFeedback()}
+            onSaveLayout={handleSave}
             onSelectZone={handleZoneSelect}
             onCreateZone={handleCanvasZoneCreate}
+            onZoneCreateBlocked={setZoneError}
             onZoneGeometryCommit={handleZoneGeometryCommit}
             onBoundaryCommit={handleBoundaryCommit}
           />
         </section>
 
-        <aside className="plot-context-rail page-stack plot-workspace-sidebar--canvas-first">
-          <section className="panel page-stack workspace-context-card">
-            <div className="workspace-context-card-head">
-              <div className="page-stack">
-                <span className="workspace-section-eyebrow">Context rail</span>
-                <h3 className="section-title">{selectedZone ? selectedZone.name : 'Zone context'}</h3>
-                <p className="section-copy">
-                  Read-only context stays here so you can orient quickly before editing the zone form or planting into the active area.
-                </p>
-              </div>
-              <StatusBadge kind="selection" tone={selectedZone ? 'soft' : canEdit ? 'warning' : 'neutral'}>
-                {selectedZone ? 'Zone active' : canEdit ? 'Select or draw a zone' : 'Read-only selection'}
-              </StatusBadge>
-            </div>
-
-            {selectedZone ? (
-              <>
-                <div className="workspace-context-stats workspace-context-stats-compact">
-                  <article className="workspace-context-stat">
-                    <span className="workspace-context-stat-label">Area</span>
-                    <strong className="workspace-context-stat-value">{safeNumber(selectedZone.zone_size, 2)} m2</strong>
-                  </article>
-                  <article className="workspace-context-stat">
-                    <span className="workspace-context-stat-label">Plants</span>
-                    <strong className="workspace-context-stat-value">{selectedZonePlants.length}</strong>
-                  </article>
-                  <article className="workspace-context-stat">
-                    <span className="workspace-context-stat-label">Last planted</span>
-                    <strong className="workspace-context-stat-value">{selectedZone.last_planting_date ? formatDate(selectedZone.last_planting_date) : 'Not set'}</strong>
-                  </article>
-                </div>
-
-                <div className="inline-note inline-note-compact">
-                  Editable fields such as soil type, rotation stage, and planting date stay in the form below so the summary here stays quick to scan.
-                </div>
-
-                {selectedZonePlants.length > 0 ? (
-                  <div className="workspace-context-list">
-                    <span className="workspace-context-list-label">Current placement</span>
-                    <div className="workspace-context-list-items">
-                      {selectedZonePlants.slice(0, 4).map((plant) => (
-                        <span key={plant.id} className="workspace-context-pill">
-                          {plant.name}
-                        </span>
-                      ))}
-                      {selectedZonePlants.length > 4 ? (
-                        <span className="workspace-context-pill workspace-context-pill--muted">
-                          +{selectedZonePlants.length - 4} more
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : (
-                  <EmptyStatePanel
-                    title="Nothing planted in this zone yet"
-                    description="Use the planting panel below to place the next plant directly into the active zone."
-                    tone="subtle"
-                  />
-                )}
-              </>
-            ) : (
-              <EmptyStatePanel
-                title={canEdit ? 'Select or draw a zone' : 'Select a zone to inspect it'}
-                description={canEdit
-                  ? 'Click an existing zone on the canvas, or switch the designer into Draw zone mode to create a new editable area.'
-                  : 'Zone geometry and metadata stay visible here once you pick a zone on the canvas.'}
-                tone="subtle"
-                action={canEdit ? (
-                  <Button onClick={handleZoneCreateFromForm} disabled={zoneBusy}>
-                    {zoneBusy ? 'Preparing zone...' : 'Create zone from current form'}
-                  </Button>
-                ) : null}
+        <InspectorPanel
+          title="Plot inspector"
+          description="Selection, metrics, plant placement, and advanced zone details stay in one rail."
+          meta={<StatusBadge kind="selection" tone={selectedZone ? 'soft' : 'neutral'}>{selectedZone ? 'Zone selected' : 'No selection'}</StatusBadge>}
+          className="plot-context-rail"
+        >
+          {mapBoundaryPoints.length >= 3 ? (
+            <InspectorSection
+              title="Boundary map"
+              description="Saved plot boundary preview with map points and side measurements."
+              meta={(
+                <StatusBadge kind="selection" tone="soft">
+                  {mapBoundaryPoints.length} points
+                </StatusBadge>
+              )}
+            >
+              <PlotLocationMap
+                mode="preview"
+                boundaryClosed
+                boundaryPoints={mapBoundaryPoints}
+                selectedLocation={mapBoundaryCenter}
+                fitBoundary
+                view={mapPreviewView ?? {
+                  center: mapBoundaryCenter,
+                  zoom: draftPlot.geometry?.map?.zoom ?? 13,
+                }}
+                readOnly
+                className="plot-location-map--compact"
+                onViewChange={setMapPreviewView}
               />
-            )}
-          </section>
+            </InspectorSection>
+          ) : null}
 
-          <section className="panel page-stack workspace-context-card">
-            <div className="list-head">
-              <div className="page-stack">
-                <h3 className="section-title">Editable details</h3>
-                <p className="section-copy">
-                  {selectedZoneId
-                    ? 'Update zone metadata here while geometry stays visible on the canvas.'
-                    : 'Prepare the next zone draft here, then place it on the canvas when you are ready.'}
-                </p>
-              </div>
-              <StatusBadge kind="selection" tone={selectedZoneId ? 'soft' : 'neutral'}>
-                {selectedZoneId ? 'Edit mode' : 'Create mode'}
+          <InspectorSection
+            title="Selected zone"
+            description="Geometry, dimensions, soil, and plant count stay together."
+            meta={(
+              <StatusBadge kind="selection" tone={selectedZone ? 'soft' : 'neutral'}>
+                {selectedZone ? 'Active' : 'None'}
               </StatusBadge>
-            </div>
+            )}
+          >
+            <ZoneInspector
+              zone={selectedZone}
+              measurements={formattedSelectedZoneMeasurements}
+              plantCount={selectedZonePlants.length}
+              emptyTitle="Select or draw a zone"
+              emptyDescription="Choose a zone on the canvas to edit its details and plant directly into it."
+            />
+          </InspectorSection>
 
-            <form className="input-grid" onSubmit={handleZoneSubmit}>
-              <div className="field">
+          <InspectorSection
+            title={selectedZone ? 'Zone details' : 'New zone draft'}
+            description="Apply detail changes to the draft before the main plot save."
+          >
+            <form className="input-grid" onSubmit={handleZoneApply}>
+              <div className="field field-span-2">
                 <label htmlFor="zone-name">Zone name</label>
                 <input
                   id="zone-name"
                   value={zoneForm.name}
                   onChange={(event) => setZoneForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="North bed, Herb strip..."
-                  required={Boolean(selectedZoneId) && canEdit}
                   disabled={!canEdit}
                 />
               </div>
-
               <div className="field">
-                <label htmlFor="soil-type">Soil type</label>
+                <label htmlFor="zone-soil-type">Soil type</label>
                 <select
-                  id="soil-type"
+                  id="zone-soil-type"
                   value={zoneForm.soil_type}
                   onChange={(event) => setZoneForm((current) => ({ ...current, soil_type: event.target.value }))}
                   disabled={!canEdit}
                 >
-                  {SOIL_TYPES.map((soil) => (
-                    <option key={soil} value={soil}>
-                      {soil}
-                    </option>
+                  {SOIL_TYPES.map((soilType) => (
+                    <option key={soilType} value={soilType}>{soilType}</option>
                   ))}
                 </select>
               </div>
-
               <div className="field">
-                <label htmlFor="rotation-stage">Rotation stage</label>
+                <label htmlFor="zone-rotation-stage">Rotation stage</label>
                 <input
-                  id="rotation-stage"
+                  id="zone-rotation-stage"
                   type="number"
                   min="0"
+                  step="1"
                   value={zoneForm.rotation_stage}
                   onChange={(event) => setZoneForm((current) => ({ ...current, rotation_stage: event.target.value }))}
                   disabled={!canEdit}
                 />
               </div>
-
-              <div className="field field-span-2">
-                <label htmlFor="zone-last-planting">Last planting date</label>
-                <input
-                  id="zone-last-planting"
-                  type="date"
-                  value={zoneForm.last_planting_date}
-                  onChange={(event) => setZoneForm((current) => ({ ...current, last_planting_date: event.target.value }))}
-                  disabled={!canEdit}
-                />
-              </div>
-
-              <div className="inline-note inline-note-compact field-span-2">
-                Zone area follows the canvas geometry automatically, so there is only one source of truth for layout size.
-              </div>
-
-              {zoneError ? <span className="field-error">{zoneError}</span> : null}
-              {!canEdit ? (
-                <div className="inline-note inline-note-compact">
-                  Your current access is read only. Select zones on the canvas to inspect them, while edits remain disabled in this rail.
-                </div>
-              ) : null}
-
-              <div className="form-actions">
-                {selectedZoneId && canEdit ? (
-                  <>
-                    <Button type="submit" disabled={zoneBusy}>
-                      {zoneBusy ? 'Saving...' : 'Save zone changes'}
-                    </Button>
-                    <Button variant="secondary" onClick={beginNewZoneDraft}>
-                      New zone draft
-                    </Button>
-                    <Button variant="danger" onClick={handleZoneDelete} disabled={zoneBusy}>
-                      Delete zone
-                    </Button>
-                  </>
-                ) : null}
-
-                {!selectedZoneId && canEdit ? (
-                  <>
-                    <Button onClick={handleZoneCreateFromForm} disabled={zoneBusy}>
-                      {zoneBusy ? 'Adding...' : 'Add a new zone'}
-                    </Button>
-                    <Button variant="secondary" onClick={() => setZoneForm(emptyZoneForm)} disabled={zoneBusy}>
-                      Clear form
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </form>
-          </section>
-
-          {canEdit ? (
-            <div className="page-stack">
-              {plantError ? <span className="field-error">{plantError}</span> : null}
-              <PlotPlantingDrawer
-                selectedZone={selectedZone}
-                canEdit={canEdit}
-                busy={busy}
-                onCreatePlant={handlePlantCreate}
-              />
-            </div>
-          ) : null}
-        </aside>
-      </div>
-
-      <section className="panel workspace-dock workspace-dock-shell page-stack">
-        <div className="workspace-dock-header">
-          <div className="page-stack">
-            <span className="workspace-section-eyebrow">Secondary workspace</span>
-            <h3 className="section-title">Planning, tracking, and collaboration live together below the canvas.</h3>
-            <p className="section-copy">
-              These tools stay easy to scan and close at hand, but they no longer compete with the live editing rail.
-            </p>
-          </div>
-        </div>
-
-        <section className="workspace-module-panel">
-          <div className="list-head">
-            <div className="page-stack">
-              <span className="workspace-action-group-label">Plot modules</span>
-              <h3 className="section-title">Core plot navigation</h3>
-              <p className="section-copy">
-                Calendar leads this set because it is one of the strongest plot workflows, while history, harvests, and analytics stay one click away.
-              </p>
-            </div>
-            <StatusBadge kind="selection" tone="neutral">{plotModules.length} modules</StatusBadge>
-          </div>
-
-          <div className="workspace-module-grid">
-            {plotModules.map((module) => (
-              <Link
-                key={module.key}
-                to={module.to}
-                className={`workspace-module-card ${module.primary ? 'workspace-module-card-primary' : ''}`.trim()}
-              >
-                <span className="workspace-module-kicker">{module.kicker}</span>
-                <strong className="workspace-module-title">{module.title}</strong>
-                <p className="workspace-module-description">{module.description}</p>
-                <span className="workspace-module-action">{module.action}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <div className={`workspace-secondary-grid ${isOwner ? 'workspace-secondary-grid--with-sidecard' : ''}`.trim()}>
-          <section className="page-stack workspace-dock-card workspace-dock-card--wide">
-            <div className="list-head">
-              <div className="page-stack">
-                <h3 className="section-title">Plants in this plot</h3>
-                <p className="section-copy">
-                  Review placed plants after editing, then open individual plant details only when you need deeper condition or lifecycle history.
-                </p>
-              </div>
-              <StatusBadge kind="selection" tone={selectedZone ? 'soft' : 'neutral'}>
-                {selectedZone ? `${selectedZonePlants.length} in ${selectedZone.name}` : `${pageState.data.plants.length} total`}
-              </StatusBadge>
-            </div>
-
-            {pageState.data.plants.length === 0 ? (
-              <EmptyState title="No plants yet" description="Place the first plant from the selected-zone rail to start building this plot plan." />
-            ) : (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Zone</th>
-                      <th>Catalog</th>
-                      <th>Condition</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageState.data.plants.map((plant) => (
-                      <tr key={plant.id}>
-                        <td>{plant.name}</td>
-                        <td>{plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Unknown zone'}</td>
-                        <td>{plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? 'Manual record'}</td>
-                        <td>{plant.condition}</td>
-                        <td>
-                          <div className="row-actions">
-                            <Link to={`/plots/${plotId}/plants/${plant.id}`}>
-                              <Button variant="ghost">Open</Button>
-                            </Link>
-                            {canEdit ? (
-                              <Button variant="danger" onClick={() => handlePlantDelete(plant.id)} disabled={busy}>
-                                Delete
-                              </Button>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {isOwner ? (
-            <section className="page-stack workspace-dock-card workspace-dock-card--side">
-              <div className="list-head">
-                <div className="page-stack">
-                  <h3 className="section-title">Sharing</h3>
-                  <p className="section-copy">
-                    Invite collaborators after the layout is in good shape, without pulling access management into the live editing rail.
-                  </p>
-                </div>
-                <StatusBadge kind="selection" tone={pageState.data.access.length > 0 ? 'soft' : 'neutral'}>
-                  {pageState.data.access.length}
-                </StatusBadge>
-              </div>
-
-              <form className="input-grid" onSubmit={handleShareSubmit}>
-                <div className="field field-span-2">
-                  <label htmlFor="recipient-email">Recipient email</label>
+              <details className="advanced-zone-details field-span-2" open={Boolean(zoneForm.last_planting_date)}>
+                <summary>Optional planting data</summary>
+                <div className="field">
+                  <label htmlFor="zone-last-planting-date">Last planting date</label>
                   <input
-                    id="recipient-email"
-                    value={shareForm.recipient_email}
-                    onChange={(event) => setShareForm((current) => ({ ...current, recipient_email: event.target.value }))}
-                    required
+                    id="zone-last-planting-date"
+                    type="date"
+                    value={zoneForm.last_planting_date}
+                    onChange={(event) => setZoneForm((current) => ({ ...current, last_planting_date: event.target.value }))}
+                    disabled={!canEdit}
                   />
                 </div>
-                <div className="field field-span-2">
-                  <label htmlFor="share-role">Role</label>
-                  <select
-                    id="share-role"
-                    value={shareForm.role}
-                    onChange={(event) => setShareForm((current) => ({ ...current, role: event.target.value }))}
-                  >
-                    {ACCESS_ROLES.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {shareError ? <span className="field-error">{shareError}</span> : null}
-                <Button type="submit" disabled={busy}>
-                  {busy ? 'Sharing...' : 'Share plot'}
-                </Button>
-              </form>
+              </details>
 
-              <div className="inline-note">
-                Owners can grant viewer or editor access here and revoke it below.
-              </div>
+              {zoneError ? <span className="field-error">{zoneError}</span> : null}
 
-              {pageState.data.access.length > 0 ? (
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pageState.data.access.map((entry) => (
-                        <tr key={entry.access_right_id}>
-                          <td>{entry.name || 'Unknown'}</td>
-                          <td>{entry.email}</td>
-                          <td>{entry.role}</td>
-                          <td>
-                            <Button
-                              variant="danger"
-                              onClick={() => handleAccessRevoke(entry.access_right_id)}
-                              disabled={busy}
-                            >
-                              Revoke
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <EmptyState title="No shared users" description="Only the owner currently has access to this plot." />
-              )}
-            </section>
-          ) : null}
-        </div>
-
-        <section className="page-stack workspace-dock-card workspace-dock-card--full">
-          <div className="list-head">
-            <div className="page-stack">
-              <h3 className="section-title">Rotation planning</h3>
-              <p className="section-copy">
-                Generate plot-wide rotation suggestions here after finishing geometry edits, then confirm or reject the draft without crowding the editor rail.
-              </p>
-            </div>
-            <StatusBadge kind="status" tone={rotationDraft ? 'warning' : 'neutral'}>
-              {rotationDraft ? 'Draft ready' : 'Idle'}
-            </StatusBadge>
-          </div>
-
-          {canEdit ? (
-            <form className="input-grid workspace-rotation-form" onSubmit={handleRotationPlanGenerate}>
-              <div className="field">
-                <label htmlFor="rotation-planning-date">Planning date</label>
-                <input
-                  id="rotation-planning-date"
-                  type="date"
-                  value={rotationPlanForm.planning_date}
-                  onChange={(event) => setRotationPlanForm((current) => ({ ...current, planning_date: event.target.value }))}
-                  required
-                />
-              </div>
-              {rotationError ? <span className="field-error">{rotationError}</span> : null}
-              {rotationFeedback ? <div className="inline-note">{rotationFeedback}</div> : null}
               <div className="form-actions">
-                <Button type="submit" loading={rotationBusy} disabled={pageState.data.plants.length === 0 || pageState.data.zones.length === 0}>
-                  {rotationBusy ? 'Generating rotation scheme' : 'Generate rotation scheme'}
-                </Button>
+                {selectedZone ? (
+                  <>
+                    <Button type="submit" variant="secondary">Apply zone details</Button>
+                    <Button variant="ghost" onClick={() => handleZoneSelect(null)}>New zone draft</Button>
+                    <Button variant="danger" onClick={handleZoneDelete}>Delete zone</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={handleZoneCreateFromForm} variant="secondary">Add zone to draft</Button>
+                    <Button variant="ghost" onClick={() => setZoneForm(emptyZoneForm)}>Clear form</Button>
+                  </>
+                )}
               </div>
             </form>
-          ) : null}
+          </InspectorSection>
 
-          {rotationDraft ? (
-            <div className="stack workspace-rotation-preview" data-testid="rotation-plan-preview">
-              <div className="list-head">
-                <div className="stack">
-                  <strong>Generated scheme preview</strong>
-                  <span className="muted">
-                    Planning date {formatDate(rotationDraft.planning_date)}
-                  </span>
-                </div>
-                <span className={`badge ${rotationDraft.plan?.status === 'ready' ? 'badge-soft' : 'badge-warning'}`}>
-                  {rotationDraft.plan?.status === 'ready' ? 'Ready to confirm' : 'Needs adjustments'}
-                </span>
-              </div>
-
-              <div className="inline-note">
-                Assigned {rotationDraft.plan?.summary?.assigned_plant_count ?? 0} of {rotationDraft.plan?.summary?.plant_count ?? 0} plants.
-              </div>
-
-              {(rotationDraft.plan?.plants ?? []).map((entry) => {
-                const selectedTarget = entry.selected_target_zone
-                const otherAlternatives = (entry.alternatives ?? []).filter((alternative) => alternative.zone_id !== selectedTarget?.zone_id)
-                const blockedCandidates = (entry.candidate_zones ?? []).filter((candidate) => candidate.verdict === 'invalid')
-
-                return (
-                  <div key={entry.plant.id} className="card workspace-rotation-entry">
-                    <div className="list-head">
-                      <div className="stack">
-                        <strong>{entry.plant.name}</strong>
-                        <span className="muted">
-                          Current zone: {entry.current_zone?.name ?? 'Not assigned'}
-                        </span>
+          <InspectorSection
+            title="Plants in zone"
+            description="Placement stays attached to the selected zone and saves with the layout."
+          >
+            {selectedZone ? (
+              selectedZonePlants.length > 0 ? (
+                <div className="plot-zone-plant-list">
+                  {selectedZonePlants.map((plant) => (
+                    <div key={plant.id} className="plot-zone-plant-card">
+                      <div className="plot-zone-plant-copy">
+                        <strong>{plant.name}</strong>
+                        <DefinitionList
+                          items={[
+                            {
+                              label: 'Catalog',
+                              value: plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? plant.type ?? 'Manual plant',
+                            },
+                          ]}
+                        />
                       </div>
-                      <span className={`badge ${selectedTarget ? 'badge-soft' : 'badge-warning'}`}>
-                        {selectedTarget ? 'Target selected' : 'No valid target'}
-                      </span>
+                      <PlantStatusBadge status={plant.condition} careLinked={plant.fk_catalog_plant_id !== null} />
+                      <div className="plot-zone-plant-actions">
+                        {Number.isFinite(Number(plant.id)) ? (
+                          <Link to={`/plots/${plotId}/plants/${plant.id}`}>
+                            <Button variant="ghost" size="sm">Open</Button>
+                          </Link>
+                        ) : null}
+                        {canEdit ? (
+                          <Button variant="ghost" size="sm" onClick={() => handlePlantDelete(plant.id)}>Remove</Button>
+                        ) : null}
+                      </div>
                     </div>
-
-                    {selectedTarget ? (
-                      <div className="stack">
-                        <strong>
-                          Suggested target zone: {selectedTarget.zone_name} (score {selectedTarget.score})
-                        </strong>
-                        <span className="muted">{selectedTarget.passed_reasons?.join(' ')}</span>
-                      </div>
-                    ) : (
-                      <div className="inline-note">
-                        No valid target zone was found for this plant in the current scheme.
-                      </div>
-                    )}
-
-                    {otherAlternatives.length > 0 ? (
-                      <div className="stack">
-                        <strong>Other valid target zones</strong>
-                        {otherAlternatives.map((alternative) => (
-                          <div key={alternative.zone_id} className="card workspace-rotation-subcard">
-                            <div className="list-head">
-                              <span>{alternative.zone_name}</span>
-                              <span>Score {alternative.score}</span>
-                            </div>
-                            <span className="muted">{alternative.passed_reasons?.join(' ')}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {blockedCandidates.length > 0 ? (
-                      <div className="stack">
-                        <strong>Rejected target zones</strong>
-                        {blockedCandidates.map((candidate) => (
-                          <div key={candidate.zone_id} className="card workspace-rotation-subcard">
-                            <div className="list-head">
-                              <span>{candidate.zone_name}</span>
-                              <span>Score {candidate.score}</span>
-                            </div>
-                            <span className="muted">{candidate.blocking_reasons?.join(' ')}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {entry.fallback_solutions?.length ? (
-                      <div className="stack">
-                        <strong>Fallback solutions</strong>
-                        {entry.fallback_solutions.map((solution) => (
-                          <span key={solution} className="muted">{solution}</span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                )
-              })}
-
-              {canEdit ? (
-                <div className="form-actions">
-                  <Button
-                    onClick={handleRotationPlanConfirm}
-                    loading={rotationBusy}
-                    disabled={rotationDraft.plan?.status !== 'ready'}
-                  >
-                    {rotationBusy ? 'Saving scheme' : 'Confirm scheme'}
-                  </Button>
-                  <Button variant="secondary" onClick={handleRotationPlanReject} disabled={rotationBusy}>
-                    Reject scheme
-                  </Button>
+                  ))}
                 </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="workspace-history-block">
-            <div>
-              <h4>Confirmed rotation history</h4>
-              <p className="section-copy">
-                Planning history snapshots remain available from the history page, while confirmed rotation assignments stay previewable here.
-              </p>
-            </div>
-            {pageState.data.rotations.length === 0 ? (
-              <EmptyState title="No confirmed rotation plans" description="Generate and confirm a scheme to create the first rotation history records." />
+              ) : (
+                <EmptyStatePanel
+                  title="No plants placed yet"
+                  description="Use the placement flow below to add the first plant into this selected zone."
+                  tone="subtle"
+                />
+              )
             ) : (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>From</th>
-                      <th>To</th>
-                      <th>Zone</th>
-                      <th>Plant</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageState.data.rotations.map((rotation) => (
-                      <tr key={rotation.id}>
-                        <td>{formatDate(rotation.from_date)}</td>
-                        <td>{formatDate(rotation.to_date)}</td>
-                        <td>{rotation.plant_zone?.name ?? rotation.fk_plant_zone_id}</td>
-                        <td>{rotation.plant?.name ?? rotation.fk_plant_id}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <EmptyStatePanel
+                title="Zone required"
+                description="Select a zone before placing plants so the next step is always clear."
+                tone="subtle"
+              />
             )}
-          </div>
-        </section>
-      </section>
+          </InspectorSection>
+
+          {plantError ? <span className="field-error">{plantError}</span> : null}
+          <PlotPlantingDrawer
+            selectedZone={selectedZone}
+            canEdit={canEdit}
+            busy={saving}
+            onCreatePlant={handlePlantCreate}
+          />
+
+          <InspectorSection
+            title="Zone sequence"
+            description="Quick map-oriented summary of the current draft zones."
+          >
+            <GardenTimeline items={zoneTimelineItems} emptyText="No zones have been drawn yet." />
+          </InspectorSection>
+        </InspectorPanel>
+      </div>
     </div>
   )
 }

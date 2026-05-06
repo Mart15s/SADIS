@@ -1,0 +1,142 @@
+@startuml
+skinparam backgroundColor #F8F8F8
+skinparam package {
+  BackgroundColor #EDF2FF
+  BorderColor #7B849C
+  FontName "Times New Roman"
+}
+skinparam ArrowColor #6B7280
+
+title Asmeninio sodo ar daržo IS - loginė architektūra
+
+package "Frontend SPA\n<<React + Vite>>" as FE {
+  package "Routing / Auth" as FE_AUTH {
+    [App.jsx]
+    [ProtectedRoute]
+    [AdminRoute]
+    [AuthContext]
+  }
+
+  package "Client API" as FE_API {
+    [lib/api.js]
+    [lib/auth.js]
+  }
+
+  package "Pages" as FE_PAGES {
+    [user]
+    [admin]
+    [plot]
+    [plant]
+    [calendar]
+    [inventory]
+    [community]
+    [dev]
+  }
+
+  package "Components" as FE_COMP {
+    [layout]
+    [shared]
+    [ui]
+    [plot]
+  }
+
+  package "Frontend Plot Logic\n<<INFERRED>>" as FE_PLOT_LOGIC {
+    [plotDesigner.js]
+    [plotGeometry.js]
+    [plotRender.js]
+    [plotWorkspaceDraft.js]
+  }
+}
+
+package "Backend API\n<<Laravel REST API>>" as BE {
+  package "Routes / Middleware" as BE_ROUTES {
+    [routes/api.php]
+    [auth:sanctum]
+    [admin middleware]
+    [dev.only middleware]
+  }
+
+  package "HTTP Controllers" as BE_HTTP {
+    [User]
+    [Admin]
+    [Plot]
+    [Plant]
+    [Calendar]
+    [Inventory]
+    [Community]
+    [Dev]
+  }
+
+  package "Requests / Resources" as BE_DTO {
+    [FormRequest classes]
+    [JsonResource classes]
+  }
+
+  package "Application Services" as BE_SERVICES {
+    [Access / Account / Admin]
+    [Plot workspace / snapshots]
+    [Plant care / lifecycle]
+    [Calendar generation / tasks]
+    [Inventory planning / coverage]
+    [Weather / community / PDF]
+  }
+
+  package "Support Types" as BE_SUPPORT {
+    [Enums]
+    [Support]
+    [ValueObjects]
+    [Exceptions]
+  }
+
+  package "Server-side Views" as BE_VIEWS {
+    [welcome.blade.php]
+    [pdf/plot-report.blade.php]
+  }
+}
+
+package "Data Model\n<<Eloquent + PostgreSQL>>" as DATA {
+  package "Models" as DATA_MODELS {
+    [User / Profile]
+    [GardenOwner]
+    [Plot / PlantZone]
+    [Plant / PlantCare]
+    [TaskCalendar / Task]
+    [InventoryItem]
+    [CommunityPost]
+    [AccessRight]
+  }
+
+  package "Schema" as DATA_SCHEMA {
+    [database/migrations]
+    [foreign keys]
+    [check constraints]
+    [json/jsonb]
+  }
+
+  package "Domain Enumerations" as DATA_ENUMS {
+    [UserRole / AccessRole]
+    [TaskType / TaskState]
+    [PlantType / ConditionType]
+    [InventoryItemType / Unit]
+  }
+}
+
+package "External Adapters\n<<boundary services, INFERRED package>>" as EXT {
+  [MeteoLtClient]
+  [PerenualService]
+  [EmailServerBoundary]
+  [PdfExportService]
+}
+
+FE_API ..> BE_ROUTES : REST /api + Sanctum
+FE_AUTH ..> FE_API
+FE_PAGES ..> FE_API
+BE_ROUTES ..> BE_HTTP : maps routes
+BE_HTTP ..> BE_DTO : validates / serializes
+BE_HTTP ..> BE_SERVICES : uses
+BE_HTTP ..> DATA_MODELS : uses
+BE_SERVICES ..> DATA : persists / queries
+DATA_MODELS ..> DATA_SCHEMA : table mapping
+BE_SERVICES ..> EXT : API clients / boundaries
+
+@enduml

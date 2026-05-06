@@ -1,10 +1,20 @@
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { MeasurementBadge } from '../../components/garden/GardenControls.jsx'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
 import ActionRow from '../../components/ui/ActionRow.jsx'
+import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { StatRow } from '../../components/ui/DefinitionList.jsx'
 import FormSection from '../../components/ui/FormSection.jsx'
+import ResourceCard, {
+  ResourceCardBody,
+  ResourceCardFooter,
+  ResourceCardHeader,
+  ResourceCardMeta,
+} from '../../components/ui/ResourceCard.jsx'
+import ResponsiveTable from '../../components/ui/ResponsiveTable.jsx'
 import SectionCard from '../../components/ui/SectionCard.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
@@ -71,6 +81,7 @@ export default function InventoryPage() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const inventoryFormRef = useRef(null)
 
   const inventoryRequestContext = useMemo(() => {
     const rawMissing = searchParams.get('missing')
@@ -171,6 +182,10 @@ export default function InventoryPage() {
           unit: item.unit ?? 'unit',
         })
       })
+      window.setTimeout(() => {
+        inventoryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        inventoryFormRef.current?.querySelector('input, select, textarea, button')?.focus()
+      }, 0)
     } catch (requestError) {
       setError(requestError.message)
     }
@@ -237,6 +252,67 @@ export default function InventoryPage() {
 
   const unitOptions = form.type === 'tool' ? TOOL_UNITS : MATERIAL_UNITS
   const quantityStep = form.type === 'tool' ? '1' : '0.01'
+  const materialCount = inventoryState.data.filter((item) => item.type === 'material').length
+  const toolCount = inventoryState.data.filter((item) => item.type === 'tool').length
+  const unavailableCount = inventoryState.data.filter((item) => !item.is_available).length
+
+  function renderInventoryActions(item) {
+    return (
+      <div className="resource-action-row">
+        <Button variant="secondary" size="sm" onClick={() => handleEdit(item.id)}>
+          Edit
+        </Button>
+        <Button variant="danger" size="sm" onClick={() => handleDelete(item.id)} disabled={submitting}>
+          Delete
+        </Button>
+      </div>
+    )
+  }
+
+  function renderInventoryCard(item) {
+    return (
+      <ResourceCard>
+        <ResourceCardHeader
+          title={item.name}
+          subtitle={formatInventoryUnit(item.unit)}
+          badge={<Badge tone={item.is_available ? 'success' : 'warning'}>{item.is_available ? 'In stock' : 'Out of stock'}</Badge>}
+        />
+        <ResourceCardMeta>
+          <Badge tone="neutral">{item.type}</Badge>
+          <Badge tone="soft">{safeNumber(item.quantity, item.type === 'tool' ? 0 : 2)} {formatInventoryUnit(item.unit)}</Badge>
+        </ResourceCardMeta>
+        <ResourceCardBody>
+          <dl className="resource-detail-grid">
+            <div>
+              <dt>Quantity</dt>
+              <dd>{safeNumber(item.quantity, item.type === 'tool' ? 0 : 2)}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{item.is_available ? 'In stock' : 'Out of stock'}</dd>
+            </div>
+          </dl>
+        </ResourceCardBody>
+        <ResourceCardFooter>
+          {renderInventoryActions(item)}
+        </ResourceCardFooter>
+      </ResourceCard>
+    )
+  }
+
+  const inventoryColumns = [
+    { key: 'name', label: 'Name', render: (item) => item.name },
+    { key: 'type', label: 'Type', render: (item) => item.type },
+    { key: 'unit', label: 'Unit', render: (item) => formatInventoryUnit(item.unit) },
+    { key: 'quantity', label: 'Quantity', render: (item) => safeNumber(item.quantity, item.type === 'tool' ? 0 : 2) },
+    { key: 'status', label: 'Status', render: (item) => item.is_available ? 'In stock' : 'Out of stock' },
+    {
+      key: 'actions',
+      label: '',
+      cellClassName: 'table-actions-cell',
+      render: (item) => renderInventoryActions(item),
+    },
+  ]
 
   if (inventoryState.loading) {
     return <LoadingState title="Loading inventory..." />
@@ -251,9 +327,15 @@ export default function InventoryPage() {
       <PageHeader
         eyebrow="Stock and supplies"
         title="Inventory"
-        description="Track consumable materials and reusable tools with explicit units and calendar-ready inventory data."
+        description="Track materials and tools as operational inputs for calendar tasks, shortages, and replenishment."
         meta={<StatusBadge kind="ownership">{inventoryState.data.length} items tracked</StatusBadge>}
       />
+
+      <section className="inventory-yard-strip" aria-label="Inventory summary">
+        <MeasurementBadge label="Materials" value={materialCount} tone="earth" />
+        <MeasurementBadge label="Tools" value={toolCount} tone="field" />
+        <MeasurementBadge label="Shortage flags" value={unavailableCount} tone={unavailableCount > 0 ? 'amber' : 'leaf'} />
+      </section>
 
       {inventoryRequestContext ? (
         <SectionCard title="Missing resources for task" description="Restock directly from calendar shortages, then return to the originating task context.">
@@ -283,9 +365,21 @@ export default function InventoryPage() {
                   >
                     <div className="stack stack-sm">
                       <strong>{resource.name}</strong>
-                      <span className="muted">
-                        Need {safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)}, have {safeNumber(resource.available_quantity ?? 0, resource.type === 'tool' ? 0 : 2)}, missing {safeNumber(resource.shortage_quantity ?? 0, resource.type === 'tool' ? 0 : 2)} {formatInventoryUnit(resource.unit)}
-                      </span>
+                      <div className="resource-summary-row">
+                        <StatRow
+                          label="Need"
+                          value={`${safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
+                        />
+                        <StatRow
+                          label="Have"
+                          value={`${safeNumber(resource.available_quantity ?? 0, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
+                        />
+                        <StatRow
+                          label="Missing"
+                          className={Number(resource.shortage_quantity ?? 0) > 0 ? 'stat-row-danger' : ''}
+                          value={`${safeNumber(resource.shortage_quantity ?? 0, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
+                        />
+                      </div>
                       <div className="inline-note inline-note-compact">
                         Item type will be assigned automatically as <strong>{resource.type}</strong> from the task resource.
                       </div>
@@ -326,45 +420,22 @@ export default function InventoryPage() {
               description="Add your first tool or material to start linking garden work with stock levels."
             />
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Unit</th>
-                    <th>Quantity</th>
-                    <th>Status</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryState.data.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.name}</td>
-                      <td>{item.type}</td>
-                      <td>{formatInventoryUnit(item.unit)}</td>
-                      <td>{safeNumber(item.quantity, item.type === 'tool' ? 0 : 2)}</td>
-                      <td>{item.is_available ? 'In stock' : 'Out of stock'}</td>
-                      <td>
-                        <div className="row-actions">
-                          <Button variant="ghost" onClick={() => handleEdit(item.id)}>
-                            Edit
-                          </Button>
-                          <Button variant="danger" onClick={() => handleDelete(item.id)} disabled={submitting}>
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={inventoryColumns}
+              items={inventoryState.data}
+              getKey={(item) => item.id}
+              renderCard={renderInventoryCard}
+              tableLabel="Inventory items table"
+              cardListLabel="Inventory items list"
+            />
           )}
         </SectionCard>
 
-        <form onSubmit={handleSubmit}>
+        <form
+          ref={inventoryFormRef}
+          className={editingId ? 'inventory-editor-form is-editing' : 'inventory-editor-form'}
+          onSubmit={handleSubmit}
+        >
           <FormSection
             title={editingId ? 'Edit inventory item' : 'Add inventory item'}
             description="Use the compact form on the right to add or restock items without letting the editor dominate the page."

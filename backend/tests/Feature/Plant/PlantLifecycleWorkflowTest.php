@@ -6,7 +6,7 @@ use App\Enums\ConditionType;
 use App\Enums\PlantType;
 use App\Models\PlantCare;
 use App\Models\Task;
-use App\Services\TaskCalendarService;
+use App\Services\Calendar\TaskCalendarService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;

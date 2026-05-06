@@ -1,3 +1,10 @@
+import {
+  denormalizePoint,
+  isValidNormalizedPolygon,
+  normalizePoint as normalizeReferencePoint,
+  sanitizeNormalizedGeometry,
+} from './plotGeometry.js'
+
 const STORAGE_PREFIX = 'sad-plot-designer-v1'
 
 export const MIN_ZOOM = 0.12
@@ -39,6 +46,19 @@ export function rectToPoints(rect) {
     { x, y: y + height },
   ].map(normalizePoint)
 }
+
+export const RESIZE_HANDLES = [
+  'nw',
+  'n',
+  'ne',
+  'e',
+  'se',
+  's',
+  'sw',
+  'w',
+]
+
+export const ZONE_VERTEX_HANDLES = [0, 1, 2, 3]
 
 export function createRectShape(rect) {
   return {
@@ -122,6 +142,28 @@ export function getShapeBounds(shape) {
     top: roundTo(top, 2),
     bottom: roundTo(bottom, 2),
   }
+}
+
+export function getShapeEdgeMidpoints(shape) {
+  const points = getShapePoints(shape)
+
+  if (points.length < 2) {
+    return []
+  }
+
+  return points.map((point, index) => {
+    const next = points[(index + 1) % points.length]
+
+    return {
+      index,
+      start: point,
+      end: next,
+      point: normalizePoint({
+        x: (point.x + next.x) / 2,
+        y: (point.y + next.y) / 2,
+      }),
+    }
+  })
 }
 
 export function getCombinedBounds(shapes) {
@@ -269,6 +311,36 @@ function segmentsIntersect(startA, endA, startB, endB) {
   return false
 }
 
+export function doShapesOverlap(firstShape, secondShape) {
+  const firstPoints = getShapePoints(firstShape)
+  const secondPoints = getShapePoints(secondShape)
+
+  if (firstPoints.length < 3 || secondPoints.length < 3) {
+    return false
+  }
+
+  const axes = [firstPoints, secondPoints].flatMap((points) => (
+    points.map((point, index) => {
+      const next = points[(index + 1) % points.length]
+      return {
+        x: -(next.y - point.y),
+        y: next.x - point.x,
+      }
+    })
+  ))
+
+  return axes.every((axis) => {
+    const firstProjection = firstPoints.map((point) => (point.x * axis.x) + (point.y * axis.y))
+    const secondProjection = secondPoints.map((point) => (point.x * axis.x) + (point.y * axis.y))
+    const firstMin = Math.min(...firstProjection)
+    const firstMax = Math.max(...firstProjection)
+    const secondMin = Math.min(...secondProjection)
+    const secondMax = Math.max(...secondProjection)
+
+    return firstMax > secondMin + 0.001 && secondMax > firstMin + 0.001
+  })
+}
+
 function hasSelfIntersection(points) {
   if (points.length < 4) {
     return false
@@ -355,15 +427,33 @@ function boundsContainsShape(bounds, shape) {
   ))
 }
 
-function getBoundsOverlapArea(firstBounds, secondBounds) {
-  const width = Math.min(firstBounds.right, secondBounds.right) - Math.max(firstBounds.left, secondBounds.left)
-  const height = Math.min(firstBounds.bottom, secondBounds.bottom) - Math.max(firstBounds.top, secondBounds.top)
+export function isZonePlacementValid(shape, boundary, existingShapes = []) {
+  return Boolean(shape)
+    && isPolygonShapeValid(shape)
+    && isShapeInsideBoundary(shape, boundary)
+    && existingShapes.every((existingShape) => !doShapesOverlap(shape, existingShape))
+}
 
-  if (width <= 0 || height <= 0) {
-    return 0
+export function isTranslatedShapeValid(shape, boundary, translation, extraValidator = null) {
+  const candidate = translateShape(shape, translation)
+
+  return isPolygonShapeValid(candidate)
+    && isShapeInsideBoundary(candidate, boundary)
+    && (extraValidator ? extraValidator(candidate) : true)
+}
+
+export function resolveTranslatedShape(shape, boundary, translation, lastValidShape = shape, extraValidator = null) {
+  const candidate = translateShape(shape, translation)
+
+  if (
+    isPolygonShapeValid(candidate)
+    && isShapeInsideBoundary(candidate, boundary)
+    && (extraValidator ? extraValidator(candidate) : true)
+  ) {
+    return candidate
   }
 
-  return width * height
+  return lastValidShape
 }
 
 export function translateShape(shape, offset) {
@@ -388,6 +478,23 @@ export function updateShapePoint(shape, index, point) {
       currentIndex === index ? normalizePoint(point) : currentPoint
     )),
   }
+}
+
+export function insertShapePoint(shape, edgeIndex, point, fallbackShape = shape, minArea = MIN_BOUNDARY_EDGE * MIN_BOUNDARY_EDGE * 0.55) {
+  const points = getShapePoints(shape)
+
+  if (points.length < 3) {
+    return sanitizePolygon(points, fallbackShape, minArea)
+  }
+
+  const insertAfter = clamp(Math.round(Number(edgeIndex) || 0), 0, points.length - 1)
+  const nextPoints = [
+    ...points.slice(0, insertAfter + 1),
+    normalizePoint(point),
+    ...points.slice(insertAfter + 1),
+  ]
+
+  return sanitizePolygon(nextPoints, fallbackShape, minArea)
 }
 
 function scaleShapeToFitBounds(shape, targetBounds, padding = 0.85) {
@@ -420,14 +527,18 @@ export function isShapeInsideBoundary(shape, boundary) {
   return getShapePoints(shape).every((point) => pointInPolygon(point, boundary))
 }
 
-export function getConstrainedTranslation(shape, boundary, translation) {
+export function getConstrainedTranslation(shape, boundary, translation, extraValidator = null) {
   if (!translation?.x && !translation?.y) {
     return { x: 0, y: 0 }
   }
 
   const candidate = translateShape(shape, translation)
+  const isValidCandidate = (nextCandidate) => (
+    isShapeInsideBoundary(nextCandidate, boundary)
+    && (extraValidator ? extraValidator(nextCandidate) : true)
+  )
 
-  if (isShapeInsideBoundary(candidate, boundary)) {
+  if (isValidCandidate(candidate)) {
     return normalizePoint(translation)
   }
 
@@ -441,7 +552,7 @@ export function getConstrainedTranslation(shape, boundary, translation) {
       y: (translation.y || 0) * middle,
     })
 
-    if (isShapeInsideBoundary(nextCandidate, boundary)) {
+    if (isValidCandidate(nextCandidate)) {
       low = middle
     } else {
       high = middle
@@ -464,7 +575,7 @@ export function getConstrainedVertexMove(
 ) {
   const points = getShapePoints(shape)
   const origin = points[index]
-  const projectedTarget = boundary ? projectPointToPolygon(targetPoint, boundary) : normalizePoint(targetPoint)
+  const normalizedTarget = normalizePoint(targetPoint)
 
   const validator = (point) => {
     const candidate = updateShapePoint(shape, index, point)
@@ -474,8 +585,8 @@ export function getConstrainedVertexMove(
       && (extraValidator ? extraValidator(candidate) : true)
   }
 
-  if (validator(projectedTarget)) {
-    return projectedTarget
+  if (validator(normalizedTarget)) {
+    return normalizedTarget
   }
 
   let low = 0
@@ -485,8 +596,8 @@ export function getConstrainedVertexMove(
   for (let iteration = 0; iteration < 20; iteration += 1) {
     const middle = (low + high) / 2
     const candidatePoint = normalizePoint({
-      x: origin.x + ((projectedTarget.x - origin.x) * middle),
-      y: origin.y + ((projectedTarget.y - origin.y) * middle),
+      x: origin.x + ((normalizedTarget.x - origin.x) * middle),
+      y: origin.y + ((normalizedTarget.y - origin.y) * middle),
     })
 
     if (validator(candidatePoint)) {
@@ -517,16 +628,18 @@ export function fitShapeInsideBoundary(shape, boundary) {
   }
 
   const fittedBounds = getShapeBounds(fitted)
-  const targetCenter = {
-    x: clamp(fittedBounds.centerX, boundaryBounds.left, boundaryBounds.right),
-    y: clamp(fittedBounds.centerY, boundaryBounds.top, boundaryBounds.bottom),
-  }
   const delta = {
-    x: targetCenter.x - fittedBounds.centerX,
-    y: targetCenter.y - fittedBounds.centerY,
+    x: fittedBounds.left < boundaryBounds.left
+      ? boundaryBounds.left - fittedBounds.left
+      : (fittedBounds.right > boundaryBounds.right ? boundaryBounds.right - fittedBounds.right : 0),
+    y: fittedBounds.top < boundaryBounds.top
+      ? boundaryBounds.top - fittedBounds.top
+      : (fittedBounds.bottom > boundaryBounds.bottom ? boundaryBounds.bottom - fittedBounds.bottom : 0),
   }
 
-  fitted = translateShape(fitted, getConstrainedTranslation(fitted, boundary, delta))
+  if (delta.x || delta.y) {
+    fitted = translateShape(fitted, getConstrainedTranslation(fitted, boundary, delta))
+  }
 
   if (!isShapeInsideBoundary(fitted, boundary)) {
     const boundaryCenter = getShapeBounds(boundary)
@@ -558,62 +671,79 @@ export function createDefaultZoneShape(boundary, existingShapes = []) {
     MIN_ZONE_EDGE * 3,
     Math.max(boundaryBounds.height * 0.52, MIN_ZONE_EDGE * 3),
   )
-  const usableWidth = Math.max(boundaryBounds.width - width, 0)
-  const usableHeight = Math.max(boundaryBounds.height - height, 0)
-  const columns = Math.max(1, Math.min(4, Math.floor(usableWidth / Math.max(width * 0.6, MIN_ZONE_EDGE * 2)) + 1))
-  const rows = Math.max(1, Math.min(4, Math.floor(usableHeight / Math.max(height * 0.6, MIN_ZONE_EDGE * 2)) + 1))
-  const existingBounds = existingShapes
-    .map((shape) => getShapeBounds(shape))
-    .filter((shapeBounds) => shapeBounds.width > 0 && shapeBounds.height > 0)
-  const centerX = boundaryBounds.centerX
-  const centerY = boundaryBounds.centerY
+  const standardCenter = {
+    x: boundaryBounds.centerX,
+    y: boundaryBounds.centerY,
+  }
+  const triedKeys = new Set()
   const candidates = []
 
-  for (let row = 0; row < rows; row += 1) {
-    const ratioY = rows === 1 ? 0.5 : row / (rows - 1)
+  function addCandidate(center, candidateWidth = width, candidateHeight = height) {
+    const key = `${roundTo(center.x, 2)}:${roundTo(center.y, 2)}:${roundTo(candidateWidth, 2)}:${roundTo(candidateHeight, 2)}`
 
-    for (let column = 0; column < columns; column += 1) {
-      const ratioX = columns === 1 ? 0.5 : column / (columns - 1)
-      const x = boundaryBounds.left + (usableWidth * ratioX)
-      const y = boundaryBounds.top + (usableHeight * ratioY)
-      const rect = createRectShape({
-        x,
-        y,
-        width,
-        height,
-      })
-      const candidate = fitShapeInsideBoundary(rect, boundary)
-      const candidateBounds = getShapeBounds(candidate)
-      const overlapArea = existingBounds.reduce(
-        (total, shapeBounds) => total + getBoundsOverlapArea(candidateBounds, shapeBounds),
-        0,
-      )
-      const distance = ((candidateBounds.centerX - centerX) ** 2) + ((candidateBounds.centerY - centerY) ** 2)
+    if (triedKeys.has(key)) {
+      return
+    }
 
-      candidates.push({
-        candidate,
-        overlapArea,
-        distance,
-      })
+    triedKeys.add(key)
+
+    const rect = createRectShape({
+      x: center.x - (candidateWidth / 2),
+      y: center.y - (candidateHeight / 2),
+      width: candidateWidth,
+      height: candidateHeight,
+    })
+    const candidate = fitShapeInsideBoundary(rect, boundary)
+
+    if (!isZonePlacementValid(candidate, boundary, existingShapes)) {
+      return
+    }
+
+    const candidateBounds = getShapeBounds(candidate)
+    const distance = ((candidateBounds.centerX - standardCenter.x) ** 2) + ((candidateBounds.centerY - standardCenter.y) ** 2)
+
+    candidates.push({
+      candidate,
+      distance,
+    })
+  }
+
+  const sizeScales = [1, 0.85, 0.7, 0.55, 0.4]
+  const maxRadius = Math.hypot(boundaryBounds.width, boundaryBounds.height)
+
+  for (const scale of sizeScales) {
+    const candidateWidth = Math.max(MIN_ZONE_EDGE * 3, width * scale)
+    const candidateHeight = Math.max(MIN_ZONE_EDGE * 3, height * scale)
+    const step = Math.max(MIN_ZONE_EDGE, Math.min(candidateWidth, candidateHeight) * 0.5)
+    const maxSteps = Math.ceil(maxRadius / step)
+
+    addCandidate(standardCenter, candidateWidth, candidateHeight)
+
+    if (candidates.length) {
+      return candidates.sort((left, right) => left.distance - right.distance)[0].candidate
+    }
+
+    for (let ring = 1; ring <= maxSteps; ring += 1) {
+      for (let xStep = -ring; xStep <= ring; xStep += 1) {
+        for (let yStep = -ring; yStep <= ring; yStep += 1) {
+          if (Math.max(Math.abs(xStep), Math.abs(yStep)) !== ring) {
+            continue
+          }
+
+          addCandidate({
+            x: standardCenter.x + (xStep * step),
+            y: standardCenter.y + (yStep * step),
+          }, candidateWidth, candidateHeight)
+        }
+      }
+
+      if (candidates.length) {
+        return candidates.sort((left, right) => left.distance - right.distance)[0].candidate
+      }
     }
   }
 
-  const bestCandidate = candidates.sort((left, right) => (
-    left.overlapArea === right.overlapArea
-      ? left.distance - right.distance
-      : left.overlapArea - right.overlapArea
-  ))[0]
-
-  if (bestCandidate) {
-    return bestCandidate.candidate
-  }
-
-  return fitShapeInsideBoundary(createRectShape({
-    x: boundaryBounds.centerX - (width / 2),
-    y: boundaryBounds.centerY - (height / 2),
-    width,
-    height,
-  }), boundary)
+  return null
 }
 
 function toNumericArea(value, fallback) {
@@ -720,6 +850,110 @@ export function createViewportToFit(boundary, layouts, canvasSize, paddingRatio 
   }
 }
 
+export function getResizeHandlePoints(shape) {
+  const bounds = getShapeBounds(shape)
+
+  return {
+    nw: { x: bounds.left, y: bounds.top },
+    n: { x: bounds.centerX, y: bounds.top },
+    ne: { x: bounds.right, y: bounds.top },
+    e: { x: bounds.right, y: bounds.centerY },
+    se: { x: bounds.right, y: bounds.bottom },
+    s: { x: bounds.centerX, y: bounds.bottom },
+    sw: { x: bounds.left, y: bounds.bottom },
+    w: { x: bounds.left, y: bounds.centerY },
+  }
+}
+
+function resizeBoundsByHandle(originBounds, handle, targetPoint, minEdge = MIN_ZONE_EDGE) {
+  const nextBounds = { ...originBounds }
+
+  if (handle.includes('w')) {
+    nextBounds.left = Math.min(targetPoint.x, originBounds.right - minEdge)
+  }
+
+  if (handle.includes('e')) {
+    nextBounds.right = Math.max(targetPoint.x, originBounds.left + minEdge)
+  }
+
+  if (handle.includes('n')) {
+    nextBounds.top = Math.min(targetPoint.y, originBounds.bottom - minEdge)
+  }
+
+  if (handle.includes('s')) {
+    nextBounds.bottom = Math.max(targetPoint.y, originBounds.top + minEdge)
+  }
+
+  return nextBounds
+}
+
+function shapeFromBounds(bounds, minEdge = MIN_ZONE_EDGE) {
+  const width = Math.max(bounds.right - bounds.left, minEdge)
+  const height = Math.max(bounds.bottom - bounds.top, minEdge)
+
+  return {
+    kind: 'polygon',
+    points: [
+      { x: bounds.left, y: bounds.top },
+      { x: bounds.left + width, y: bounds.top },
+      { x: bounds.left + width, y: bounds.top + height },
+      { x: bounds.left, y: bounds.top + height },
+    ].map(normalizePoint),
+  }
+}
+
+export function resizeShapeByHandle(originShape, handle, targetPoint, boundary, minArea = MIN_ZONE_EDGE * MIN_ZONE_EDGE * 0.35, minEdge = MIN_ZONE_EDGE) {
+  const originBounds = getShapeBounds(originShape)
+  const boundaryBounds = boundary ? getShapeBounds(boundary) : null
+  const projectedTarget = boundary
+    ? projectPointToPolygon({
+      x: clamp(targetPoint.x, boundaryBounds.left, boundaryBounds.right),
+      y: clamp(targetPoint.y, boundaryBounds.top, boundaryBounds.bottom),
+    }, boundary)
+    : normalizePoint(targetPoint)
+
+  const buildCandidate = (ratio) => {
+    const interpolated = {
+      x: originBounds[handle.includes('w') ? 'left' : handle.includes('e') ? 'right' : 'centerX']
+        + ((projectedTarget.x - originBounds[handle.includes('w') ? 'left' : handle.includes('e') ? 'right' : 'centerX']) * ratio),
+      y: originBounds[handle.includes('n') ? 'top' : handle.includes('s') ? 'bottom' : 'centerY']
+        + ((projectedTarget.y - originBounds[handle.includes('n') ? 'top' : handle.includes('s') ? 'bottom' : 'centerY']) * ratio),
+    }
+    const candidateBounds = resizeBoundsByHandle(originBounds, handle, interpolated, minEdge)
+
+    return shapeFromBounds(candidateBounds, minEdge)
+  }
+
+  const isValidCandidate = (candidate) => (
+    isPolygonShapeValid(candidate, minArea)
+    && (!boundary || isShapeInsideBoundary(candidate, boundary))
+  )
+
+  const fullCandidate = buildCandidate(1)
+
+  if (isValidCandidate(fullCandidate)) {
+    return fullCandidate
+  }
+
+  let low = 0
+  let high = 1
+  let bestShape = originShape
+
+  for (let iteration = 0; iteration < 24; iteration += 1) {
+    const middle = (low + high) / 2
+    const candidate = buildCandidate(middle)
+
+    if (isValidCandidate(candidate)) {
+      bestShape = candidate
+      low = middle
+    } else {
+      high = middle
+    }
+  }
+
+  return bestShape
+}
+
 export function translateLayouts(layouts, offset) {
   return Object.fromEntries(
     Object.entries(layouts).map(([zoneId, shape]) => [zoneId, translateShape(shape, offset)]),
@@ -728,12 +962,8 @@ export function translateLayouts(layouts, offset) {
 
 export function isNormalizedGeometry(geometry) {
   return Array.isArray(geometry?.points)
-    && geometry.points.length === 4
-    && geometry.points.every((point) => {
-      const x = Number(point?.x)
-      const y = Number(point?.y)
-      return Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= 1 && y >= 0 && y <= 1
-    })
+    && geometry.points.length >= 3
+    && isValidNormalizedPolygon(geometry.points)
 }
 
 export function createGeometryReference(shape) {
@@ -759,17 +989,17 @@ export function geometryToShape(geometry, reference) {
 
   return {
     kind: 'polygon',
-    points: geometry.points.map((point) => normalizePoint({
-      x: (Number(reference?.originX) || 0) + (Number(point.x) * size),
-      y: (Number(reference?.originY) || 0) + (Number(point.y) * size),
-    })),
+    points: geometry.points
+      .map((point) => denormalizePoint(point, reference))
+      .filter(Boolean)
+      .map(normalizePoint),
   }
 }
 
 export function shapeToGeometry(shape, referenceShape = shape) {
   const points = getShapePoints(shape)
 
-  if (points.length !== 4) {
+  if (points.length < 3) {
     return null
   }
 
@@ -779,16 +1009,20 @@ export function shapeToGeometry(shape, referenceShape = shape) {
     return null
   }
 
-  return {
-    points: points.map((point) => ({
-      x: roundTo((point.x - reference.originX) / reference.size, 4),
-      y: roundTo((point.y - reference.originY) / reference.size, 4),
-    })),
+  const geometry = {
+    points: points.map((point) => normalizeReferencePoint(point, reference)).filter(Boolean),
   }
+  const sanitized = sanitizeNormalizedGeometry(geometry)
+
+  return sanitized.error ? null : sanitized.geometry
 }
 
 export function geometryEquals(firstGeometry, secondGeometry) {
   if (!isNormalizedGeometry(firstGeometry) || !isNormalizedGeometry(secondGeometry)) {
+    return false
+  }
+
+  if (firstGeometry.points.length !== secondGeometry.points.length) {
     return false
   }
 
@@ -848,9 +1082,10 @@ export function buildDesignerStateFromPersistence({
   const nextBoundary = boundaryFromGeometry
     ?? sanitizeBoundary(storedState?.boundary, fallbackBoundary)
   const geometryLayouts = buildZoneLayoutsFromGeometry(zones, nextBoundary)
-  const savedLayouts = Object.keys(geometryLayouts).length > 0
-    ? geometryLayouts
-    : storedState?.layouts
+  const savedLayouts = {
+    ...(storedState?.layouts ?? {}),
+    ...geometryLayouts,
+  }
 
   return {
     boundary: nextBoundary,

@@ -3,8 +3,14 @@ import { Link } from 'react-router-dom'
 import { EmptyState } from '../shared/StatusView.jsx'
 import EmptyStatePanel from '../ui/EmptyStatePanel.jsx'
 import Button from '../ui/Button.jsx'
+import { KeyValueGrid, StatRow } from '../ui/DefinitionList.jsx'
+import { DialogBody, DialogFooter, DialogHeader, Drawer } from '../ui/Dialog.jsx'
 import { api } from '../../lib/api.js'
-import { CONDITION_TYPES, safeNumber } from '../../lib/constants.js'
+import {
+  CONDITION_TYPES,
+  formatDayCount,
+  formatSquareMetersValue,
+} from '../../lib/constants.js'
 import { useDebouncedValue } from '../../lib/hooks/useDebouncedValue.js'
 
 function createInitialForm(selectedZone) {
@@ -133,7 +139,7 @@ export default function PlotPlantingDrawer({
         disease: Boolean(form.disease),
         disease_notes: form.disease_notes.trim() || null,
         fk_catalog_plant_id: Number(form.fk_catalog_plant_id),
-        fk_plant_zone_id: Number(selectedZone.id),
+        fk_plant_zone_id: selectedZone.id,
         perenual_species_id: carePreview(selectedCatalogPlant)?.source_perenual_species_id ?? null,
       })
 
@@ -147,7 +153,7 @@ export default function PlotPlantingDrawer({
 
   return (
     <>
-      <section className="panel page-stack">
+      <section className="inspector-section workspace-context-card plant-placement-card">
         <div className="list-head">
           <div className="page-stack">
             <h3 className="section-title">Plant placement</h3>
@@ -160,17 +166,15 @@ export default function PlotPlantingDrawer({
             disabled={!canEdit || !selectedZone}
             data-testid="open-plant-drawer"
           >
-            {selectedZone ? `Add plant to ${selectedZone.name}` : 'Zone required'}
+            {selectedZone ? 'Add plant to draft' : 'Zone required'}
           </Button>
         </div>
 
         {selectedZone ? (
-          <div className="inline-note">
-            Active zone: <strong>{selectedZone.name}</strong>
-            {' | '}
-            {safeNumber(selectedZone.zone_size, 2)} m2
-            {' | '}
-            soil {selectedZone.soil_type}
+          <div className="meta-cluster">
+            <StatRow label="Active zone" value={selectedZone.name} />
+            <StatRow label="Area" value={formatSquareMetersValue(selectedZone.zone_size, 2)} />
+            <StatRow label="Soil" value={selectedZone.soil_type} />
           </div>
         ) : (
           <EmptyStatePanel
@@ -181,20 +185,23 @@ export default function PlotPlantingDrawer({
         )}
       </section>
 
-      {isOpen ? (
-        <div className="plant-flow-overlay" role="dialog" aria-modal="true">
-          <div className="plant-flow-panel page-stack">
-            <div className="plant-flow-header">
-              <div className="page-stack">
-                <h3 className="section-title">Add plant to {selectedZone?.name ?? 'selected zone'}</h3>
-                <p className="section-copy">
-                  Choose a reusable catalog plant and place it into the selected zone. Plant care stays shared at the catalog level.
-                </p>
-              </div>
-              <button type="button" className="plant-flow-close" onClick={closeDrawer} aria-label="Close plant drawer">
-                x
-              </button>
-            </div>
+      <Drawer
+        open={isOpen}
+        onClose={closeDrawer}
+        labelledBy="plant-placement-title"
+        describedBy="plant-placement-subtitle"
+        size="lg"
+        className="plant-flow-panel"
+      >
+        <DialogHeader
+          title={`Add plant to ${selectedZone?.name ?? 'selected zone'}`}
+          subtitle="Choose a reusable catalog plant and place it into the selected zone. This stays in the editor draft until the main plot save is committed."
+          titleId="plant-placement-title"
+          subtitleId="plant-placement-subtitle"
+          onClose={closeDrawer}
+          closeLabel="Close plant drawer"
+        />
+        <DialogBody className="plant-flow-body page-stack">
 
             <div className="inline-note">
               Zone context is locked to <strong>{selectedZone?.name ?? 'selected zone'}</strong>.
@@ -245,9 +252,9 @@ export default function PlotPlantingDrawer({
                         </div>
 
                         <div className="meta-cluster">
-                          <span>{preview?.watering_interval_days ? `Water every ${preview.watering_interval_days} d.` : 'Watering not set'}</span>
-                          <span>{preview?.fertilizing_interval_days ? `Feed every ${preview.fertilizing_interval_days} d.` : 'Feeding not set'}</span>
-                          <span>{catalogPlant.usage_count ?? 0} placed</span>
+                          <StatRow label="Water every" value={formatDayCount(preview?.watering_interval_days)} />
+                          <StatRow label="Feed every" value={formatDayCount(preview?.fertilizing_interval_days)} />
+                          <StatRow label="Placed" value={catalogPlant.usage_count ?? 0} />
                         </div>
                       </button>
                     )
@@ -263,7 +270,7 @@ export default function PlotPlantingDrawer({
             </section>
 
             {selectedCatalogPlant ? (
-              <form className="page-stack" onSubmit={handleSubmit}>
+              <form id="plant-placement-form" className="page-stack" onSubmit={handleSubmit}>
                 <section className="panel page-stack plant-flow-summary">
                   <div className="list-head">
                     <div className="page-stack">
@@ -350,24 +357,15 @@ export default function PlotPlantingDrawer({
                   </div>
 
                   {selectedCare ? (
-                    <div className="form-grid plants-detail-grid">
-                      <div className="card">
-                        <strong>Watering interval</strong>
-                        <span className="muted">{selectedCare.watering_interval_days ?? 'Not set'} days</span>
-                      </div>
-                      <div className="card">
-                        <strong>Fertilizing interval</strong>
-                        <span className="muted">{selectedCare.fertilizing_interval_days ?? 'Not set'} days</span>
-                      </div>
-                      <div className="card">
-                        <strong>Pest checks</strong>
-                        <span className="muted">{selectedCare.pest_check_interval_days ?? 'Not set'} days</span>
-                      </div>
-                      <div className="card">
-                        <strong>Conditions</strong>
-                        <span className="muted">{selectedCare.conditions || 'Not set'}</span>
-                      </div>
-                    </div>
+                    <KeyValueGrid
+                      className="plants-detail-grid"
+                      items={[
+                        { label: 'Watering interval', value: formatDayCount(selectedCare.watering_interval_days) },
+                        { label: 'Fertilizing interval', value: formatDayCount(selectedCare.fertilizing_interval_days) },
+                        { label: 'Pest checks', value: formatDayCount(selectedCare.pest_check_interval_days) },
+                        { label: 'Conditions', value: selectedCare.conditions || 'Not set' },
+                      ]}
+                    />
                   ) : (
                     <div className="inline-note">
                       This catalog plant does not have a shared care profile yet. Open the catalog plant to add it before planting.
@@ -386,14 +384,6 @@ export default function PlotPlantingDrawer({
 
                 {submitError ? <span className="field-error">{submitError}</span> : null}
 
-                <div className="form-actions">
-                  <Button type="submit" disabled={busy}>
-                    {busy ? 'Saving...' : 'Save planted plant'}
-                  </Button>
-                  <Button type="button" variant="secondary" onClick={closeDrawer} disabled={busy}>
-                    Cancel
-                  </Button>
-                </div>
               </form>
             ) : (
               <div className="panel page-stack">
@@ -403,9 +393,24 @@ export default function PlotPlantingDrawer({
                 />
               </div>
             )}
-          </div>
-        </div>
-      ) : null}
+        </DialogBody>
+        <DialogFooter>
+          {selectedCatalogPlant ? (
+            <>
+              <Button type="submit" form="plant-placement-form" disabled={busy}>
+                {busy ? 'Adding to draft...' : 'Add plant to draft'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={closeDrawer} disabled={busy}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button type="button" variant="secondary" onClick={closeDrawer}>
+              Close
+            </Button>
+          )}
+        </DialogFooter>
+      </Drawer>
     </>
   )
 }

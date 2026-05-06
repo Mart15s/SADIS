@@ -11,25 +11,67 @@ vi.mock('../../lib/api.js', () => ({
     getPlot: vi.fn(),
     listPlantZones: vi.fn(),
     listPlants: vi.fn(),
-    listRotations: vi.fn(),
-    listAccessRights: vi.fn(),
-    createPlant: vi.fn(),
-    deletePlant: vi.fn(),
-    createPlantZone: vi.fn(),
-    updatePlantZone: vi.fn(),
-    deletePlantZone: vi.fn(),
-    updatePlot: vi.fn(),
+    commitPlotWorkspace: vi.fn(),
     downloadPlotPdf: vi.fn(),
-    createRotationPlan: vi.fn(),
-    confirmRotationPlan: vi.fn(),
-    rejectRotationPlan: vi.fn(),
-    sharePlot: vi.fn(),
-    revokeAccessRight: vi.fn(),
   },
 }))
 
+vi.mock('../../lib/plotWorkspaceDraft.js', () => ({
+  createPlotWorkspaceSignature: vi.fn((workspace) => JSON.stringify(workspace)),
+  loadPlotWorkspaceDraft: vi.fn(() => null),
+  savePlotWorkspaceDraft: vi.fn(),
+  clearPlotWorkspaceDraft: vi.fn(),
+}))
+
 vi.mock('../../components/plot/PlotDesignerCanvas.jsx', () => ({
-  default: () => <div data-testid="plot-designer-canvas">canvas</div>,
+  default: React.forwardRef(function MockPlotDesignerCanvas(props, ref) {
+    React.useImperativeHandle(ref, () => ({
+      createZoneFromForm: vi.fn(),
+    }))
+
+    return (
+      <div data-testid="plot-designer-canvas">
+        canvas
+        <span data-testid="active-zone-id">{props.activeZoneId ?? 'none'}</span>
+        <button type="button" onClick={() => props.onSelectZone(props.zones[0] ?? null)}>Select zone</button>
+        <button type="button" onClick={() => props.onSelectZone(null)}>Clear zone</button>
+        <button
+          type="button"
+          onClick={() => props.onBoundaryCommit(
+            { kind: 'polygon', points: [{ x: 0, y: 0 }, { x: 8, y: 0 }, { x: 8, y: 8 }, { x: 0, y: 8 }] },
+            {},
+          )}
+        >
+          Commit boundary
+        </button>
+      </div>
+    )
+  }),
+}))
+
+vi.mock('../../components/plot/PlotLocationMap.jsx', () => ({
+  default: ({ boundaryPoints, readOnly }) => (
+    <div data-testid="plot-location-map" data-readonly={readOnly ? 'true' : 'false'}>
+      {boundaryPoints.length} boundary points
+    </div>
+  ),
+}))
+
+vi.mock('../../components/plot/PlotPlantingDrawer.jsx', () => ({
+  default: () => <div data-testid="plot-planting-drawer">planting drawer</div>,
+}))
+
+vi.mock('../../components/plot/PlotSectionNav.jsx', () => ({
+  default: ({ plotName, sectionLabel = 'Editor', description, meta, actions }) => (
+    <div data-testid="plot-section-nav">
+      <span>Plots</span>
+      <span>{sectionLabel}</span>
+      <h1>{plotName}</h1>
+      <p>{description}</p>
+      <div>{meta}</div>
+      <div>{actions}</div>
+    </div>
+  ),
 }))
 
 vi.mock('../../components/layout/PageHeader.jsx', () => ({
@@ -42,9 +84,21 @@ vi.mock('../../components/layout/PageHeader.jsx', () => ({
   ),
 }))
 
-describe('PlotDetailPage workspace layout', () => {
+describe('PlotDetailPage explicit save workspace', () => {
+  function renderPage() {
+    return render(
+      <MemoryRouter initialEntries={['/plots/5']}>
+        <Routes>
+          <Route path="/plots/:plotId" element={<PlotDetailPage />} />
+          <Route path="/plots/:plotId/edit" element={<div>metadata page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.stubGlobal('confirm', vi.fn(() => true))
 
     api.listPlots.mockResolvedValue([{ id: 5, access_role: 'owner' }])
     api.getPlot.mockResolvedValue({
@@ -53,6 +107,7 @@ describe('PlotDetailPage workspace layout', () => {
       city: 'Vilnius',
       plot_size: 42,
       geometry: null,
+      share: true,
     })
     api.listPlantZones.mockResolvedValue([
       {
@@ -75,81 +130,191 @@ describe('PlotDetailPage workspace layout', () => {
         plant_zone: { id: 11, name: 'Zone A' },
       },
     ])
-    api.listRotations.mockResolvedValue([])
-    api.listAccessRights.mockResolvedValue([])
-    api.createRotationPlan.mockResolvedValue({
-      draft: {
-        id: 77,
-        planning_date: '2026-04-20',
-        plan: {
-          status: 'needs_adjustment',
-          summary: {
-            assigned_plant_count: 0,
-            plant_count: 1,
-          },
-          plants: [
-            {
-              plant: { id: 22, name: 'Cucumber' },
-              current_zone: { id: 11, name: 'Zone A' },
-              selected_target_zone: null,
-              alternatives: [],
-              candidate_zones: [
-                {
-                  zone_id: 11,
-                  zone_name: 'Zone A',
-                  verdict: 'invalid',
-                  score: 0,
-                  blocking_reasons: ['Target zone conflict detected.'],
-                  passed_reasons: [],
-                },
-              ],
-              fallback_solutions: ['Delay the plan until another zone becomes available.'],
-            },
-          ],
+    api.commitPlotWorkspace.mockResolvedValue({
+      plot: {
+        id: 5,
+        name: 'North Plot',
+        city: 'Vilnius',
+        plot_size: 42,
+        geometry: null,
+        share: true,
+      },
+      zones: [
+        {
+          id: 11,
+          name: 'Zone A Prime',
+          zone_size: 12,
+          soil_type: 'clay',
+          rotation_stage: 0,
+          geometry: null,
         },
+      ],
+      plants: [
+        {
+          id: 22,
+          name: 'Cucumber',
+          type: 'vegetable',
+          condition: 'growing',
+          fk_plant_zone_id: 11,
+        },
+      ],
+      history_entry: {
+        label: 'Committed zone changes',
       },
     })
   })
 
-  it('renders the canvas-first workspace classes used for the relaxed single-scroll layout', async () => {
-    const { container } = render(
-      <MemoryRouter initialEntries={['/plots/5']}>
-        <Routes>
-          <Route path="/plots/:plotId" element={<PlotDetailPage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+  it('renders the focused editor layout with a single primary save action', async () => {
+    const { container } = renderPage()
 
     await waitFor(() => {
       expect(screen.getByText('North Plot')).toBeInTheDocument()
     })
 
-    expect(screen.getByTestId('workspace-page')).toHaveClass('workspace-page--canvas-first')
-    expect(container.querySelector('.plot-workspace-main--canvas-first')).not.toBeNull()
-    expect(container.querySelector('.plot-workspace-sidebar--canvas-first')).not.toBeNull()
+    expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
+    expect(screen.getByTestId('plot-section-nav')).toBeInTheDocument()
+    expect(container.querySelector('.workspace-page--editor')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Save plot changes' })).toBeDisabled()
   })
 
-  it('shows rejected target zones without any passed-checks copy', async () => {
-    render(
-      <MemoryRouter initialEntries={['/plots/5']}>
-        <Routes>
-          <Route path="/plots/:plotId" element={<PlotDetailPage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+  it('keeps edits in draft until the explicit save action commits them', async () => {
+    renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('North Plot')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation scheme' }))
+    fireEvent.change(screen.getByLabelText('Zone name'), {
+      target: { value: 'Zone A Prime' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply zone details' }))
+
+    const saveButton = screen.getByRole('button', { name: 'Save plot changes' })
+    expect(saveButton).toBeEnabled()
+
+    fireEvent.click(saveButton)
 
     await waitFor(() => {
-      expect(screen.getByTestId('rotation-plan-preview')).toBeInTheDocument()
+      expect(api.commitPlotWorkspace).toHaveBeenCalledTimes(1)
     })
 
-    expect(screen.getByText('Rejected target zones')).toBeInTheDocument()
-    expect(screen.getByText('Target zone conflict detected.')).toBeInTheDocument()
-    expect(screen.queryByText('Target zone passed the current suitability checks.')).not.toBeInTheDocument()
+    expect(api.commitPlotWorkspace).toHaveBeenCalledWith('5', expect.objectContaining({
+      zones: [
+        expect.objectContaining({
+          id: 11,
+          name: 'Zone A Prime',
+        }),
+      ],
+    }))
+  })
+
+  it('keeps the zone selection cleared when the canvas reports an empty-background click', async () => {
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('active-zone-id')).toHaveTextContent('11')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear zone' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('active-zone-id')).toHaveTextContent('none')
+    })
+    expect(screen.getByText('None')).toBeInTheDocument()
+    expect(screen.getByText('Select or draw a zone')).toBeInTheDocument()
+  })
+
+  it('blocks route navigation when the user cancels the unsaved-changes confirmation', async () => {
+    globalThis.confirm.mockReturnValue(false)
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText('Zone name'), {
+      target: { value: 'Zone A Prime' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply zone details' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }))
+
+    expect(globalThis.confirm).toHaveBeenCalledWith('You have unsaved plot changes. Leave without saving this draft?')
+    expect(screen.queryByText('metadata page')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save plot changes' })).toBeEnabled()
+  })
+
+  it('allows route navigation after the user confirms the unsaved-changes warning', async () => {
+    globalThis.confirm.mockReturnValue(true)
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText('Zone name'), {
+      target: { value: 'Zone A Prime' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply zone details' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('metadata page')).toBeInTheDocument()
+    })
+  })
+
+  it('renders saved map boundary preview and preserves map geometry on canvas boundary commits', async () => {
+    const mapGeometry = {
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 0, y: 1 },
+      ],
+      map: {
+        provider: 'openstreetmap',
+        center: { lat: 54.681, lng: 25.271 },
+        zoom: 16,
+        boundary: [
+          { lat: 54.681, lng: 25.271 },
+          { lat: 54.681, lng: 25.272 },
+          { lat: 54.68, lng: 25.272 },
+          { lat: 54.68, lng: 25.271 },
+        ],
+      },
+    }
+
+    api.getPlot.mockResolvedValueOnce({
+      id: 5,
+      name: 'North Plot',
+      city: 'Vilnius',
+      plot_size: 42,
+      geometry: mapGeometry,
+      share: true,
+    })
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('plot-location-map')).toHaveTextContent('4 boundary points')
+    })
+
+    expect(screen.getByTestId('plot-location-map')).toHaveAttribute('data-readonly', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Commit boundary' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save plot changes' }))
+
+    await waitFor(() => {
+      expect(api.commitPlotWorkspace).toHaveBeenCalledTimes(1)
+    })
+
+    expect(api.commitPlotWorkspace).toHaveBeenCalledWith('5', expect.objectContaining({
+      plot: expect.objectContaining({
+        geometry: expect.objectContaining({
+          map: mapGeometry.map,
+        }),
+      }),
+    }))
   })
 })

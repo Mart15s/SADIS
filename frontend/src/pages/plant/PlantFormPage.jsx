@@ -3,8 +3,9 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { KeyValueGrid, StatRow } from '../../components/ui/DefinitionList.jsx'
 import { api } from '../../lib/api.js'
-import { CONDITION_TYPES, PLANT_TYPES } from '../../lib/constants.js'
+import { CONDITION_TYPES, PLANT_TYPES, formatDayCount, formatDisplayValue } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 function createEmptyPlantForm() {
@@ -348,9 +349,9 @@ export default function PlantFormPage() {
                 </div>
                 <div className="muted">{entry.source_scientific_name || 'No scientific name stored'}</div>
                 <div className="meta-cluster">
-                  <span>Water every {entry.plant_care_summary?.watering_interval_days ?? 'n/a'} days</span>
-                  <span>Fertilize every {entry.plant_care_summary?.fertilizing_interval_days ?? 'n/a'} days</span>
-                  <span>{entry.usage_count ?? 0} placed</span>
+                  <StatRow label="Water every" value={formatDayCount(entry.plant_care_summary?.watering_interval_days)} />
+                  <StatRow label="Fertilize every" value={formatDayCount(entry.plant_care_summary?.fertilizing_interval_days)} />
+                  <StatRow label="Placed" value={entry.usage_count ?? 0} />
                 </div>
               </button>
             ))}
@@ -571,9 +572,9 @@ export default function PlantFormPage() {
             </div>
 
             <div className="meta-cluster">
-              <span>Catalog {selectedCatalogPlant.name}</span>
-              <span>Canonical {selectedCatalogPlant.canonical_name}</span>
-              <span>Usage {selectedCatalogPlant.usage_count ?? 0}</span>
+              <StatRow label="Catalog" value={selectedCatalogPlant.name} />
+              <StatRow label="Canonical" value={formatDisplayValue(selectedCatalogPlant.canonical_name)} />
+              <StatRow label="Usage" value={selectedCatalogPlant.usage_count ?? 0} />
             </div>
 
             {selectedCatalogPlant.metadata?.classification ? (
@@ -583,24 +584,15 @@ export default function PlantFormPage() {
             ) : null}
 
             {selectedCare ? (
-              <div className="form-grid plants-detail-grid">
-                <div className="card">
-                  <strong>Watering interval</strong>
-                  <span className="muted">{selectedCare.watering_interval_days ?? 'Not set'} days</span>
-                </div>
-                <div className="card">
-                  <strong>Fertilizing interval</strong>
-                  <span className="muted">{selectedCare.fertilizing_interval_days ?? 'Not set'} days</span>
-                </div>
-                <div className="card">
-                  <strong>Pest checks</strong>
-                  <span className="muted">{selectedCare.pest_check_interval_days ?? 'Not set'} days</span>
-                </div>
-                <div className="card">
-                  <strong>Conditions</strong>
-                  <span className="muted">{selectedCare.conditions || 'Not set'}</span>
-                </div>
-              </div>
+              <KeyValueGrid
+                className="plants-detail-grid"
+                items={[
+                  { label: 'Watering interval', value: formatDayCount(selectedCare.watering_interval_days) },
+                  { label: 'Fertilizing interval', value: formatDayCount(selectedCare.fertilizing_interval_days) },
+                  { label: 'Pest checks', value: formatDayCount(selectedCare.pest_check_interval_days) },
+                  { label: 'Conditions', value: selectedCare.conditions || 'Not set' },
+                ]}
+              />
             ) : (
               <div className="inline-note">
                 This catalog plant does not have a shared care profile linked yet.

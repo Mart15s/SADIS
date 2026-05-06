@@ -1,20 +1,28 @@
-import { useDeferredValue, useEffect, useState } from 'react'
+import { useDeferredValue, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { MeasurementBadge, MapLayerControl } from '../../components/garden/GardenControls.jsx'
 import PageHeader from '../../components/layout/PageHeader.jsx'
+import PlanPreview from '../../components/plot/PlanPreview.jsx'
 import {
   EmptyState,
   ErrorState,
   LoadingState,
-  ProcessingState,
-  SuccessToast,
 } from '../../components/shared/StatusView.jsx'
 import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
-import FormSection from '../../components/ui/FormSection.jsx'
+import FilterBar from '../../components/ui/FilterBar.jsx'
+import FormField from '../../components/ui/FormField.jsx'
+import ResourceCard, {
+  ResourceCardBody,
+  ResourceCardFooter,
+  ResourceCardHeader,
+  ResourceCardMeta,
+} from '../../components/ui/ResourceCard.jsx'
+import ResponsiveList from '../../components/ui/ResponsiveList.jsx'
 import SectionCard from '../../components/ui/SectionCard.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
-import { formatDate, safeNumber } from '../../lib/constants.js'
+import { formatDate, formatSquareMetersValue } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 function SearchIcon() {
@@ -67,32 +75,10 @@ function PencilIcon() {
   )
 }
 
-const emptyPlotForm = {
-  name: '',
-  city: '',
-  plot_size: '',
-  creation_date: new Date().toISOString().slice(0, 10),
-  description: '',
-  share: false,
-}
-
 export default function PlotsPage() {
   const plotsState = useAsyncData(() => api.listPlots(), [], [])
-  const [form, setForm] = useState(emptyPlotForm)
   const [search, setSearch] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [toastMessage, setToastMessage] = useState('')
   const deferredSearch = useDeferredValue(search)
-
-  useEffect(() => {
-    if (!toastMessage) {
-      return undefined
-    }
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 2400)
-    return () => window.clearTimeout(timeoutId)
-  }, [toastMessage])
 
   const filteredPlots = plotsState.data.filter((plot) => {
     const needle = deferredSearch.trim().toLowerCase()
@@ -102,47 +88,15 @@ export default function PlotsPage() {
       .some((value) => value.toLowerCase().includes(needle))
   })
 
-  function handleChange(event) {
-    const { name, type, checked, value } = event.target
-    setForm((current) => ({
-      ...current,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    setSubmitting(true)
-    setError('')
-    try {
-      const created = await api.createPlot({
-        ...form,
-        plot_size: Number(form.plot_size),
-      })
-      plotsState.setData((current) => [{
-        ...created,
-        access_role: 'owner',
-        plant_zones_count: 0,
-        plants_count: 0,
-      }, ...current])
-      setForm(emptyPlotForm)
-      setToastMessage(`Created ${created.name}.`)
-    } catch (requestError) {
-      setError(requestError.message)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   if (plotsState.loading) return <LoadingState title="Loading plots..." />
   if (plotsState.error) return <ErrorState error={plotsState.error} onRetry={plotsState.reload} />
 
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Garden portfolio"
-        title="Plots"
-        description="Browse plots, review ownership, and create new workspaces without burying the main list in oversized empty panels."
+        eyebrow="Plot registry"
+        title="Plot plans"
+        description="Browse garden workspaces as mapped planning objects with area, zones, plants, and direct editor routes."
         meta={(
           <>
             <StatusBadge kind="ownership">{plotsState.data.length} total plots</StatusBadge>
@@ -151,25 +105,27 @@ export default function PlotsPage() {
         )}
       />
 
-      <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
-
       <div className="plots-layout">
         <SectionCard
           title="Browse plots"
           description="Search by plot name, city, description, or access role. The list scales to the available content instead of floating in an oversized content well."
         >
-          <div className="field plots-search-field">
-            <label htmlFor="plot-search">Search plots</label>
-            <div className="search-input-wrap">
-              <span className="search-icon"><SearchIcon /></span>
-              <input
-                id="plot-search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, city, description, or access role"
-              />
-            </div>
-          </div>
+          <FilterBar
+            resultCount={filteredPlots.length}
+            onClear={search ? () => setSearch('') : null}
+          >
+            <FormField id="plot-search" label="Search plots" className="plots-search-field">
+              <div className="search-input-wrap">
+                <span className="search-icon"><SearchIcon /></span>
+                <input
+                  id="plot-search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Name, city, description, or access role"
+                />
+              </div>
+            </FormField>
+          </FilterBar>
 
           {filteredPlots.length === 0 ? (
             <EmptyState
@@ -177,132 +133,84 @@ export default function PlotsPage() {
               description="Create your first plot or change the current search to reveal more results."
             />
           ) : (
-            <div className="plot-grid plot-browser-grid">
+            <ResponsiveList className="plot-grid plot-browser-grid" ariaLabel="Plot list">
               {filteredPlots.map((plot) => (
-                <article key={plot.id} className="plot-browser-card">
-                  <div className="list-head">
-                    <h3>{plot.name}</h3>
-                    <StatusBadge kind="ownership">{plot.access_role ?? 'viewer'}</StatusBadge>
-                  </div>
+                <ResourceCard key={plot.id} className="plot-browser-card">
+                  <PlanPreview
+                    className="plot-browser-preview"
+                    plotName={plot.name}
+                    plotSize={plot.plot_size}
+                    plotGeometry={plot.geometry}
+                    zones={plot.zones ?? []}
+                  />
+                  <ResourceCardHeader
+                    title={plot.name}
+                    subtitle={plot.city || 'No city'}
+                    badge={<StatusBadge kind="ownership">{plot.access_role ?? 'viewer'}</StatusBadge>}
+                  />
 
-                  <span className="muted">
-                    {plot.city} | {safeNumber(plot.plot_size, 2)} m2
-                  </span>
+                  <ResourceCardMeta>
+                    <MapLayerControl
+                      title={plot.city || 'No city'}
+                      items={[
+                        { id: 'boundary', label: formatSquareMetersValue(plot.plot_size, 2), active: true, color: '#47633b' },
+                        { id: 'zones', label: `${plot.plant_zones_count ?? 0} zones`, active: Number(plot.plant_zones_count ?? 0) > 0, color: '#b9683f' },
+                        { id: 'plants', label: `${plot.plants_count ?? 0} plants`, active: Number(plot.plants_count ?? 0) > 0, color: '#237d52' },
+                      ]}
+                    />
+                  </ResourceCardMeta>
 
-                  <p className="muted plot-browser-copy">
-                    {plot.description || 'No description yet.'}
-                  </p>
+                  <ResourceCardBody>
+                    <p className="muted plot-browser-copy">
+                      {plot.description || 'No description yet.'}
+                    </p>
 
-                  <div className="meta-cluster">
-                    <span>{plot.plant_zones_count ?? 0} zones</span>
-                    <span>{plot.plants_count ?? 0} plants</span>
-                    <span>Created {formatDate(plot.creation_date)}</span>
-                  </div>
+                    <div className="plot-browser-metrics">
+                      <MeasurementBadge label="Created" value={formatDate(plot.creation_date)} tone="earth" />
+                      <MeasurementBadge label="Area" value={formatSquareMetersValue(plot.plot_size, 2)} tone="field" />
+                    </div>
+                  </ResourceCardBody>
 
-                  <ActionRow>
-                    <Link to={`/plots/${plot.id}`}>
-                      <Button variant="ghost"><ArrowIcon /> Open</Button>
-                    </Link>
-                    <Link to={`/plots/${plot.id}/calendar`}>
-                      <Button variant="secondary"><CalendarIcon /> Calendar</Button>
-                    </Link>
-                    <Link to={`/plots/${plot.id}/analytics`}>
-                      <Button variant="secondary"><BarChartIcon /> Analytics</Button>
-                    </Link>
-                    <Link to={`/plots/${plot.id}/edit`}>
-                      <Button variant="secondary"><PencilIcon /> Edit</Button>
-                    </Link>
-                  </ActionRow>
-                </article>
+                  <ResourceCardFooter>
+                    <ActionRow className="resource-action-row">
+                      <Link to={`/plots/${plot.id}`}>
+                        <Button variant="ghost" size="sm"><ArrowIcon /> Open</Button>
+                      </Link>
+                      <Link to={`/plots/${plot.id}/calendar`}>
+                        <Button variant="secondary" size="sm"><CalendarIcon /> Calendar</Button>
+                      </Link>
+                      <Link to={`/plots/${plot.id}/analytics`}>
+                        <Button variant="secondary" size="sm"><BarChartIcon /> Analytics</Button>
+                      </Link>
+                      <Link to={`/plots/${plot.id}/edit`}>
+                        <Button variant="secondary" size="sm"><PencilIcon /> Edit</Button>
+                      </Link>
+                    </ActionRow>
+                  </ResourceCardFooter>
+                </ResourceCard>
               ))}
-            </div>
+            </ResponsiveList>
           )}
         </SectionCard>
 
         <div className="plots-form-panel">
-          <form onSubmit={handleSubmit}>
-            <FormSection
-              title="Create plot"
-              description="Capture the essentials here, then refine geometry and zones inside the plot workspace."
-            >
-              <div className="input-grid">
-                <div className="field">
-                  <label htmlFor="plot-name">Name</label>
-                  <input id="plot-name" name="name" value={form.name} onChange={handleChange} required />
-                </div>
-
-                <div className="field">
-                  <label htmlFor="plot-city">City</label>
-                  <input id="plot-city" name="city" value={form.city} onChange={handleChange} required />
-                </div>
-
-                <div className="field">
-                  <label htmlFor="plot-size">Plot size (m2)</label>
-                  <input
-                    id="plot-size"
-                    name="plot_size"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={form.plot_size}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="field">
-                  <label htmlFor="creation-date">Creation date</label>
-                  <input
-                    id="creation-date"
-                    name="creation_date"
-                    type="date"
-                    value={form.creation_date}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="field field-span-2">
-                  <label htmlFor="plot-description">Description</label>
-                  <textarea id="plot-description" name="description" value={form.description} onChange={handleChange} />
-                </div>
-
-                <label className="field field-span-2">
-                  <span>Community sharing</span>
-                  <select
-                    name="share"
-                    value={String(form.share)}
-                    onChange={(event) => {
-                      setForm((current) => ({
-                        ...current,
-                        share: event.target.value === 'true',
-                      }))
-                    }}
-                  >
-                    <option value="false">Private</option>
-                    <option value="true">Shared</option>
-                  </select>
-                </label>
+          <SectionCard
+            title="Create plot"
+            description="Mark the plot boundary on the map, draw internal zones, then save the plan."
+          >
+            <div className="page-stack">
+              <div className="plot-create-entry-steps">
+                <span>1. Boundary</span>
+                <span>2. Zones</span>
+                <span>3. Summary</span>
               </div>
-
-              {error ? <span className="field-error">{error}</span> : null}
-
-              {submitting ? (
-                <ProcessingState
-                  title="Creating plot"
-                  description="Saving metadata and preparing the new workspace."
-                  steps={['Validating form', 'Creating plot', 'Refreshing list']}
-                  compact
-                />
-              ) : null}
-
               <ActionRow>
-                <Button type="submit" loading={submitting}>
-                  {submitting ? 'Creating plot' : <><PlusIcon /> Create plot</>}
-                </Button>
+                <Link to="/plots/new">
+                  <Button><PlusIcon /> Create plot</Button>
+                </Link>
               </ActionRow>
-            </FormSection>
-          </form>
+            </div>
+          </SectionCard>
         </div>
       </div>
     </div>

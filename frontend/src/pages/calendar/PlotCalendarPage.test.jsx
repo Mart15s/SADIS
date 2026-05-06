@@ -152,7 +152,7 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
     await user.click(container.querySelector('.month-day.is-selected'))
 
     await waitFor(() => {
-      expect(screen.getByText(/Task completion is blocked/i)).toBeInTheDocument()
+      expect(screen.getByText(/stays blocked until/i)).toBeInTheDocument()
     })
 
     expect(screen.getByText(/Day resources/i)).toBeInTheDocument()
@@ -246,7 +246,7 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
     await user.click(container.querySelector('.month-day.is-selected'))
 
     await waitFor(() => {
-      expect(screen.getByText(/This replenishment reminder does not consume inventory/i)).toBeInTheDocument()
+      expect(screen.getByText(/Completing this task adds stock to inventory/i)).toBeInTheDocument()
     })
 
     expect(
@@ -255,8 +255,245 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
         return text.includes('Missing 1.00 kg of Fertilizer') && text.includes('for 1 blocked task')
       }).length,
     ).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: /Complete restock/i })).toBeInTheDocument()
     expect(screen.queryByText(/Completing this task will deduct consumables/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Task completion is blocked until the missing inventory is replenished/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Update stock, then mark this reminder complete/i)).not.toBeInTheDocument()
+  })
+
+  it('marks the restock task completed and refreshes dependent tasks after replenishment', async () => {
+    const user = userEvent.setup()
+
+    api.listCalendars.mockResolvedValue([
+      { id: 9, start_date: TODAY, end_date: TODAY, tasks_count: 2 },
+    ])
+    api.getCalendar
+      .mockResolvedValueOnce({
+        id: 9,
+        start_date: TODAY,
+        end_date: TODAY,
+        available_dates: [TODAY],
+        day_resource_summary: {
+          [TODAY]: {
+            day_inventory_status: 'blocked',
+            blocked_task_count: 1,
+            summary_text: '1 planned task is blocked by Fertilizer shortage.',
+            grouped_resource_summary: [
+              {
+                resource_key: 'material|kg|consumable|fertilizer',
+                resource_name: 'Fertilizer',
+                inventory_item_type: 'material',
+                unit: 'kg',
+                required_quantity: 1,
+                available_quantity: 0,
+                shortage_quantity: 1,
+                resource_mode: 'consumable',
+              },
+            ],
+            replenishment_tasks: [{ id: 70, name: 'Buy Fertilizer', item: 'Fertilizer', item_quantity: 1 }],
+          },
+        },
+        tasks_by_date: {
+          [TODAY]: [
+            { id: 70, plant_id: null, plant_name: null, zone_id: null, zone_name: null },
+            { id: 41, plant_id: 17, plant_name: 'Tomato', zone_id: 11, zone_name: 'Zone A' },
+          ],
+        },
+        weather: [],
+      })
+      .mockResolvedValueOnce({
+        id: 9,
+        start_date: TODAY,
+        end_date: TODAY,
+        available_dates: [TODAY],
+        day_resource_summary: {
+          [TODAY]: {
+            day_inventory_status: 'fully_covered',
+            blocked_task_count: 0,
+            summary_text: 'Inventory is fully covered for planned work on this day.',
+            grouped_resource_summary: [
+              {
+                resource_key: 'material|kg|consumable|fertilizer',
+                resource_name: 'Fertilizer',
+                inventory_item_type: 'material',
+                unit: 'kg',
+                required_quantity: 1,
+                available_quantity: 1,
+                shortage_quantity: 0,
+                resource_mode: 'consumable',
+              },
+            ],
+            replenishment_tasks: [],
+          },
+        },
+        tasks_by_date: {
+          [TODAY]: [
+            { id: 70, plant_id: null, plant_name: null, zone_id: null, zone_name: null },
+            { id: 41, plant_id: 17, plant_name: 'Tomato', zone_id: 11, zone_name: 'Zone A' },
+          ],
+        },
+        weather: [],
+      })
+    api.listCalendarTasks
+      .mockResolvedValueOnce([
+        {
+          id: 70,
+          date: TODAY,
+          name: 'Buy Fertilizer',
+          type: 'buy',
+          task_type: 'buy',
+          priority: 'medium',
+          status: 'pending',
+          can_complete: true,
+          inventory_mode: 'replenishment',
+          is_replenishment_task: true,
+          inventory_shortages: [
+            {
+              id: 'material|kg|consumable|fertilizer',
+              resource_name: 'Fertilizer',
+              name: 'Fertilizer',
+              unit: 'kg',
+              shortage_quantity: 1,
+              blocked_task_count: 1,
+              is_shortage: true,
+            },
+          ],
+          inventory_context: {
+            status: 'replenishment',
+            shortage_count: 1,
+          },
+        },
+        {
+          id: 41,
+          date: TODAY,
+          name: 'Fertilize Tomato',
+          type: 'fertilize',
+          task_type: 'fertilize',
+          priority: 'medium',
+          status: 'pending',
+          can_complete: false,
+          plant_name: 'Tomato',
+          zone_name: 'Zone A',
+          inventory_mode: 'shortage',
+          inventory_context: {
+            status: 'shortage',
+            shortage_count: 1,
+            is_actionable: false,
+            buy_task_ids: [70],
+          },
+          resource_requirements: [
+            {
+              id: 3,
+              name: 'Fertilizer',
+              type: 'material',
+              unit: 'kg',
+              required_quantity: 1,
+              available_quantity: 0,
+              shortage_quantity: 1,
+              resource_mode: 'consumable',
+              is_shortage: true,
+            },
+          ],
+          inventory_shortages: [
+            {
+              id: 3,
+              name: 'Fertilizer',
+              type: 'material',
+              unit: 'kg',
+              shortage_quantity: 1,
+              blocked_task_count: 1,
+              is_shortage: true,
+            },
+          ],
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 70,
+          date: TODAY,
+          name: 'Buy Fertilizer',
+          type: 'buy',
+          task_type: 'buy',
+          priority: 'medium',
+          status: 'completed',
+          can_complete: false,
+          inventory_mode: 'not_required',
+          is_replenishment_task: true,
+          comment: 'Restocked: Fertilizer (1.00 kg)',
+          inventory_shortages: [],
+          inventory_context: {
+            status: 'completed',
+            shortage_count: 0,
+            is_actionable: false,
+          },
+        },
+        {
+          id: 41,
+          date: TODAY,
+          name: 'Fertilize Tomato',
+          type: 'fertilize',
+          task_type: 'fertilize',
+          priority: 'medium',
+          status: 'pending',
+          can_complete: true,
+          plant_name: 'Tomato',
+          zone_name: 'Zone A',
+          inventory_mode: 'available',
+          inventory_context: {
+            status: 'available',
+            shortage_count: 0,
+            is_actionable: true,
+            buy_task_ids: [],
+          },
+          resource_requirements: [
+            {
+              id: 3,
+              name: 'Fertilizer',
+              type: 'material',
+              unit: 'kg',
+              required_quantity: 1,
+              available_quantity: 1,
+              shortage_quantity: 0,
+              resource_mode: 'consumable',
+              is_shortage: false,
+            },
+          ],
+          inventory_shortages: [],
+        },
+      ])
+    api.completeTask.mockResolvedValue({
+      task: { id: 70, status: 'completed' },
+    })
+
+    const { container } = renderPage()
+
+    await waitFor(() => {
+      expect(api.listCalendarTasks).toHaveBeenCalledTimes(1)
+    })
+
+    await user.click(container.querySelector('.month-day.is-selected'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Complete restock/i })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /Complete restock/i }))
+
+    await waitFor(() => {
+      expect(api.completeTask).toHaveBeenCalledWith(70)
+    })
+
+    await waitFor(() => {
+      expect(api.listCalendarTasks).toHaveBeenCalledTimes(2)
+      expect(api.getCalendar).toHaveBeenCalledTimes(2)
+    })
+
+    expect(screen.queryByRole('button', { name: /Complete restock/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Inventory is fully covered for planned work on this day.')).toBeInTheDocument()
+    expect(screen.queryByText(/Generated replenishment tasks/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Go to inventory/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/stays blocked until/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/^completed$/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: /^Complete$/i })).toBeEnabled()
   })
 
   it('restores the requested calendar day from the query string', async () => {

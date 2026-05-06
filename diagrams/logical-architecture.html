@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loginės architektūros paketų diagrama</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #526070;
+      --line: #334155;
+      --paper: #ffffff;
+      --page: #f5f7fb;
+      --view: #dcecff;
+      --control: #ffe1e7;
+      --entity: #fff2bf;
+      --external: #ece7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    main {
+      width: min(1680px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid #d5dbe7;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+    .comment {
+      border-left: 4px solid #8aa5d6;
+      background: #f7faff;
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      color: #334155;
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    .legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 16px; height: 12px; border: 1px solid #64748b; display: inline-block; }
+    .canvas { overflow: auto; border: 1px solid #dbe3ef; background: #fff; }
+    svg { display: block; max-width: none; background: #fff; }
+    .uml-title { font-size: 18px; font-weight: 700; }
+    .pkg-title, .lane-title { font-size: 15px; font-weight: 700; }
+    .stereo { font-size: 11px; fill: #5b6472; font-style: italic; }
+    .class-name { font-size: 13px; font-weight: 700; }
+    .member { font-size: 11px; fill: #172033; }
+    .small { font-size: 10px; fill: #374151; }
+    .edge-label { font-size: 11px; fill: #1f2937; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 13px; }
+    th, td { border: 1px solid #d9e1ee; padding: 7px 8px; vertical-align: top; }
+    th { background: #eef3ff; text-align: left; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+    ul { margin-top: 6px; }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; border: 0; box-shadow: none; }
+      .canvas { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Loginės architektūros paketų diagrama</h1>
+  <div class="meta">Sugeneruota: 2026-04-29. Šaltinis: faktinė Laravel + React codebase būsena.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#dcecff"></i> Views / boundaries</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> Controllers / services</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> Models / entities / types</span>
+    <span><i class="swatch" style="background:#ece7ff"></i> External systems / boundaries</span>
+  </div>
+  <div class="comment">Paketai atitinka faktinę frontend/src/pages bei backend/app/Http/Controllers, backend/app/Services ir backend/app/Models struktūrą po refaktoringo į loginius katalogus.</div>
+  <div class="canvas"><svg width="1600" height="940" role="img" aria-label="Loginės architektūros paketų diagrama">
+    <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#334155"></path>
+    </marker>
+    <marker id="openArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8" fill="none" stroke="#334155" stroke-width="1.5"></path>
+    </marker>
+    <marker id="diamond" markerWidth="12" markerHeight="10" refX="2" refY="5" orient="auto">
+      <path d="M2,5 L6,1 L10,5 L6,9 z" fill="#334155" stroke="#334155"></path>
+    </marker>
+  </defs>
+    <text x="24" y="30" class="uml-title">Loginės architektūros paketų diagrama</text>
+    <rect x="30" y="60" width="460" height="820" fill="#eef3ff" stroke="#7b89a8" opacity="0.58"></rect>
+    <text x="260" y="83" text-anchor="middle" class="lane-title">Views</text>
+<rect x="570" y="60" width="470" height="820" fill="#eef3ff" stroke="#7b89a8" opacity="0.58"></rect>
+    <text x="805" y="83" text-anchor="middle" class="lane-title">Controllers / Services</text>
+<rect x="1120" y="60" width="430" height="820" fill="#eef3ff" stroke="#7b89a8" opacity="0.58"></rect>
+    <text x="1335" y="83" text-anchor="middle" class="lane-title">Models / Entities / Types</text>
+    <polyline points="250,187 610,187" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="430" y="182" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="450,201 820,208" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="635" y="199.5" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="250,402 610,432" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="430" y="412" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="450,397 820,462" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="635" y="424.5" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="250,602 610,671" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="430" y="631.5" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="450,602 820,664" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="635" y="628" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="250,764 610,811" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="430" y="782.5" text-anchor="middle" class="edge-label">REST /api</text>
+<polyline points="450,771 820,818" fill="none" stroke="#334155" stroke-width="1.25" stroke-dasharray="7 5" marker-end="url(#openArrow)"></polyline><text x="635" y="789.5" text-anchor="middle" class="edge-label">boundary calls</text>
+<polyline points="800,187 1160,180" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="980" y="178.5" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="1010,208 1350,201" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1180" y="199.5" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="800,432 1160,462" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="980" y="442" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="1010,462 1350,469" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1180" y="460.5" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="800,671 1160,715" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="980" y="688" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="1010,664 1350,701" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1180" y="677.5" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="705,760 1245,245" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="975" y="497.5" text-anchor="middle" class="edge-label">Eloquent</text>
+<polyline points="915,760 1350,469" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1132.5" y="609.5" text-anchor="middle" class="edge-label">weather cache</text>
+<polyline points="915,760 1245,534" fill="none" stroke="#334155" stroke-width="1.25" marker-end="url(#openArrow)"></polyline><text x="1080" y="642" text-anchor="middle" class="edge-label">plant care cache</text>
+    <rect x="70" y="115" width="180" height="144" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="160" y="131" text-anchor="middle" class="stereo">«package»</text>
+<text x="160" y="148" text-anchor="middle" class="class-name">User</text>
+<line x1="70" y1="158" x2="250" y2="158" stroke="#4f7fb8"></line>
+<text x="78" y="172" class="member">+ LoginPage</text>
+<text x="78" y="186" class="member">+ RegisterPage</text>
+<text x="78" y="200" class="member">+ ForgotPasswordPage</text>
+<text x="78" y="214" class="member">+ ResetPasswordPage</text>
+<text x="78" y="228" class="member">+ AccountPage</text>
+<text x="78" y="242" class="member">+ DashboardPage</text>
+<rect x="270" y="115" width="180" height="172" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="360" y="131" text-anchor="middle" class="stereo">«package»</text>
+<text x="360" y="148" text-anchor="middle" class="class-name">Plot</text>
+<line x1="270" y1="158" x2="450" y2="158" stroke="#4f7fb8"></line>
+<text x="278" y="172" class="member">+ PlotsPage</text>
+<text x="278" y="186" class="member">+ PlotDetailPage</text>
+<text x="278" y="200" class="member">+ PlotEditPage</text>
+<text x="278" y="214" class="member">+ PlotHistoryPage</text>
+<text x="278" y="228" class="member">+ PlotSharingPage</text>
+<text x="278" y="242" class="member">+ PlotRotationPage</text>
+<text x="278" y="256" class="member">+ PlotAnalyticsPage</text>
+<text x="278" y="270" class="member">+ PlotHarvestsPage</text>
+<rect x="70" y="330" width="180" height="144" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="160" y="346" text-anchor="middle" class="stereo">«package»</text>
+<text x="160" y="363" text-anchor="middle" class="class-name">Plant</text>
+<line x1="70" y1="373" x2="250" y2="373" stroke="#4f7fb8"></line>
+<text x="78" y="387" class="member">+ PlantsPage</text>
+<text x="78" y="401" class="member">+ PlantFormPage</text>
+<text x="78" y="415" class="member">+ PlantDetailPage</text>
+<text x="78" y="429" class="member">+ CatalogPlantsPage</text>
+<text x="78" y="443" class="member">+ CatalogPlantFormPage</text>
+<text x="78" y="457" class="member">+ CatalogPlantDetailPage</text>
+<rect x="270" y="360" width="180" height="74" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="360" y="376" text-anchor="middle" class="stereo">«package»</text>
+<text x="360" y="393" text-anchor="middle" class="class-name">Calendar</text>
+<line x1="270" y1="403" x2="450" y2="403" stroke="#4f7fb8"></line>
+<text x="278" y="417" class="member">+ PlotCalendarPage</text>
+<rect x="70" y="565" width="180" height="74" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="160" y="581" text-anchor="middle" class="stereo">«package»</text>
+<text x="160" y="598" text-anchor="middle" class="class-name">Inventory</text>
+<line x1="70" y1="608" x2="250" y2="608" stroke="#4f7fb8"></line>
+<text x="78" y="622" class="member">+ InventoryPage</text>
+<rect x="270" y="565" width="180" height="74" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="360" y="581" text-anchor="middle" class="stereo">«package»</text>
+<text x="360" y="598" text-anchor="middle" class="class-name">Community</text>
+<line x1="270" y1="608" x2="450" y2="608" stroke="#4f7fb8"></line>
+<text x="278" y="622" class="member">+ CommunityPage</text>
+<rect x="70" y="720" width="180" height="88" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="160" y="736" text-anchor="middle" class="stereo">«package»</text>
+<text x="160" y="753" text-anchor="middle" class="class-name">Admin</text>
+<line x1="70" y1="763" x2="250" y2="763" stroke="#4f7fb8"></line>
+<text x="78" y="777" class="member">+ AdminUsersPage</text>
+<text x="78" y="791" class="member">+ AdminRoute</text>
+<rect x="270" y="720" width="180" height="102" rx="4" fill="#dcecff" stroke="#4f7fb8" stroke-width="1.4"></rect>
+<text x="360" y="736" text-anchor="middle" class="stereo">«package»</text>
+<text x="360" y="753" text-anchor="middle" class="class-name">BoundariesToExternal</text>
+<line x1="270" y1="763" x2="450" y2="763" stroke="#4f7fb8"></line>
+<text x="278" y="777" class="member">+ api.js</text>
+<text x="278" y="791" class="member">+ AuthContext</text>
+<text x="278" y="805" class="member">+ downloadBlob</text>
+<rect x="610" y="115" width="190" height="144" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="705" y="131" text-anchor="middle" class="stereo">«package»</text>
+<text x="705" y="148" text-anchor="middle" class="class-name">User</text>
+<line x1="610" y1="158" x2="800" y2="158" stroke="#bf5a6b"></line>
+<text x="618" y="172" class="member">+ LoginController</text>
+<text x="618" y="186" class="member">+ SignUpController</text>
+<text x="618" y="200" class="member">+ LogoutController</text>
+<text x="618" y="214" class="member">+ CurrentUserController</text>
+<text x="618" y="228" class="member">+ PasswordResetController</text>
+<text x="618" y="242" class="member">+ AccountService</text>
+<rect x="820" y="115" width="190" height="186" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="915" y="131" text-anchor="middle" class="stereo">«package»</text>
+<text x="915" y="148" text-anchor="middle" class="class-name">Plot</text>
+<line x1="820" y1="158" x2="1010" y2="158" stroke="#bf5a6b"></line>
+<text x="828" y="172" class="member">+ PlotController</text>
+<text x="828" y="186" class="member">+ SchemeController</text>
+<text x="828" y="200" class="member">+ WorkspaceController</text>
+<text x="828" y="214" class="member">+ ShareController</text>
+<text x="828" y="228" class="member">+ RotationController</text>
+<text x="828" y="242" class="member">+ HistoryController</text>
+<text x="828" y="256" class="member">+ AnalyticsController</text>
+<text x="828" y="270" class="member">+ ExportController</text>
+<text x="828" y="284" class="member">+ HarvestController</text>
+<rect x="610" y="360" width="190" height="144" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="705" y="376" text-anchor="middle" class="stereo">«package»</text>
+<text x="705" y="393" text-anchor="middle" class="class-name">Plant</text>
+<line x1="610" y1="403" x2="800" y2="403" stroke="#bf5a6b"></line>
+<text x="618" y="417" class="member">+ PlantController</text>
+<text x="618" y="431" class="member">+ CatalogPlantController</text>
+<text x="618" y="445" class="member">+ PlantConditionController</text>
+<text x="618" y="459" class="member">+ CatalogPlantService</text>
+<text x="618" y="473" class="member">+ PlantCareService</text>
+<text x="618" y="487" class="member">+ PlantCareNormalizer</text>
+<rect x="820" y="390" width="190" height="144" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="915" y="406" text-anchor="middle" class="stereo">«package»</text>
+<text x="915" y="423" text-anchor="middle" class="class-name">Calendar</text>
+<line x1="820" y1="433" x2="1010" y2="433" stroke="#bf5a6b"></line>
+<text x="828" y="447" class="member">+ CalendarController</text>
+<text x="828" y="461" class="member">+ TaskController</text>
+<text x="828" y="475" class="member">+ TaskCalendarService</text>
+<text x="828" y="489" class="member">+ CalendarGenerationService</text>
+<text x="828" y="503" class="member">+ WeatherService</text>
+<text x="828" y="517" class="member">+ TaskWorkflowService</text>
+<rect x="610" y="620" width="190" height="102" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="705" y="636" text-anchor="middle" class="stereo">«package»</text>
+<text x="705" y="653" text-anchor="middle" class="class-name">Inventory</text>
+<line x1="610" y1="663" x2="800" y2="663" stroke="#bf5a6b"></line>
+<text x="618" y="677" class="member">+ InventoryController</text>
+<text x="618" y="691" class="member">+ InventoryService</text>
+<text x="618" y="705" class="member">+ TaskInventoryCoverageService</text>
+<rect x="820" y="620" width="190" height="88" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="915" y="636" text-anchor="middle" class="stereo">«package»</text>
+<text x="915" y="653" text-anchor="middle" class="class-name">Community</text>
+<line x1="820" y1="663" x2="1010" y2="663" stroke="#bf5a6b"></line>
+<text x="828" y="677" class="member">+ CommunityController</text>
+<text x="828" y="691" class="member">+ CommunityService</text>
+<rect x="610" y="760" width="190" height="102" rx="4" fill="#ffe1e7" stroke="#bf5a6b" stroke-width="1.4"></rect>
+<text x="705" y="776" text-anchor="middle" class="stereo">«package»</text>
+<text x="705" y="793" text-anchor="middle" class="class-name">Admin</text>
+<line x1="610" y1="803" x2="800" y2="803" stroke="#bf5a6b"></line>
+<text x="618" y="817" class="member">+ AccountController</text>
+<text x="618" y="831" class="member">+ AuditLogController</text>
+<text x="618" y="845" class="member">+ AdminService</text>
+<rect x="820" y="760" width="190" height="116" rx="4" fill="#ece7ff" stroke="#7962bd" stroke-width="1.4"></rect>
+<text x="915" y="776" text-anchor="middle" class="stereo">«package»</text>
+<text x="915" y="793" text-anchor="middle" class="class-name">Integrations / Boundaries</text>
+<line x1="820" y1="803" x2="1010" y2="803" stroke="#7962bd"></line>
+<text x="828" y="817" class="member">+ MeteoLtClient</text>
+<text x="828" y="831" class="member">+ PerenualService</text>
+<text x="828" y="845" class="member">+ EmailServerBoundary</text>
+<text x="828" y="859" class="member">+ PdfExportService</text>
+<rect x="1160" y="115" width="170" height="130" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1245" y="131" text-anchor="middle" class="stereo">«package»</text>
+<text x="1245" y="148" text-anchor="middle" class="class-name">User domain</text>
+<line x1="1160" y1="158" x2="1330" y2="158" stroke="#b58b26"></line>
+<text x="1168" y="172" class="member">+ User</text>
+<text x="1168" y="186" class="member">+ Profile</text>
+<text x="1168" y="200" class="member">+ GardenOwner</text>
+<text x="1168" y="214" class="member">+ AuditLog</text>
+<text x="1168" y="228" class="member">+ UserRole</text>
+<rect x="1350" y="115" width="170" height="172" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1435" y="131" text-anchor="middle" class="stereo">«package»</text>
+<text x="1435" y="148" text-anchor="middle" class="class-name">Plot domain</text>
+<line x1="1350" y1="158" x2="1520" y2="158" stroke="#b58b26"></line>
+<text x="1358" y="172" class="member">+ Plot</text>
+<text x="1358" y="186" class="member">+ PlantZone</text>
+<text x="1358" y="200" class="member">+ AccessRight</text>
+<text x="1358" y="214" class="member">+ HasPlot</text>
+<text x="1358" y="228" class="member">+ RotationHistory</text>
+<text x="1358" y="242" class="member">+ RotationPlanDraft</text>
+<text x="1358" y="256" class="member">+ HarvestRecord</text>
+<text x="1358" y="270" class="member">+ plot_snapshots</text>
+<rect x="1160" y="390" width="170" height="144" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1245" y="406" text-anchor="middle" class="stereo">«package»</text>
+<text x="1245" y="423" text-anchor="middle" class="class-name">Plant domain</text>
+<line x1="1160" y1="433" x2="1330" y2="433" stroke="#b58b26"></line>
+<text x="1168" y="447" class="member">+ Plant</text>
+<text x="1168" y="461" class="member">+ CatalogPlant</text>
+<text x="1168" y="475" class="member">+ PlantCare</text>
+<text x="1168" y="489" class="member">+ PlantConditionHistory</text>
+<text x="1168" y="503" class="member">+ PlantType</text>
+<text x="1168" y="517" class="member">+ ConditionType</text>
+<rect x="1350" y="390" width="170" height="158" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1435" y="406" text-anchor="middle" class="stereo">«package»</text>
+<text x="1435" y="423" text-anchor="middle" class="class-name">Calendar domain</text>
+<line x1="1350" y1="433" x2="1520" y2="433" stroke="#b58b26"></line>
+<text x="1358" y="447" class="member">+ TaskCalendar</text>
+<text x="1358" y="461" class="member">+ Task</text>
+<text x="1358" y="475" class="member">+ WeatherForecast</text>
+<text x="1358" y="489" class="member">+ TaskResourceRequirement</text>
+<text x="1358" y="503" class="member">+ UsedOn</text>
+<text x="1358" y="517" class="member">+ TaskType</text>
+<text x="1358" y="531" class="member">+ TaskState</text>
+<rect x="1160" y="650" width="170" height="130" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1245" y="666" text-anchor="middle" class="stereo">«package»</text>
+<text x="1245" y="683" text-anchor="middle" class="class-name">Inventory domain</text>
+<line x1="1160" y1="693" x2="1330" y2="693" stroke="#b58b26"></line>
+<text x="1168" y="707" class="member">+ InventoryItem</text>
+<text x="1168" y="721" class="member">+ HasInventory</text>
+<text x="1168" y="735" class="member">+ InventoryUsageLog</text>
+<text x="1168" y="749" class="member">+ InventoryItemType</text>
+<text x="1168" y="763" class="member">+ InventoryUnit</text>
+<rect x="1350" y="650" width="170" height="102" rx="4" fill="#fff2bf" stroke="#b58b26" stroke-width="1.4"></rect>
+<text x="1435" y="666" text-anchor="middle" class="stereo">«package»</text>
+<text x="1435" y="683" text-anchor="middle" class="class-name">Community domain</text>
+<line x1="1350" y1="693" x2="1520" y2="693" stroke="#b58b26"></line>
+<text x="1358" y="707" class="member">+ CommunityPost</text>
+<text x="1358" y="721" class="member">+ Plot</text>
+<text x="1358" y="735" class="member">+ Profile</text>
+    <rect x="60" y="890" width="1480" height="36" rx="4" fill="#f8fafc" stroke="#94a3b8"></rect>
+      <text x="70" y="908" class="small">Pastaba: backend struktūra jau refaktorinta pagal</text>
+<text x="70" y="922" class="small">loginius katalogus; senų Api/Admin, Api/Calendar</text>
+<text x="70" y="936" class="small">ir panašių controllerių kelių nebėra, jie matomi</text>
+<text x="70" y="950" class="small">tik kaip ištrinti git worktree įrašai.</text>
+  </svg></div>
+</main>
+</body>
+</html>

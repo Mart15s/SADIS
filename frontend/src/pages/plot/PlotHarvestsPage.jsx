@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import PageHeader from '../../components/layout/PageHeader.jsx'
+import PlotSectionNav from '../../components/plot/PlotSectionNav.jsx'
 import {
   EmptyState,
   ErrorState,
@@ -34,16 +34,18 @@ export default function PlotHarvestsPage() {
 
   const pageState = useAsyncData(
     async () => {
+      const plots = await api.listPlots()
+      const accessRole = plots.find((entry) => String(entry.id) === String(plotId))?.access_role ?? null
       const [plot, plants, harvests] = await Promise.all([
         api.getPlot(plotId),
         api.listPlants(plotId),
         api.listHarvests(plotId),
       ])
 
-      return { plot, plants, harvests }
+      return { plot, plants, harvests, accessRole }
     },
     [plotId],
-    { plot: null, plants: [], harvests: [] },
+    { plot: null, plants: [], harvests: [], accessRole: null },
   )
 
   useEffect(() => {
@@ -97,9 +99,11 @@ export default function PlotHarvestsPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        eyebrow="Harvest log"
-        title={`${pageState.data.plot?.name ?? 'Plot'} harvests`}
+      <PlotSectionNav
+        plotId={plotId}
+        plotName={pageState.data.plot?.name ?? 'Plot'}
+        sectionKey="harvests"
+        isOwner={pageState.data.accessRole === 'owner'}
         description="Register explicit harvest quantities and review the saved harvest history for this plot."
         meta={(
           <>
@@ -108,14 +112,9 @@ export default function PlotHarvestsPage() {
           </>
         )}
         actions={(
-          <>
-            <Link to={`/plots/${plotId}/analytics`}>
-              <Button variant="secondary">Analytics</Button>
-            </Link>
-            <Link to={`/plots/${plotId}`}>
-              <Button variant="secondary">Back to plot</Button>
-            </Link>
-          </>
+          <Link to={`/plots/${plotId}/analytics`}>
+            <Button variant="secondary">Analytics</Button>
+          </Link>
         )}
       />
 

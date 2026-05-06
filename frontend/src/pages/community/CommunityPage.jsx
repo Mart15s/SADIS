@@ -1,4 +1,5 @@
 import { startTransition, useDeferredValue, useState } from 'react'
+import { MapLayerControl } from '../../components/garden/GardenControls.jsx'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import PlanPreview from '../../components/plot/PlanPreview.jsx'
 import {
@@ -10,7 +11,16 @@ import {
 } from '../../components/shared/StatusView.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
-import Card from '../../components/ui/Card.jsx'
+import FilterBar from '../../components/ui/FilterBar.jsx'
+import FormField from '../../components/ui/FormField.jsx'
+import { StatRow } from '../../components/ui/DefinitionList.jsx'
+import ResourceCard, {
+  ResourceCardBody,
+  ResourceCardFooter,
+  ResourceCardHeader,
+  ResourceCardMeta,
+} from '../../components/ui/ResourceCard.jsx'
+import ResponsiveList from '../../components/ui/ResponsiveList.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { api } from '../../lib/api.js'
 import { formatDateTime } from '../../lib/constants.js'
@@ -101,7 +111,7 @@ export default function CommunityPage() {
       <PageHeader
         title="Community"
         eyebrow="Shared garden spaces"
-        description="Explore plot snapshots from the community, search by author or plot, and publish your own shared updates without leaving the main product workspace."
+        description="Explore shared plot plans as map snapshots with owners, zones, and garden planning context."
         meta={(
           <>
             <Badge tone="soft">{filteredPosts.length} visible posts</Badge>
@@ -112,20 +122,26 @@ export default function CommunityPage() {
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
-      <div className="search-row">
-        <div className="field">
-          <label htmlFor="community-search">Search posts</label>
+      <FilterBar
+        resultCount={filteredPosts.length}
+        onClear={search || selectedPlotId ? () => {
+          setSearch('')
+          startTransition(() => {
+            setSelectedPlotId('')
+          })
+        } : null}
+      >
+        <FormField id="community-search" label="Search posts">
           <input
             id="community-search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by title, text, author, or plot"
           />
-        </div>
+        </FormField>
 
         {isAuthenticated ? (
-          <div className="field">
-            <label htmlFor="plot-filter">Plot filter</label>
+          <FormField id="plot-filter" label="Plot filter">
             <select
               id="plot-filter"
               value={selectedPlotId}
@@ -142,9 +158,9 @@ export default function CommunityPage() {
                 </option>
               ))}
             </select>
-          </div>
+          </FormField>
         ) : null}
-      </div>
+      </FilterBar>
 
       <div className="community-grid">
         <section className="post-stack">
@@ -154,35 +170,48 @@ export default function CommunityPage() {
               title="No community posts"
               description="Try a different search term or clear the plot filter."
             />
-          ) : filteredPosts.map((post) => (
-            <Card key={post.id} className="post-card" tone="default">
-              <div className="list-head">
-                <div className="page-stack" style={{ gap: '0.4rem' }}>
-                  <div className="meta-cluster">
+          ) : (
+            <ResponsiveList className="resource-feed-list" ariaLabel="Community posts">
+              {filteredPosts.map((post) => (
+                <ResourceCard key={post.id} className="post-card">
+                  <ResourceCardHeader
+                    title={post.name}
+                    badge={<Badge tone="soft">{post.owner_name || 'Unknown author'}</Badge>}
+                  />
+                  <ResourceCardMeta>
                     <Badge tone={post.share ? 'success' : 'warning'}>{post.share ? 'Shared' : 'Private'}</Badge>
                     {post.plot_name ? <Badge tone="neutral">{post.plot_name}</Badge> : null}
-                  </div>
-                  <h3>{post.name}</h3>
-                </div>
-                <Badge tone="soft">{post.owner_name || 'Unknown author'}</Badge>
-              </div>
-              <p>{post.text}</p>
-              {post.plot_preview ? (
-                <PlanPreview
-                  className="community-plan-preview"
-                  plotName={post.plot_preview.plot_name}
-                  plotSize={post.plot_preview.plot_size}
-                  plotGeometry={post.plot_preview.geometry}
-                  zones={post.plot_preview.zones}
-                />
-              ) : null}
-              <footer>
-                <span>{post.owner_name || 'Unknown author'}</span>
-                <span>{post.plot_name || 'General post'}</span>
-                <span>{formatDateTime(post.created_at)}</span>
-              </footer>
-            </Card>
-          ))}
+                  </ResourceCardMeta>
+                  <ResourceCardBody>
+                    <p>{post.text}</p>
+                    {post.plot_preview ? (
+                      <div className="community-plan-shell">
+                        <MapLayerControl
+                          title="Shared plot layers"
+                          items={[
+                            { id: 'boundary', label: 'Boundary', active: true, color: '#47633b' },
+                            { id: 'zones', label: `${post.plot_preview.zones?.length ?? 0} zones`, active: true, color: '#b9683f' },
+                          ]}
+                        />
+                        <PlanPreview
+                          className="community-plan-preview"
+                          plotName={post.plot_preview.plot_name}
+                          plotSize={post.plot_preview.plot_size}
+                          plotGeometry={post.plot_preview.geometry}
+                          zones={post.plot_preview.zones}
+                        />
+                      </div>
+                    ) : null}
+                  </ResourceCardBody>
+                  <ResourceCardFooter>
+                    <StatRow label="Author" value={post.owner_name || 'Unknown author'} />
+                    <StatRow label="Plot" value={post.plot_name || 'General post'} />
+                    <StatRow label="Posted" value={formatDateTime(post.created_at)} />
+                  </ResourceCardFooter>
+                </ResourceCard>
+              ))}
+            </ResponsiveList>
+          )}
         </section>
 
         <aside className="panel input-grid">
@@ -197,16 +226,13 @@ export default function CommunityPage() {
             />
           ) : (
             <form className="input-grid" onSubmit={handleCreatePost}>
-              <div className="field">
-                <label htmlFor="post-name">Title</label>
+              <FormField id="post-name" label="Title">
                 <input id="post-name" name="name" value={form.name} onChange={handleFormChange} required />
-              </div>
-              <div className="field">
-                <label htmlFor="post-text">Text</label>
+              </FormField>
+              <FormField id="post-text" label="Text">
                 <textarea id="post-text" name="text" value={form.text} onChange={handleFormChange} required />
-              </div>
-              <div className="field">
-                <label htmlFor="post-plot">Link to plot</label>
+              </FormField>
+              <FormField id="post-plot" label="Link to plot">
                 <select id="post-plot" name="fk_plot_id" value={form.fk_plot_id} onChange={handleFormChange}>
                   <option value="">No plot</option>
                   {plotsState.data.map((plot) => (
@@ -215,9 +241,8 @@ export default function CommunityPage() {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div className="field">
-                <label htmlFor="post-share">Visibility</label>
+              </FormField>
+              <FormField id="post-share" label="Visibility">
                 <select
                   id="post-share"
                   name="share"
@@ -232,7 +257,7 @@ export default function CommunityPage() {
                   <option value="true">Shared</option>
                   <option value="false">Private</option>
                 </select>
-              </div>
+              </FormField>
 
               {createError ? <span className="field-error">{createError}</span> : null}
 

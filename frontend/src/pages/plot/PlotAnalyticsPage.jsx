@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import PageHeader from '../../components/layout/PageHeader.jsx'
+import PlotSectionNav from '../../components/plot/PlotSectionNav.jsx'
 import {
-  EmptyState,
   ErrorState,
   LoadingState,
   ProcessingState,
@@ -10,7 +9,11 @@ import {
 } from '../../components/shared/StatusView.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { StatRow } from '../../components/ui/DefinitionList.jsx'
+import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
 import MetricCard from '../../components/ui/MetricCard.jsx'
+import SectionCard from '../../components/ui/SectionCard.jsx'
+import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
 import { safeNumber } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
@@ -39,7 +42,7 @@ function MetricBars({ title, metrics }) {
   }
 
   return (
-    <section className="panel page-stack">
+    <section className="panel analytics-result-subsection page-stack">
       <h3>{title}</h3>
       <div className="analytics-bars">
         {Object.entries(metrics).map(([label, value]) => (
@@ -64,11 +67,12 @@ function WarningList({ warnings }) {
   }
 
   return (
-    <section className="panel page-stack">
-      <div className="list-head">
-        <h3>Warnings</h3>
-        <Badge tone="warning">{warnings.length}</Badge>
-      </div>
+    <SectionCard
+      title="Warnings"
+      description="These sections generated successfully, but some plot records are still incomplete."
+      className="analytics-warning-card"
+      actions={<Badge tone="warning">{warnings.length}</Badge>}
+    >
       <div className="analytics-warning-stack">
         {warnings.map((warning) => (
           <div key={warning} className="analytics-warning">
@@ -76,19 +80,18 @@ function WarningList({ warnings }) {
           </div>
         ))}
       </div>
-    </section>
+    </SectionCard>
   )
 }
 
 function NoDataSection({ title, description }) {
   return (
-    <section className="panel page-stack">
-      <div className="list-head">
-        <h3>{title}</h3>
-        <Badge tone="warning">No data</Badge>
-      </div>
-      <p className="muted">{description}</p>
-    </section>
+    <SectionCard
+      title={title}
+      description={description}
+      className="analytics-result-card analytics-no-data-card"
+      actions={<Badge tone="warning">No data</Badge>}
+    />
   )
 }
 
@@ -103,7 +106,7 @@ function PlanningSection({ section }) {
   }
 
   return (
-    <section className="panel page-stack">
+    <section className="panel analytics-result-card page-stack">
       <div className="list-head">
         <div className="stack">
           <h3>Planning decisions analysis</h3>
@@ -120,7 +123,7 @@ function PlanningSection({ section }) {
       </section>
 
       <div className="detail-grid analytics-detail-grid">
-        <section className="panel page-stack">
+        <section className="panel analytics-result-subsection page-stack">
           <h3>Zone-season selections</h3>
           {section.zone_season_selections?.length ? (
             <div className="table-wrap">
@@ -150,14 +153,15 @@ function PlanningSection({ section }) {
           )}
         </section>
 
-        <section className="panel page-stack">
+        <section className="panel analytics-result-subsection page-stack">
           <h3>Rotation participation</h3>
           {section.rotation_history?.zone_participation_counts?.length ? (
             section.rotation_history.zone_participation_counts.map((entry) => (
-              <div key={entry.zone_id} className="list-head">
-                <strong>{entry.zone_name || `Zone #${entry.zone_id}`}</strong>
-                <span>{entry.records_count}</span>
-              </div>
+              <StatRow
+                key={entry.zone_id}
+                label={entry.zone_name || `Zone #${entry.zone_id}`}
+                value={entry.records_count}
+              />
             ))
           ) : (
             <p className="muted">No rotation history is available yet.</p>
@@ -165,7 +169,7 @@ function PlanningSection({ section }) {
         </section>
       </div>
 
-      <section className="panel page-stack">
+      <section className="panel analytics-result-subsection page-stack">
         <h3>Detected rotation violations</h3>
         {section.rotation_violations?.length ? (
           section.rotation_violations.map((violation, index) => (
@@ -193,7 +197,7 @@ function PlantConditionSection({ section }) {
   }
 
   return (
-    <section className="panel page-stack">
+    <section className="panel analytics-result-card page-stack">
       <div className="list-head">
         <div className="stack">
           <h3>Plant condition analysis</h3>
@@ -218,7 +222,7 @@ function PlantConditionSection({ section }) {
       <MetricBars title="Current condition distribution" metrics={section.counts_by_condition} />
 
       <div className="detail-grid analytics-detail-grid">
-        <section className="panel page-stack">
+        <section className="panel analytics-result-subsection page-stack">
           <h3>Condition changes</h3>
           {section.condition_changes?.length ? (
             <div className="table-wrap">
@@ -248,7 +252,7 @@ function PlantConditionSection({ section }) {
           )}
         </section>
 
-        <section className="panel page-stack">
+        <section className="panel analytics-result-subsection page-stack">
           <h3>Critical deterioration points</h3>
           {section.critical_deterioration_points?.length ? (
             section.critical_deterioration_points.map((entry, index) => (
@@ -277,7 +281,7 @@ function HarvestSection({ section }) {
   }
 
   return (
-    <section className="panel page-stack">
+    <section className="panel analytics-result-card page-stack">
       <div className="list-head">
         <div className="stack">
           <h3>Harvest analysis</h3>
@@ -298,21 +302,22 @@ function HarvestSection({ section }) {
       </section>
 
       <div className="detail-grid analytics-detail-grid">
-        <section className="panel page-stack">
+        <section className="panel analytics-result-subsection page-stack">
           <h3>Best yielding plants</h3>
           {section.best_yielding_plants?.length ? (
             section.best_yielding_plants.map((plant) => (
-              <div key={plant.plant_id} className="list-head">
-                <strong>{plant.plant_name}</strong>
-                <span>{safeNumber(plant.total_quantity, 2)}</span>
-              </div>
+              <StatRow
+                key={plant.plant_id}
+                label={plant.plant_name}
+                value={safeNumber(plant.total_quantity, 2)}
+              />
             ))
           ) : (
             <p className="muted">No explicit harvest quantities are registered yet.</p>
           )}
         </section>
 
-        <section className="panel page-stack">
+        <section className="panel analytics-result-subsection page-stack">
           <h3>Harvest trend by period</h3>
           {section.records_by_period?.length ? (
             <div className="table-wrap">
@@ -360,7 +365,16 @@ function renderSection(type, section) {
 
 export default function PlotAnalyticsPage() {
   const { plotId } = useParams()
-  const plotState = useAsyncData(() => api.getPlot(plotId), [plotId], null)
+  const plotState = useAsyncData(
+    async () => {
+      const plots = await api.listPlots()
+      const accessRole = plots.find((entry) => String(entry.id) === String(plotId))?.access_role ?? null
+      const plot = await api.getPlot(plotId)
+      return { plot, accessRole }
+    },
+    [plotId],
+    { plot: null, accessRole: null },
+  )
   const [selectedAnalysisTypes, setSelectedAnalysisTypes] = useState([])
   const [analytics, setAnalytics] = useState(null)
   const [analyticsError, setAnalyticsError] = useState('')
@@ -407,13 +421,25 @@ export default function PlotAnalyticsPage() {
   }
 
   const summary = analytics?.summary ?? null
+  const selectedOptions = ANALYSIS_OPTIONS.filter((option) => selectedAnalysisTypes.includes(option.value))
 
   return (
-    <div className="page-stack">
-      <PageHeader
-        eyebrow="Plot insights"
-        title={`${plotState.data?.name ?? 'Plot'} analytics`}
-        description="Generate focused insight packs for planning, plant condition, and harvest data with clearer progress, warnings, and no-data handling."
+    <div className="page-stack analytics-page">
+      <PlotSectionNav
+        plotId={plotId}
+        plotName={plotState.data?.plot?.name ?? 'Plot'}
+        sectionKey="analytics"
+        isOwner={plotState.data?.accessRole === 'owner'}
+        description="Generate focused insight packs for planning history, plant conditions, and harvest performance without leaving the plot workspace."
+        meta={(
+          <>
+            {plotState.data?.plot?.city ? <StatusBadge kind="ownership">{plotState.data.plot.city}</StatusBadge> : null}
+            <StatusBadge kind="status" tone="neutral">{plotState.data?.accessRole ?? 'viewer'}</StatusBadge>
+            <StatusBadge kind="selection" tone={selectedAnalysisTypes.length > 0 ? 'soft' : 'neutral'}>
+              {selectedAnalysisTypes.length > 0 ? `${selectedAnalysisTypes.length} selected` : 'Choose insight packs'}
+            </StatusBadge>
+          </>
+        )}
         actions={(
           <>
             <Link to={`/plots/${plotId}/history`}>
@@ -422,90 +448,134 @@ export default function PlotAnalyticsPage() {
             <Link to={`/plots/${plotId}/harvests`}>
               <Button variant="secondary">Harvests</Button>
             </Link>
-            <Link to={`/plots/${plotId}`}>
-              <Button variant="secondary">Back to plot</Button>
-            </Link>
           </>
         )}
       />
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
-      <form className="panel page-stack" onSubmit={handleGenerate}>
-        <div className="list-head">
-          <div className="stack">
-            <h3>Generate analysis</h3>
-            <span className="muted">The selected plot is fixed by the current route. Choose the analysis branches you want to run.</span>
-          </div>
-          <Button type="submit" disabled={generating || selectedAnalysisTypes.length === 0}>
-            {generating ? 'Generating...' : 'Generate analysis'}
-          </Button>
-        </div>
+      <form onSubmit={handleGenerate}>
+        <SectionCard
+          title="Generate analysis"
+          description="Select the insight packs you want to run for this plot. Each branch focuses on one part of the gardening workflow, so you can generate only what you need."
+          className="analytics-generator-card"
+          actions={(
+            <StatusBadge kind="selection" tone={selectedAnalysisTypes.length > 0 ? 'soft' : 'neutral'}>
+              {selectedAnalysisTypes.length}/3 selected
+            </StatusBadge>
+          )}
+        >
+          <div className="analytics-generator-layout">
+            <div className="analytics-option-grid">
+              {ANALYSIS_OPTIONS.map((option) => {
+                const selected = selectedAnalysisTypes.includes(option.value)
 
-        <div className="analytics-type-grid">
-          {ANALYSIS_OPTIONS.map((option) => {
-            const selected = selectedAnalysisTypes.includes(option.value)
+                return (
+                  <label
+                    key={option.value}
+                    className={`analytics-option-card ${selected ? 'is-selected' : ''}`.trim()}
+                  >
+                    <input
+                      className="analytics-option-input"
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleType(option.value)}
+                    />
+                    <div className="analytics-option-card-head">
+                      <div className="analytics-option-copy">
+                        <strong className="analytics-option-title">{option.label}</strong>
+                        <span className="analytics-option-description">{option.description}</span>
+                      </div>
+                      <span className={`analytics-option-indicator ${selected ? 'is-selected' : ''}`.trim()}>
+                        {selected ? 'Selected' : 'Select'}
+                      </span>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
 
-            return (
-              <label
-                key={option.value}
-                className={`analytics-type-card ${selected ? 'is-selected' : ''}`}
+            <aside className="analytics-generator-sidebar">
+              <div className="analytics-generator-sidebar-copy">
+                <span className="workspace-section-eyebrow">Analysis run</span>
+                <h2 className="workspace-overview-title">Build one focused report instead of a raw form dump.</h2>
+                <p className="section-copy">
+                  The plot is already fixed by this route, so the only decision here is which insight packs to include in the next run.
+                </p>
+              </div>
+
+              <div className="analytics-selection-summary">
+                <span className="analytics-selection-label">Selected branches</span>
+                {selectedOptions.length > 0 ? (
+                  <div className="analytics-selection-chips">
+                    {selectedOptions.map((option) => (
+                      <Badge key={option.value} tone="soft">{option.label}</Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="muted">Choose at least one branch to enable generation.</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                fullWidth
+                disabled={generating || selectedAnalysisTypes.length === 0}
+                className="analytics-generate-button"
               >
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  onChange={() => toggleType(option.value)}
-                />
-                <div className="stack">
-                  <strong>{option.label}</strong>
-                  <span className="muted">{option.description}</span>
-                </div>
-              </label>
-            )
-          })}
-        </div>
+                {generating ? 'Generating analysis...' : 'Generate analysis'}
+              </Button>
 
-        {analyticsError ? (
-          <div className="analytics-warning analytics-warning-error">
-            {analyticsError}
+              <p className="analytics-generator-note">
+                Planning, condition, and harvest sections can be generated together or separately.
+              </p>
+            </aside>
           </div>
-        ) : null}
 
-        {generating ? (
-          <ProcessingState
-            title="Generating analysis"
-            description="The system is collecting historical records, validating available data, and preparing a polished analytics summary."
-            steps={['Preparing data', 'Computing metrics', 'Finalizing report']}
-          />
-        ) : null}
+          {analyticsError ? (
+            <div className="analytics-warning analytics-warning-error">
+              {analyticsError}
+            </div>
+          ) : null}
+
+          {generating ? (
+            <ProcessingState
+              title="Generating analysis"
+              description="The system is collecting historical records, validating available data, and preparing a polished analytics summary."
+              steps={['Preparing data', 'Computing metrics', 'Finalizing report']}
+              compact
+            />
+          ) : null}
+        </SectionCard>
       </form>
 
       {!analytics ? (
-        <EmptyState
+        <EmptyStatePanel
           title="No analysis generated yet"
-          description="Select at least one analysis type and generate a report for this plot."
+          description="Choose one or more insight packs above, then run the analysis to populate this workspace."
+          className="analytics-empty-state"
+          tone="subtle"
         />
       ) : (
         <>
-          <section className="summary-grid">
-            <MetricCard label="Zones" value={summary?.total_zones} />
-            <MetricCard label="Plants" value={summary?.total_plants} />
-            <MetricCard label="Sections with data" value={summary?.sections_with_data_count} />
-            <MetricCard
-              label="Has actionable data"
-              value={summary?.has_actionable_data ? 'Yes' : 'No'}
-              note={`${summary?.sections_without_data_count ?? 0} without data`}
-            />
-          </section>
+          <SectionCard
+            title="Generated analysis"
+            description="This run reflects the currently selected plot and the latest data returned by the backend analysis service."
+            className="analytics-summary-shell"
+            actions={<Badge tone="soft">{analytics.selectedAnalysisTypes.length} sections</Badge>}
+          >
+            <section className="summary-grid">
+              <MetricCard label="Zones" value={summary?.total_zones} />
+              <MetricCard label="Plants" value={summary?.total_plants} />
+              <MetricCard label="Sections with data" value={summary?.sections_with_data_count} />
+              <MetricCard
+                label="Has actionable data"
+                value={summary?.has_actionable_data ? 'Yes' : 'No'}
+                note={`${summary?.sections_without_data_count ?? 0} without data`}
+              />
+            </section>
 
-          <WarningList warnings={analytics.warnings} />
-
-          <section className="panel page-stack">
-            <div className="list-head">
-              <h3>Generated analysis scope</h3>
-              <Badge tone="soft">{analytics.selectedAnalysisTypes.length}</Badge>
-            </div>
-            <div className="meta-cluster">
+            <div className="analytics-selection-chips">
               {analytics.selectedAnalysisTypes.map((type) => {
                 const option = ANALYSIS_OPTIONS.find((entry) => entry.value === type)
                 return (
@@ -515,7 +585,9 @@ export default function PlotAnalyticsPage() {
                 )
               })}
             </div>
-          </section>
+          </SectionCard>
+
+          <WarningList warnings={analytics.warnings} />
 
           {analytics.selectedAnalysisTypes.map((type) => renderSection(type, analytics.sections?.[type]))}
         </>

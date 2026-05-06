@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BPP UML komponentų diagrama</title>
+  <style>
+    :root {
+      --page: #f5f6f8;
+      --canvas: #ffffff;
+      --pkg: #edf3ff;
+      --pkg-2: #f8fbff;
+      --tab: #dbe8fb;
+      --line: #6f7b91;
+      --text: #101827;
+      --muted: #526070;
+      --component: #f5f0c6;
+      --component-border: #8f8652;
+      --artifact: #ead8aa;
+      --external: #ffffff;
+      --database: #eff6d7;
+      --iface: #ffffff;
+      --control: #7a4b12;
+      --boundary: #1f5f8b;
+      --entity: #245f37;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 2140px;
+      background: var(--page);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .canvas {
+      position: relative;
+      width: 2140px;
+      height: 1750px;
+      margin: 14px auto;
+      overflow: hidden;
+      background: var(--canvas);
+      border: 1px solid #8b95a6;
+    }
+
+    .caption {
+      position: absolute;
+      left: 14px;
+      top: 8px;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .caption span {
+      border: 1px solid #8b95a6;
+      background: #f8fafc;
+      padding: 2px 6px;
+    }
+
+    .watermark {
+      position: absolute;
+      z-index: 0;
+      color: rgba(120, 130, 145, 0.13);
+      font-size: 18px;
+      font-weight: 700;
+      transform: rotate(13deg);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    svg.links {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .component,
+    .external,
+    .database {
+      position: absolute;
+      z-index: 2;
+      border: 2px solid var(--component-border);
+      background: linear-gradient(135deg, var(--component) 0%, #fbf8dc 100%);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+
+    .external { background: var(--external); }
+    .database { background: var(--database); }
+
+    .component::before,
+    .external::before,
+    .database::before,
+    .package::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: -2px;
+      width: 112px;
+      height: 18px;
+      border: 2px solid var(--component-border);
+      border-bottom: 0;
+      background: var(--tab);
+    }
+
+    .component-icon {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      width: 28px;
+      height: 21px;
+      border: 1.4px solid var(--component-border);
+      background: rgba(255,255,255,0.28);
+    }
+
+    .component-icon::before,
+    .component-icon::after {
+      content: "";
+      position: absolute;
+      left: -9px;
+      width: 9px;
+      height: 5px;
+      border: 1.4px solid var(--component-border);
+      background: rgba(255,255,255,0.28);
+    }
+
+    .component-icon::before { top: 3px; }
+    .component-icon::after { bottom: 3px; }
+
+    .head {
+      height: 44px;
+      padding: 7px 54px 6px 14px;
+      border-bottom: 1px solid rgba(120, 112, 71, 0.65);
+    }
+
+    .stereo {
+      display: block;
+      margin-bottom: 2px;
+      color: #303030;
+      font-size: 11px;
+    }
+
+    .title {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .body {
+      position: relative;
+      height: calc(100% - 44px);
+      padding: 14px;
+    }
+
+    .package {
+      position: absolute;
+      border: 1.5px solid var(--line);
+      background: linear-gradient(135deg, var(--pkg) 0%, var(--pkg-2) 100%);
+    }
+
+    .package::before {
+      width: 72px;
+      height: 15px;
+      top: -15px;
+      border-width: 1.5px;
+      border-color: var(--line);
+    }
+
+    .package-title {
+      min-height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 4px 7px;
+      border-bottom: 1px solid #bdc7d8;
+      background: #e7eef9;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .package-body {
+      padding: 7px 9px 8px;
+      font-size: 11px;
+      line-height: 1.22;
+    }
+
+    .artifact-box {
+      background: linear-gradient(135deg, var(--artifact) 0%, #f7e8bd 100%);
+      border-color: #8d7d54;
+    }
+
+    .artifact-box .package-title {
+      background: #efdca8;
+      border-bottom-color: #b49d67;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    li {
+      position: relative;
+      margin: 2px 0;
+      padding-left: 12px;
+      white-space: nowrap;
+    }
+
+    li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: 1px solid #7b8495;
+      background: #dbe4f1;
+    }
+
+    .two-cols {
+      columns: 2;
+      column-gap: 18px;
+    }
+
+    .three-cols {
+      columns: 3;
+      column-gap: 18px;
+    }
+
+    .tiny { font-size: 10.5px; }
+    .micro { font-size: 9.8px; }
+    .muted { color: var(--muted); }
+    .boundary { color: var(--boundary); }
+    .control { color: var(--control); }
+    .entity { color: var(--entity); }
+
+    .note {
+      position: absolute;
+      z-index: 3;
+      border: 1px solid #cbd3df;
+      background: rgba(255,255,255,0.94);
+      padding: 5px 7px;
+      font-size: 11px;
+      color: #374151;
+    }
+
+    .legend {
+      position: absolute;
+      left: 34px;
+      bottom: 20px;
+      z-index: 3;
+      width: 1180px;
+      border: 1.5px solid #8792a8;
+      background: #fbfcff;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .iface-label {
+      position: absolute;
+      z-index: 4;
+      padding: 2px 5px;
+      background: #fff;
+      border: 1px solid #cbd3df;
+      font-size: 11px;
+      font-style: italic;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+
+    .socket {
+      position: absolute;
+      z-index: 4;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #262626;
+      background: var(--iface);
+    }
+  </style>
+</head>
+<body>
+  <main class="canvas" aria-label="BPP UML komponentų diagrama pagal realų codebase">
+    <div class="caption">
+      <span><b>Component Diagram</b></span>
+      <span>Projekto modelis: SAD System</span>
+      <span>Atnaujinta pagal loginę architektūrą ir realius failus</span>
+    </div>
+
+    <div class="watermark" style="left: 560px; top: 30px;">Academic Version for Teaching Only</div>
+    <div class="watermark" style="left: 1500px; top: 180px;">Academic Version for Teaching Only</div>
+    <div class="watermark" style="left: 230px; top: 900px;">Academic Version for Teaching Only</div>
+    <div class="watermark" style="left: 1280px; top: 1220px;">Academic Version for Teaching Only</div>
+
+    <svg class="links" viewBox="0 0 2140 1500" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L10,4 L0,8 z" fill="#262626"></path>
+        </marker>
+        <marker id="open-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L10,4 L0,8" fill="none" stroke="#262626" stroke-width="1.2"></path>
+        </marker>
+      </defs>
+
+      <path d="M565 620 H624" stroke="#262626" stroke-width="1.8" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1290 620 H1325" stroke="#262626" stroke-width="1.7" stroke-dasharray="8 6" fill="none" marker-end="url(#arrow)"></path>
+      <path d="M1518 1118 C1518 1190, 1530 1246, 1555 1326" stroke="#262626" stroke-width="1.7" stroke-dasharray="8 6" fill="none" marker-end="url(#arrow)"></path>
+
+      <path d="M1110 834 C1250 834, 1520 250, 1765 250" stroke="#262626" stroke-width="1.5" fill="none" marker-end="url(#open-arrow)"></path>
+      <path d="M1110 834 C1270 834, 1540 410, 1765 410" stroke="#262626" stroke-width="1.5" fill="none" marker-end="url(#open-arrow)"></path>
+      <path d="M1110 890 C1260 920, 1548 650, 1765 650" stroke="#262626" stroke-width="1.5" fill="none" marker-end="url(#open-arrow)"></path>
+      <path d="M1110 890 C1265 940, 1548 805, 1765 805" stroke="#262626" stroke-width="1.5" fill="none" marker-end="url(#open-arrow)"></path>
+
+      <path d="M1526 1178 C1546 1215, 1550 1270, 1558 1358" stroke="#262626" stroke-width="1.5" fill="none" marker-end="url(#arrow)"></path>
+    </svg>
+
+    <div class="socket" style="left: 556px; top: 611px;"></div>
+    <div class="iface-label" style="left: 454px; top: 585px;">I REST API (/api)</div>
+    <div class="iface-label" style="left: 1740px; top: 214px;">IWeatherForecastProvider</div>
+    <div class="iface-label" style="left: 1740px; top: 374px;">IPlantCareProvider</div>
+    <div class="iface-label" style="left: 1740px; top: 614px;">IPdfRenderer</div>
+    <div class="iface-label" style="left: 1740px; top: 769px;">IMailTransport</div>
+    <div class="note" style="left: 588px; top: 586px;">React apiClient → Laravel routes/api.php</div>
+    <div class="note" style="left: 1296px; top: 590px;">controllers/services → Eloquent models</div>
+    <div class="note" style="left: 1492px; top: 1232px;">Eloquent → PostgreSQL</div>
+
+    <section class="component" style="left: 34px; top: 110px; width: 520px; height: 1185px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;component&gt;&gt;</span>
+        <span class="title">React SPA Views</span>
+      </div>
+      <div class="body">
+        <div class="package" style="left: 16px; top: 34px; width: 222px; height: 205px;">
+          <div class="package-title">User <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>AccountPage</li>
+              <li>DashboardPage</li>
+              <li>ForgotPasswordPage</li>
+              <li>LoginPage</li>
+              <li>RegisterPage</li>
+              <li>ResetPasswordPage</li>
+              <li>NotFoundPage</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 266px; top: 34px; width: 216px; height: 70px;">
+          <div class="package-title">Admin <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny"><ul><li>AdminUsersPage</li></ul></div>
+        </div>
+
+        <div class="package" style="left: 266px; top: 142px; width: 216px; height: 240px;">
+          <div class="package-title">Plot <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>PlotsPage</li>
+              <li>PlotDetailPage</li>
+              <li>PlotEditPage</li>
+              <li>PlotAnalyticsPage</li>
+              <li>PlotHarvestsPage</li>
+              <li>PlotHistoryPage</li>
+              <li>PlotRotationPage</li>
+              <li>PlotSharingPage</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 16px; top: 280px; width: 222px; height: 70px;">
+          <div class="package-title">Calendar <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny"><ul><li>PlotCalendarPage</li></ul></div>
+        </div>
+
+        <div class="package" style="left: 16px; top: 390px; width: 238px; height: 178px;">
+          <div class="package-title">Plant <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>CatalogPlantDetailPage</li>
+              <li>CatalogPlantFormPage</li>
+              <li>CatalogPlantsPage</li>
+              <li>PlantDetailPage</li>
+              <li>PlantFormPage</li>
+              <li>PlantsPage</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 286px; top: 420px; width: 196px; height: 70px;">
+          <div class="package-title">Inventory <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny"><ul><li>InventoryPage</li></ul></div>
+        </div>
+
+        <div class="package" style="left: 286px; top: 534px; width: 196px; height: 70px;">
+          <div class="package-title">Community <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny"><ul><li>CommunityPage</li></ul></div>
+        </div>
+
+        <div class="package" style="left: 16px; top: 636px; width: 466px; height: 126px;">
+          <div class="package-title">Frontend API / Guards <span class="boundary">«boundary»</span></div>
+          <div class="package-body tiny two-cols">
+            <ul>
+              <li>frontend/src/App.jsx</li>
+              <li>frontend/src/lib/api.js</li>
+              <li>frontend/src/lib/auth.js</li>
+              <li>frontend/src/context/AuthContext.jsx</li>
+              <li>frontend/src/components/shared/ProtectedRoute.jsx</li>
+              <li>frontend/src/components/shared/AdminRoute.jsx</li>
+              <li>frontend/vite.config.js</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package artifact-box" style="left: 16px; top: 806px; width: 466px; height: 166px;">
+          <div class="package-title">deployed elements</div>
+          <div class="package-body tiny two-cols">
+            <ul>
+              <li>frontend/index.html</li>
+              <li>frontend/dist/*</li>
+              <li>frontend/src/App.jsx</li>
+              <li>frontend/src/main.jsx</li>
+              <li>frontend/src/context/*.jsx</li>
+              <li>frontend/src/lib/*.js</li>
+              <li>frontend/src/pages/admin/*.jsx</li>
+              <li>frontend/src/pages/calendar/*.jsx</li>
+              <li>frontend/src/pages/community/*.jsx</li>
+              <li>frontend/src/pages/inventory/*.jsx</li>
+              <li>frontend/src/pages/plant/*.jsx</li>
+              <li>frontend/src/pages/plot/*.jsx</li>
+              <li>frontend/src/pages/user/*.jsx</li>
+              <li>frontend/src/components/layout/*.jsx</li>
+              <li>frontend/src/components/plot/*.jsx</li>
+              <li>frontend/src/components/shared/*.jsx</li>
+              <li>React SPA application</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="component" style="left: 624px; top: 110px; width: 666px; height: 1430px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;component&gt;&gt;</span>
+        <span class="title">Laravel REST API Controllers / Services</span>
+      </div>
+      <div class="body">
+        <div class="package" style="left: 18px; top: 34px; width: 290px; height: 170px;">
+          <div class="package-title">User <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>AccountController</li>
+              <li>CurrentUserController</li>
+              <li>LoginController</li>
+              <li>LogoutController</li>
+              <li>PasswordResetController</li>
+              <li>SignUpController</li>
+              <li>AccountService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 338px; top: 34px; width: 286px; height: 112px;">
+          <div class="package-title">Admin <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>Api\Admin\AccountController</li>
+              <li>AuditLogController</li>
+              <li>AdminService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 338px; top: 188px; width: 286px; height: 295px;">
+          <div class="package-title">Plot <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>PlotController</li>
+              <li>SchemeController</li>
+              <li>RotationController</li>
+              <li>WorkspaceController</li>
+              <li>ShareController</li>
+              <li>HistoryController</li>
+              <li>HarvestController</li>
+              <li>AnalyticsController</li>
+              <li>ExportController</li>
+              <li>AccessService</li>
+              <li>PlotSnapshotService</li>
+              <li>PlotWorkspaceService</li>
+              <li>RotationPlannerService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 18px; top: 244px; width: 290px; height: 165px;">
+          <div class="package-title">Calendar <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>CalendarController</li>
+              <li>TaskController</li>
+              <li>TaskCalendarService</li>
+              <li>CalendarGenerationService</li>
+              <li>TaskWorkflowService</li>
+              <li>TaskInventoryCoverageService</li>
+              <li>WeatherService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 18px; top: 450px; width: 290px; height: 232px;">
+          <div class="package-title">Plant <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>CatalogPlantController</li>
+              <li>PlantConditionController</li>
+              <li>ConditionHistoryController</li>
+              <li>PlantController</li>
+              <li>CatalogPlantService</li>
+              <li>PlantCareService</li>
+              <li>PlantConditionHistoryService</li>
+              <li>PlantLifecyclePhaseService</li>
+              <li>PlantLifecycleService</li>
+              <li>PlantStateService</li>
+              <li>PlantCareNormalizer</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 338px; top: 526px; width: 286px; height: 95px;">
+          <div class="package-title">Inventory <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>InventoryController</li>
+              <li>InventoryService</li>
+              <li>InventoryPlanningRepairService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 338px; top: 664px; width: 286px; height: 88px;">
+          <div class="package-title">Community <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>CommunityController</li>
+              <li>CommunityService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 18px; top: 724px; width: 290px; height: 176px;">
+          <div class="package-title">Boundaries To External <span class="control">«control»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>MeteoLtClient</li>
+              <li>PerenualService</li>
+              <li>EmailServerBoundary</li>
+              <li>PdfExportService</li>
+              <li>WeatherForecastRepairService</li>
+              <li>PlantCareRepairService</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package artifact-box" style="left: 18px; top: 944px; width: 606px; height: 214px;">
+          <div class="package-title">deployed elements</div>
+          <div class="package-body tiny two-cols">
+            <ul>
+              <li>backend/.env</li>
+              <li>backend/artisan</li>
+              <li>backend/routes/api.php</li>
+              <li>backend/app/Http/Controllers/User/*.php</li>
+              <li>backend/app/Http/Controllers/Plant/*.php</li>
+              <li>backend/app/Http/Controllers/Plot/*.php</li>
+              <li>backend/app/Http/Controllers/Api/Admin/*.php</li>
+              <li>backend/app/Http/Controllers/Api/Calendar/*.php</li>
+              <li>backend/app/Http/Controllers/Api/Community/*.php</li>
+              <li>backend/app/Http/Controllers/Api/Dev/*.php</li>
+              <li>backend/app/Http/Controllers/Api/Inventory/*.php</li>
+              <li>backend/app/Http/Controllers/Api/Plot/*.php</li>
+              <li>backend/app/Http/Middleware/*.php</li>
+              <li>backend/app/Http/Requests/*/*.php</li>
+              <li>backend/app/Http/Resources/*/*.php</li>
+              <li>backend/app/Services/*.php</li>
+              <li>Laravel application</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="component" style="left: 1326px; top: 180px; width: 386px; height: 1040px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;component&gt;&gt;</span>
+        <span class="title">Eloquent Domain Models</span>
+      </div>
+      <div class="body">
+        <div class="package" style="left: 18px; top: 34px; width: 344px; height: 468px;">
+          <div class="package-title">Models <span class="entity">«entity»</span></div>
+          <div class="package-body tiny">
+            <ul>
+              <li>AccessRight</li>
+              <li>AuditLog</li>
+              <li>CatalogPlant</li>
+              <li>CommunityPost</li>
+              <li>GardenOwner</li>
+              <li>HarvestRecord</li>
+              <li>HasInventory</li>
+              <li>HasPlot</li>
+              <li>InventoryItem</li>
+              <li>InventoryUsageLog</li>
+              <li>Plant</li>
+              <li>PlantCare</li>
+              <li>PlantConditionHistory</li>
+              <li>PlantZone</li>
+              <li>Plot</li>
+              <li>Profile</li>
+              <li>RotationHistory</li>
+              <li>RotationPlanDraft</li>
+              <li>Task</li>
+              <li>TaskCalendar</li>
+              <li>TaskResourceRequirement</li>
+              <li>UsedOn</li>
+              <li>User</li>
+              <li>WeatherForecast</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package" style="left: 18px; top: 540px; width: 160px; height: 196px;">
+          <div class="package-title">Enums</div>
+          <div class="package-body tiny">
+            <ul>
+              <li>AccessRole</li>
+              <li>AnalysisType</li>
+              <li>ConditionType</li>
+              <li>InventoryItemType</li>
+              <li>InventoryUnit</li>
+              <li>PlantType</li>
+              <li>SoilType</li>
+              <li>TaskPriority</li>
+              <li>TaskState</li>
+              <li>TaskType</li>
+              <li>UserRole</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="package artifact-box" style="left: 196px; top: 540px; width: 166px; height: 196px;">
+          <div class="package-title">deployed elements</div>
+          <div class="package-body tiny">
+            <ul>
+              <li>backend/app/Models/*.php</li>
+              <li>backend/app/Enums/*.php</li>
+              <li>backend/database/migrations/*.php</li>
+              <li>backend/config/database.php</li>
+              <li>PostgreSQL schema</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="database" style="left: 1558px; top: 1340px; width: 242px; height: 122px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;database&gt;&gt;</span>
+        <span class="title">PostgreSQL DB</span>
+      </div>
+      <div class="body tiny">
+        <ul>
+          <li>DB_CONNECTION=pgsql</li>
+          <li>Foreign keys via migrations</li>
+          <li>JSON geometry fields</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="external" style="left: 1770px; top: 220px; width: 292px; height: 110px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;external component&gt;&gt;</span>
+        <span class="title">Meteo.lt API</span>
+      </div>
+      <div class="body tiny">
+        <ul>
+          <li>https://api.meteo.lt/v1</li>
+          <li>backend/app/Services/MeteoLtClient.php</li>
+          <li>backend/config/services.php</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="external" style="left: 1770px; top: 380px; width: 292px; height: 124px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;external component&gt;&gt;</span>
+        <span class="title">Perenual Plant API</span>
+      </div>
+      <div class="body tiny">
+        <ul>
+          <li>https://perenual.com/api</li>
+          <li>backend/app/Services/PerenualService.php</li>
+          <li>backend/config/services.php</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="external" style="left: 1770px; top: 620px; width: 292px; height: 122px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;artifact / library&gt;&gt;</span>
+        <span class="title">PDF Export Boundary</span>
+      </div>
+      <div class="body tiny">
+        <ul>
+          <li>backend/app/Services/PdfExportService.php</li>
+          <li>backend/resources/views/pdf/plot-report.blade.php</li>
+          <li>backend/composer.json: dompdf/dompdf</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="external" style="left: 1770px; top: 775px; width: 292px; height: 112px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;external boundary&gt;&gt;</span>
+        <span class="title">Email Server / Mailer</span>
+      </div>
+      <div class="body tiny">
+        <ul>
+          <li>backend/app/Services/EmailServerBoundary.php</li>
+          <li>backend/config/mail.php</li>
+          <li>Password reset code delivery</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="component" style="left: 1326px; top: 1260px; width: 200px; height: 114px;">
+      <div class="component-icon"></div>
+      <div class="head">
+        <span class="stereo">&lt;&lt;component&gt;&gt;</span>
+        <span class="title">Migrations</span>
+      </div>
+      <div class="body tiny">
+        <ul>
+          <li>backend/database/migrations</li>
+          <li>FK + constraints</li>
+        </ul>
+      </div>
+    </section>
+
+    <aside class="legend">
+      <b>Semantika:</b>
+      kairėje parodytas React vaizdų komponentas ir jo realizacijos paketai su puslapių pavadinimais;
+      centre - Laravel REST API komponentas su controllerių ir service realizacijomis;
+      dešinėje - Eloquent modelių komponentas, migracijos ir PostgreSQL saugykla.
+      Punktyrinis ryšys rodo priklausomybę, pilna rodyklė - naudojamą sąsają / komunikaciją.
+      Išoriniai Meteo.lt, Perenual, PDF ir mail boundary elementai prijungti per įvardintas interface etiketes, o artefaktų dėžėse nurodyti realūs codebase keliai.
+    </aside>
+  </main>
+</body>
+</html>

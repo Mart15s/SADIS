@@ -1,8 +1,8 @@
 <?php
 
-use App\Services\InventoryPlanningRepairService;
-use App\Services\PlantCareRepairService;
-use App\Services\WeatherForecastRepairService;
+use App\Services\Inventory\InventoryPlanningRepairService;
+use App\Services\Plant\PlantCareRepairService;
+use App\Services\Calendar\WeatherForecastRepairService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import Button from '../../components/ui/Button.jsx'
 import { api } from '../../lib/api.js'
@@ -12,7 +12,12 @@ const initialForm = {
 }
 
 export default function ResetPasswordPage() {
-  const [form, setForm] = useState(initialForm)
+  const [searchParams] = useSearchParams()
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    email: searchParams.get('email') ?? '',
+    reset_code: searchParams.get('token') ?? searchParams.get('reset_code') ?? '',
+  }))
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -45,7 +50,7 @@ export default function ResetPasswordPage() {
     <div className="page-stack auth-card">
       <PageHeader
         title="Reset password"
-        description="Use the six-character reset code sent by the backend email boundary and choose a new password."
+        description="Use the password reset link sent by email and choose a new password."
       />
 
       <form className="panel split-form" onSubmit={handleSubmit}>
@@ -54,7 +59,7 @@ export default function ResetPasswordPage() {
           <input id="reset-email" name="email" type="email" value={form.email} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="reset_code">Reset code</label>
+          <label htmlFor="reset_code">Reset token</label>
           <input id="reset_code" name="reset_code" value={form.reset_code} onChange={handleChange} required />
         </div>
         <div className="field">

@@ -9,7 +9,7 @@ const baseLinks = [
 
 const authLinks = [
   { to: '/account', label: 'Account', icon: 'account' },
-  { to: '/community', label: 'Community', icon: 'community', badge: { tone: 'soft', text: 'Shared' } },
+  { to: '/community', label: 'Community', icon: 'community' },
   { to: '/plots', label: 'Plots', icon: 'plots' },
   { to: '/plants', label: 'Plants', icon: 'plants' },
   { to: '/inventory', label: 'Inventory', icon: 'inventory' },
@@ -81,7 +81,14 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export default function Sidebar({ isAuthenticated, isAdmin }) {
+export default function Sidebar({
+  isAuthenticated,
+  isAdmin,
+  variant = 'desktop',
+  isCollapsed = false,
+  onToggleCollapse,
+  onNavigate,
+}) {
   const { displayName, user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -99,11 +106,18 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
 
   async function handleLogout() {
     await logout()
+    onNavigate?.()
     navigate('/login')
   }
 
   return (
-    <aside className="shell-sidebar">
+    <aside
+      id={variant === 'drawer' ? 'app-navigation-drawer' : undefined}
+      className={`shell-sidebar shell-sidebar--${variant} ${isCollapsed ? 'is-collapsed' : ''}`.trim()}
+      role={variant === 'drawer' ? 'dialog' : undefined}
+      aria-label="Application navigation"
+      aria-modal={variant === 'drawer' ? 'true' : undefined}
+    >
       <div className="brand-lockup">
         <span className="brand-leaf" aria-hidden="true">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -114,8 +128,22 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
         </span>
         <span className="brand-copy">
           <span className="brand-title">SAD<em>iS</em></span>
-          <span className="brand-subtitle">Garden planning workspace</span>
+          <span className="brand-subtitle">Plot GIS and care planner</span>
         </span>
+        {variant === 'desktop' ? (
+          <button
+            type="button"
+            className="sidebar-collapse-button"
+            onClick={onToggleCollapse}
+            aria-label={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+            aria-pressed={isCollapsed}
+            title={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+          >
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d={isCollapsed ? 'M8 5l5 5-5 5' : 'M12 5l-5 5 5 5'} />
+            </svg>
+          </button>
+        ) : null}
       </div>
 
       <nav className="sidebar-nav" aria-label="Primary">
@@ -124,10 +152,12 @@ export default function Sidebar({ isAuthenticated, isAdmin }) {
             key={link.to}
             to={link.to}
             end={link.to === '/'}
+            onClick={onNavigate}
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            title={isCollapsed ? link.label : undefined}
           >
+            <SidebarIcon name={link.icon} />
             <span className="sidebar-link-main">
-              <SidebarIcon name={link.icon} />
               <span className="sidebar-link-label">{link.label}</span>
             </span>
             {link.badge ? (

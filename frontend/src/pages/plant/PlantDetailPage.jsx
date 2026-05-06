@@ -3,8 +3,17 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { DefinitionList, KeyValueGrid, StatRow } from '../../components/ui/DefinitionList.jsx'
 import { api } from '../../lib/api.js'
-import { CONDITION_TYPES, formatDate, formatDateTime } from '../../lib/constants.js'
+import {
+  CONDITION_TYPES,
+  formatDate,
+  formatDateTime,
+  formatDayCount,
+  formatDisplayValue,
+  formatNumberWithUnit,
+  formatTemperatureC,
+} from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 const initialConditionForm = {
@@ -13,14 +22,6 @@ const initialConditionForm = {
   photo_url: '',
   condition: CONDITION_TYPES[6],
   disease: '',
-}
-
-function valueOrFallback(value, suffix = '') {
-  if (value === null || value === undefined || value === '') {
-    return 'Not set'
-  }
-
-  return `${value}${suffix}`
 }
 
 function createReviewForm(task) {
@@ -267,7 +268,7 @@ export default function PlantDetailPage() {
         <section className="panel page-stack">
           <div>
             <h3 className="section-title">Pending Lifecycle Review</h3>
-            <p className="section-copy">This review task was opened from the calendar and will update the plant’s confirmed condition once you submit the review.</p>
+            <p className="section-copy">This review task was opened from the calendar and will update the plant's confirmed condition once you submit the review.</p>
           </div>
           <div className="meta-cluster">
             <span>Task {reviewTask.name}</span>
@@ -354,40 +355,25 @@ export default function PlantDetailPage() {
           </div>
 
           <div className="meta-cluster">
-            <span>Condition {plant.condition}</span>
-            <span>Planted {formatDate(plant.plant_date)}</span>
-            <span>Plot {plant.plot?.name ?? 'Unknown'}</span>
-            <span>Zone {linkedZone?.name ?? 'Unknown'}</span>
-            <span>Catalog {linkedCatalogPlant?.name ?? 'Not linked'}</span>
-            <span>Disease {plant.disease ? 'Yes' : 'No'}</span>
+            <StatRow label="Condition" value={plant.condition} />
+            <StatRow label="Planted" value={formatDate(plant.plant_date)} />
+            <StatRow label="Plot" value={plant.plot?.name ?? 'Unknown'} />
+            <StatRow label="Zone" value={linkedZone?.name ?? 'Unknown'} />
+            <StatRow label="Catalog" value={linkedCatalogPlant?.name ?? 'Not linked'} />
+            <StatRow label="Disease" value={plant.disease ? 'Yes' : 'No'} />
           </div>
 
-          <div className="form-grid plants-detail-grid">
-            <div className="card">
-              <strong>Growing time</strong>
-              <span className="muted">{valueOrFallback(plant.growing_time_days, ' days')}</span>
-            </div>
-            <div className="card">
-              <strong>Recommended temperature</strong>
-              <span className="muted">{valueOrFallback(plant.recommended_temperature, ' C')}</span>
-            </div>
-            <div className="card">
-              <strong>Recommended humidity</strong>
-              <span className="muted">{valueOrFallback(plant.recommended_humidity, '%')}</span>
-            </div>
-            <div className="card">
-              <strong>Rest time</strong>
-              <span className="muted">{valueOrFallback(plant.rest_time_days, ' days')}</span>
-            </div>
-            <div className="card">
-              <strong>Plant size</strong>
-              <span className="muted">{valueOrFallback(plant.plant_size)}</span>
-            </div>
-            <div className="card">
-              <strong>Linked care profile</strong>
-              <span className="muted">{plant.fk_plant_care_id ?? linkedCare?.id ?? 'Not linked'}</span>
-            </div>
-          </div>
+          <KeyValueGrid
+            className="plants-detail-grid"
+            items={[
+              { label: 'Growing time', value: formatDayCount(plant.growing_time_days) },
+              { label: 'Recommended temperature', value: formatTemperatureC(plant.recommended_temperature) },
+              { label: 'Recommended humidity', value: formatNumberWithUnit(plant.recommended_humidity, '%', 1) },
+              { label: 'Rest time', value: formatDayCount(plant.rest_time_days) },
+              { label: 'Plant size', value: formatDisplayValue(plant.plant_size) },
+              { label: 'Linked care profile', value: plant.fk_plant_care_id ?? linkedCare?.id ?? 'Not linked' },
+            ]}
+          />
 
           {plant.disease_notes ? <div className="inline-note">{plant.disease_notes}</div> : null}
 
@@ -410,35 +396,28 @@ export default function PlantDetailPage() {
             {lifecycle ? (
               <>
                 <div className="meta-cluster">
-                  <span>Confirmed stage {lifecycle.current_condition}</span>
-                  <span>Anchor date {formatDate(lifecycle.current_condition_anchor_date)}</span>
-                  <span>Regenerating path {lifecycle.supports_regeneration ? 'Supported' : 'No'}</span>
+                  <StatRow label="Confirmed stage" value={lifecycle.current_condition} />
+                  <StatRow label="Anchor date" value={formatDate(lifecycle.current_condition_anchor_date)} />
+                  <StatRow label="Regenerating path" value={lifecycle.supports_regeneration ? 'Supported' : 'No'} />
                 </div>
                 {lifecycle.next_review ? (
-                  <div className="card">
-                    <strong>Next review</strong>
-                    <span className="muted">
-                      Review transition to {lifecycle.next_review.target_condition} on {formatDate(lifecycle.next_review.expected_on)}
-                      {lifecycle.next_review.is_overdue ? ' (overdue)' : ''}
-                    </span>
-                  </div>
+                  <StatRow
+                    label="Next review"
+                    value={`Review transition to ${lifecycle.next_review.target_condition} on ${formatDate(lifecycle.next_review.expected_on)}${lifecycle.next_review.is_overdue ? ' (overdue)' : ''}`}
+                  />
                 ) : null}
                 {lifecycle.next_harvest ? (
-                  <div className="card">
-                    <strong>Next harvest checkpoint</strong>
-                    <span className="muted">
-                      Harvest expected on {formatDate(lifecycle.next_harvest.expected_on)}
-                      {lifecycle.next_harvest.is_overdue ? ' (overdue)' : ''}
-                    </span>
-                  </div>
+                  <StatRow
+                    label="Next harvest checkpoint"
+                    value={`Harvest expected on ${formatDate(lifecycle.next_harvest.expected_on)}${lifecycle.next_harvest.is_overdue ? ' (overdue)' : ''}`}
+                  />
                 ) : null}
-                <div className="page-stack" style={{ gap: '0.35rem' }}>
-                  {Object.entries(lifecycle.scheduled_stage_starts ?? {}).map(([condition, date]) => (
-                    <span key={condition} className="muted">
-                      {condition}: {formatDate(date)}
-                    </span>
-                  ))}
-                </div>
+                <DefinitionList
+                  items={Object.entries(lifecycle.scheduled_stage_starts ?? {}).map(([condition, date]) => ({
+                    label: condition,
+                    value: formatDate(date),
+                  }))}
+                />
               </>
             ) : (
               <EmptyState title="No lifecycle guidance" description="Link a plant care profile to derive expected stage transitions." />
@@ -454,40 +433,19 @@ export default function PlantDetailPage() {
             </div>
 
             {linkedCare ? (
-              <div className="form-grid plants-detail-grid">
-                <div className="card">
-                  <strong>Watering interval</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.watering_interval_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Fertilizing interval</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.fertilizing_interval_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Pest check interval</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.pest_check_interval_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Germinating duration</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.germinating_duration_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Growing duration</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.growing_duration_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Flowering duration</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.flowering_duration_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Mature duration</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.mature_duration_days, ' days')}</span>
-                </div>
-                <div className="card">
-                  <strong>Regenerating duration</strong>
-                  <span className="muted">{valueOrFallback(linkedCare.regenerating_duration_days, ' days')}</span>
-                </div>
-              </div>
+              <KeyValueGrid
+                className="plants-detail-grid"
+                items={[
+                  { label: 'Watering interval', value: formatDayCount(linkedCare.watering_interval_days) },
+                  { label: 'Fertilizing interval', value: formatDayCount(linkedCare.fertilizing_interval_days) },
+                  { label: 'Pest check interval', value: formatDayCount(linkedCare.pest_check_interval_days) },
+                  { label: 'Germinating duration', value: formatDayCount(linkedCare.germinating_duration_days) },
+                  { label: 'Growing duration', value: formatDayCount(linkedCare.growing_duration_days) },
+                  { label: 'Flowering duration', value: formatDayCount(linkedCare.flowering_duration_days) },
+                  { label: 'Mature duration', value: formatDayCount(linkedCare.mature_duration_days) },
+                  { label: 'Regenerating duration', value: formatDayCount(linkedCare.regenerating_duration_days) },
+                ]}
+              />
             ) : (
               <EmptyState title="No plant care linked" description="This plant does not currently have a linked care profile." />
             )}
@@ -606,7 +564,7 @@ export default function PlantDetailPage() {
                     {pageState.data.harvests.map((record) => (
                       <tr key={record.id}>
                         <td>{formatDate(record.harvested_on)}</td>
-                        <td>{valueOrFallback(record.quantity)}</td>
+                        <td>{formatDisplayValue(record.quantity)}</td>
                         <td>{record.task_name || record.task_id || 'Manual'}</td>
                       </tr>
                     ))}

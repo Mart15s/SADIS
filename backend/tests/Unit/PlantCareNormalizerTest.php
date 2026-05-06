@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\PlantCareNormalizer;
+use App\Services\Plant\PlantCareNormalizer;
 use App\Models\Plant;
 use Tests\TestCase;
 

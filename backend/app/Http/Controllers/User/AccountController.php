@@ -5,7 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\UpdateAccountRequest;
 use App\Http\Resources\User\AuthenticatedUserResource;
-use App\Services\AccountService;
+use App\Services\User\AccountService;
 use Illuminate\Http\JsonResponse;
 
 class AccountController extends Controller

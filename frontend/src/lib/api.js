@@ -3,7 +3,13 @@ import { getAuthToken } from './auth.js'
 
 let unauthorizedHandler = null
 
-function normalizeMessage(payload) {
+const GENERIC_SERVER_ERROR = 'The request could not be completed. Please check the data and try again.'
+
+function normalizeMessage(payload, status = null) {
+  if (status >= 500) {
+    return GENERIC_SERVER_ERROR
+  }
+
   if (typeof payload?.message === 'string' && payload.message.trim()) {
     return payload.message
   }
@@ -28,7 +34,7 @@ function toApiError(error) {
     })
   }
 
-  return Object.assign(new Error(normalizeMessage(error.response.data)), {
+  return Object.assign(new Error(normalizeMessage(error.response.data, error.response.status)), {
     status: error.response.status,
     details: error.response.data?.errors ?? null,
     original: error,
@@ -144,6 +150,10 @@ export const api = {
     const { data } = await apiClient.get('/plots')
     return unwrapCollection(data)
   },
+  async reverseGeocode(params) {
+    const { data } = await apiClient.get('/geocode/reverse', { params })
+    return data?.data ?? data
+  },
   async getPlot(plotId) {
     const { data } = await apiClient.get(`/plots/${plotId}`)
     return data
@@ -154,6 +164,10 @@ export const api = {
   },
   async updatePlot(plotId, payload) {
     const { data } = await apiClient.patch(`/plots/${plotId}`, payload)
+    return data
+  },
+  async commitPlotWorkspace(plotId, payload) {
+    const { data } = await apiClient.put(`/plots/${plotId}/workspace`, payload)
     return data
   },
   async deletePlot(plotId) {
@@ -219,24 +233,6 @@ export const api = {
   async previewPerenualCatalogPlant(speciesId) {
     const { data } = await apiClient.get(`/catalog-plants/perenual/species/${speciesId}`)
     return data?.data ?? data
-  },
-  async debugSearchPlants(query) {
-    const { data } = await apiClient.get('/dev/plant-care-test/search', {
-      params: { q: query },
-    })
-    return data
-  },
-  async debugLoadPlantCareSpecies(speciesId, params = {}) {
-    const { data } = await apiClient.get(`/dev/plant-care-test/species/${speciesId}`, {
-      params,
-    })
-    return data
-  },
-  async debugCheckWeather(city) {
-    const { data } = await apiClient.get('/dev/plant-care-test/weather', {
-      params: { city },
-    })
-    return data
   },
   async createPlant(plotId, payload) {
     const { data } = await apiClient.post(`/plots/${plotId}/plants`, payload)

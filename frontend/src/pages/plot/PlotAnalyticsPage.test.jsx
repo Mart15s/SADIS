@@ -8,6 +8,7 @@ import { api } from '../../lib/api.js'
 
 vi.mock('../../lib/api.js', () => ({
   api: {
+    listPlots: vi.fn(),
     getPlot: vi.fn(),
     generatePlotAnalytics: vi.fn(),
   },
@@ -17,6 +18,7 @@ describe('PlotAnalyticsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    api.listPlots.mockResolvedValue([{ id: 5, access_role: 'owner' }])
     api.getPlot.mockResolvedValue({
       id: 5,
       name: 'North Plot',
@@ -61,7 +63,7 @@ describe('PlotAnalyticsPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /North Plot analytics/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /North Plot/i })).toBeInTheDocument()
     })
 
     const generateButton = screen.getByRole('button', { name: /Generate analysis/i })
@@ -124,7 +126,7 @@ describe('PlotAnalyticsPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /North Plot analytics/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /North Plot/i })).toBeInTheDocument()
     })
 
     await user.click(screen.getByLabelText(/Planning decisions/i))

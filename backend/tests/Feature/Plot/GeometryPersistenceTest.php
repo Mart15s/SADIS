@@ -57,6 +57,31 @@ class GeometryPersistenceTest extends TestCase
             ->assertJsonPath('geometry.points.2.y', 0.82);
     }
 
+    public function test_plot_geometry_supports_three_point_boundaries(): void
+    {
+        [$user] = $this->createGardenOwner('triangle-owner@example.com');
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/plots', [
+            'name' => 'Trikampis sklypas',
+            'city' => 'Vilnius',
+            'plot_size' => 86.5,
+            'creation_date' => '2026-03-27',
+            'geometry' => [
+                'points' => [
+                    ['x' => 0.10, 'y' => 0.12],
+                    ['x' => 0.88, 'y' => 0.18],
+                    ['x' => 0.42, 'y' => 0.82],
+                ],
+            ],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('geometry.points.0.x', 0.10)
+            ->assertJsonPath('geometry.points.2.y', 0.82);
+    }
+
     public function test_plant_zone_geometry_can_be_saved_and_returned(): void
     {
         [$user, $owner] = $this->createGardenOwner('owner@example.com');
@@ -125,5 +150,45 @@ class GeometryPersistenceTest extends TestCase
         $zonesResponse->assertOk()
             ->assertJsonPath('0.id', $zone->id)
             ->assertJsonPath('0.geometry', null);
+    }
+
+    public function test_workspace_save_rejects_out_of_range_geometry_payload(): void
+    {
+        [$user, $owner] = $this->createGardenOwner('owner@example.com');
+        $plot = $this->createPlotForOwner($owner, [
+            'geometry' => self::PLOT_GEOMETRY,
+        ]);
+        $zone = $this->createZoneForPlot($plot, [
+            'geometry' => self::ZONE_GEOMETRY,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->putJson("/api/plots/{$plot->id}/workspace", [
+            'plot' => [
+                'plot_size' => 120,
+                'geometry' => [
+                    'points' => [
+                        ['x' => 0, 'y' => 0],
+                        ['x' => 1.2, 'y' => 0],
+                        ['x' => 1, 'y' => 1],
+                        ['x' => 0, 'y' => 1],
+                    ],
+                ],
+            ],
+            'zones' => [[
+                'id' => $zone->id,
+                'name' => $zone->name,
+                'zone_size' => 24,
+                'soil_type' => 'clay',
+                'rotation_stage' => 0,
+                'last_planting_date' => '2026-03-26',
+                'geometry' => self::ZONE_GEOMETRY,
+            ]],
+            'plants' => [],
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['plot.geometry']);
     }
 }

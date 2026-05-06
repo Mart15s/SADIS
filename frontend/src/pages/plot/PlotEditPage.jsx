@@ -131,8 +131,8 @@ export default function PlotEditPage() {
     <div className="page-stack">
       <PageHeader
         eyebrow="Plot settings"
-        title={`Edit ${pageState.data.plot.name}`}
-        description="Update the plot identity, location, size, and community visibility without affecting the existing layout."
+        title="Edit plot metadata"
+        description={`Update ${pageState.data.plot.name} identity, location, size, and community visibility without affecting the existing layout.`}
         meta={(
           <>
             <Badge tone="soft">{pageState.data.accessRole}</Badge>

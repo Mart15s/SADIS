@@ -4,9 +4,10 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\EmailServerBoundary;
+use App\Services\Boundaries\EmailServerBoundary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -14,6 +15,7 @@ class PasswordResetController extends Controller
 {
     private const FORGOT_MAX_ATTEMPTS = 3;
     private const FORGOT_DECAY_SECONDS = 600;
+    private const RESET_LINK_SENT_MESSAGE = 'If the email address exists, a password reset link has been sent.';
 
     public function __construct(
         private readonly EmailServerBoundary $emailServerBoundary
@@ -23,7 +25,7 @@ class PasswordResetController extends Controller
     public function forgot(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
         ]);
 
         $throttleKey = 'pwreset|'.Str::lower($validated['email']).'|'.$request->ip();
@@ -39,43 +41,49 @@ class PasswordResetController extends Controller
 
         RateLimiter::hit($throttleKey, self::FORGOT_DECAY_SECONDS);
 
-        $user = User::query()->where('email', $validated['email'])->firstOrFail();
-        $user->update([
-            'reset_code' => Str::upper(Str::random(6)),
-        ]);
+        $user = User::query()->where('email', $validated['email'])->first();
 
-        $this->emailServerBoundary->sendPasswordResetCode($user);
+        if ($user) {
+            $token = Password::broker()->createToken($user);
+            $this->emailServerBoundary->sendPasswordResetLink($user, $token);
+        }
 
         return response()->json([
-            'message' => 'Password reset code sent successfully.',
+            'message' => self::RESET_LINK_SENT_MESSAGE,
         ]);
     }
 
     public function reset(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email', 'exists:users,email'],
-            'reset_code' => ['required', 'string', 'size:6'],
+            'email' => ['required', 'email'],
+            'reset_code' => ['required_without:token', 'nullable', 'string'],
+            'token' => ['required_without:reset_code', 'nullable', 'string'],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
-        $user = User::query()
-            ->where('email', $validated['email'])
-            ->where('reset_code', $validated['reset_code'])
-            ->first();
+        $status = Password::broker()->reset(
+            [
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+                'password_confirmation' => $request->input('password_confirmation'),
+                'token' => $validated['token'] ?? $validated['reset_code'],
+            ],
+            function (User $user, string $password): void {
+                $user->forceFill([
+                    'password' => $password,
+                    'reset_code' => null,
+                ])->save();
 
-        if (! $user) {
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
             return response()->json([
-                'message' => 'The provided reset code is invalid.',
+                'message' => 'The provided password reset token is invalid or expired.',
             ], 422);
         }
-
-        $user->update([
-            'password' => $validated['password'],
-            'reset_code' => null,
-        ]);
-
-        $user->tokens()->delete();
 
         return response()->json([
             'message' => 'Password updated successfully.',

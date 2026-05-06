@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\AccessRole;
 use App\Enums\ConditionType;
 use App\Enums\PlantType;
-use App\Services\PlotSnapshotService;
+use App\Services\Plot\PlotSnapshotService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\Feature\Concerns\CreatesGardenData;
