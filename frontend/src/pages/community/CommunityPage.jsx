@@ -33,6 +33,24 @@ const initialPostForm = {
   fk_plot_id: '',
 }
 
+function renderPostText(text) {
+  const value = text ?? ''
+
+  if (value.length <= 260) {
+    return <p>{value}</p>
+  }
+
+  return (
+    <div className="community-post-text">
+      <p>{value.slice(0, 260).trim()}...</p>
+      <details className="community-read-more">
+        <summary>Read more</summary>
+        <p>{value}</p>
+      </details>
+    </div>
+  )
+}
+
 export default function CommunityPage() {
   const { isAuthenticated } = useAuth()
   const [search, setSearch] = useState('')
@@ -183,7 +201,7 @@ export default function CommunityPage() {
                     {post.plot_name ? <Badge tone="neutral">{post.plot_name}</Badge> : null}
                   </ResourceCardMeta>
                   <ResourceCardBody>
-                    <p>{post.text}</p>
+                    {renderPostText(post.text)}
                     {post.plot_preview ? (
                       <div className="community-plan-shell">
                         <MapLayerControl

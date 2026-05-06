@@ -23,8 +23,44 @@ export default function PlotSectionNav({
   description = '',
   meta = null,
   actions = null,
+  compact = true,
 }) {
   const activeSectionLabel = getSectionLabel(sectionKey, sectionLabel)
+  const visibleSections = sections.filter((section) => !section.ownerOnly || isOwner)
+
+  if (compact) {
+    return (
+      <section className="plot-compact-nav" aria-label="Plot workspace">
+        <div className="plot-compact-main">
+          <Link className="plot-compact-back" to="/plots" aria-label="Back to plots">
+            <span aria-hidden="true">&larr;</span>
+          </Link>
+
+          <div className="plot-compact-title-block">
+            <span className="plot-compact-kicker">{activeSectionLabel}</span>
+            <h1 className="plot-compact-title">{plotName}</h1>
+          </div>
+
+          {meta ? <div className="plot-compact-meta">{meta}</div> : null}
+        </div>
+
+        <nav className="plot-compact-tabs" aria-label="Plot sections">
+          {visibleSections.map((section) => (
+            <NavLink
+              key={section.key}
+              to={section.to(plotId)}
+              end={section.key === 'editor'}
+              className={({ isActive }) => `plot-section-link plot-compact-tab ${isActive ? 'is-active' : ''}`.trim()}
+            >
+              {section.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {actions ? <div className="plot-compact-actions">{actions}</div> : null}
+      </section>
+    )
+  }
 
   return (
     <section className="plot-workspace-nav" aria-label="Plot workspace">

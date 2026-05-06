@@ -15,38 +15,38 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --bg: #f4efe6;
+  --bg: #f7f3ea;
   --bg-accent: #f3eee5;
-  --panel: rgba(255, 251, 246, 0.94);
-  --panel-strong: #fffdf9;
-  --panel-muted: rgba(252, 246, 239, 0.88);
-  --line: rgba(83, 61, 39, 0.11);
-  --line-strong: rgba(83, 61, 39, 0.18);
-  --text: #1c221b;
-  --text-strong: #141914;
-  --text-soft: #384235;
-  --text-muted: #525d4e;
-  --text-faint: #65705f;
+  --panel: rgba(255, 253, 248, 0.96);
+  --panel-strong: #fffdf8;
+  --panel-muted: rgba(249, 243, 234, 0.9);
+  --line: rgba(65, 55, 41, 0.12);
+  --line-strong: rgba(65, 55, 41, 0.2);
+  --text: #1d211b;
+  --text-strong: #121610;
+  --text-soft: #394236;
+  --text-muted: #5e665b;
+  --text-faint: #747b70;
   --brand: #ef6d22;
-  --brand-dark: #cc5817;
-  --brand-soft: rgba(239, 109, 34, 0.12);
+  --brand-dark: #9f4218;
+  --brand-soft: rgba(239, 109, 34, 0.13);
   --brand-gradient: #ef6d22;
-  --accent: #49683f;
-  --accent-soft: rgba(73, 104, 63, 0.12);
-  --neutral: #56605a;
-  --neutral-soft: rgba(86, 96, 90, 0.12);
-  --info: #2f637d;
-  --info-soft: rgba(47, 99, 125, 0.12);
-  --selected: #2f637d;
-  --selected-soft: rgba(47, 99, 125, 0.12);
-  --danger: #c44934;
-  --danger-soft: rgba(196, 73, 52, 0.12);
-  --warning: #b76d17;
-  --warning-soft: rgba(183, 109, 23, 0.14);
-  --success: #237d52;
-  --success-soft: rgba(35, 125, 82, 0.14);
+  --accent: #8b6748;
+  --accent-soft: rgba(139, 103, 72, 0.13);
+  --neutral: #625d52;
+  --neutral-soft: rgba(98, 93, 82, 0.11);
+  --info: #476f77;
+  --info-soft: rgba(71, 111, 119, 0.12);
+  --selected: #ef6d22;
+  --selected-soft: rgba(239, 109, 34, 0.13);
+  --danger: #b64d42;
+  --danger-soft: rgba(182, 77, 66, 0.12);
+  --warning: #b9832f;
+  --warning-soft: rgba(185, 131, 47, 0.14);
+  --success: #2f7650;
+  --success-soft: rgba(47, 118, 80, 0.14);
   --border: 1px solid var(--line);
-  --shadow-raised: 0 14px 34px rgba(92, 70, 47, 0.09);
+  --shadow-raised: 0 10px 28px rgba(65, 55, 41, 0.08);
   --shadow-sm: var(--shadow-raised);
   --shadow: var(--shadow-raised);
   --shadow-lg: var(--shadow-raised);
@@ -1281,9 +1281,9 @@ ul {
 
 .button-toggle.is-active {
   background: var(--selected-soft);
-  border-color: rgba(47, 99, 125, 0.18);
+  border-color: rgba(239, 109, 34, 0.2);
   color: var(--selected);
-  box-shadow: inset 0 0 0 1px rgba(47, 99, 125, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(239, 109, 34, 0.1);
 }
 
 .button-spinner {
@@ -1813,7 +1813,7 @@ tbody tr:last-child td {
 }
 
 .inventory-request-card.is-selected {
-  border-color: rgba(47, 99, 125, 0.22);
+  border-color: rgba(239, 109, 34, 0.24);
   background: var(--selected-soft);
   box-shadow: var(--shadow-raised);
 }
@@ -1924,7 +1924,7 @@ tbody tr:last-child td {
 }
 
 .calendar-choice-card.is-selected {
-  border-color: rgba(47, 99, 125, 0.2);
+  border-color: rgba(239, 109, 34, 0.24);
   background: var(--selected-soft);
   box-shadow: var(--shadow-raised);
 }
@@ -1987,9 +1987,9 @@ tbody tr:last-child td {
 }
 
 .analytics-option-card.is-selected {
-  border-color: rgba(47, 99, 125, 0.22);
+  border-color: rgba(239, 109, 34, 0.24);
   background:
-    radial-gradient(circle at top right, rgba(47, 99, 125, 0.09), transparent 32%),
+    radial-gradient(circle at top right, rgba(239, 109, 34, 0.1), transparent 32%),
     var(--selected-soft);
   box-shadow: var(--shadow-raised);
 }
@@ -2043,7 +2043,7 @@ tbody tr:last-child td {
 
 .analytics-option-indicator.is-selected {
   background: var(--selected-soft);
-  border-color: rgba(47, 99, 125, 0.16);
+  border-color: rgba(239, 109, 34, 0.2);
   color: var(--selected);
 }
 
@@ -5946,9 +5946,9 @@ html {
 }
 
 .month-day.is-selected {
-  background: rgba(47, 99, 125, 0.12);
-  border-color: rgba(47, 99, 125, 0.32);
-  box-shadow: inset 0 0 0 2px rgba(47, 99, 125, 0.18);
+  background: rgba(239, 109, 34, 0.13);
+  border-color: rgba(239, 109, 34, 0.34);
+  box-shadow: inset 0 0 0 2px rgba(239, 109, 34, 0.2);
 }
 
 .month-day.is-selected .month-day-num,
@@ -5958,7 +5958,7 @@ html {
 }
 
 .month-day.is-selected .month-day-load {
-  background: rgba(47, 99, 125, 0.16);
+  background: rgba(239, 109, 34, 0.18);
 }
 
 .calendar-main-panel .section-card-body {
@@ -6464,6 +6464,65 @@ html {
   background: rgba(255, 255, 255, 0.9);
 }
 
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+
+.topbar--page-header {
+  grid-template-columns: minmax(180px, auto) minmax(0, 1fr) auto;
+}
+
+.topbar-left,
+.topbar-copy {
+  min-width: 0;
+}
+
+.topbar-title {
+  margin: 0;
+  max-width: min(34vw, 360px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-page-chrome,
+.topbar-page-meta,
+.topbar-page-actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.topbar-page-chrome {
+  gap: var(--space-2);
+  justify-content: flex-end;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.topbar-page-meta,
+.topbar-page-actions {
+  flex: 0 0 auto;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+}
+
+.topbar-page-meta .badge,
+.topbar-page-meta .status-badge {
+  min-height: 30px;
+  padding: 0.24rem 0.62rem;
+  font-size: 0.72rem;
+}
+
+.topbar-page-actions .button {
+  min-height: 34px;
+  padding: 0 0.72rem;
+  font-size: 0.78rem;
+}
+
 @media (max-width: 760px) {
   .topbar {
     top: var(--space-2);
@@ -6480,5 +6539,2378 @@ html {
   .topbar-actions .status-badge-ownership,
   .topbar-user-link {
     display: none;
+  }
+
+  .topbar--page-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topbar--page-header .topbar-page-chrome,
+  .topbar--page-header .topbar-actions {
+    justify-content: flex-start;
+  }
+
+  .topbar-title {
+    max-width: none;
+  }
+}
+
+/* Felt-inspired garden workspace system */
+
+:root {
+  --workspace-bg: #f5f1e8;
+  --workspace-surface: rgba(255, 253, 248, 0.96);
+  --workspace-surface-solid: #fffdf8;
+  --workspace-panel: rgba(255, 253, 248, 0.92);
+  --workspace-control: rgba(255, 255, 255, 0.84);
+  --workspace-hover: rgba(239, 109, 34, 0.08);
+  --workspace-selected: rgba(239, 109, 34, 0.13);
+  --workspace-soil: #8b6748;
+  --workspace-amber: #d6a143;
+  --workspace-green: #ef6d22;
+  --workspace-green-dark: #9f4218;
+  --workspace-line: rgba(65, 55, 41, 0.12);
+  --workspace-line-strong: rgba(65, 55, 41, 0.2);
+  --workspace-focus: 0 0 0 4px rgba(239, 109, 34, 0.16);
+  --workspace-shadow: 0 12px 28px rgba(65, 55, 41, 0.08);
+  --workspace-float-shadow: 0 16px 38px rgba(34, 42, 29, 0.14);
+}
+
+body {
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.62), rgba(245, 241, 232, 0.95)),
+    var(--workspace-bg);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: none;
+  box-shadow: var(--workspace-focus);
+}
+
+.app-shell {
+  background: var(--workspace-bg);
+}
+
+.shell-sidebar {
+  background: rgba(255, 253, 248, 0.94);
+  border-color: var(--workspace-line);
+}
+
+.brand-leaf,
+.topbar-mark,
+.user-avatar {
+  background: var(--workspace-green);
+}
+
+.brand-title em {
+  color: var(--workspace-green);
+}
+
+.sidebar-link {
+  min-height: 44px;
+  border-radius: var(--radius-card);
+  color: var(--text-soft);
+}
+
+.sidebar-link:hover {
+  background: var(--workspace-hover);
+  border-color: rgba(239, 109, 34, 0.12);
+  color: var(--workspace-green-dark);
+  transform: none;
+}
+
+.sidebar-link.active {
+  background: var(--workspace-selected);
+  border-color: rgba(239, 109, 34, 0.18);
+  box-shadow: inset 3px 0 0 var(--workspace-green);
+  color: var(--workspace-green-dark);
+}
+
+.sidebar-link.active .sidebar-icon,
+.sidebar-link:hover .sidebar-icon {
+  background: rgba(239, 109, 34, 0.1);
+  color: var(--workspace-green-dark);
+}
+
+.topbar {
+  border-color: var(--workspace-line);
+  background: rgba(255, 253, 248, 0.88);
+  box-shadow: 0 8px 22px rgba(65, 55, 41, 0.07);
+}
+
+.page-container {
+  padding-top: var(--space-4);
+}
+
+.page-container-workspace {
+  padding-top: var(--space-3);
+}
+
+.page-header {
+  align-items: center;
+  padding: 0;
+}
+
+.page-header-title,
+.section-card-title,
+.section-header-title,
+.section-title {
+  color: var(--text-strong);
+}
+
+.page-header-eyebrow,
+.workspace-overview-kicker,
+.workspace-section-eyebrow {
+  background: rgba(239, 109, 34, 0.09);
+  color: var(--workspace-green-dark);
+}
+
+.panel,
+.card,
+.surface,
+.section-card,
+.stat-card,
+.empty-state,
+.empty-state-panel,
+.status-card,
+.status-hero,
+.toast,
+.month-day,
+.calendar-choice-card,
+.plot-browser-card,
+.plot-summary-card,
+.inventory-request-card,
+.post-card,
+.resource-card {
+  border-color: var(--workspace-line);
+  background: var(--workspace-surface);
+  box-shadow: 0 8px 22px rgba(65, 55, 41, 0.06);
+}
+
+.card:hover,
+.plot-browser-card:hover,
+.resource-card:hover,
+.post-card:hover,
+.workspace-module-card:hover,
+.analytics-option-card:hover {
+  border-color: rgba(239, 109, 34, 0.18);
+  box-shadow: var(--workspace-shadow);
+}
+
+.button {
+  min-height: 38px;
+  border-radius: var(--radius-card);
+  box-shadow: none;
+}
+
+.button:hover:not(:disabled) {
+  transform: none;
+}
+
+.button-primary {
+  background: var(--workspace-green);
+  color: #fff;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--workspace-green-dark);
+}
+
+.button-secondary,
+.button-ghost,
+.button-toggle {
+  background: var(--workspace-control);
+  border-color: var(--workspace-line);
+  color: var(--text-soft);
+}
+
+.button-secondary:hover:not(:disabled),
+.button-ghost:hover:not(:disabled),
+.button-toggle:hover:not(:disabled) {
+  background: #fff;
+  border-color: var(--workspace-line-strong);
+  color: var(--text-strong);
+}
+
+.button-toggle.is-active,
+.button-toggle.is-active:hover:not(:disabled) {
+  background: var(--workspace-selected);
+  border-color: rgba(239, 109, 34, 0.2);
+  color: var(--workspace-green-dark);
+  box-shadow: inset 0 0 0 1px rgba(239, 109, 34, 0.1);
+}
+
+.field input,
+.field select,
+.field textarea {
+  border-color: var(--workspace-line);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--workspace-green);
+  box-shadow: var(--workspace-focus);
+}
+
+.table-wrap {
+  border: 1px solid var(--workspace-line);
+  background: var(--workspace-surface-solid);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  background: rgba(247, 243, 234, 0.92);
+  color: var(--text-soft);
+}
+
+tbody tr:hover td {
+  background: rgba(239, 109, 34, 0.045);
+}
+
+.badge,
+.status-badge {
+  border-color: var(--workspace-line);
+}
+
+.badge-soft,
+.badge-info {
+  background: rgba(239, 109, 34, 0.1);
+  color: var(--workspace-green-dark);
+}
+
+.modal-layer {
+  background: rgba(29, 33, 27, 0.28);
+}
+
+.modal-surface,
+.dialog-header,
+.dialog-footer {
+  background: var(--workspace-surface-solid);
+  border-color: var(--workspace-line);
+}
+
+.dialog-close-button,
+.plant-flow-close {
+  background: var(--workspace-control);
+  border-color: var(--workspace-line);
+}
+
+.filter-bar,
+.resource-filter-bar {
+  border-color: var(--workspace-line);
+  background: var(--workspace-panel);
+}
+
+.status-hero,
+.status-card,
+.empty-state-panel {
+  align-items: start;
+  justify-items: start;
+  text-align: left;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(65, 55, 41, 0.08), rgba(255, 255, 255, 0.72), rgba(65, 55, 41, 0.08));
+}
+
+.plot-editor-layout {
+  grid-template-columns: minmax(236px, 280px) minmax(0, 1fr) minmax(320px, 390px);
+  gap: var(--space-3);
+  align-items: stretch;
+  min-height: calc(100vh - 190px);
+}
+
+.plot-layers-panel,
+.plot-context-rail {
+  position: sticky;
+  top: calc(52px + var(--space-6));
+  align-self: start;
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.plot-layers-panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: var(--workspace-panel);
+  box-shadow: 0 8px 22px rgba(65, 55, 41, 0.06);
+}
+
+.plot-layers-panel-header,
+.plot-layer-section-head {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.plot-layer-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.plot-layer-section-head strong {
+  color: var(--text-strong);
+  font-size: 0.84rem;
+}
+
+.plot-layer-section-head span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.plot-layer-metrics {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.plot-layer-object-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.plot-layer-object {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-2);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--text);
+  text-align: left;
+}
+
+.plot-layer-object:hover,
+.plot-layer-object.is-selected {
+  border-color: rgba(239, 109, 34, 0.22);
+  background: var(--workspace-selected);
+}
+
+.plot-layer-object-index,
+.plot-layer-object-count {
+  display: inline-grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: var(--radius-pill);
+  background: rgba(239, 109, 34, 0.12);
+  color: var(--workspace-green-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.plot-layer-object-copy {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.plot-layer-object-copy strong,
+.plot-layer-object-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-layer-object-copy strong {
+  color: var(--text-strong);
+  font-size: 0.84rem;
+}
+
+.plot-layer-object-copy small {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.plot-editor-main {
+  min-width: 0;
+  padding: 0;
+}
+
+.plot-context-rail.inspector-panel,
+.inspector-panel {
+  border-color: var(--workspace-line);
+  background: var(--workspace-panel);
+  box-shadow: 0 8px 22px rgba(65, 55, 41, 0.06);
+}
+
+.inspector-panel-header {
+  background: rgba(255, 253, 248, 0.96);
+  border-bottom-color: var(--workspace-line);
+}
+
+.workspace-context-card,
+.workspace-dock-card,
+.day-drawer-section,
+.dialog-section,
+.analytics-generator-sidebar,
+.plot-create-side-panel {
+  border-color: var(--workspace-line);
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: none;
+}
+
+.designer-panel {
+  position: relative;
+  min-height: clamp(620px, 72vh, 880px);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: var(--workspace-surface-solid);
+  overflow: hidden;
+  box-shadow: var(--workspace-shadow);
+}
+
+.designer-stage {
+  min-height: clamp(620px, 72vh, 880px);
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(239, 109, 34, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 109, 34, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, #fbf8f0 0%, #efe7d8 100%);
+  background-size: 28px 28px, 28px 28px, auto;
+  box-shadow: none;
+}
+
+.designer-toolbar {
+  position: absolute;
+  z-index: 8;
+  top: var(--space-4);
+  left: 50%;
+  width: min(calc(100% - 2rem), 980px);
+  transform: translateX(-50%);
+  align-items: center;
+  padding: var(--space-2);
+  border-color: var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: var(--workspace-float-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.designer-toolbar-group--status {
+  min-width: min(260px, 32vw);
+}
+
+.designer-toolbar-hint {
+  max-width: 40ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.designer-map-console {
+  position: absolute;
+  z-index: 7;
+  top: calc(var(--space-4) + 66px);
+  left: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  width: min(260px, calc(100% - 2rem));
+}
+
+.designer-map-console .map-layer-control,
+.plot-scale-control {
+  border-color: var(--workspace-line);
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow: var(--workspace-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.designer-meta-grid {
+  position: absolute;
+  z-index: 7;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  pointer-events: none;
+}
+
+.designer-meta-grid .measurement-badge {
+  min-height: 54px;
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow: 0 8px 18px rgba(65, 55, 41, 0.08);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.designer-legend {
+  position: absolute;
+  z-index: 7;
+  left: var(--space-4);
+  bottom: calc(var(--space-4) + 68px);
+  max-width: min(620px, calc(100% - 2rem));
+}
+
+.designer-legend-item,
+.map-layer-item,
+.measurement-badge,
+.weather-mini-stat,
+.calendar-generator-highlight {
+  border-color: var(--workspace-line);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.map-layer-control {
+  border-radius: var(--radius-section);
+}
+
+.map-layer-title,
+.measurement-badge-label {
+  color: var(--text-muted);
+}
+
+.measurement-badge-field,
+.measurement-badge-leaf {
+  border-left-color: var(--workspace-green);
+}
+
+.measurement-badge-earth {
+  border-left-color: var(--workspace-soil);
+}
+
+.measurement-badge-amber {
+  border-left-color: var(--workspace-amber);
+}
+
+.designer-zone-label,
+.designer-plot-label,
+.designer-dimension-label {
+  box-shadow: 0 8px 18px rgba(65, 55, 41, 0.1);
+}
+
+.calendar-layout {
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+}
+
+.calendar-sidebar {
+  top: calc(52px + var(--space-6));
+}
+
+.month-day {
+  min-height: 94px;
+  box-shadow: none;
+}
+
+.month-day.is-selected {
+  background: var(--workspace-selected);
+  border-color: rgba(239, 109, 34, 0.28);
+  box-shadow: inset 0 0 0 2px rgba(239, 109, 34, 0.14);
+}
+
+.month-day.is-selected .month-day-num,
+.month-day.is-selected .month-day-state,
+.month-day.is-selected .month-day-tasks {
+  color: var(--text-strong);
+}
+
+.day-task-card,
+.task-item {
+  border-color: var(--workspace-line);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.day-task-card-badges,
+.calendar-generator-highlights,
+.analytics-selection-chips {
+  gap: var(--space-2);
+}
+
+.analytics-option-card.is-selected,
+.calendar-choice-card.is-selected,
+.inventory-request-card.is-selected,
+.plot-history-row.is-selected {
+  border-color: rgba(239, 109, 34, 0.24);
+  background: var(--workspace-selected);
+  box-shadow: inset 3px 0 0 var(--workspace-green);
+}
+
+.community-grid {
+  align-items: start;
+}
+
+.post-card {
+  gap: var(--space-3);
+}
+
+.post-card p,
+.post-card .section-copy,
+.resource-card-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.community-post-text,
+.community-read-more {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.community-read-more summary {
+  width: fit-content;
+  color: var(--workspace-green-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.community-read-more p {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  color: var(--text-soft);
+}
+
+.responsive-table th,
+.responsive-table td {
+  padding: 0.68rem 0.85rem;
+}
+
+.responsive-table tbody tr {
+  height: 48px;
+}
+
+@media (max-width: 1280px) {
+  .plot-editor-layout {
+    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  }
+
+  .plot-context-rail {
+    grid-column: 1 / -1;
+    position: static;
+    max-height: none;
+  }
+
+  .designer-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .plot-editor-layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .plot-layers-panel,
+  .plot-context-rail {
+    position: static;
+    max-height: none;
+  }
+
+  .plot-layers-panel {
+    order: 2;
+  }
+
+  .plot-editor-main {
+    order: 1;
+  }
+
+  .plot-context-rail {
+    order: 3;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-container {
+    padding-top: var(--space-2);
+  }
+
+  .plot-layers-panel,
+  .plot-context-rail.inspector-panel {
+    border-radius: var(--radius-section) var(--radius-section) 0 0;
+  }
+
+  .designer-panel,
+  .designer-stage {
+    min-height: 520px;
+  }
+
+  .designer-toolbar {
+    top: auto;
+    right: var(--space-2);
+    bottom: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    transform: none;
+    align-items: stretch;
+  }
+
+  .designer-toolbar-group {
+    width: 100%;
+  }
+
+  .designer-toolbar-group--status {
+    display: none;
+  }
+
+  .designer-map-console {
+    top: var(--space-2);
+    left: var(--space-2);
+    width: calc(100% - var(--space-4));
+  }
+
+  .designer-map-console .map-layer-control {
+    display: none;
+  }
+
+  .designer-meta-grid {
+    right: var(--space-2);
+    bottom: 106px;
+    left: var(--space-2);
+    grid-template-columns: 1fr;
+  }
+
+  .designer-meta-grid .measurement-badge:not(:first-child) {
+    display: none;
+  }
+
+  .designer-legend {
+    display: none;
+  }
+
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-sidebar {
+    position: static;
+  }
+
+  .modal-layer-drawer-right,
+  .modal-layer-drawer-left {
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+
+  .modal-surface-drawer-right,
+  .modal-surface-drawer-left,
+  .day-modal-panel,
+  .plant-flow-panel {
+    width: 100vw;
+    height: min(86vh, 760px);
+    border-radius: var(--radius-section) var(--radius-section) 0 0;
+  }
+}
+
+/* Map-first plot workspaces */
+
+.plot-workspace-page {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.plot-workspace-command-bar {
+  position: sticky;
+  top: calc(var(--space-3) + 52px);
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 58px;
+  padding: var(--space-2);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow: var(--workspace-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.plot-workspace-command-left,
+.plot-workspace-command-title-row,
+.plot-workspace-command-meta,
+.plot-workspace-command-actions {
+  display: flex;
+  align-items: center;
+}
+
+.plot-workspace-command-left {
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.plot-workspace-command-copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.plot-workspace-command-eyebrow {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.plot-workspace-command-title-row {
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.plot-workspace-command-title-row h1 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-workspace-command-copy p {
+  max-width: 72ch;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-workspace-command-meta,
+.plot-workspace-command-actions {
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.plot-workspace-command-modes {
+  min-width: min(360px, 32vw);
+}
+
+.plot-workspace-step-segments {
+  min-height: 38px;
+  padding: 0.18rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.plot-workspace-step-segments .button {
+  min-height: 32px;
+  padding-inline: 0.82rem;
+  border-radius: var(--radius-pill);
+}
+
+.plot-workspace-stage {
+  position: relative;
+  min-height: calc(100vh - 172px);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: var(--workspace-surface-solid);
+  box-shadow: var(--workspace-shadow);
+  overflow: hidden;
+}
+
+.plot-create-workspace,
+.plot-editor-layout {
+  min-height: calc(100vh - 172px);
+}
+
+.plot-create-workspace--boundary {
+  background: #dfe8d9;
+}
+
+.plot-create-workspace--summary {
+  background: #f3eee5;
+}
+
+.plot-location-map--workspace,
+.plot-location-map--workspace .plot-location-map-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 172px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.plot-location-map--workspace .plot-location-map-mode-hint {
+  top: var(--space-4);
+  left: 50%;
+  max-width: min(520px, calc(100% - 2rem));
+  transform: translateX(-50%);
+}
+
+.plot-floating-panel {
+  position: absolute;
+  z-index: 12;
+  display: grid;
+  gap: var(--space-3);
+  width: min(340px, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  padding: var(--space-4);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: var(--workspace-float-shadow);
+  backdrop-filter: blur(18px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.plot-floating-panel--top-left {
+  top: var(--space-4);
+  left: var(--space-4);
+}
+
+.plot-floating-panel--left {
+  top: calc(var(--space-4) + 132px);
+  left: var(--space-4);
+}
+
+.plot-floating-panel--right {
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
+.plot-create-workspace--zones .plot-floating-panel--left,
+.plot-create-workspace--summary .plot-floating-panel--left {
+  top: calc(var(--space-4) + 78px);
+}
+
+.plot-create-guidance-panel h2,
+.plot-floating-panel-head h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.plot-workspace-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.plot-create-layers-panel {
+  width: min(300px, calc(100% - 2rem));
+}
+
+.plot-create-side-panel,
+.plot-create-zone-panel,
+.plot-create-summary-panel {
+  width: min(360px, calc(100% - 2rem));
+}
+
+.plot-create-side-panel .form-actions,
+.plot-create-zone-panel .form-actions,
+.plot-create-summary-panel .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.plot-create-summary-panel {
+  max-height: calc(100% - 2rem);
+}
+
+.plot-create-summary-panel .input-grid,
+.plot-create-zone-panel .input-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plot-create-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plot-create-summary-grid .designer-stat-card {
+  padding: var(--space-2);
+}
+
+.plot-create-panel-toggles {
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 18;
+  flex-direction: row;
+  width: auto;
+  max-width: min(420px, calc(100% - 2rem));
+  border-radius: var(--radius-pill);
+}
+
+.plot-create-workspace .plot-floating-panel--left,
+.plot-create-workspace--zones .plot-floating-panel--left,
+.plot-create-workspace--summary .plot-floating-panel--left {
+  top: calc(var(--space-3) + 46px);
+  left: var(--space-3);
+}
+
+.plot-create-workspace .plot-floating-panel--right {
+  top: calc(var(--space-3) + 46px);
+  right: var(--space-3);
+}
+
+.plot-create-workspace .plot-floating-panel {
+  border-radius: var(--radius-card);
+}
+
+.plot-floating-panel-head--inline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.plot-floating-panel-head--inline > div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.plot-floating-panel-head--inline > .designer-toolbar-kicker {
+  align-self: center;
+}
+
+.plot-create-workspace--zones .designer-toolbar,
+.plot-create-workspace--summary .designer-toolbar {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  width: auto;
+  min-width: 0;
+  max-width: calc(100% - 30rem);
+  padding: 0.28rem;
+  border-radius: var(--radius-pill);
+  transform: translateX(-50%);
+}
+
+.plot-create-workspace--zones .designer-map-console,
+.plot-create-workspace--summary .designer-map-console {
+  display: none;
+}
+
+.plot-workspace-nav {
+  position: sticky;
+  top: calc(var(--space-3) + 52px);
+  z-index: 20;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow: var(--workspace-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.plot-workspace-nav-head {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.plot-workspace-back {
+  min-height: 38px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: var(--workspace-control);
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.plot-workspace-back:hover {
+  background: #fff;
+  color: var(--text-strong);
+}
+
+.plot-workspace-title-block {
+  min-width: 0;
+}
+
+.plot-breadcrumb,
+.plot-workspace-description {
+  display: none;
+}
+
+.plot-workspace-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-workspace-meta {
+  gap: var(--space-2);
+  margin-top: 0.28rem;
+}
+
+.plot-workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.plot-section-tabs-scroll {
+  margin: 0;
+  overflow-x: auto;
+}
+
+.plot-section-nav {
+  display: inline-flex;
+  gap: 0.18rem;
+  min-width: max-content;
+  padding: 0.18rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.plot-section-link {
+  min-height: 32px;
+  padding: 0.38rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.plot-section-link:hover,
+.plot-section-link.is-active {
+  background: var(--workspace-selected);
+  color: var(--workspace-green-dark);
+}
+
+.plot-section-link.is-active::after {
+  display: none;
+}
+
+.plot-editor-layout {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-section);
+  background: var(--workspace-surface-solid);
+  box-shadow: var(--workspace-shadow);
+}
+
+.plot-editor-main,
+.plot-editor-main .designer-panel,
+.plot-editor-main .designer-stage {
+  width: 100%;
+  min-height: calc(100vh - 172px);
+}
+
+.plot-editor-layout .plot-layers-panel,
+.plot-editor-layout .plot-context-rail {
+  position: absolute;
+  z-index: 13;
+  top: var(--space-4);
+  max-height: calc(100% - var(--space-6));
+  border-color: var(--workspace-line);
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: var(--workspace-float-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.plot-editor-layout .plot-layers-panel {
+  left: var(--space-4);
+  width: min(300px, calc(100% - 2rem));
+}
+
+.plot-editor-layout .plot-context-rail {
+  right: var(--space-4);
+  width: min(380px, calc(100% - 2rem));
+}
+
+.plot-editor-layout .designer-map-console {
+  top: calc(var(--space-4) + 74px);
+  left: calc(var(--space-4) + 316px);
+}
+
+.plot-editor-layout .designer-meta-grid,
+.plot-create-workspace .designer-meta-grid {
+  right: calc(var(--space-4) + 392px);
+  left: calc(var(--space-4) + 316px);
+}
+
+.plot-editor-layout .designer-legend,
+.plot-create-workspace--zones .designer-legend,
+.plot-create-workspace--summary .designer-legend {
+  left: calc(var(--space-4) + 316px);
+}
+
+@media (max-width: 1280px) {
+  .plot-workspace-command-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .plot-workspace-command-modes {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .plot-editor-layout .plot-layers-panel {
+    width: min(270px, calc(100% - 2rem));
+  }
+
+  .plot-editor-layout .plot-context-rail {
+    width: min(340px, calc(100% - 2rem));
+  }
+
+  .plot-editor-layout .designer-meta-grid,
+  .plot-create-workspace .designer-meta-grid {
+    right: var(--space-4);
+    left: calc(var(--space-4) + 286px);
+  }
+}
+
+@media (max-width: 980px) {
+  .plot-workspace-command-bar,
+  .plot-workspace-nav {
+    position: relative;
+    top: auto;
+  }
+
+  .plot-workspace-command-bar,
+  .plot-workspace-nav-head {
+    grid-template-columns: 1fr;
+  }
+
+  .plot-workspace-command-copy p {
+    white-space: normal;
+  }
+
+  .plot-workspace-command-actions,
+  .plot-workspace-actions {
+    justify-content: flex-start;
+  }
+
+  .plot-workspace-stage,
+  .plot-create-workspace,
+  .plot-editor-layout {
+    display: grid;
+    gap: var(--space-3);
+    min-height: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .plot-location-map--workspace,
+  .plot-location-map--workspace .plot-location-map-canvas,
+  .plot-editor-main,
+  .plot-editor-main .designer-panel,
+  .plot-editor-main .designer-stage {
+    min-height: min(72vh, 680px);
+    border-radius: var(--radius-section);
+  }
+
+  .plot-floating-panel,
+  .plot-floating-panel--top-left,
+  .plot-floating-panel--left,
+  .plot-floating-panel--right,
+  .plot-editor-layout .plot-layers-panel,
+  .plot-editor-layout .plot-context-rail {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-height: none;
+  }
+
+  .plot-create-workspace--boundary .plot-create-guidance-panel {
+    order: -1;
+  }
+
+  .plot-editor-layout .plot-layers-panel {
+    order: 2;
+  }
+
+  .plot-editor-main {
+    order: 1;
+  }
+
+  .plot-editor-layout .plot-context-rail {
+    order: 3;
+  }
+
+  .plot-editor-layout .designer-map-console,
+  .plot-editor-layout .designer-meta-grid,
+  .plot-create-workspace .designer-meta-grid,
+  .plot-editor-layout .designer-legend,
+  .plot-create-workspace--zones .designer-legend,
+  .plot-create-workspace--summary .designer-legend {
+    left: var(--space-4);
+    right: var(--space-4);
+  }
+}
+
+@media (max-width: 760px) {
+  .plot-workspace-command-title-row,
+  .plot-workspace-command-meta,
+  .plot-workspace-command-actions,
+  .plot-workspace-actions {
+    align-items: stretch;
+  }
+
+  .plot-workspace-command-title-row {
+    flex-wrap: wrap;
+  }
+
+  .plot-workspace-command-actions .button,
+  .plot-workspace-actions .button {
+    width: 100%;
+  }
+
+  .plot-workspace-step-segments {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .plot-floating-panel,
+  .plot-layers-panel,
+  .plot-context-rail.inspector-panel {
+    border-radius: var(--radius-section) var(--radius-section) 0 0;
+  }
+
+  .plot-create-summary-panel .input-grid,
+  .plot-create-zone-panel .input-grid,
+  .plot-create-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plot-location-map--workspace,
+  .plot-location-map--workspace .plot-location-map-canvas,
+  .plot-editor-main,
+  .plot-editor-main .designer-panel,
+  .plot-editor-main .designer-stage {
+    min-height: 560px;
+  }
+}
+
+/* Map-first plot editor refinements */
+
+.page-container-workspace {
+  width: 100%;
+  max-width: none;
+}
+
+.workspace-page--editor {
+  gap: var(--space-3);
+}
+
+.plot-workspace-nav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  top: calc(var(--space-3) + 60px);
+  min-height: 0;
+  gap: 0.25rem var(--space-3);
+  align-items: center;
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--radius-card);
+}
+
+.plot-workspace-nav-head {
+  display: contents;
+}
+
+.plot-workspace-back {
+  grid-row: 1 / 3;
+  min-height: 34px;
+  padding: 0 0.72rem;
+  border-radius: var(--radius-card);
+  font-size: 0.78rem;
+}
+
+.plot-workspace-title {
+  font-size: 1.08rem;
+  line-height: 1.15;
+}
+
+.plot-workspace-title-block {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.plot-workspace-meta {
+  margin-top: 0;
+}
+
+.plot-workspace-actions {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-items: center;
+}
+
+.plot-workspace-actions .button {
+  min-height: 36px;
+  padding: 0 0.82rem;
+  border-radius: var(--radius-card);
+  font-size: 0.82rem;
+}
+
+.plot-section-tabs-scroll {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 0;
+}
+
+.plot-section-link {
+  min-height: 30px;
+  padding: 0.3rem 0.68rem;
+  font-size: 0.76rem;
+}
+
+.plot-editor-layout,
+.plot-editor-main,
+.plot-editor-main .designer-panel,
+.plot-editor-main .designer-stage {
+  min-height: calc(100vh - 154px);
+}
+
+.plot-editor-layout {
+  border-radius: var(--radius-card);
+}
+
+.plot-workspace-panel-toggles {
+  position: absolute;
+  z-index: 16;
+  top: var(--space-3);
+  left: var(--space-3);
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 132px;
+  max-width: calc(100% - var(--space-6));
+  padding: 0.28rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 253, 248, 0.88);
+  box-shadow: var(--workspace-shadow);
+  backdrop-filter: blur(16px);
+  overflow-x: auto;
+}
+
+.plot-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  min-height: 32px;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.plot-panel-toggle:hover,
+.plot-panel-toggle.is-active {
+  background: var(--workspace-selected);
+  color: var(--workspace-green-dark);
+}
+
+.plot-editor-view-toggle {
+  position: absolute;
+  z-index: 19;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: inline-flex;
+  gap: 0.18rem;
+  max-width: min(320px, calc(100% - 2rem));
+  padding: 0.28rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 253, 248, 0.88);
+  box-shadow: var(--workspace-shadow);
+  backdrop-filter: blur(16px);
+  overflow-x: auto;
+}
+
+.plot-editor-view-toggle .plot-panel-toggle {
+  min-height: 30px;
+  padding: 0 0.68rem;
+  white-space: nowrap;
+}
+
+.plot-editor-layout--boundary .plot-workspace-panel-toggles {
+  max-width: min(360px, calc(100% - 22rem));
+}
+
+.plot-editor-main--map,
+.plot-editor-main--map .plot-location-map--workspace,
+.plot-editor-main--map .plot-location-map-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 154px);
+}
+
+.plot-editor-layout--boundary {
+  background: #dfe8d9;
+}
+
+.plot-boundary-center-readout {
+  display: grid;
+  gap: 0.2rem;
+  padding: var(--space-3);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.plot-boundary-center-readout strong {
+  color: var(--text-strong);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.plot-floating-panel-actions {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.plot-panel-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.plot-panel-close:hover {
+  background: #fff;
+  color: var(--text-strong);
+}
+
+.plot-editor-layout .plot-layers-panel,
+.plot-editor-layout .plot-context-rail {
+  top: calc(var(--space-3) + 48px);
+  max-height: calc(100% - var(--space-6) - 48px);
+  border-radius: var(--radius-card);
+}
+
+.plot-editor-layout .plot-layers-panel {
+  left: var(--space-3);
+}
+
+.plot-editor-layout .plot-context-rail {
+  right: var(--space-3);
+}
+
+.plot-editor-layout .designer-toolbar {
+  top: var(--space-3);
+  width: min(calc(100% - 23rem), 760px);
+  min-width: min(620px, calc(100% - 2rem));
+  padding: 0.35rem;
+  border-radius: var(--radius-card);
+}
+
+.plot-editor-layout .designer-toolbar-group--status {
+  min-width: 190px;
+}
+
+.plot-editor-layout .designer-toolbar-hint {
+  max-width: 28ch;
+}
+
+.plot-editor-layout .designer-map-console {
+  top: auto;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  left: auto;
+  width: auto;
+}
+
+.plot-editor-layout .designer-map-console .map-layer-control {
+  display: none;
+}
+
+.plot-editor-layout .designer-meta-grid,
+.plot-create-workspace .designer-meta-grid {
+  right: calc(var(--space-3) + 92px);
+  bottom: var(--space-3);
+  left: auto;
+  width: min(560px, calc(100% - 12rem));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.plot-editor-layout .designer-meta-grid .measurement-badge {
+  min-height: 46px;
+  padding: 0.55rem 0.65rem;
+}
+
+.plot-editor-layout:not(.has-context-panel) .designer-meta-grid {
+  display: none;
+}
+
+.plot-editor-layout .designer-legend {
+  left: var(--space-3);
+  bottom: calc(var(--space-3) + 54px);
+  max-width: min(520px, calc(100% - 2rem));
+}
+
+@media (max-width: 1280px) {
+  .plot-editor-layout .designer-toolbar {
+    top: calc(var(--space-3) + 46px);
+    width: min(calc(100% - 2rem), 760px);
+    min-width: 0;
+  }
+
+  .plot-editor-layout .designer-meta-grid,
+  .plot-create-workspace .designer-meta-grid {
+    right: calc(var(--space-3) + 92px);
+    left: auto;
+    width: min(520px, calc(100% - 11rem));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .plot-workspace-nav {
+    position: sticky;
+    top: calc(var(--space-2) + 54px);
+  }
+
+  .plot-workspace-nav-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .plot-workspace-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .plot-editor-layout,
+  .plot-create-workspace {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--workspace-line);
+    background: var(--workspace-surface-solid);
+    box-shadow: var(--workspace-shadow);
+  }
+
+  .plot-editor-layout .plot-layers-panel,
+  .plot-editor-layout .plot-context-rail {
+    position: absolute;
+    inset: auto var(--space-2) var(--space-2) var(--space-2);
+    width: auto;
+    max-height: min(70%, 640px);
+  }
+
+  .plot-editor-layout .designer-toolbar {
+    top: auto;
+    right: var(--space-2);
+    bottom: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    transform: none;
+  }
+
+  .plot-editor-layout .designer-map-console {
+    top: var(--space-2);
+    right: var(--space-2);
+    bottom: auto;
+  }
+
+  .plot-editor-layout .designer-meta-grid,
+  .plot-create-workspace .designer-meta-grid {
+    display: none;
+  }
+
+  .plot-editor-view-toggle {
+    right: var(--space-2);
+    left: auto;
+    max-width: min(320px, calc(100% - 2rem));
+  }
+
+  .plot-editor-layout--boundary .plot-workspace-panel-toggles {
+    top: calc(var(--space-2) + 46px);
+    max-width: calc(100% - 1rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .plot-workspace-nav {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    padding: 0.35rem;
+  }
+
+  .plot-workspace-back {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 34px;
+  }
+
+  .plot-workspace-title-block {
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+    min-width: 0;
+  }
+
+  .plot-workspace-title {
+    font-size: 1rem;
+  }
+
+  .plot-workspace-meta {
+    display: none;
+  }
+
+  .plot-workspace-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .plot-workspace-actions .button {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 34px;
+    padding: 0 0.72rem;
+    white-space: nowrap;
+  }
+
+  .plot-section-tabs-scroll {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
+  }
+
+  .plot-section-nav {
+    max-width: 100%;
+  }
+
+  .plot-section-link {
+    min-height: 30px;
+    padding: 0.28rem 0.62rem;
+  }
+
+  .plot-workspace-panel-toggles {
+    right: var(--space-2);
+    left: var(--space-2);
+    flex-direction: row;
+    width: auto;
+    border-radius: var(--radius-pill);
+  }
+
+  .plot-editor-layout,
+  .plot-editor-main,
+  .plot-editor-main .designer-panel,
+  .plot-editor-main .designer-stage {
+    min-height: 620px;
+  }
+}
+
+/* Canvas-first plot editor */
+
+.shell-main--plot-editor {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100dvh;
+  min-height: 0;
+  padding: var(--space-3);
+  overflow: hidden;
+}
+
+.page-container-plot-editor {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+}
+
+.workspace-page--editor {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.plot-compact-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(320px, 1fr) minmax(0, auto);
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 58px;
+  padding: 0.42rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 10px 26px rgba(34, 42, 29, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.plot-compact-main,
+.plot-compact-meta,
+.plot-compact-actions,
+.plot-compact-tabs {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.plot-compact-main {
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.plot-compact-back {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text-soft);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.plot-compact-back:hover {
+  background: #fff;
+  color: var(--workspace-green-dark);
+}
+
+.plot-compact-title-block {
+  display: grid;
+  gap: 0;
+  flex: 0 1 190px;
+  min-width: 0;
+}
+
+.plot-compact-kicker {
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.plot-compact-title {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-compact-meta,
+.plot-compact-actions {
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.plot-compact-meta {
+  flex: 1 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.plot-compact-meta::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-meta .status-badge {
+  min-height: 30px;
+  padding: 0.24rem 0.62rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.plot-compact-tabs {
+  gap: 0.16rem;
+  justify-self: stretch;
+  max-width: 100%;
+  padding: 0.16rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.62);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.plot-compact-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.plot-compact-tab {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0.28rem 0.56rem;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.plot-create-step-tab {
+  appearance: none;
+  cursor: pointer;
+}
+
+.plot-create-step-tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.plot-compact-actions {
+  justify-content: flex-end;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.plot-compact-actions .button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 0.7rem;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.workspace-page--editor .field-error {
+  position: absolute;
+  top: 66px;
+  left: var(--space-3);
+  z-index: 35;
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-card);
+  background: rgba(255, 253, 248, 0.94);
+}
+
+.workspace-page--editor .plot-editor-layout,
+.workspace-page--editor .plot-create-workspace,
+.workspace-page--editor .plot-editor-main,
+.workspace-page--editor .plot-editor-main .designer-panel,
+.workspace-page--editor .plot-editor-main .designer-stage {
+  height: 100%;
+  min-height: 0;
+}
+
+.workspace-page--editor .plot-editor-layout,
+.workspace-page--editor .plot-create-workspace {
+  position: relative;
+  grid-row: 2;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+}
+
+.workspace-page--editor .plot-editor-main {
+  min-width: 0;
+}
+
+.workspace-page--editor .designer-panel {
+  border: 0;
+  border-radius: var(--radius-card);
+  box-shadow: none;
+}
+
+.workspace-page--editor .designer-stage {
+  border-radius: var(--radius-card);
+}
+
+.workspace-page--editor .plot-workspace-panel-toggles {
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 18;
+  flex-direction: row;
+  width: auto;
+  max-width: min(360px, calc(100% - 2rem));
+  border-radius: var(--radius-pill);
+}
+
+.workspace-page--editor .plot-panel-toggle {
+  min-height: 30px;
+  padding: 0 0.62rem;
+  white-space: nowrap;
+}
+
+.workspace-page--editor .plot-layers-panel,
+.workspace-page--editor .plot-context-rail {
+  position: absolute;
+  z-index: 17;
+  top: calc(var(--space-3) + 46px);
+  max-height: calc(100% - 118px);
+  border-radius: var(--radius-card);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.workspace-page--editor .plot-layers-panel {
+  left: var(--space-3);
+  width: min(300px, calc(100% - 2rem));
+}
+
+.workspace-page--editor .plot-context-rail {
+  right: var(--space-3);
+  width: min(380px, calc(100% - 2rem));
+}
+
+.workspace-page--editor .designer-toolbar {
+  position: absolute;
+  top: var(--space-3);
+  bottom: auto;
+  left: 50%;
+  z-index: 14;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: auto;
+  min-width: 0;
+  max-width: calc(100% - 25rem);
+  padding: 0.28rem;
+  border-radius: var(--radius-pill);
+  transform: translateX(-50%);
+}
+
+.designer-icon-button {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-soft);
+}
+
+.designer-icon-button svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.designer-icon-button:hover:not(:disabled),
+.designer-icon-button.is-active {
+  border-color: rgba(239, 109, 34, 0.18);
+  background: var(--workspace-selected);
+  color: var(--workspace-green-dark);
+}
+
+.designer-icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.designer-icon-button::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 50%;
+  z-index: 50;
+  width: max-content;
+  max-width: 180px;
+  padding: 0.28rem 0.48rem;
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--radius-card);
+  background: rgba(36, 49, 31, 0.94);
+  color: #fffdf8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.designer-icon-button:hover::after,
+.designer-icon-button:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.designer-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  margin-inline: 0.12rem;
+  background: var(--workspace-line);
+}
+
+.designer-toolbar-save {
+  min-height: 34px;
+  padding-inline: 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+}
+
+.workspace-page--editor .designer-map-console {
+  display: none;
+}
+
+.workspace-page--editor .designer-meta-grid {
+  display: none;
+}
+
+.designer-bottom-hud {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  left: var(--space-3);
+  z-index: 12;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  pointer-events: none;
+}
+
+.designer-bottom-hud .designer-legend,
+.designer-bottom-hud .plot-scale-control {
+  position: static;
+  pointer-events: auto;
+}
+
+.designer-bottom-hud .designer-legend {
+  display: flex;
+  max-width: min(56%, 680px);
+  gap: 0.45rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.designer-bottom-hud .designer-legend-item {
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.designer-bottom-hud button.designer-legend-item {
+  cursor: pointer;
+}
+
+.designer-bottom-hud .plot-scale-control {
+  min-width: 0;
+  max-width: min(430px, 42%);
+  padding: 0.58rem 0.72rem;
+  border-radius: var(--radius-card);
+}
+
+.designer-bottom-hud .plot-scale-copy strong {
+  font-size: 0.9rem;
+}
+
+.designer-bottom-hud .plot-scale-copy span {
+  white-space: nowrap;
+}
+
+@media (max-width: 1320px) {
+  .plot-compact-nav {
+    grid-template-columns: minmax(240px, 1fr) minmax(260px, auto);
+  }
+
+  .plot-compact-tabs {
+    order: 3;
+    grid-column: 1 / 2;
+    justify-self: start;
+  }
+
+  .plot-compact-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .workspace-page--editor .designer-toolbar {
+    top: calc(var(--space-3) + 46px);
+    max-width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 980px) {
+  .shell-main--plot-editor {
+    padding: var(--space-2);
+  }
+
+  .plot-compact-nav {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 128px;
+    overflow: hidden;
+  }
+
+  .plot-compact-main {
+    width: 100%;
+  }
+
+  .plot-compact-title-block {
+    min-width: 0;
+  }
+
+  .plot-compact-meta {
+    margin-left: auto;
+    overflow-x: auto;
+  }
+
+  .plot-compact-tabs,
+  .plot-compact-actions {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+    justify-self: stretch;
+    justify-content: flex-start;
+  }
+
+  .workspace-page--editor .plot-layers-panel,
+  .workspace-page--editor .plot-context-rail {
+    inset: auto var(--space-2) calc(var(--space-2) + 68px) var(--space-2);
+    width: auto;
+    max-height: min(62%, 620px);
+  }
+
+  .workspace-page--editor .designer-toolbar {
+    top: calc(var(--space-2) + 42px);
+    right: var(--space-2);
+    bottom: auto;
+    left: auto;
+    max-width: calc(100% - var(--space-4));
+    transform: none;
+  }
+
+  .designer-bottom-hud {
+    right: var(--space-2);
+    bottom: var(--space-2);
+    left: var(--space-2);
+  }
+}
+
+@media (max-width: 760px) {
+  .workspace-page--editor {
+    gap: 0.35rem;
+  }
+
+  .plot-compact-nav {
+    min-height: 54px;
+    max-height: 112px;
+    padding: 0.32rem;
+  }
+
+  .plot-compact-kicker,
+  .plot-compact-meta .status-badge:nth-child(n+3) {
+    display: none;
+  }
+
+  .plot-compact-tabs {
+    max-width: 100%;
+  }
+
+  .plot-compact-actions .button {
+    min-height: 32px;
+    padding: 0 0.6rem;
+  }
+
+  .workspace-page--editor .plot-workspace-panel-toggles {
+    top: var(--space-2);
+    left: var(--space-2);
+    max-width: calc(100% - 6.5rem);
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle {
+    top: var(--space-2);
+    right: var(--space-2);
+    max-width: calc(100% - 7rem);
+  }
+
+  .workspace-page--editor .plot-editor-layout--boundary .plot-workspace-panel-toggles {
+    top: calc(var(--space-2) + 44px);
+    max-width: calc(100% - 1rem);
+  }
+
+  .workspace-page--editor .designer-toolbar {
+    top: calc(var(--space-2) + 46px);
+    bottom: auto;
+    gap: 0.18rem;
+    padding: 0.22rem;
+  }
+
+  .designer-icon-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .designer-toolbar-divider,
+  .designer-toolbar-save {
+    display: none;
+  }
+
+  .designer-bottom-hud {
+    align-items: flex-end;
+    gap: var(--space-2);
+  }
+
+  .designer-bottom-hud .designer-legend {
+    max-width: 54%;
+  }
+
+  .designer-bottom-hud .plot-scale-control {
+    max-width: 46%;
+    padding: 0.46rem 0.52rem;
+  }
+
+  .designer-bottom-hud .plot-scale-ruler {
+    display: none;
+  }
+
+  .designer-bottom-hud .plot-scale-copy span {
+    max-width: 18ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

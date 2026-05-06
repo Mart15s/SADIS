@@ -35,6 +35,7 @@ vi.mock('../../components/plot/PlotDesignerCanvas.jsx', () => ({
         <span data-testid="active-zone-id">{props.activeZoneId ?? 'none'}</span>
         <button type="button" onClick={() => props.onSelectZone(props.zones[0] ?? null)}>Select zone</button>
         <button type="button" onClick={() => props.onSelectZone(null)}>Clear zone</button>
+        <button type="button" onClick={() => props.onSelectBoundary?.()}>Select boundary</button>
         <button
           type="button"
           onClick={() => props.onBoundaryCommit(
@@ -50,9 +51,19 @@ vi.mock('../../components/plot/PlotDesignerCanvas.jsx', () => ({
 }))
 
 vi.mock('../../components/plot/PlotLocationMap.jsx', () => ({
-  default: ({ boundaryPoints, readOnly }) => (
+  default: ({ boundaryPoints, readOnly, onBoundaryPointMove }) => (
     <div data-testid="plot-location-map" data-readonly={readOnly ? 'true' : 'false'}>
       {boundaryPoints.length} boundary points
+      <button
+        type="button"
+        onClick={() => onBoundaryPointMove?.(0, {
+          lat: Number(boundaryPoints[0]?.lat ?? 0) + 0.001,
+          lng: Number(boundaryPoints[0]?.lng ?? 0),
+        })}
+        disabled={!boundaryPoints.length || readOnly}
+      >
+        Move boundary point
+      </button>
     </div>
   ),
 }))
@@ -181,6 +192,12 @@ describe('PlotDetailPage explicit save workspace', () => {
     renderPage()
 
     await waitFor(() => {
+      expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
+
+    await waitFor(() => {
       expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
     })
 
@@ -212,6 +229,12 @@ describe('PlotDetailPage explicit save workspace', () => {
     renderPage()
 
     await waitFor(() => {
+      expect(screen.getByTestId('active-zone-id')).toHaveTextContent('none')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
+
+    await waitFor(() => {
       expect(screen.getByTestId('active-zone-id')).toHaveTextContent('11')
     })
 
@@ -220,14 +243,20 @@ describe('PlotDetailPage explicit save workspace', () => {
     await waitFor(() => {
       expect(screen.getByTestId('active-zone-id')).toHaveTextContent('none')
     })
-    expect(screen.getByText('None')).toBeInTheDocument()
-    expect(screen.getByText('Select or draw a zone')).toBeInTheDocument()
+    expect(screen.queryByText('None')).not.toBeInTheDocument()
+    expect(screen.queryByText('Select or draw a zone')).not.toBeInTheDocument()
   })
 
   it('blocks route navigation when the user cancels the unsaved-changes confirmation', async () => {
     globalThis.confirm.mockReturnValue(false)
 
     renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
@@ -248,6 +277,12 @@ describe('PlotDetailPage explicit save workspace', () => {
     globalThis.confirm.mockReturnValue(true)
 
     renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
@@ -296,6 +331,8 @@ describe('PlotDetailPage explicit save workspace', () => {
 
     renderPage()
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Select boundary' }))
+
     await waitFor(() => {
       expect(screen.getByTestId('plot-location-map')).toHaveTextContent('4 boundary points')
     })
@@ -316,5 +353,86 @@ describe('PlotDetailPage explicit save workspace', () => {
         }),
       }),
     }))
+  })
+
+  it('opens boundary view with the editable saved map boundary and saves boundary draft changes', async () => {
+    const mapGeometry = {
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 0, y: 1 },
+      ],
+      map: {
+        provider: 'openstreetmap',
+        center: { lat: 54.681, lng: 25.271 },
+        zoom: 16,
+        boundary: [
+          { lat: 54.681, lng: 25.271 },
+          { lat: 54.681, lng: 25.272 },
+          { lat: 54.68, lng: 25.272 },
+          { lat: 54.68, lng: 25.271 },
+        ],
+      },
+    }
+
+    api.getPlot.mockResolvedValueOnce({
+      id: 5,
+      name: 'North Plot',
+      city: 'Vilnius',
+      plot_size: 42,
+      geometry: mapGeometry,
+      share: true,
+    })
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
+    })
+
+    expect(screen.getByRole('button', { name: 'Zone view' })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Boundary view' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('plot-location-map')).toHaveTextContent('4 boundary points')
+    })
+
+    expect(screen.queryByTestId('plot-designer-canvas')).not.toBeInTheDocument()
+    expect(screen.getByTestId('plot-location-map')).toHaveAttribute('data-readonly', 'false')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move boundary point' }))
+
+    const saveButton = screen.getByRole('button', { name: 'Save plot changes' })
+    expect(saveButton).toBeEnabled()
+
+    fireEvent.click(saveButton)
+
+    await waitFor(() => {
+      expect(api.commitPlotWorkspace).toHaveBeenCalledTimes(1)
+    })
+
+    const savedPayload = api.commitPlotWorkspace.mock.calls[0][1]
+
+    expect(api.commitPlotWorkspace).toHaveBeenCalledWith('5', expect.objectContaining({
+      plot: expect.objectContaining({
+        geometry: expect.objectContaining({
+          map: expect.objectContaining({
+            provider: 'openstreetmap',
+            boundary: expect.arrayContaining([
+              expect.objectContaining({ lat: 54.682, lng: 25.271 }),
+            ]),
+          }),
+        }),
+      }),
+    }))
+    expect(savedPayload.plot.geometry.points).not.toEqual(mapGeometry.points)
+    expect(savedPayload.plot.geometry.points).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 0.5 },
+      { x: 1, y: 1 },
+      { x: 0, y: 1 },
+    ])
   })
 })

@@ -1,19 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import PageHeader from '../../components/layout/PageHeader.jsx'
+import { MapLayerControl, MeasurementBadge } from '../../components/garden/GardenControls.jsx'
 import PlotDesignerCanvas from '../../components/plot/PlotDesignerCanvas.jsx'
 import PlotLocationMap from '../../components/plot/PlotLocationMap.jsx'
+import { FloatingPanel, WorkspaceStage } from '../../components/plot/PlotWorkspaceShell.jsx'
 import {
   ErrorState,
   ProcessingState,
   SuccessToast,
 } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
-import FormSection from '../../components/ui/FormSection.jsx'
-import ModeToggleGroup from '../../components/ui/ModeToggleGroup.jsx'
-import SectionCard from '../../components/ui/SectionCard.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
-import Surface from '../../components/ui/Surface.jsx'
 import { api } from '../../lib/api.js'
 import { SOIL_TYPES } from '../../lib/constants.js'
 import { assertSanitizedGeometryPayload } from '../../lib/plotGeometry.js'
@@ -23,6 +20,11 @@ import { formatMeters, formatSquareMeters } from '../../lib/plotMeasurements.js'
 
 const CREATE_DRAFT_KEY = 'sad-plot-create-draft-v1'
 const DEFAULT_LOCATION = { lat: 54.6872, lng: 25.2797 }
+const CREATE_INSPECTORS = {
+  boundary: 'boundary',
+  summary: 'summary',
+  zone: 'zone',
+}
 
 const emptyForm = {
   name: '',
@@ -181,6 +183,14 @@ export default function PlotCreatePage() {
   const [toastMessage, setToastMessage] = useState(hasMeaningfulDraft(restoredDraft) ? 'Restored unsaved plot boundary.' : '')
   const [cityLookupStatus, setCityLookupStatus] = useState('')
   const [cityManuallyEdited, setCityManuallyEdited] = useState(Boolean(restoredDraft?.form?.city))
+  const [activeUtilityPanel, setActiveUtilityPanel] = useState(null)
+  const [activeInspector, setActiveInspector] = useState(
+    getInitialCreateStep(restoredDraft) === 'zones'
+      ? null
+      : getInitialCreateStep(restoredDraft) === 'summary'
+        ? CREATE_INSPECTORS.summary
+        : CREATE_INSPECTORS.boundary,
+  )
 
   const estimatedArea = useMemo(() => estimateAreaFromBoundary(boundaryPoints), [boundaryPoints])
   const estimatedPerimeter = useMemo(
@@ -277,6 +287,28 @@ export default function PlotCreatePage() {
   useEffect(() => {
     setZoneForm(zoneToForm(selectedZone))
   }, [selectedZone])
+
+  useEffect(() => {
+    setActiveUtilityPanel(null)
+
+    if (step === 'boundary') {
+      setActiveInspector(CREATE_INSPECTORS.boundary)
+      return
+    }
+
+    if (step === 'summary') {
+      setActiveInspector(CREATE_INSPECTORS.summary)
+      return
+    }
+
+    setActiveInspector(null)
+  }, [step])
+
+  useEffect(() => {
+    if (step === 'zones' && selectedZoneId) {
+      setActiveInspector(CREATE_INSPECTORS.zone)
+    }
+  }, [selectedZoneId, step])
 
   function handleFormChange(event) {
     const { name, type, checked, value } = event.target
@@ -566,257 +598,495 @@ export default function PlotCreatePage() {
     setCityLookupStatus('')
     setSaveError('')
     setZoneError('')
+    setActiveUtilityPanel(null)
+    setActiveInspector(CREATE_INSPECTORS.boundary)
   }
 
   const stepOptions = [
-    { value: 'boundary', label: '1. Boundary' },
-    { value: 'zones', label: '2. Zones', disabled: !isBoundaryReady },
-    { value: 'summary', label: '3. Summary', disabled: !isBoundaryReady },
+    { value: 'boundary', label: 'Boundary' },
+    { value: 'zones', label: 'Zones', disabled: !isBoundaryReady },
+    { value: 'summary', label: 'Summary', disabled: !isBoundaryReady },
+  ]
+  const boundaryLayers = [
+    { id: 'boundary', label: boundaryClosed ? 'Closed boundary' : 'Boundary draft', active: boundaryPoints.length > 0, color: '#47633b' },
+    { id: 'corners', label: `${boundaryPoints.length} corners`, active: boundaryPoints.length > 0, color: '#b9683f' },
+    { id: 'center', label: calculatedCenter ? 'Calculated center' : 'Center pending', active: Boolean(calculatedCenter), color: '#237d52' },
+  ]
+  const zoneLayers = [
+    { id: 'boundary', label: 'Plot boundary', active: isBoundaryReady, color: '#47633b' },
+    { id: 'zones', label: `${draftZones.length} zones`, active: draftZones.length > 0, color: '#b9683f' },
+    { id: 'dimensions', label: 'Dimensions', active: true, color: '#d6a143' },
   ]
 
   return (
-    <div className="page-stack plot-create-page">
-      <PageHeader
-        eyebrow="Plot creation"
-        title="Create plot from map boundary"
-        description="Mark the plot corners on the map first. Center coordinates, area, and perimeter are calculated automatically."
-        meta={(
-          <>
+    <div className="page-stack workspace-page workspace-page--editor plot-create-page" data-testid="workspace-page">
+      <section className="plot-compact-nav plot-create-compact-nav" aria-label="Create plot workspace">
+        <div className="plot-compact-main">
+          <Link className="plot-compact-back" to="/plots" aria-label="Back to plots">
+            <span aria-hidden="true">&larr;</span>
+          </Link>
+
+          <div className="plot-compact-title-block">
+            <span className="plot-compact-kicker">New plot</span>
+            <h1 className="plot-compact-title">
+              {step === 'boundary' ? 'Draw plot boundary' : step === 'zones' ? 'Create zones' : 'Review plot'}
+            </h1>
+          </div>
+
+          <div className="plot-compact-meta">
             <StatusBadge kind="selection" tone={activeMode === 'map' ? 'success' : 'neutral'}>
-              {activeMode === 'map' ? 'Draw boundary' : 'Create zones'}
+              {activeMode === 'map' ? 'Boundary' : 'Zones'}
             </StatusBadge>
             <StatusBadge kind="status" tone={isBoundaryReady ? 'success' : 'warning'}>
               {boundaryPoints.length} points
             </StatusBadge>
-          </>
-        )}
-        actions={(
-          <>
-            <Link to="/plots">
-              <Button variant="ghost">Back to plots</Button>
-            </Link>
-            <Button variant="secondary" onClick={resetDraft}>Clear draft</Button>
-          </>
-        )}
-      />
+          </div>
+        </div>
+
+        <div className="plot-compact-tabs plot-create-step-tabs" role="group" aria-label="Plot creation steps">
+          {stepOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`plot-section-link plot-compact-tab plot-create-step-tab ${step === option.value ? 'is-active' : ''}`.trim()}
+              onClick={() => handleStepChange(option.value)}
+              disabled={option.disabled}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="plot-compact-actions">
+          <Button variant="secondary" onClick={resetDraft}>Clear draft</Button>
+          <Button
+            onClick={() => setStep(step === 'boundary' ? 'zones' : 'summary')}
+            disabled={step === 'summary' || !isBoundaryReady}
+          >
+            {step === 'boundary' ? 'Create zones' : 'Review'}
+          </Button>
+        </div>
+      </section>
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
-      <SectionCard>
-        <div className="plot-create-stepbar">
-          <ModeToggleGroup
-            ariaLabel="Plot creation steps"
-            value={step}
-            onChange={handleStepChange}
-            options={stepOptions}
-          />
-        </div>
-      </SectionCard>
-
       {step === 'boundary' ? (
-        <SectionCard
-          title="Draw plot boundary"
-          description="Click the map to place corners. Close the boundary after at least 3 points, then drag corners to adjust."
-        >
-          <div className="plot-create-map-layout">
-            <PlotLocationMap
-              mode={mapMode}
-              boundaryClosed={boundaryClosed}
-              selectedLocation={calculatedCenter}
-              boundaryPoints={boundaryPoints}
-              view={mapView}
-              onBoundaryPointAdd={handleBoundaryPointAdd}
-              onBoundaryPointInsert={handleBoundaryPointInsert}
-              onBoundaryPointMove={handleBoundaryPointMove}
-              onBoundaryPointRemove={handleBoundaryPointRemove}
-              onViewChange={setMapView}
-            />
+        <WorkspaceStage className="plot-create-workspace plot-create-workspace--boundary">
+          <PlotLocationMap
+            mode={mapMode}
+            boundaryClosed={boundaryClosed}
+            selectedLocation={calculatedCenter}
+            boundaryPoints={boundaryPoints}
+            view={mapView}
+            className="plot-location-map--workspace"
+            onBoundaryPointAdd={handleBoundaryPointAdd}
+            onBoundaryPointInsert={handleBoundaryPointInsert}
+            onBoundaryPointMove={handleBoundaryPointMove}
+            onBoundaryPointRemove={handleBoundaryPointRemove}
+            onViewChange={setMapView}
+          />
 
-            <Surface as="aside" className="plot-create-side-panel">
-              <div className="plot-create-side-block">
-                <span className="designer-toolbar-kicker">Plot center</span>
-                <strong>
-                  {calculatedCenter
-                    ? `${roundCoordinate(calculatedCenter.lat)}, ${roundCoordinate(calculatedCenter.lng)}`
-                    : 'Calculated after 3 points'}
-                </strong>
-              </div>
-              <div className="plot-create-side-block">
-                <span className="designer-toolbar-kicker">Boundary</span>
-                <strong>{boundaryPoints.length} points</strong>
-                <span className="section-copy">
-                  {isBoundaryReady
-                    ? 'Boundary is ready. Continue to zones.'
-                    : boundaryPoints.length >= 3
-                      ? 'Close the boundary or adjust corners.'
-                      : 'Mark at least 3 plot corners.'}
-                </span>
-              </div>
-              <div className="plot-create-side-block">
-                <span className="designer-toolbar-kicker">Measurements</span>
-                <strong>{formatSquareMeters(estimatedArea, 1)}</strong>
-                <span className="section-copy">{formatMeters(estimatedPerimeter)} perimeter</span>
-              </div>
-              <div className="form-actions">
-                <Button
-                  variant="secondary"
-                  onClick={handleBoundaryClose}
-                  disabled={boundaryPoints.length < 3 || boundaryClosed}
-                >
-                  Close boundary
-                </Button>
-                <Button variant="ghost" onClick={() => setBoundaryClosed(false)} disabled={!boundaryClosed}>
-                  Edit boundary
-                </Button>
-                <Button variant="ghost" onClick={handleBoundaryUndo} disabled={boundaryPoints.length === 0}>
-                  Undo last point
-                </Button>
-                <Button variant="ghost" onClick={handleBoundaryClear} disabled={boundaryPoints.length === 0}>
-                  Clear boundary
-                </Button>
-                <Button
-                  onClick={() => setStep('zones')}
-                  disabled={!isBoundaryReady}
-                >
-                  Create zones
-                </Button>
-              </div>
-              {boundaryPoints.length ? (
-                <div className="plot-boundary-point-list">
-                  {boundaryPoints.map((point, index) => (
-                    <button
-                      key={`remove-boundary-point-${index}`}
-                      type="button"
-                      title={`Remove point ${index + 1}`}
-                      onClick={() => handleBoundaryPointRemove(index)}
-                      disabled={boundaryClosed && boundaryPoints.length <= 3}
-                    >
-                      <span>{index + 1}</span>
-                      <strong>{roundCoordinate(point.lat)}, {roundCoordinate(point.lng)}</strong>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </Surface>
+          <div className="plot-workspace-panel-toggles plot-create-panel-toggles" aria-label="Create plot panels">
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeUtilityPanel === 'layers' ? 'is-active' : ''}`.trim()}
+              onClick={() => setActiveUtilityPanel((current) => (current === 'layers' ? null : 'layers'))}
+              aria-expanded={activeUtilityPanel === 'layers'}
+            >
+              Layers
+            </button>
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeInspector === CREATE_INSPECTORS.boundary ? 'is-active' : ''}`.trim()}
+              onClick={() => setActiveInspector((current) => (
+                current === CREATE_INSPECTORS.boundary ? null : CREATE_INSPECTORS.boundary
+              ))}
+              aria-expanded={activeInspector === CREATE_INSPECTORS.boundary}
+            >
+              Boundary details
+            </button>
           </div>
-        </SectionCard>
+
+          {activeUtilityPanel === 'layers' ? (
+          <FloatingPanel position="left" className="plot-create-layers-panel">
+            <div className="plot-floating-panel-head plot-floating-panel-head--inline">
+              <span className="designer-toolbar-kicker">Layers</span>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveUtilityPanel(null)}
+                aria-label="Close layers panel"
+              >
+                x
+              </button>
+            </div>
+            <MapLayerControl title="Map layers" items={boundaryLayers} />
+            <MeasurementBadge label="Area" value={formatSquareMeters(estimatedArea, 1)} tone="field" />
+            <MeasurementBadge label="Perimeter" value={formatMeters(estimatedPerimeter)} tone="earth" />
+          </FloatingPanel>
+          ) : null}
+
+          {activeInspector === CREATE_INSPECTORS.boundary ? (
+          <FloatingPanel position="right" className="plot-create-side-panel">
+            <div className="plot-floating-panel-head plot-floating-panel-head--inline">
+              <div>
+                <span className="designer-toolbar-kicker">Boundary details</span>
+                <h2>Draw plot boundary</h2>
+              </div>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveInspector(null)}
+                aria-label="Close boundary details panel"
+              >
+                x
+              </button>
+            </div>
+            <p className="section-copy">
+              Mark at least 3 corners, then close the boundary. Drag points or add corners on edges after closing.
+            </p>
+            <div className="plot-workspace-pill-row">
+              <StatusBadge kind="selection" tone={boundaryClosed ? 'success' : 'warning'}>{boundaryClosed ? 'Closed' : 'Drawing'}</StatusBadge>
+              <StatusBadge kind="status" tone={boundaryPoints.length >= 3 ? 'success' : 'warning'}>{boundaryPoints.length} points</StatusBadge>
+            </div>
+            <div className="plot-create-side-block">
+              <span className="designer-toolbar-kicker">Plot center</span>
+              <strong>
+                {calculatedCenter
+                  ? `${roundCoordinate(calculatedCenter.lat)}, ${roundCoordinate(calculatedCenter.lng)}`
+                  : 'Calculated after 3 points'}
+              </strong>
+            </div>
+            <div className="plot-create-side-block">
+              <span className="designer-toolbar-kicker">Boundary</span>
+              <strong>{boundaryPoints.length} points</strong>
+              <span className="section-copy">
+                {isBoundaryReady
+                  ? 'Boundary is ready. Continue to zones.'
+                  : boundaryPoints.length >= 3
+                    ? 'Close the boundary or adjust corners.'
+                    : 'Mark at least 3 plot corners.'}
+              </span>
+            </div>
+            <div className="form-actions">
+              <Button
+                variant="secondary"
+                onClick={handleBoundaryClose}
+                disabled={boundaryPoints.length < 3 || boundaryClosed}
+              >
+                Close boundary
+              </Button>
+              <Button variant="ghost" onClick={() => setBoundaryClosed(false)} disabled={!boundaryClosed}>
+                Edit boundary
+              </Button>
+              <Button variant="ghost" onClick={handleBoundaryUndo} disabled={boundaryPoints.length === 0}>
+                Undo
+              </Button>
+              <Button variant="ghost" onClick={handleBoundaryClear} disabled={boundaryPoints.length === 0}>
+                Clear
+              </Button>
+              <Button onClick={() => setStep('zones')} disabled={!isBoundaryReady}>
+                Create zones
+              </Button>
+            </div>
+            {boundaryPoints.length ? (
+              <div className="plot-boundary-point-list">
+                {boundaryPoints.map((point, index) => (
+                  <button
+                    key={`remove-boundary-point-${index}`}
+                    type="button"
+                    title={`Remove point ${index + 1}`}
+                    onClick={() => handleBoundaryPointRemove(index)}
+                    disabled={boundaryClosed && boundaryPoints.length <= 3}
+                  >
+                    <span>{index + 1}</span>
+                    <strong>{roundCoordinate(point.lat)}, {roundCoordinate(point.lng)}</strong>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </FloatingPanel>
+          ) : null}
+        </WorkspaceStage>
       ) : null}
 
       {step === 'zones' ? (
-        <div className="plot-create-zones-layout">
-          <section className="plot-create-designer">
-            <PlotDesignerCanvas
-              ref={designerCanvasRef}
-              plotId="new-plot-draft"
-              plotName={form.name || 'New plot'}
-              plotSize={effectivePlotSize}
-              plotGeometry={planGeometry}
-              zones={draftZones}
-              plants={[]}
-              canEdit
-              activeZoneId={selectedZoneId}
-              persistState={false}
-              showSaveAction={false}
-              isLayoutSaveDisabled={false}
-              isLayoutSaving={submitting}
-              layoutSaveFeedback={{ type: 'idle', message: '' }}
-              onSaveLayout={() => setStep('summary')}
-              onSelectZone={handleZoneSelect}
-              onCreateZone={handleCanvasZoneCreate}
-              onZoneCreateBlocked={setZoneError}
-              onZoneGeometryCommit={handleZoneGeometryCommit}
-              onBoundaryCommit={handleBoundaryCommit}
-            />
-          </section>
+        <WorkspaceStage className="plot-create-workspace plot-create-workspace--zones">
+          <PlotDesignerCanvas
+            ref={designerCanvasRef}
+            plotId="new-plot-draft"
+            plotName={form.name || 'New plot'}
+            plotSize={effectivePlotSize}
+            plotGeometry={planGeometry}
+            zones={draftZones}
+            plants={[]}
+            canEdit
+            activeZoneId={selectedZoneId}
+            persistState={false}
+            showSaveAction={false}
+            isLayoutSaveDisabled={false}
+            isLayoutSaving={submitting}
+            layoutSaveFeedback={{ type: 'idle', message: '' }}
+            showLayerConsole={false}
+            onSaveLayout={() => setStep('summary')}
+            onSelectZone={handleZoneSelect}
+            onCreateZone={handleCanvasZoneCreate}
+            onZoneCreateBlocked={setZoneError}
+            onZoneGeometryCommit={handleZoneGeometryCommit}
+            onBoundaryCommit={handleBoundaryCommit}
+          />
 
-          <aside className="plot-create-zone-panel page-stack">
-            <SectionCard
-              title={selectedZone ? 'Zone details' : 'New zone'}
-              description="Draw a zone inside the marked plot boundary, then refine its details before the final save."
+          <div className="plot-workspace-panel-toggles plot-create-panel-toggles" aria-label="Create plot panels">
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeUtilityPanel === 'layers' ? 'is-active' : ''}`.trim()}
+              onClick={() => setActiveUtilityPanel((current) => (current === 'layers' ? null : 'layers'))}
+              aria-expanded={activeUtilityPanel === 'layers'}
             >
-              <form className="input-grid" onSubmit={handleZoneApply}>
-                <div className="field field-span-2">
-                  <label htmlFor="create-zone-name">Zone name</label>
-                  <input
-                    id="create-zone-name"
-                    value={zoneForm.name}
-                    onChange={(event) => setZoneForm((current) => ({ ...current, name: event.target.value }))}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="create-zone-soil">Soil type</label>
-                  <select
-                    id="create-zone-soil"
-                    value={zoneForm.soil_type}
-                    onChange={(event) => setZoneForm((current) => ({ ...current, soil_type: event.target.value }))}
-                  >
-                    {SOIL_TYPES.map((soilType) => (
-                      <option key={soilType} value={soilType}>{soilType}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="create-zone-rotation">Rotation stage</label>
-                  <input
-                    id="create-zone-rotation"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={zoneForm.rotation_stage}
-                    onChange={(event) => setZoneForm((current) => ({ ...current, rotation_stage: event.target.value }))}
-                  />
-                </div>
-                <details className="advanced-zone-details field-span-2" open={Boolean(zoneForm.last_planting_date)}>
-                  <summary>Optional planting data</summary>
-                  <div className="field">
-                    <label htmlFor="create-zone-last-date">Last planting date</label>
-                    <input
-                      id="create-zone-last-date"
-                      type="date"
-                      value={zoneForm.last_planting_date}
-                      onChange={(event) => setZoneForm((current) => ({ ...current, last_planting_date: event.target.value }))}
-                    />
-                  </div>
-                </details>
-
-                {zoneError ? <span className="field-error">{zoneError}</span> : null}
-
-                <div className="form-actions field-span-2">
-                  {selectedZone ? (
-                    <>
-                      <Button type="submit" variant="secondary">Apply details</Button>
-                      <Button variant="ghost" onClick={() => setSelectedZoneId(null)}>New zone</Button>
-                      <Button variant="danger" onClick={handleZoneDelete}>Delete zone</Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button variant="secondary" onClick={handleZoneCreateFromForm}>Add zone</Button>
-                      <Button variant="ghost" onClick={() => setZoneForm(emptyZoneForm)}>Clear</Button>
-                    </>
-                  )}
-                </div>
-              </form>
-            </SectionCard>
-
-            <SectionCard
-              title="Plan status"
-              description={`${draftZones.length} zones are ready for the final plot save.`}
+              Layers
+            </button>
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeInspector === CREATE_INSPECTORS.zone ? 'is-active' : ''}`.trim()}
+              onClick={() => setActiveInspector((current) => (
+                current === CREATE_INSPECTORS.zone ? null : CREATE_INSPECTORS.zone
+              ))}
+              aria-expanded={activeInspector === CREATE_INSPECTORS.zone}
             >
-              <div className="form-actions">
-                <Button variant="ghost" onClick={() => setStep('boundary')}>Back to boundary</Button>
-                <Button onClick={() => setStep('summary')} disabled={!isBoundaryReady}>Review summary</Button>
+              Zone details
+            </button>
+          </div>
+
+          {activeUtilityPanel === 'layers' ? (
+          <FloatingPanel position="left" className="plot-create-layers-panel">
+            <div className="plot-floating-panel-head plot-floating-panel-head--inline">
+              <span className="designer-toolbar-kicker">Layers</span>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveUtilityPanel(null)}
+                aria-label="Close layers panel"
+              >
+                x
+              </button>
+            </div>
+            <MapLayerControl title="Visible layers" items={zoneLayers} />
+            <div className="plot-layer-section">
+              <div className="plot-layer-section-head">
+                <strong>Zones</strong>
+                <span>{draftZones.length}</span>
               </div>
-            </SectionCard>
-          </aside>
-        </div>
+              {draftZones.length ? (
+                <div className="plot-layer-object-list">
+                  {draftZones.map((zone, index) => (
+                    <button
+                      key={zone.id}
+                      type="button"
+                      className={`plot-layer-object ${sameId(zone.id, selectedZoneId) ? 'is-selected' : ''}`.trim()}
+                      onClick={() => handleZoneSelect(zone)}
+                    >
+                      <span className="plot-layer-object-index">{index + 1}</span>
+                      <span className="plot-layer-object-copy">
+                        <strong>{zone.name}</strong>
+                        <small>{formatSquareMeters(zone.zone_size ?? 0, 1)} - {zone.soil_type}</small>
+                      </span>
+                      <span className="plot-layer-object-count">0</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="section-copy">Draw the first zone or use Add zone to place a starter rectangle.</p>
+              )}
+            </div>
+          </FloatingPanel>
+          ) : null}
+
+          {activeInspector === CREATE_INSPECTORS.zone ? (
+          <FloatingPanel position="right" className="plot-create-zone-panel">
+            <div className="plot-floating-panel-head plot-floating-panel-head--inline">
+              <div>
+                <span className="designer-toolbar-kicker">{selectedZone ? 'Selected zone' : 'Inspector'}</span>
+                <h2>{selectedZone ? 'Zone details' : 'New zone'}</h2>
+              </div>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveInspector(null)}
+                aria-label="Close zone details panel"
+              >
+                x
+              </button>
+            </div>
+            <p className="section-copy">
+              Draw a zone inside the boundary, then refine its name, soil, and rotation data here.
+            </p>
+            <form className="input-grid" onSubmit={handleZoneApply}>
+              <div className="field field-span-2">
+                <label htmlFor="create-zone-name">Zone name</label>
+                <input
+                  id="create-zone-name"
+                  value={zoneForm.name}
+                  onChange={(event) => setZoneForm((current) => ({ ...current, name: event.target.value }))}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="create-zone-soil">Soil type</label>
+                <select
+                  id="create-zone-soil"
+                  value={zoneForm.soil_type}
+                  onChange={(event) => setZoneForm((current) => ({ ...current, soil_type: event.target.value }))}
+                >
+                  {SOIL_TYPES.map((soilType) => (
+                    <option key={soilType} value={soilType}>{soilType}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="create-zone-rotation">Rotation stage</label>
+                <input
+                  id="create-zone-rotation"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={zoneForm.rotation_stage}
+                  onChange={(event) => setZoneForm((current) => ({ ...current, rotation_stage: event.target.value }))}
+                />
+              </div>
+              <details className="advanced-zone-details field-span-2" open={Boolean(zoneForm.last_planting_date)}>
+                <summary>Optional planting data</summary>
+                <div className="field">
+                  <label htmlFor="create-zone-last-date">Last planting date</label>
+                  <input
+                    id="create-zone-last-date"
+                    type="date"
+                    value={zoneForm.last_planting_date}
+                    onChange={(event) => setZoneForm((current) => ({ ...current, last_planting_date: event.target.value }))}
+                  />
+                </div>
+              </details>
+
+              {zoneError ? <span className="field-error field-span-2">{zoneError}</span> : null}
+
+              <div className="form-actions field-span-2">
+                {selectedZone ? (
+                  <>
+                    <Button type="submit" variant="secondary">Apply details</Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedZoneId(null)
+                        setActiveInspector(CREATE_INSPECTORS.zone)
+                      }}
+                    >
+                      New zone
+                    </Button>
+                    <Button variant="danger" onClick={handleZoneDelete}>Delete</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="secondary" onClick={handleZoneCreateFromForm}>Add zone</Button>
+                    <Button variant="ghost" onClick={() => setZoneForm(emptyZoneForm)}>Clear</Button>
+                  </>
+                )}
+              </div>
+            </form>
+            <div className="plot-create-side-block">
+              <span className="designer-toolbar-kicker">Plan status</span>
+              <strong>{draftZones.length} zones ready</strong>
+              <div className="form-actions">
+                <Button variant="ghost" onClick={() => setStep('boundary')}>Boundary</Button>
+              <Button onClick={() => setStep('summary')} disabled={!isBoundaryReady}>Summary</Button>
+              </div>
+            </div>
+          </FloatingPanel>
+          ) : null}
+        </WorkspaceStage>
       ) : null}
 
       {step === 'summary' ? (
-        <form className="page-stack" onSubmit={handleSave}>
-          <FormSection
-            title="Plot summary and save"
-            description="Review plot details, calculated center, boundary, and zones before saving the plan."
-          >
+        <WorkspaceStage className="plot-create-workspace plot-create-workspace--summary">
+          <PlotDesignerCanvas
+            plotId="new-plot-draft-summary"
+            plotName={form.name || 'New plot'}
+            plotSize={effectivePlotSize}
+            plotGeometry={planGeometry}
+            zones={draftZones}
+            plants={[]}
+            canEdit={false}
+            activeZoneId={selectedZoneId}
+            persistState={false}
+            showSaveAction={false}
+            isLayoutSaveDisabled
+            isLayoutSaving={submitting}
+            layoutSaveFeedback={{ type: 'idle', message: '' }}
+            showLayerConsole={false}
+            onSaveLayout={handleSave}
+            onSelectZone={handleZoneSelect}
+            onCreateZone={handleCanvasZoneCreate}
+            onZoneCreateBlocked={setZoneError}
+            onZoneGeometryCommit={handleZoneGeometryCommit}
+            onBoundaryCommit={handleBoundaryCommit}
+          />
+
+          <div className="plot-workspace-panel-toggles plot-create-panel-toggles" aria-label="Create plot panels">
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeUtilityPanel === 'layers' ? 'is-active' : ''}`.trim()}
+              onClick={() => setActiveUtilityPanel((current) => (current === 'layers' ? null : 'layers'))}
+              aria-expanded={activeUtilityPanel === 'layers'}
+            >
+              Layers
+            </button>
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeInspector === CREATE_INSPECTORS.summary ? 'is-active' : ''}`.trim()}
+              onClick={() => setActiveInspector((current) => (
+                current === CREATE_INSPECTORS.summary ? null : CREATE_INSPECTORS.summary
+              ))}
+              aria-expanded={activeInspector === CREATE_INSPECTORS.summary}
+            >
+              Summary
+            </button>
+          </div>
+
+          {activeUtilityPanel === 'layers' ? (
+          <FloatingPanel position="left" className="plot-create-layers-panel">
+            <div className="plot-floating-panel-head plot-floating-panel-head--inline">
+              <span className="designer-toolbar-kicker">Layers</span>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveUtilityPanel(null)}
+                aria-label="Close layers panel"
+              >
+                x
+              </button>
+            </div>
+            <MapLayerControl title="Review layers" items={zoneLayers} />
+            <MeasurementBadge label="Area" value={formatSquareMeters(estimatedArea, 1)} tone="field" />
+            <MeasurementBadge label="Perimeter" value={formatMeters(estimatedPerimeter)} tone="earth" />
+            <MeasurementBadge label="Zones" value={draftZones.length} tone="leaf" />
+          </FloatingPanel>
+          ) : null}
+
+          {activeInspector === CREATE_INSPECTORS.summary ? (
+          <FloatingPanel position="right" className="plot-create-summary-panel" as="form" onSubmit={handleSave}>
+            <div className="plot-floating-panel-head plot-floating-panel-head--inline">
+              <div>
+                <span className="designer-toolbar-kicker">Final save</span>
+                <h2>Plot summary</h2>
+              </div>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveInspector(null)}
+                aria-label="Close summary panel"
+              >
+                x
+              </button>
+            </div>
+            <p className="section-copy">Review plot details before saving the mapped boundary and zone draft.</p>
+
             <div className="input-grid">
               <div className="field">
                 <label htmlFor="new-plot-name">Name</label>
@@ -887,7 +1157,7 @@ export default function PlotCreatePage() {
 
             <div className="plot-create-summary-grid">
               <article className="designer-stat-card">
-                <span className="designer-stat-label">Plot center</span>
+                <span className="designer-stat-label">Center</span>
                 <strong className="designer-stat-value designer-stat-value--summary">
                   {calculatedCenter
                     ? `${roundCoordinate(calculatedCenter.lat)}, ${roundCoordinate(calculatedCenter.lng)}`
@@ -895,18 +1165,8 @@ export default function PlotCreatePage() {
                 </strong>
               </article>
               <article className="designer-stat-card">
-                <span className="designer-stat-label">City</span>
-                <strong className="designer-stat-value designer-stat-value--summary">
-                  {form.city?.trim() || 'Not detected'}
-                </strong>
-              </article>
-              <article className="designer-stat-card">
                 <span className="designer-stat-label">Boundary</span>
                 <strong className="designer-stat-value">{boundaryPoints.length} points</strong>
-              </article>
-              <article className="designer-stat-card">
-                <span className="designer-stat-label">Area</span>
-                <strong className="designer-stat-value">{formatSquareMeters(estimatedArea, 1)}</strong>
               </article>
               <article className="designer-stat-card">
                 <span className="designer-stat-label">Zones</span>
@@ -915,7 +1175,6 @@ export default function PlotCreatePage() {
             </div>
 
             {saveError ? <ErrorState description={saveError} /> : null}
-
             {submitting ? (
               <ProcessingState
                 title="Creating plot"
@@ -929,8 +1188,9 @@ export default function PlotCreatePage() {
               <Button variant="ghost" onClick={() => setStep('zones')}>Back to zones</Button>
               <Button type="submit" loading={submitting}>Save plot</Button>
             </div>
-          </FormSection>
-        </form>
+          </FloatingPanel>
+          ) : null}
+        </WorkspaceStage>
       ) : null}
     </div>
   )
