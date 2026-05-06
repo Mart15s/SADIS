@@ -25,6 +25,22 @@ php artisan view:clear --no-interaction
 php artisan config:cache --no-interaction
 php artisan view:cache --no-interaction
 
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+    attempts=0
+
+    until php artisan migrate --force --no-interaction; do
+        attempts=$((attempts + 1))
+
+        if [ "$attempts" -ge 5 ]; then
+            echo "Database migrations failed after ${attempts} attempts." >&2
+            exit 1
+        fi
+
+        echo "Database migrations failed; retrying in 5 seconds..." >&2
+        sleep 5
+    done
+fi
+
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
 
 php-fpm -D
