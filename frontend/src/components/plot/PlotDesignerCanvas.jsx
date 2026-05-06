@@ -2,7 +2,6 @@ import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useS
 import { Circle, Group, Layer, Line, Rect, Stage } from 'react-konva'
 import { MapLayerControl, MeasurementBadge, PlotScaleControl } from '../garden/GardenControls.jsx'
 import Button from '../ui/Button.jsx'
-import ModeToggleGroup from '../ui/ModeToggleGroup.jsx'
 import { safeNumber } from '../../lib/constants.js'
 import { getBoundaryLabelLayout } from '../../lib/plotCanvasLabels.js'
 import {
@@ -62,6 +61,99 @@ const INTERACTION_MODES = {
   movingZone: 'movingZone',
   editingZone: 'editingZone',
   addingBoundaryPoint: 'addingBoundaryPoint',
+}
+
+function DesignerIcon({ name }) {
+  const common = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: '2',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': 'true',
+  }
+
+  if (name === 'cursor') {
+    return (
+      <svg {...common}>
+        <path d="M4 3l7.8 17 1.8-7 6.6-2.2L4 3z" />
+      </svg>
+    )
+  }
+
+  if (name === 'draw') {
+    return (
+      <svg {...common}>
+        <path d="M4 18.5 9.5 20 20 9.5 14.5 4 4 14.5v4z" />
+        <path d="m13 5.5 5.5 5.5" />
+      </svg>
+    )
+  }
+
+  if (name === 'fit') {
+    return (
+      <svg {...common}>
+        <path d="M8 3H3v5" />
+        <path d="M16 3h5v5" />
+        <path d="M21 16v5h-5" />
+        <path d="M8 21H3v-5" />
+        <path d="M9 9h6v6H9z" />
+      </svg>
+    )
+  }
+
+  if (name === 'reset') {
+    return (
+      <svg {...common}>
+        <path d="M4 4v6h6" />
+        <path d="M20 12a8 8 0 0 0-14.5-4.7L4 10" />
+        <path d="M20 20v-6h-6" />
+        <path d="M4 12a8 8 0 0 0 14.5 4.7L20 14" />
+      </svg>
+    )
+  }
+
+  if (name === 'grid') {
+    return (
+      <svg {...common}>
+        <path d="M4 4h16v16H4z" />
+        <path d="M4 10h16" />
+        <path d="M4 16h16" />
+        <path d="M10 4v16" />
+        <path d="M16 4v16" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg {...common}>
+      <path d="M4 19V5" />
+      <path d="M20 19V5" />
+      <path d="M4 7h16" />
+      <path d="M7 7v3" />
+      <path d="M12 7v5" />
+      <path d="M17 7v3" />
+      <path d="M4 17h16" />
+    </svg>
+  )
+}
+
+function DesignerIconButton({ label, icon, active = false, disabled = false, onClick }) {
+  return (
+    <button
+      type="button"
+      className={`designer-icon-button ${active ? 'is-active' : ''}`.trim()}
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      disabled={disabled}
+      data-tooltip={label}
+      onClick={onClick}
+    >
+      <DesignerIcon name={icon} />
+    </button>
+  )
 }
 
 function nodeHasAnyName(node, names) {
@@ -163,7 +255,6 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   plotSize,
   plotGeometry,
   zones,
-  plants,
   canEdit,
   activeZoneId,
   persistState = true,
@@ -173,10 +264,13 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   layoutSaveFeedback,
   onSaveLayout,
   onSelectZone,
+  onSelectBoundary,
   onCreateZone,
   onZoneCreateBlocked,
   onZoneGeometryCommit,
   onBoundaryCommit,
+  showLayerConsole = true,
+  mapFirstHud = false,
 }, ref) {
   const containerRef = useRef(null)
   const stageRef = useRef(null)
@@ -232,15 +326,6 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   const zonesById = useMemo(
     () => Object.fromEntries(zones.map((zone) => [String(zone.id), zone])),
     [zones],
-  )
-
-  const plantCountsByZoneId = useMemo(
-    () => plants.reduce((counts, plant) => {
-      const zoneId = String(plant.fk_plant_zone_id)
-      counts[zoneId] = (counts[zoneId] ?? 0) + 1
-      return counts
-    }, {}),
-    [plants],
   )
 
   const fitViewport = useMemo(
@@ -345,7 +430,11 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   function selectBoundary() {
     setInteractionMode(INTERACTION_MODES.editingBoundary)
     setSelectedTarget({ type: 'boundary', id: null })
-    onSelectZone(null)
+    if (onSelectBoundary) {
+      onSelectBoundary()
+    } else {
+      onSelectZone(null)
+    }
   }
 
   function clearSelection() {
@@ -728,8 +817,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
-      const nextWidth = Math.max(Math.round(entry.contentRect.width), 720)
-      const nextHeight = Math.max(Math.round(entry.contentRect.height), 620)
+      const nextWidth = Math.max(Math.round(entry.contentRect.width), 320)
+      const nextHeight = Math.max(Math.round(entry.contentRect.height), 520)
 
       setCanvasSize((current) => (
         current.width === nextWidth && current.height === nextHeight
@@ -1110,22 +1199,6 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       }),
     ]
     : []
-  const toolbarStatusTitle = selectedZone
-    ? `${selectedZone.name} selected`
-    : selectedTarget.type === 'boundary'
-      ? 'Plot boundary selected'
-      : isDrawingZoneMode
-        ? 'Zone drawing mode'
-        : interactionMode === INTERACTION_MODES.addingBoundaryPoint
-          ? 'Adding boundary corner'
-          : 'Selection mode'
-  const toolbarStatusHint = selectedZone
-    ? `${plantCountsByZoneId[selectedTarget.id] ?? 0} plants in zone`
-    : selectedTarget.type === 'boundary'
-      ? 'Drag corners to reshape, or use the small + handles on edges to add a corner'
-      : isDrawingZoneMode
-        ? 'Click and drag inside the plot. Clicks outside the boundary are ignored.'
-        : 'Click a zone to edit it, or drag the background to pan'
   const layerItems = [
     { id: 'boundary', label: 'Plot boundary', active: true, color: '#47633b' },
     { id: 'zones', label: `${zones.length} zones`, active: zones.length > 0, color: '#b9683f' },
@@ -1135,61 +1208,55 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   return (
     <div className="designer-panel">
-      <div className="designer-toolbar">
-        <div className="designer-toolbar-group designer-toolbar-group--controls">
-          <ModeToggleGroup
-            ariaLabel="Plot designer modes"
-            value={isDrawingZoneMode ? INTERACTION_MODES.drawingZone : INTERACTION_MODES.idle}
-            onChange={(nextMode) => {
+      <div className="designer-toolbar" role="toolbar" aria-label="Plot editor tools">
+        <DesignerIconButton
+          label="Select or edit"
+          icon="cursor"
+          active={!isDrawingZoneMode}
+          onClick={() => setInteractionMode(INTERACTION_MODES.idle)}
+        />
+        {canEdit ? (
+          <DesignerIconButton
+            label="Draw zone"
+            icon="draw"
+            active={isDrawingZoneMode}
+            onClick={() => {
               setInteractionMode((current) => (
-                nextMode === INTERACTION_MODES.drawingZone && current === INTERACTION_MODES.drawingZone
+                current === INTERACTION_MODES.drawingZone
                   ? INTERACTION_MODES.idle
-                  : nextMode
+                  : INTERACTION_MODES.drawingZone
               ))
             }}
-            options={[
-              { value: INTERACTION_MODES.idle, label: 'Select / edit' },
-              ...(canEdit ? [{ value: INTERACTION_MODES.drawingZone, label: 'Draw zone' }] : []),
-            ]}
           />
-          <Button variant="ghost" onClick={handleFitView} title="Fit the full plot and all zones into view">Fit to view</Button>
-          {canEdit ? <Button variant="secondary" onClick={resetDesignerLayout} title="Reset the visual plot layout to the default shape">Reset layout</Button> : null}
-        </div>
-
-        <div className="designer-toolbar-group designer-toolbar-group--status">
-          <span className="designer-toolbar-kicker">{toolbarStatusTitle}</span>
-          <span className="designer-toolbar-hint">{toolbarStatusHint}</span>
-        </div>
-
-        <div className="designer-toolbar-group designer-toolbar-group--actions">
-          {canEdit && showSaveAction ? (
-            <Button onClick={onSaveLayout} disabled={isLayoutSaveDisabled || isLayoutSaving}>
-              {isLayoutSaving ? 'Saving layout...' : 'Save plot layout'}
-            </Button>
-          ) : null}
-          {saveStatus ? <span className={saveStatus.className}>{saveStatus.text}</span> : null}
-          <label className="designer-toggle">
-            <input
-              type="checkbox"
-              checked={snapEnabled}
-              onChange={(event) => setSnapEnabled(event.target.checked)}
-            />
-            <span>Snap to grid</span>
-          </label>
-          <label className="designer-toggle">
-            <input
-              type="checkbox"
-              checked={showDimensions}
-              onChange={(event) => setShowDimensions(event.target.checked)}
-            />
-            <span>Show dimensions</span>
-          </label>
-        </div>
+        ) : null}
+        <span className="designer-toolbar-divider" aria-hidden="true" />
+        <DesignerIconButton label="Fit to view" icon="fit" onClick={handleFitView} />
+        {canEdit ? <DesignerIconButton label="Reset layout" icon="reset" onClick={resetDesignerLayout} /> : null}
+        <span className="designer-toolbar-divider" aria-hidden="true" />
+        <DesignerIconButton
+          label="Snap to grid"
+          icon="grid"
+          active={snapEnabled}
+          disabled={!canEdit}
+          onClick={() => setSnapEnabled((current) => !current)}
+        />
+        <DesignerIconButton
+          label="Show dimensions"
+          icon="ruler"
+          active={showDimensions}
+          onClick={() => setShowDimensions((current) => !current)}
+        />
+        {canEdit && showSaveAction ? (
+          <Button className="designer-toolbar-save" onClick={onSaveLayout} disabled={isLayoutSaveDisabled || isLayoutSaving}>
+            {isLayoutSaving ? 'Saving layout...' : 'Save layout'}
+          </Button>
+        ) : null}
+        {saveStatus ? <span className={saveStatus.className}>{saveStatus.text}</span> : null}
       </div>
 
       <div className="designer-map-console">
-        <MapLayerControl title="Visible layers" items={layerItems} />
-        <PlotScaleControl zoom={zoomLabel} snapEnabled={snapEnabled} dimensionsVisible={showDimensions} />
+        {showLayerConsole ? <MapLayerControl title="Visible layers" items={layerItems} /> : null}
+        {!mapFirstHud ? <PlotScaleControl zoom={zoomLabel} snapEnabled={snapEnabled} dimensionsVisible={showDimensions} /> : null}
       </div>
 
       <div className="designer-meta-grid">
@@ -1614,7 +1681,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         </div>
       </div>
 
-      {zones.length > 0 ? (
+      {!mapFirstHud && zones.length > 0 ? (
         <div className="designer-legend" aria-label="Zone legend">
           {zones.map((zone, index) => {
             const zoneId = String(zone.id)
@@ -1642,6 +1709,38 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               </span>
             )
           })}
+        </div>
+      ) : null}
+
+      {mapFirstHud ? (
+        <div className="designer-bottom-hud" aria-label="Canvas status">
+          <div className="designer-legend" aria-label="Zone legend">
+            {zones.length > 0 ? zones.map((zone, index) => {
+              const zoneId = String(zone.id)
+              const colors = getZoneColor(index)
+              const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
+
+              return (
+                <button
+                  key={`designer-legend-${zoneId}`}
+                  type="button"
+                  className={`designer-legend-item ${isActive ? 'is-active' : ''}`.trim()}
+                  onClick={() => selectZone(zone.id)}
+                >
+                  <span className="designer-legend-index">{index + 1}</span>
+                  <span
+                    className="designer-legend-swatch"
+                    style={{
+                      background: colors.fill,
+                      borderColor: colors.stroke,
+                    }}
+                  />
+                  <span className="designer-legend-text">{zone.name}</span>
+                </button>
+              )
+            }) : null}
+          </div>
+          <PlotScaleControl zoom={zoomLabel} snapEnabled={snapEnabled} dimensionsVisible={showDimensions} />
         </div>
       ) : null}
     </div>

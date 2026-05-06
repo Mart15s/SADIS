@@ -29,13 +29,23 @@ function getRouteLabel(pathname) {
   return routeLabels.find((route) => route.pattern.test(pathname))?.label ?? 'Workspace'
 }
 
-export default function Topbar({ isWide = false }) {
+export default function Topbar({ isWide = false, pageHeader = null }) {
   const { isAdmin, isAuthenticated, displayName } = useAuth()
   const location = useLocation()
   const currentLabel = getRouteLabel(location.pathname)
+  const title = pageHeader?.title ?? currentLabel
+  const kicker = pageHeader?.eyebrow ?? 'SADiS'
+  const hasPageChrome = Boolean(pageHeader?.meta || pageHeader?.actions)
 
   return (
-    <header className={`topbar ${isWide ? 'topbar-wide' : ''}`.trim()} aria-label="Workspace bar">
+    <header
+      className={[
+        'topbar',
+        isWide ? 'topbar-wide' : '',
+        pageHeader ? 'topbar--page-header' : '',
+      ].filter(Boolean).join(' ')}
+      aria-label="Workspace bar"
+    >
       <div className="topbar-left">
         <Link to="/" className="topbar-mark" aria-label="Go to dashboard">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -45,12 +55,19 @@ export default function Topbar({ isWide = false }) {
           </svg>
         </Link>
         <div className="topbar-copy">
-          <span className="topbar-kicker">SADiS</span>
-          <strong className="topbar-title">{currentLabel}</strong>
+          <span className="topbar-kicker">{kicker}</span>
+          <h1 className="topbar-title">{title}</h1>
         </div>
       </div>
 
-      <div className="topbar-actions">
+      {hasPageChrome ? (
+        <div className="topbar-page-chrome">
+          {pageHeader.meta ? <div className="topbar-page-meta">{pageHeader.meta}</div> : null}
+          {pageHeader.actions ? <div className="topbar-page-actions">{pageHeader.actions}</div> : null}
+        </div>
+      ) : null}
+
+      <div className="topbar-actions" aria-label="Session status">
         <StatusBadge kind="connection" tone={isAuthenticated ? 'success' : 'warning'}>
           {isAuthenticated ? 'Connected' : 'Guest'}
         </StatusBadge>

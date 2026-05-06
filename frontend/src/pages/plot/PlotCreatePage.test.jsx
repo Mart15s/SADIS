@@ -47,6 +47,6 @@ describe('PlotCreatePage Leaflet creation flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close boundary' }))
 
-    expect(screen.getByRole('button', { name: '2. Zones' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Zones' })).not.toBeDisabled()
   })
 })

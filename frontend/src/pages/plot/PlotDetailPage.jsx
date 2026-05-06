@@ -36,9 +36,14 @@ import {
   loadPlotWorkspaceDraft,
   savePlotWorkspaceDraft,
 } from '../../lib/plotWorkspaceDraft.js'
-import { buildDesignerStateFromPersistence, calculateArea, shapeToGeometry } from '../../lib/plotDesigner.js'
+import {
+  buildDesignerStateFromPersistence,
+  calculateArea,
+  isShapeInsideBoundary,
+  shapeToGeometry,
+} from '../../lib/plotDesigner.js'
 import { assertSanitizedGeometryPayload } from '../../lib/plotGeometry.js'
-import { calculateLatLngCenter } from '../../lib/geoMeasurements.js'
+import { calculateLatLngArea, calculateLatLngCenter, calculateLatLngPerimeter } from '../../lib/geoMeasurements.js'
 import { buildShapeMetrics, formatMeters, formatSquareMeters } from '../../lib/plotMeasurements.js'
 
 const emptyZoneForm = {
@@ -137,6 +142,76 @@ function createEmptyFeedback() {
   return { type: 'idle', message: '' }
 }
 
+const INSPECTOR_TYPES = {
+  boundary: 'boundary',
+  zone: 'zone',
+}
+
+const EDITOR_VIEWS = {
+  zones: 'zones',
+  boundary: 'boundary',
+}
+
+const DEFAULT_MAP_VIEW = { center: { lat: 54.6872, lng: 25.2797 }, zoom: 13 }
+const MAX_BOUNDARY_POINTS = 12
+
+function roundCoordinate(value, digits = 6) {
+  const factor = 10 ** digits
+  return Math.round(Number(value) * factor) / factor
+}
+
+function createMapGeometryPatch(boundaryPoints, currentMap, mapView) {
+  const center = calculateLatLngCenter(boundaryPoints)
+    ?? getFiniteLatLng(currentMap?.center)
+    ?? getFiniteLatLng(mapView?.center)
+    ?? DEFAULT_MAP_VIEW.center
+
+  return {
+    provider: currentMap?.provider ?? 'openstreetmap',
+    center: {
+      lat: roundCoordinate(center.lat),
+      lng: roundCoordinate(center.lng),
+    },
+    zoom: Math.round(Number(mapView?.zoom ?? currentMap?.zoom ?? DEFAULT_MAP_VIEW.zoom)),
+    ...(boundaryPoints.length >= 3
+      ? {
+        boundary: boundaryPoints.map((point) => ({
+          lat: roundCoordinate(point.lat),
+          lng: roundCoordinate(point.lng),
+        })),
+      }
+      : {}),
+  }
+}
+
+function createPlotGeometryFromMapBoundary(boundaryPoints, currentGeometry, mapView) {
+  const nextMap = createMapGeometryPatch(boundaryPoints, currentGeometry?.map, mapView)
+
+  if (boundaryPoints.length < 3) {
+    return {
+      ...(currentGeometry ?? {}),
+      map: nextMap,
+    }
+  }
+
+  const lats = boundaryPoints.map((point) => point.lat)
+  const lngs = boundaryPoints.map((point) => point.lng)
+  const minLat = Math.min(...lats)
+  const maxLat = Math.max(...lats)
+  const minLng = Math.min(...lngs)
+  const maxLng = Math.max(...lngs)
+  const latSpan = Math.max(maxLat - minLat, Number.EPSILON)
+  const lngSpan = Math.max(maxLng - minLng, Number.EPSILON)
+
+  return {
+    points: boundaryPoints.map((point) => ({
+      x: roundCoordinate((point.lng - minLng) / lngSpan, 4),
+      y: roundCoordinate((maxLat - point.lat) / latSpan, 4),
+    })),
+    map: nextMap,
+  }
+}
+
 export default function PlotDetailPage() {
   const { plotId } = useParams()
   const designerCanvasRef = useRef(null)
@@ -152,6 +227,10 @@ export default function PlotDetailPage() {
   const [saving, setSaving] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [mapPreviewView, setMapPreviewView] = useState(null)
+  const [activeUtilityPanel, setActiveUtilityPanel] = useState(null)
+  const [activeInspector, setActiveInspector] = useState(null)
+  const [editorView, setEditorView] = useState(EDITOR_VIEWS.zones)
+  const [boundaryClosed, setBoundaryClosed] = useState(true)
 
   const pageState = useAsyncData(
     async () => {
@@ -215,6 +294,11 @@ export default function PlotDetailPage() {
     () => getMapCenter(draftPlot?.geometry, mapBoundaryPoints),
     [draftPlot?.geometry, mapBoundaryPoints],
   )
+  const mapBoundaryArea = useMemo(() => calculateLatLngArea(mapBoundaryPoints), [mapBoundaryPoints])
+  const mapBoundaryPerimeter = useMemo(
+    () => calculateLatLngPerimeter(mapBoundaryPoints, mapBoundaryPoints.length >= 3),
+    [mapBoundaryPoints],
+  )
 
   useUnsavedChangesGuard({
     when: isDirty,
@@ -228,13 +312,18 @@ export default function PlotDetailPage() {
 
     const restoredDraft = loadPlotWorkspaceDraft(plotId, persistedSignature)
     const nextWorkspace = restoredDraft ?? persistedWorkspace
-    const nextSelectedZone = nextWorkspace.zones.find((zone) => sameId(zone.id, selectedZoneId))
+    const nextSelectedZone = selectedZoneId
+      ? nextWorkspace.zones.find((zone) => sameId(zone.id, selectedZoneId))
+      : null
 
     setDraftPlot(nextWorkspace.plot)
     setDraftZones(nextWorkspace.zones)
     setDraftPlants(nextWorkspace.plants)
-    setSelectedZoneId(nextSelectedZone?.id ?? nextWorkspace.zones[0]?.id ?? null)
-    setZoneForm(zoneToForm(nextSelectedZone ?? nextWorkspace.zones[0] ?? null))
+    setSelectedZoneId(nextSelectedZone?.id ?? null)
+    setZoneForm(zoneToForm(nextSelectedZone ?? null))
+    setActiveInspector(nextSelectedZone ? INSPECTOR_TYPES.zone : null)
+    setEditorView(EDITOR_VIEWS.zones)
+    setBoundaryClosed(getMapBoundaryPoints(nextWorkspace.plot.geometry).length >= 3)
     setDraftReady(true)
     setZoneError('')
     setPlantError('')
@@ -299,11 +388,167 @@ export default function PlotDetailPage() {
     if (!zone) {
       setSelectedZoneId(null)
       setZoneForm(emptyZoneForm)
+      setActiveInspector(null)
       return
     }
 
     setSelectedZoneId(zone.id)
     setZoneForm(zoneToForm(zone))
+    setActiveInspector(INSPECTOR_TYPES.zone)
+  }
+
+  function handleBoundarySelect() {
+    setSelectedZoneId(null)
+    setZoneForm(emptyZoneForm)
+    setActiveInspector(INSPECTOR_TYPES.boundary)
+  }
+
+  function openNewZoneInspector() {
+    setSelectedZoneId(null)
+    setZoneForm(emptyZoneForm)
+    setActiveInspector(INSPECTOR_TYPES.zone)
+  }
+
+  function changeEditorView(nextView) {
+    setEditorView(nextView)
+
+    if (nextView === EDITOR_VIEWS.boundary) {
+      setSelectedZoneId(null)
+      setZoneForm(emptyZoneForm)
+      setActiveInspector(INSPECTOR_TYPES.boundary)
+      return
+    }
+
+    if (activeInspector === INSPECTOR_TYPES.boundary) {
+      setActiveInspector(null)
+    }
+  }
+
+  function commitMapBoundaryPoints(nextBoundaryPoints, nextMapView = mapPreviewView) {
+    setSaveError('')
+    setZoneError('')
+
+    if (!draftPlot) {
+      return
+    }
+
+    const nextGeometry = createPlotGeometryFromMapBoundary(
+      nextBoundaryPoints,
+      draftPlot.geometry,
+      nextMapView ?? {
+        center: getMapCenter(draftPlot.geometry, nextBoundaryPoints),
+        zoom: draftPlot.geometry?.map?.zoom ?? DEFAULT_MAP_VIEW.zoom,
+      },
+    )
+
+    if (nextBoundaryPoints.length < 3) {
+      setDraftPlot((current) => current ? {
+        ...current,
+        geometry: nextGeometry,
+      } : current)
+      return
+    }
+
+    const nextPlotSize = calculateLatLngArea(nextBoundaryPoints)
+    const currentDesignerState = buildDesignerStateFromPersistence({
+      plotSize: draftPlot.plot_size,
+      plotGeometry: draftPlot.geometry,
+      zones: draftZones,
+      storedState: null,
+    })
+    const nextDesignerState = buildDesignerStateFromPersistence({
+      plotSize: nextPlotSize,
+      plotGeometry: nextGeometry,
+      zones: [],
+      storedState: null,
+    })
+    const nextBoundary = nextDesignerState.boundary
+    const outsideZoneNames = []
+
+    const nextZones = draftZones.map((zone) => {
+      const currentShape = currentDesignerState.layouts[String(zone.id)]
+
+      if (!currentShape) {
+        return zone
+      }
+
+      if (!isShapeInsideBoundary(currentShape, nextBoundary)) {
+        outsideZoneNames.push(zone.name)
+        return zone
+      }
+
+      const nextZoneGeometry = shapeToGeometry(currentShape, nextBoundary)
+
+      return nextZoneGeometry
+        ? {
+          ...zone,
+          geometry: nextZoneGeometry,
+        }
+        : zone
+    })
+
+    setDraftPlot((current) => current ? {
+      ...current,
+      plot_size: nextPlotSize,
+      geometry: nextGeometry,
+    } : current)
+    setDraftZones(nextZones)
+
+    if (outsideZoneNames.length) {
+      setZoneError(`${outsideZoneNames.length} zone${outsideZoneNames.length === 1 ? ' is' : 's are'} outside the edited boundary. Adjust the boundary or review zones before saving.`)
+    }
+  }
+
+  function handleBoundaryPointAdd(point) {
+    if (boundaryClosed || mapBoundaryPoints.length >= MAX_BOUNDARY_POINTS) {
+      return
+    }
+
+    commitMapBoundaryPoints([...mapBoundaryPoints, point])
+  }
+
+  function handleBoundaryPointMove(index, point) {
+    commitMapBoundaryPoints(mapBoundaryPoints.map((existingPoint, currentIndex) => (
+      currentIndex === index ? point : existingPoint
+    )))
+  }
+
+  function handleBoundaryPointInsert(index, point) {
+    if (mapBoundaryPoints.length >= MAX_BOUNDARY_POINTS) {
+      return
+    }
+
+    commitMapBoundaryPoints([
+      ...mapBoundaryPoints.slice(0, index),
+      point,
+      ...mapBoundaryPoints.slice(index),
+    ])
+  }
+
+  function handleBoundaryPointRemove(index) {
+    if (boundaryClosed && mapBoundaryPoints.length <= 3) {
+      return
+    }
+
+    const nextPoints = mapBoundaryPoints.filter((_, currentIndex) => currentIndex !== index)
+    setBoundaryClosed(nextPoints.length >= 3 && boundaryClosed)
+    commitMapBoundaryPoints(nextPoints)
+  }
+
+  function handleBoundaryUndo() {
+    if (!mapBoundaryPoints.length || (boundaryClosed && mapBoundaryPoints.length <= 3)) {
+      return
+    }
+
+    const nextPoints = mapBoundaryPoints.slice(0, -1)
+    setBoundaryClosed(nextPoints.length >= 3 && boundaryClosed)
+    commitMapBoundaryPoints(nextPoints)
+  }
+
+  function handleBoundaryClose() {
+    if (mapBoundaryPoints.length >= 3) {
+      setBoundaryClosed(true)
+    }
   }
 
   async function handleCanvasZoneCreate(shape, boundaryShape) {
@@ -323,6 +568,7 @@ export default function PlotDetailPage() {
     setDraftZones((current) => [...current, createdZone])
     setSelectedZoneId(createdZone.id)
     setZoneForm(zoneToForm(createdZone))
+    setActiveInspector(INSPECTOR_TYPES.zone)
     setToastMessage(`Added ${createdZone.name} to the draft.`)
 
     return createdZone
@@ -381,6 +627,7 @@ export default function PlotDetailPage() {
     setDraftZones((current) => current.filter((zone) => !sameId(zone.id, selectedZoneId)))
     setSelectedZoneId(null)
     setZoneForm(emptyZoneForm)
+    setActiveInspector(null)
     setToastMessage('Zone removed from the draft.')
   }
 
@@ -450,8 +697,10 @@ export default function PlotDetailPage() {
     setDraftPlot(persistedWorkspace.plot)
     setDraftZones(persistedWorkspace.zones)
     setDraftPlants(persistedWorkspace.plants)
-    setSelectedZoneId(persistedWorkspace.zones[0]?.id ?? null)
-    setZoneForm(zoneToForm(persistedWorkspace.zones[0] ?? null))
+    setSelectedZoneId(null)
+    setZoneForm(emptyZoneForm)
+    setActiveInspector(null)
+    setBoundaryClosed(getMapBoundaryPoints(persistedWorkspace.plot.geometry).length >= 3)
     setZoneError('')
     setPlantError('')
     setSaveError('')
@@ -483,6 +732,11 @@ export default function PlotDetailPage() {
 
     const selectedZone = draftZones.find((zone) => sameId(zone.id, selectedZoneId)) ?? null
     const sanitizedPlotGeometry = assertSanitizedGeometryPayload('Plot geometry', draftPlot.geometry ?? null)
+
+    if (mapBoundaryPoints.length > 0 && (!boundaryClosed || mapBoundaryPoints.length < 3)) {
+      setSaveError('Close the map boundary before saving plot changes.')
+      return
+    }
 
     if (sanitizedPlotGeometry.error) {
       setSaveError(sanitizedPlotGeometry.error)
@@ -571,6 +825,8 @@ export default function PlotDetailPage() {
       })))
       setSelectedZoneId(nextSelectedZone?.id ?? null)
       setZoneForm(zoneToForm(nextSelectedZone))
+      setActiveInspector(nextSelectedZone ? INSPECTOR_TYPES.zone : null)
+      setBoundaryClosed(getMapBoundaryPoints(response.plot.geometry).length >= 3)
       setToastMessage(response.history_entry?.label ?? 'Plot changes saved.')
     } catch (requestError) {
       setSaveError(requestError.message)
@@ -610,6 +866,11 @@ export default function PlotDetailPage() {
     { id: 'plants', label: `${draftPlants.length} plants`, active: draftPlants.length > 0, color: '#237d52' },
     { id: 'measurements', label: 'Dimensions', active: true, color: '#ef6d22' },
   ]
+  const boundaryEditorLayers = [
+    { id: 'boundary', label: boundaryClosed ? 'Closed boundary' : 'Boundary draft', active: mapBoundaryPoints.length > 0, color: '#47633b' },
+    { id: 'corners', label: `${mapBoundaryPoints.length} corners`, active: mapBoundaryPoints.length > 0, color: '#b9683f' },
+    { id: 'center', label: mapBoundaryCenter ? 'Calculated center' : 'Center pending', active: Boolean(mapBoundaryCenter), color: '#237d52' },
+  ]
   const zoneTimelineItems = draftZones.slice(0, 5).map((zone) => ({
     id: zone.id,
     label: zone.name,
@@ -624,6 +885,7 @@ export default function PlotDetailPage() {
         plotName={pageState.data.plot.name}
         sectionKey="editor"
         isOwner={isOwner}
+        compact
         description="Edit the plot in draft first, keep the canvas dominant, and commit one clean saved version only when the workspace is ready."
         meta={(
           <>
@@ -662,23 +924,6 @@ export default function PlotDetailPage() {
       {saveError ? <span className="field-error">{saveError}</span> : null}
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
-      <section className="plot-editor-intro">
-        <div className="plot-editor-intro-copy">
-          <span className="workspace-section-eyebrow">Draft editing</span>
-          <h2 className="workspace-overview-title">Plot plan is the primary work surface.</h2>
-          <p className="section-copy">
-            Zone movement, geometry changes, and plant placement stay in draft until you commit them. The map, dimensions, and inspector stay visible as editor controls.
-          </p>
-        </div>
-        <div className="plot-editor-intro-stats">
-          <MeasurementBadge label="Plot area" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
-          <MeasurementBadge label="Plot perimeter" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
-          <MeasurementBadge label="Side lengths" value={plotMeasurements?.sideSummary || 'No side lengths available.'} tone="amber" className="measurement-badge-wide" />
-        </div>
-      </section>
-
-      <MapLayerControl title="Editor layers" items={editorLayers} className="plot-editor-layer-console" />
-
       {!canEdit ? (
         <EmptyState
           title="Read-only editor access"
@@ -686,8 +931,214 @@ export default function PlotDetailPage() {
         />
       ) : null}
 
-      <div className="plot-editor-layout">
-        <section className="plot-editor-main">
+      <div
+        className={[
+          'plot-editor-layout',
+          editorView === EDITOR_VIEWS.boundary ? 'plot-editor-layout--boundary' : 'plot-editor-layout--zones',
+          activeUtilityPanel ? 'has-utility-panel' : '',
+          activeInspector ? 'has-context-panel' : '',
+        ].filter(Boolean).join(' ')}
+      >
+        <div className="plot-editor-view-toggle" aria-label="Editor view">
+          <button
+            type="button"
+            className={`plot-panel-toggle ${editorView === EDITOR_VIEWS.zones ? 'is-active' : ''}`.trim()}
+            onClick={() => changeEditorView(EDITOR_VIEWS.zones)}
+            aria-pressed={editorView === EDITOR_VIEWS.zones}
+          >
+            Zone view
+          </button>
+          <button
+            type="button"
+            className={`plot-panel-toggle ${editorView === EDITOR_VIEWS.boundary ? 'is-active' : ''}`.trim()}
+            onClick={() => changeEditorView(EDITOR_VIEWS.boundary)}
+            aria-pressed={editorView === EDITOR_VIEWS.boundary}
+          >
+            Boundary view
+          </button>
+        </div>
+
+        <div className="plot-workspace-panel-toggles" aria-label="Workspace panels">
+          <button
+            type="button"
+            className={`plot-panel-toggle ${activeUtilityPanel === 'layers' ? 'is-active' : ''}`.trim()}
+            onClick={() => setActiveUtilityPanel((current) => (current === 'layers' ? null : 'layers'))}
+            aria-expanded={activeUtilityPanel === 'layers'}
+            aria-controls="plot-layers-panel"
+          >
+            Layers
+          </button>
+          <button
+            type="button"
+            className={`plot-panel-toggle ${activeInspector === INSPECTOR_TYPES.boundary ? 'is-active' : ''}`.trim()}
+            onClick={() => {
+              if (editorView !== EDITOR_VIEWS.boundary) {
+                handleBoundarySelect()
+                return
+              }
+
+              setActiveInspector((current) => (current === INSPECTOR_TYPES.boundary ? null : INSPECTOR_TYPES.boundary))
+            }}
+            aria-expanded={activeInspector === INSPECTOR_TYPES.boundary}
+          >
+            {editorView === EDITOR_VIEWS.boundary ? 'Boundary details' : 'Boundary'}
+          </button>
+          {editorView === EDITOR_VIEWS.zones ? (
+            <button
+              type="button"
+              className={`plot-panel-toggle ${activeInspector === INSPECTOR_TYPES.zone && !selectedZone ? 'is-active' : ''}`.trim()}
+              onClick={openNewZoneInspector}
+              aria-expanded={activeInspector === INSPECTOR_TYPES.zone && !selectedZone}
+            >
+              Zone details
+            </button>
+          ) : null}
+        </div>
+
+        {activeUtilityPanel === 'layers' ? (
+        <aside id="plot-layers-panel" className="plot-layers-panel" aria-label="Plot layers and objects">
+          <div className="plot-layers-panel-header">
+            <div className="page-stack stack-sm">
+              <span className="workspace-section-eyebrow">Layers</span>
+              <h2 className="section-title">Plot objects</h2>
+            </div>
+            <div className="plot-floating-panel-actions">
+              <StatusBadge kind="selection" tone={isDirty ? 'warning' : 'neutral'}>
+                {isDirty ? 'Draft' : 'Saved'}
+              </StatusBadge>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => setActiveUtilityPanel(null)}
+                aria-label="Close layers panel"
+              >
+                x
+              </button>
+            </div>
+          </div>
+
+          <MapLayerControl
+            title="Visible layers"
+            items={editorView === EDITOR_VIEWS.boundary ? boundaryEditorLayers : editorLayers}
+            className="plot-editor-layer-console"
+          />
+
+          <div className="plot-layer-metrics">
+            {editorView === EDITOR_VIEWS.boundary ? (
+              <>
+                <MeasurementBadge label="Area" value={formatSquareMeters(mapBoundaryArea, 1)} tone="field" />
+                <MeasurementBadge label="Perimeter" value={formatMeters(mapBoundaryPerimeter)} tone="earth" />
+                <MeasurementBadge label="Points" value={mapBoundaryPoints.length} tone="amber" className="measurement-badge-wide" />
+              </>
+            ) : (
+              <>
+                <MeasurementBadge label="Area" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
+                <MeasurementBadge label="Perimeter" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
+                <MeasurementBadge label="Sides" value={plotMeasurements?.sideSummary || 'No geometry'} tone="amber" className="measurement-badge-wide" />
+              </>
+            )}
+          </div>
+
+          {editorView === EDITOR_VIEWS.boundary ? (
+          <div className="plot-layer-section">
+            <div className="plot-layer-section-head">
+              <strong>Boundary points</strong>
+              <span>{mapBoundaryPoints.length}</span>
+            </div>
+            {mapBoundaryPoints.length > 0 ? (
+              <div className="plot-boundary-point-list">
+                {mapBoundaryPoints.map((point, index) => (
+                  <button
+                    key={`edit-boundary-point-${index}`}
+                    type="button"
+                    title={`Remove point ${index + 1}`}
+                    onClick={() => handleBoundaryPointRemove(index)}
+                    disabled={!canEdit || (boundaryClosed && mapBoundaryPoints.length <= 3)}
+                  >
+                    <span>{index + 1}</span>
+                    <strong>{roundCoordinate(point.lat)}, {roundCoordinate(point.lng)}</strong>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <EmptyStatePanel
+                title="No map boundary"
+                description="Click the map to add at least three boundary corners."
+                tone="subtle"
+              />
+            )}
+          </div>
+          ) : (
+          <>
+          <div className="plot-layer-section">
+            <div className="plot-layer-section-head">
+              <strong>Zones</strong>
+              <span>{draftZones.length}</span>
+            </div>
+            {draftZones.length > 0 ? (
+              <div className="plot-layer-object-list" role="list">
+                {draftZones.map((zone, index) => {
+                  const isSelected = sameId(zone.id, selectedZoneId)
+                  const plantCount = draftPlants.filter((plant) => sameId(plant.fk_plant_zone_id, zone.id)).length
+
+                  return (
+                    <button
+                      key={zone.id}
+                      type="button"
+                      className={`plot-layer-object ${isSelected ? 'is-selected' : ''}`.trim()}
+                      onClick={() => handleZoneSelect(zone)}
+                    >
+                      <span className="plot-layer-object-index">{index + 1}</span>
+                      <span className="plot-layer-object-copy">
+                        <strong>{zone.name}</strong>
+                        <small>{formatSquareMeters(zone.zone_size ?? 0, 1)} - {zone.soil_type}</small>
+                      </span>
+                      <span className="plot-layer-object-count">{plantCount}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <EmptyStatePanel
+                title="No zones yet"
+                description="Draw the first growing zone directly on the canvas."
+                tone="subtle"
+              />
+            )}
+          </div>
+
+          <div className="plot-layer-section">
+            <div className="plot-layer-section-head">
+              <strong>Planning sequence</strong>
+              <span>{zoneTimelineItems.length}</span>
+            </div>
+            <GardenTimeline items={zoneTimelineItems} emptyText="No zones have been drawn yet." />
+          </div>
+          </>
+          )}
+        </aside>
+        ) : null}
+
+        <section className={`plot-editor-main ${editorView === EDITOR_VIEWS.boundary ? 'plot-editor-main--map' : ''}`.trim()}>
+          {editorView === EDITOR_VIEWS.boundary ? (
+            <PlotLocationMap
+              mode="boundary"
+              boundaryClosed={boundaryClosed}
+              selectedLocation={mapBoundaryCenter}
+              boundaryPoints={mapBoundaryPoints}
+              view={mapPreviewView ?? {
+                center: mapBoundaryCenter ?? DEFAULT_MAP_VIEW.center,
+                zoom: draftPlot.geometry?.map?.zoom ?? DEFAULT_MAP_VIEW.zoom,
+              }}
+              readOnly={!canEdit}
+              className="plot-location-map--workspace"
+              onBoundaryPointAdd={handleBoundaryPointAdd}
+              onBoundaryPointInsert={handleBoundaryPointInsert}
+              onBoundaryPointMove={handleBoundaryPointMove}
+              onBoundaryPointRemove={handleBoundaryPointRemove}
+              onViewChange={setMapPreviewView}
+            />
+          ) : (
           <PlotDesignerCanvas
             ref={designerCanvasRef}
             plotId={plotId}
@@ -703,21 +1154,97 @@ export default function PlotDetailPage() {
             isLayoutSaveDisabled={!isDirty}
             isLayoutSaving={saving}
             layoutSaveFeedback={createEmptyFeedback()}
+            showLayerConsole={false}
+            mapFirstHud
             onSaveLayout={handleSave}
             onSelectZone={handleZoneSelect}
+            onSelectBoundary={handleBoundarySelect}
             onCreateZone={handleCanvasZoneCreate}
             onZoneCreateBlocked={setZoneError}
             onZoneGeometryCommit={handleZoneGeometryCommit}
             onBoundaryCommit={handleBoundaryCommit}
           />
+          )}
         </section>
 
+        {activeInspector ? (
         <InspectorPanel
-          title="Plot inspector"
-          description="Selection, metrics, plant placement, and advanced zone details stay in one rail."
-          meta={<StatusBadge kind="selection" tone={selectedZone ? 'soft' : 'neutral'}>{selectedZone ? 'Zone selected' : 'No selection'}</StatusBadge>}
+          title={activeInspector === INSPECTOR_TYPES.boundary ? 'Boundary inspector' : selectedZone ? 'Zone inspector' : 'Zone draft'}
+          description={activeInspector === INSPECTOR_TYPES.boundary
+            ? 'Plot boundary, saved map preview, and full-plot measurements.'
+            : 'Zone details, dimensions, plant placement, and draft changes.'}
+          meta={(
+            <div className="plot-floating-panel-actions">
+              <StatusBadge kind="selection" tone={selectedZone || activeInspector === INSPECTOR_TYPES.boundary ? 'soft' : 'neutral'}>
+                {activeInspector === INSPECTOR_TYPES.boundary ? 'Boundary selected' : selectedZone ? 'Zone selected' : 'Draft'}
+              </StatusBadge>
+              <button
+                type="button"
+                className="plot-panel-close"
+                onClick={() => handleZoneSelect(null)}
+                aria-label="Close inspector"
+              >
+                x
+              </button>
+            </div>
+          )}
           className="plot-context-rail"
         >
+          {activeInspector === INSPECTOR_TYPES.boundary ? (
+          <>
+          {editorView === EDITOR_VIEWS.boundary ? (
+            <>
+          <InspectorSection
+            title="Boundary details"
+            description="Map boundary draft measurements update as corners move."
+            meta={(
+              <StatusBadge kind="selection" tone={boundaryClosed ? 'success' : 'warning'}>
+                {boundaryClosed ? 'Closed' : 'Drawing'}
+              </StatusBadge>
+            )}
+          >
+            <div className="plot-layer-metrics">
+              <MeasurementBadge label="Area" value={formatSquareMeters(mapBoundaryArea, 1)} tone="field" />
+              <MeasurementBadge label="Perimeter" value={formatMeters(mapBoundaryPerimeter)} tone="earth" />
+              <MeasurementBadge label="Points" value={mapBoundaryPoints.length} tone="amber" className="measurement-badge-wide" />
+            </div>
+            <div className="plot-boundary-center-readout">
+              <span className="designer-toolbar-kicker">Center</span>
+              <strong>
+                {mapBoundaryCenter
+                  ? `${roundCoordinate(mapBoundaryCenter.lat)}, ${roundCoordinate(mapBoundaryCenter.lng)}`
+                  : 'Calculated after 3 points'}
+              </strong>
+            </div>
+          </InspectorSection>
+
+          <InspectorSection
+            title="Boundary controls"
+            description="Corner edits stay in this draft until Save plot changes."
+          >
+            <div className="form-actions">
+              <Button
+                variant="secondary"
+                onClick={handleBoundaryClose}
+                disabled={!canEdit || boundaryClosed || mapBoundaryPoints.length < 3}
+              >
+                Close boundary
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleBoundaryUndo}
+                disabled={!canEdit || !mapBoundaryPoints.length || (boundaryClosed && mapBoundaryPoints.length <= 3)}
+              >
+                Undo
+              </Button>
+            </div>
+            {mapBoundaryPoints.length < 3 ? (
+              <span className="field-error">Add at least 3 boundary points before saving.</span>
+            ) : null}
+          </InspectorSection>
+            </>
+          ) : (
+          <>
           {mapBoundaryPoints.length >= 3 ? (
             <InspectorSection
               title="Boundary map"
@@ -745,6 +1272,21 @@ export default function PlotDetailPage() {
             </InspectorSection>
           ) : null}
 
+          <InspectorSection
+            title="Plot measurements"
+            description="These geometry values update when the boundary is changed on the canvas."
+          >
+            <div className="plot-layer-metrics">
+              <MeasurementBadge label="Area" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
+              <MeasurementBadge label="Perimeter" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
+              <MeasurementBadge label="Sides" value={plotMeasurements?.sideSummary || 'No geometry'} tone="amber" className="measurement-badge-wide" />
+            </div>
+          </InspectorSection>
+          </>
+          )}
+          </>
+          ) : (
+          <>
           <InspectorSection
             title="Selected zone"
             description="Geometry, dimensions, soil, and plant count stay together."
@@ -822,7 +1364,7 @@ export default function PlotDetailPage() {
                 {selectedZone ? (
                   <>
                     <Button type="submit" variant="secondary">Apply zone details</Button>
-                    <Button variant="ghost" onClick={() => handleZoneSelect(null)}>New zone draft</Button>
+                    <Button variant="ghost" onClick={openNewZoneInspector}>New zone draft</Button>
                     <Button variant="danger" onClick={handleZoneDelete}>Delete zone</Button>
                   </>
                 ) : (
@@ -893,13 +1435,10 @@ export default function PlotDetailPage() {
             onCreatePlant={handlePlantCreate}
           />
 
-          <InspectorSection
-            title="Zone sequence"
-            description="Quick map-oriented summary of the current draft zones."
-          >
-            <GardenTimeline items={zoneTimelineItems} emptyText="No zones have been drawn yet." />
-          </InspectorSection>
+          </>
+          )}
         </InspectorPanel>
+        ) : null}
       </div>
     </div>
   )
