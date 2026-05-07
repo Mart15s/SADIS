@@ -1087,12 +1087,12 @@ export default function PlotCreatePage() {
             </div>
             <p className="section-copy">Review plot details before saving the mapped boundary and zone draft.</p>
 
-            <div className="input-grid">
-              <div className="field">
+            <div className="input-grid plot-create-summary-form-grid">
+              <div className="field field-span-2">
                 <label htmlFor="new-plot-name">Name</label>
                 <input id="new-plot-name" name="name" value={form.name} onChange={handleFormChange} required />
               </div>
-              <div className="field">
+              <div className="field field-span-2">
                 <label htmlFor="new-plot-city">City</label>
                 <input
                   id="new-plot-city"

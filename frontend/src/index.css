@@ -1013,7 +1013,6 @@ ul {
 .empty-state-panel,
 .status-card,
 .status-hero,
-.toast,
 .month-day,
 .calendar-choice-card,
 .plot-browser-card,
@@ -6679,7 +6678,6 @@ summary:focus-visible {
 .empty-state-panel,
 .status-card,
 .status-hero,
-.toast,
 .month-day,
 .calendar-choice-card,
 .plot-browser-card,
@@ -7523,6 +7521,10 @@ tbody tr:hover td {
   width: min(360px, calc(100% - 2rem));
 }
 
+.plot-create-summary-panel {
+  width: min(430px, calc(100% - 2rem));
+}
+
 .plot-create-side-panel .form-actions,
 .plot-create-zone-panel .form-actions,
 .plot-create-summary-panel .form-actions {
@@ -7538,6 +7540,24 @@ tbody tr:hover td {
 .plot-create-summary-panel .input-grid,
 .plot-create-zone-panel .input-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plot-create-summary-panel .plot-create-summary-form-grid {
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.plot-create-summary-panel .field {
+  align-content: start;
+}
+
+.plot-create-summary-panel .field-hint {
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.plot-create-summary-panel textarea {
+  min-height: 96px;
 }
 
 .plot-create-summary-grid {
