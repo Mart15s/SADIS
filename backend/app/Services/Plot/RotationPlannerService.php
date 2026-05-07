@@ -10,7 +10,6 @@ use App\Models\Plot;
 use App\Models\RotationHistory;
 use App\Models\RotationPlanDraft;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -90,6 +89,7 @@ class RotationPlannerService
 
         $planningDate = $this->normalizePlanningDate($draft->planning_date?->toDateString());
         $assignments = collect($plan['plants'] ?? [])
+            ->filter(fn (array $entry) => (bool) ($entry['is_rotatable'] ?? true))
             ->filter(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null))
             ->mapWithKeys(fn (array $entry) => [
                 (int) $entry['plant']['id'] => (int) $entry['selected_target_zone']['zone_id'],
@@ -98,6 +98,10 @@ class RotationPlannerService
         $assignmentMap = $assignments->all();
 
         foreach (($plan['plants'] ?? []) as $entry) {
+            if (! (bool) ($entry['is_rotatable'] ?? true)) {
+                continue;
+            }
+
             abort_if(
                 blank($entry['selected_target_zone']['zone_id'] ?? null)
                     || ! (bool) ($entry['selected_target_zone']['is_eligible'] ?? false)
@@ -283,13 +287,24 @@ class RotationPlannerService
             ];
         }
 
-        $readyAssignments = collect($planPlants)->filter(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null));
-        $unresolvedPlants = collect($planPlants)->reject(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null));
+        $permanentPlants = $plot->plants
+            ->filter(fn (Plant $plant): bool => $this->isPermanentPlanting($plant))
+            ->map(fn (Plant $plant): array => $this->permanentPlantEntry($plant))
+            ->values()
+            ->all();
+
+        $planPlants = array_merge($planPlants, $permanentPlants);
+
+        $annualPlants = collect($planPlants)->filter(fn (array $entry): bool => (bool) ($entry['is_rotatable'] ?? true));
+        $readyAssignments = $annualPlants->filter(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null));
+        $unresolvedPlants = $annualPlants->reject(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null));
 
         return [
             'status' => $unresolvedPlants->isEmpty() ? 'ready' : 'needs_adjustment',
             'summary' => [
                 'plant_count' => count($planPlants),
+                'annual_plant_count' => $annualPlants->count(),
+                'permanent_plant_count' => count($permanentPlants),
                 'assigned_plant_count' => $readyAssignments->count(),
                 'unresolved_plant_count' => $unresolvedPlants->count(),
                 'blocked_plant_count' => $unresolvedPlants->count(),
@@ -313,11 +328,13 @@ class RotationPlannerService
         ];
         $visitedNodes = 0;
         $maxNodes = 8000;
+        $foundCompleteAssignment = false;
 
         $search = function (int $index, array $assignments, int $assignedCount, int $score) use (
             &$search,
             &$best,
             &$visitedNodes,
+            &$foundCompleteAssignment,
             $maxNodes,
             $plants,
             $plot,
@@ -325,7 +342,7 @@ class RotationPlannerService
         ): void {
             $visitedNodes += 1;
 
-            if ($visitedNodes > $maxNodes) {
+            if ($foundCompleteAssignment || $visitedNodes > $maxNodes) {
                 return;
             }
 
@@ -344,6 +361,10 @@ class RotationPlannerService
                         'assigned_count' => $assignedCount,
                         'score' => $score,
                     ];
+
+                    if ($assignedCount === $plants->count()) {
+                        $foundCompleteAssignment = true;
+                    }
                 }
 
                 return;
@@ -403,21 +424,15 @@ class RotationPlannerService
         }
 
         if ($currentZoneId !== 0 && $currentZoneId === (int) $targetZone->id) {
-            $hardBlockingReasons[] = 'Target zone is the same as the current plant zone.';
-        }
-
-        if ($currentZoneId !== 0 && $currentZoneId === (int) $targetZone->id && ! (bool) $plant->reusable) {
-            $blockingReasons[] = 'TikslinÄ— zona sutampa su dabartine augalo zona, todÄ—l tai nÄ—ra tinkama rotacija.';
+            $blockingReasons[] = 'Target zone is the same as the current plant zone.';
         } else {
-            $passedReasons[] = $currentZoneId === (int) $targetZone->id
-                ? 'Augalas gali likti dabartinÄ—je zonoje tik todÄ—l, kad paÅ¾ymÄ—tas kaip daugiametis ar pakartotinai naudojamas.'
-                : 'TikslinÄ— zona skiriasi nuo dabartinÄ—s zonos, todÄ—l atitinka bazinÄÆ rotacijos perkÄ—limo principÄ….';
+            $passedReasons[] = 'Target zone is different from the current zone, which satisfies the basic rotation movement rule.';
         }
 
         if ($remainingCapacity < 0) {
-            $blockingReasons[] = 'TikslinÄ—je zonoje nepakanka vietos Åiam augalui.';
+            $blockingReasons[] = 'Target zone does not have enough space for this plant.';
         } else {
-            $passedReasons[] = 'TikslinÄ—je zonoje pakanka vietos Åiam augalui.';
+            $passedReasons[] = 'Target zone has enough space for this plant.';
         }
 
         $sameNameConflict = $currentOccupants->contains(function (Plant $zonePlant) use ($plant): bool {
@@ -425,9 +440,9 @@ class RotationPlannerService
         });
 
         if ($sameNameConflict) {
-            $blockingReasons[] = 'TikslinÄ—je zonoje jau yra toks pats augalas.';
+            $blockingReasons[] = 'Target zone already contains the same plant.';
         } else {
-            $passedReasons[] = 'TikslinÄ—je zonoje nÄ—ra tokio paties augalo konflikto.';
+            $passedReasons[] = 'Target zone does not contain the same plant conflict.';
         }
 
         $sameNameDraftConflict = $draftAssignedOccupants->filter(function (Plant $zonePlant) use ($plant): bool {
@@ -446,9 +461,9 @@ class RotationPlannerService
         });
 
         if ($sameTypeConflict) {
-            $blockingReasons[] = 'TikslinÄ—je zonoje jau yra to paties tipo augalÅ³ konfliktas.';
+            $blockingReasons[] = 'Target zone already contains the same broad plant type.';
         } else {
-            $passedReasons[] = 'TikslinÄ—je zonoje nÄ—ra to paties tipo augalÅ³ konflikto.';
+            $passedReasons[] = 'Target zone does not contain the same broad plant type conflict.';
         }
 
         $sameTypeDraftConflict = $draftAssignedOccupants->filter(function (Plant $zonePlant) use ($plantType): bool {
@@ -481,21 +496,21 @@ class RotationPlannerService
         if ($rotationConflict !== null) {
             $blockingReasons[] = $rotationConflict['message'];
         } else {
-            $passedReasons[] = 'TikslinÄ—je zonoje nÄ—ra per neseniai sodinto to paties augalo ar tipo rotacijos konflikto.';
+            $passedReasons[] = 'Target zone has no recent same plant, family, or rotation group history conflict.';
         }
 
         $restConflict = $this->restIntervalConflict($targetZone, $plant, $planningDate);
         if ($restConflict !== null) {
             $blockingReasons[] = $restConflict;
         } else {
-            $passedReasons[] = 'TikslinÄ— zona atitinka minimalÅ³ poilsio intervalÄ….';
+            $passedReasons[] = 'Target zone has completed the required rotation rest interval.';
         }
 
         $soilCompatibility = $this->soilCompatibilityForZone($plant, $targetZone);
         if ($soilCompatibility === false) {
-            $blockingReasons[] = 'TikslinÄ—s zonos dirvoÅ¾emis neatitinka augalo prieÅ¾iÅ«ros profilio signalÅ³.';
+            $blockingReasons[] = 'Target zone soil does not match the plant care profile signals.';
         } elseif ($soilCompatibility === true) {
-            $passedReasons[] = 'TikslinÄ—s zonos dirvoÅ¾emis atitinka augalo prieÅ¾iÅ«ros profilio signalus.';
+            $passedReasons[] = 'Target zone soil matches the plant care profile signals.';
         }
 
         if ($soilCompatibility === null) {
@@ -629,6 +644,7 @@ class RotationPlannerService
     private function orderPlantsForPlanning(Plot $plot, CarbonImmutable $planningDate): Collection
     {
         return $plot->plants
+            ->reject(fn (Plant $plant): bool => $this->isPermanentPlanting($plant))
             ->map(function (Plant $plant) use ($plot, $planningDate): array {
                 $validCandidateCount = $plot->plantZones
                     ->filter(fn (PlantZone $zone) => $this->evaluateZoneCandidate($plot, $plant, $zone, $planningDate, [])['is_eligible'])
@@ -686,7 +702,7 @@ class RotationPlannerService
 
         if ($recentPlantRotation) {
             return $this->rotationConflictPayload(
-                'Tikslinėje zonoje tas pats augalas buvo sodintas per neseniai pagal rotacijos istoriją.',
+                'Target zone has the same plant in recent rotation history.',
                 $recentPlantRotation
             );
         }
@@ -707,7 +723,7 @@ class RotationPlannerService
 
         if ($recentTypeRotation) {
             return $this->rotationConflictPayload(
-                'Tikslinėje zonoje tos pačios šeimos arba rotacijos grupės augalai buvo sodinti per neseniai pagal pasėlių kaitos taisykles.',
+                'Target zone has recent same family or rotation group rotation history.',
                 $recentTypeRotation
             );
         }
@@ -726,7 +742,7 @@ class RotationPlannerService
         $daysSinceLastPlanting = CarbonImmutable::instance($targetZone->last_planting_date)->diffInDays($planningDate);
 
         if ($daysSinceLastPlanting < $restDays) {
-            return 'TikslinÄ— zona dar nÄ—ra iÅlaukusi minimalaus poilsio intervalo.';
+            return 'Target zone has not completed the required rotation rest interval.';
         }
 
         return null;
@@ -854,23 +870,23 @@ class RotationPlannerService
         $solutions = [];
 
         if ($bestBlockedZone && ($bestBlockedZone['remaining_capacity'] ?? 0) < 0) {
-            $solutions[] = 'Padidinkite arba atlaisvinkite zonÄ… "'.$bestBlockedZone['zone_name'].'" prieÅ planuodami rotacijÄ….';
+            $solutions[] = 'Increase or clear zone "'.$bestBlockedZone['zone_name'].'" before planning this rotation.';
         }
 
         if ($candidates->contains(fn (array $candidate) => collect($candidate['blocking_reasons'] ?? [])->contains(
-            fn (string $reason) => Str::contains($reason, 'poilsio interval')
+            fn (string $reason) => Str::contains($reason, 'required rotation rest interval')
         ))) {
-            $solutions[] = 'AtidÄ—kite rotacijÄ… vÄ—lesnei datai, kad zonos spÄ—tÅ³ iÅlaukti poilsio intervalÄ….';
+            $solutions[] = 'Postpone the rotation to a later date so zones can complete the required rest interval.';
         }
 
         if ($candidates->contains(fn (array $candidate) => collect($candidate['blocking_reasons'] ?? [])->contains(
-            fn (string $reason) => Str::contains($reason, 'to paties tipo')
+            fn (string $reason) => Str::contains($reason, 'same broad plant type')
         ))) {
-            $solutions[] = 'Perplanuokite kaimyninius augalus arba pasirinkite kitÄ… augalÅ³ kombinacijÄ…, kad neliktÅ³ to paties tipo konflikto.';
+            $solutions[] = 'Replan neighboring plants or choose a different plant combination so there is no broad plant type conflict.';
         }
 
         if ($solutions === []) {
-            $solutions[] = 'Å iuo metu Åiam augalui nerasta validi zona. Reikia papildomos zonos arba augalÅ³ perskirstymo prieÅ tvirtinant schemÄ….';
+            $solutions[] = 'No valid zone is currently available for this plant. Add another zone or redistribute plants before confirming the draft.';
         }
 
         return array_values(array_unique($solutions));
@@ -917,7 +933,7 @@ class RotationPlannerService
         $keptReasons = [];
 
         foreach ($hardBlockingReasons as $reason) {
-            if (Str::contains($reason, ['to paties tipo', 'same-type conflict'])) {
+            if (Str::contains($reason, ['same broad plant type', 'same-type conflict'])) {
                 $softWarnings[] = 'Broad plant type matches are informational only; family or rotation group data is used for blocking rotation conflicts.';
 
                 continue;
@@ -991,6 +1007,49 @@ class RotationPlannerService
             'rest_time_days' => $plant->rest_time_days,
             'reusable' => (bool) $plant->reusable,
         ];
+    }
+
+    private function isPermanentPlanting(Plant $plant): bool
+    {
+        $plantType = $plant->type?->value ?? $plant->type;
+
+        return (bool) $plant->reusable
+            || in_array($plantType, ['berry', 'shrub', 'tree'], true);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function permanentPlantEntry(Plant $plant): array
+    {
+        $reason = $this->permanentPlantReason($plant);
+
+        return [
+            'plant' => $this->plantSummary($plant),
+            'current_zone' => $this->zoneSummary($plant->plantZone),
+            'selected_target_zone' => null,
+            'candidate_zones' => [],
+            'alternatives' => [],
+            'fallback_solutions' => [],
+            'is_rotatable' => false,
+            'rotation_mode' => 'permanent_planting',
+            'resolution_status' => 'excluded',
+            'exclusion_reason' => $reason,
+            'positive_reasons' => [$reason],
+            'soft_warnings' => [],
+            'hard_blocking_reasons' => [],
+        ];
+    }
+
+    private function permanentPlantReason(Plant $plant): string
+    {
+        $plantType = $plant->type?->value ?? $plant->type;
+
+        if (in_array($plantType, ['berry', 'shrub', 'tree'], true)) {
+            return 'Permanent planting — excluded from annual crop rotation.';
+        }
+
+        return 'Perennial plant — recommended to stay in its current zone.';
     }
 
     private function resolvePlantCare(Plant $plant): ?PlantCare

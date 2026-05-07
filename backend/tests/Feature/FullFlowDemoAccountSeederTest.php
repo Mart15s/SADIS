@@ -13,6 +13,7 @@ use App\Models\Plot;
 use App\Models\RotationPlanDraft;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\Plot\RotationPlannerService;
 use Database\Seeders\FullFlowDemoAccountSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -56,6 +57,7 @@ class FullFlowDemoAccountSeederTest extends TestCase
         $this->assertSame(8, $secondCounts['harvest_records']);
         $this->assertGreaterThanOrEqual(15, $secondCounts['condition_history_records']);
         $this->assertGreaterThanOrEqual(18, $secondCounts['tasks']);
+        $this->assertDemoRotationPlansAreUsable();
 
         $this->assertTrue(
             Task::query()
@@ -81,8 +83,36 @@ class FullFlowDemoAccountSeederTest extends TestCase
             CatalogPlant::query()
                 ->where('canonical_name', 'garlic')
                 ->whereDoesntHave('plants')
-                ->exists()
+            ->exists()
         );
+    }
+
+    private function assertDemoRotationPlansAreUsable(): void
+    {
+        $planner = app(RotationPlannerService::class);
+        $primary = Plot::query()
+            ->where('name', 'Oakridge Kitchen Garden')
+            ->firstOrFail();
+        $secondary = Plot::query()
+            ->where('name', 'South Fence Berry and Orchard Strip')
+            ->firstOrFail();
+
+        $primaryPlan = $planner->evaluatePlot($primary, now()->toDateString());
+        $secondaryPlan = $planner->evaluatePlot($secondary, now()->toDateString());
+
+        $this->assertSame('ready', $primaryPlan['status']);
+        $this->assertGreaterThan(0, $primaryPlan['summary']['annual_plant_count']);
+        $this->assertSame(0, $primaryPlan['summary']['unresolved_plant_count']);
+        $this->assertGreaterThan(0, $primaryPlan['summary']['assigned_plant_count']);
+
+        $this->assertSame('ready', $secondaryPlan['status']);
+        $this->assertSame(0, $secondaryPlan['summary']['annual_plant_count']);
+        $this->assertSame(4, $secondaryPlan['summary']['permanent_plant_count']);
+        $this->assertSame(0, $secondaryPlan['summary']['unresolved_plant_count']);
+        $this->assertTrue(collect($secondaryPlan['plants'])->every(
+            fn (array $entry): bool => ($entry['is_rotatable'] ?? true) === false
+                && ($entry['exclusion_reason'] ?? '') !== ''
+        ));
     }
 
     /**

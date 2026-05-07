@@ -119,6 +119,76 @@ describe('PlotRotationPage', () => {
     expect(screen.getByText('Pepper')).toBeInTheDocument()
     expect(screen.getByText('Zone A')).toBeInTheDocument()
     expect(screen.getByText('Same family was planted here in 2025.')).toBeInTheDocument()
+    expect(screen.getByText('This draft cannot be confirmed because 1 annual plant still needs a valid target zone.')).toBeInTheDocument()
+    expect(screen.getByText('Needs valid target')).toBeInTheDocument()
+    expect(screen.queryByText('Needs manual review')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeDisabled()
+  })
+
+  it('shows permanent plantings as non-blocking annual rotation context', async () => {
+    api.createRotationPlan.mockResolvedValueOnce({
+      draft: {
+        id: 91,
+        plan: {
+          status: 'ready',
+          summary: {
+            plant_count: 2,
+            annual_plant_count: 0,
+            permanent_plant_count: 2,
+            assigned_plant_count: 0,
+            unresolved_plant_count: 0,
+            blocked_plant_count: 0,
+          },
+          plants: [
+            {
+              plant: { id: 31, name: "Apple Tree 'Auksis'" },
+              current_zone: { id: 12, name: 'Young Apple Guild' },
+              selected_target_zone: null,
+              is_rotatable: false,
+              rotation_mode: 'permanent_planting',
+              exclusion_reason: 'Permanent planting — excluded from annual crop rotation.',
+              alternatives: [],
+              fallback_solutions: [],
+              candidate_zones: [],
+            },
+            {
+              plant: { id: 32, name: "Raspberry 'Glen Ample'" },
+              current_zone: { id: 13, name: 'Raspberry Canes' },
+              selected_target_zone: null,
+              is_rotatable: false,
+              rotation_mode: 'permanent_planting',
+              exclusion_reason: 'Permanent planting — excluded from annual crop rotation.',
+              alternatives: [],
+              fallback_solutions: [],
+              candidate_zones: [],
+            },
+          ],
+        },
+      },
+    })
+    api.confirmRotationPlan.mockResolvedValueOnce({})
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('North Plot')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation draft' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Ready to confirm')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('No annual rotation is needed for this plot. Permanent plantings are shown for context and can stay in place.')).toBeInTheDocument()
+    expect(screen.getAllByText('Permanent planting')).toHaveLength(2)
+    expect(screen.getAllByText('Permanent planting — excluded from annual crop rotation.').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeEnabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm rotation plan' }))
+
+    await waitFor(() => {
+      expect(api.confirmRotationPlan).toHaveBeenCalledWith('5', 91)
+    })
   })
 })

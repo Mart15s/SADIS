@@ -1,0 +1,599 @@
+@startuml
+title Asmeninio sodo ar daržo IS - pagrindinis esybių klasių modelis
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class "Naudotojas" as Naudotojas <<entity>> {
+  email: string
+  role: UserRole
+}
+note right of Naudotojas
+Kodas: App\Models\User
+Lentelė: users
+end note
+
+class "Profilis" as Profilis <<entity>> {
+  name: string
+  surname: string
+  last_login: datetime
+}
+note right of Profilis
+Kodas: App\Models\Profile
+Lentelė: profiles
+end note
+
+class "Sodo savininkas" as SodoSavininkas <<entity>> {
+}
+note right of SodoSavininkas
+Kodas: App\Models\GardenOwner
+Lentelė: garden_owners
+end note
+
+class "Administratorius" as Administratorius <<entity>> {
+}
+note right of Administratorius
+Kodas: User.role = admin
+Atskiro modelio nėra
+end note
+
+class "Sklypas" as Sklypas <<entity>> {
+  name: string
+  city: string
+  plot_size: decimal
+  creation_date: date
+  description: text
+  share: boolean
+  geometry: JSON
+}
+note right of Sklypas
+Kodas: App\Models\Plot
+Lentelė: plots
+end note
+
+class "Augalų zona" as AugaluZona <<entity>> {
+  name: string
+  zone_size: decimal
+  soil_type: SoilType
+  rotation_stage: integer
+  last_planting_date: date
+  geometry: JSON
+}
+note right of AugaluZona
+Kodas: App\Models\PlantZone
+Lentelė: plant_zones
+end note
+
+class "Augalas" as Augalas <<entity>> {
+  name: string
+  type: PlantType
+  condition: ConditionType
+  plant_date: date
+  disease: boolean
+  disease_notes: string
+  growing_time_days: integer
+  recommended_temperature: decimal
+  recommended_humidity: decimal
+  rest_time_days: integer
+  plant_size: decimal
+  photo_url: string
+  reusable: boolean
+}
+note right of Augalas
+Kodas: App\Models\Plant
+Lentelė: plants
+end note
+
+class "Katalogo augalas" as KatalogoAugalas <<entity>> {
+  name: string
+  canonical_name: string
+  plant_type: PlantType
+  description: text
+  source_provider: string
+  source_quality: string
+  source_scientific_name: string
+  source_family: string
+  source_image_url: text
+  metadata: JSON
+}
+note right of KatalogoAugalas
+Kodas: App\Models\CatalogPlant
+Lentelė: catalog_plants
+end note
+
+class "Augalo priežiūros profilis" as PrieziurosProfilis <<entity>> {
+  plant_name: string
+  canonical_name: string
+  description: text
+  conditions: text
+  task_type: TaskType
+  plant_type: PlantType
+  condition: ConditionType
+  watering_interval_days: integer
+  fertilizing_interval_days: integer
+  pest_check_interval_days: integer
+  rain_skip_threshold_mm: decimal
+  frost_temp_threshold_c: decimal
+  heat_extra_water_temp_c: decimal
+  wind_protection_kmh: decimal
+}
+note right of PrieziurosProfilis
+Kodas: App\Models\PlantCare
+Lentelė: plant_care
+end note
+
+class "Augalo būsenos įrašas" as BusenosIrasas <<entity>> {
+  measured_at: datetime
+  condition: ConditionType
+  notes: text
+  photo_url: string
+}
+note right of BusenosIrasas
+Kodas: App\Models\PlantConditionHistory
+Lentelė: plant_condition_history
+end note
+
+class "Rekomendacijų kalendorius" as Kalendorius <<entity>> {
+  creation_date: datetime
+  start_date: date
+  end_date: date
+}
+note right of Kalendorius
+Kodas: App\Models\TaskCalendar
+Lentelė: task_calendars
+end note
+
+class "Užduotis" as Uzduotis <<entity>> {
+  date: date
+  name: string
+  task_type: TaskType
+  priority: TaskPriority
+  reason: text
+  comment: text
+  item: string
+  item_quantity: decimal
+  state: TaskState
+  weather_context: JSON
+  inventory_context: JSON
+  simulated_state: JSON
+  workflow_context: JSON
+}
+note right of Uzduotis
+Kodas: App\Models\Task
+Lentelė: tasks
+end note
+
+class "Užduoties resurso poreikis" as ResursoPoreikis <<entity>> {
+  resource_name: string
+  inventory_item_type: InventoryItemType
+  unit: InventoryUnit
+  required_quantity: decimal
+  shortage_quantity: decimal
+  is_consumed: boolean
+}
+note right of ResursoPoreikis
+Kodas: App\Models\TaskResourceRequirement
+Lentelė: task_resource_requirements
+end note
+
+class "Orų prognozė" as OruPrognoze <<entity>> {
+  date: date
+  temperature: decimal
+  temp_min: decimal
+  temp_max: decimal
+  precipitation: decimal
+  humidity: decimal
+  wind_kmh: decimal
+  condition_code: string
+  source: string
+  source_date: date
+  source_city: string
+  city: string
+  is_seasonal_fallback: boolean
+}
+note right of OruPrognoze
+Kodas: App\Models\WeatherForecast
+Lentelė: weather_forecasts
+end note
+
+class "Inventoriaus elementas" as InventoriausElementas <<entity>> {
+  name: string
+  normalized_name: string
+  quantity: decimal
+  inventory_item_type: InventoryItemType
+  unit: InventoryUnit
+}
+note right of InventoriausElementas
+Kodas: App\Models\InventoryItem
+Lentelė: inventory_items
+end note
+
+class "Inventoriaus naudojimo įrašas" as InventoriausNaudojimas <<entity>> {
+  change_type: string
+  quantity_before: decimal
+  quantity_delta: decimal
+  quantity_after: decimal
+  unit: InventoryUnit
+  metadata: JSON
+  created_at: datetime
+}
+note right of InventoriausNaudojimas
+Kodas: App\Models\InventoryUsageLog
+Lentelė: inventory_usage_logs
+end note
+
+class "Derliaus įrašas" as DerliausIrasas <<entity>> {
+  quantity: double
+  harvested_on: date
+  notes: text
+}
+note right of DerliausIrasas
+Kodas: App\Models\HarvestRecord
+Lentelė: harvest_records
+end note
+
+class "Sėjomainos įrašas" as SejomainosIrasas <<entity>> {
+  from_date: date
+  to_date: date
+}
+note right of SejomainosIrasas
+Kodas: App\Models\RotationHistory
+Lentelė: rotation_history
+end note
+
+class "Sklypo versija" as SklypoVersija <<entity>> {
+  action: string
+  snapshot: JSON
+  created_at: datetime
+}
+note right of SklypoVersija
+Kodas: PlotSnapshotService
+Lentelė: plot_snapshots
+Eloquent modelio nėra
+end note
+
+class "Prieigos teisė" as PrieigosTeise <<entity>> {
+  granted_at: datetime
+  role: AccessRole
+}
+note right of PrieigosTeise
+Kodas: App\Models\AccessRight
+Lentelė: access_rights
+end note
+
+class "Bendruomenės įrašas" as BendruomenesIrasas <<entity>> {
+  name: string
+  text: text
+  share: boolean
+  created_at: datetime
+}
+note right of BendruomenesIrasas
+Kodas: App\Models\CommunityPost
+Lentelė: community_posts
+end note
+
+Naudotojas <|-- SodoSavininkas : "role = owner"
+Naudotojas <|-- Administratorius : "role = admin"
+Naudotojas "1" *-- "0..1" Profilis : "turi profilį"
+SodoSavininkas "1" -- "0..*" Sklypas : "valdo"
+SodoSavininkas "1" -- "0..*" InventoriausElementas : "turi inventorių"
+
+Sklypas "1" *-- "0..*" AugaluZona : "sudarytas iš"
+Sklypas "1" *-- "0..*" Augalas : "turi augalus"
+AugaluZona "1" *-- "0..*" Augalas : "talpina"
+
+KatalogoAugalas "0..1" -- "0..*" Augalas : "naudojamas sodinimui"
+KatalogoAugalas "0..*" o-- "0..1" PrieziurosProfilis : "turi bendrą priežiūrą"
+Augalas "1" *-- "0..*" BusenosIrasas : "turi būsenos istoriją"
+
+Sklypas "1" *-- "0..*" Kalendorius : "turi kalendorius"
+Kalendorius "1" *-- "0..*" Uzduotis : "sudaro"
+Kalendorius "1" *-- "0..*" OruPrognoze : "saugo prognozes"
+Uzduotis "0..*" -- "0..1" Augalas : "skirta augalui"
+Uzduotis "0..*" -- "0..1" AugaluZona : "skirta zonai"
+Uzduotis "1" *-- "0..*" ResursoPoreikis : "reikalauja"
+
+InventoriausElementas "1" *-- "0..*" InventoriausNaudojimas : "turi naudojimo istoriją"
+Uzduotis "0..1" -- "0..*" InventoriausNaudojimas : "sukelia pokytį"
+ResursoPoreikis "0..1" -- "0..*" InventoriausNaudojimas : "įvykdomas naudojimu"
+
+Sklypas "1" *-- "0..*" DerliausIrasas : "turi derliaus įrašus"
+Augalas "1" -- "0..*" DerliausIrasas : "duoda derlių"
+Uzduotis "0..1" -- "0..1" DerliausIrasas : "registruoja derlių"
+
+Sklypas "1" *-- "0..*" SejomainosIrasas : "turi sėjomainos istoriją"
+AugaluZona "1" -- "0..*" SejomainosIrasas : "dalyvauja"
+Augalas "1" -- "0..*" SejomainosIrasas : "įtrauktas"
+Sklypas "1" *-- "0..*" SklypoVersija : "turi planavimo versijas"
+
+Sklypas "1" -- "0..*" PrieigosTeise : "bendrinamas per"
+SodoSavininkas "1" -- "0..*" PrieigosTeise : "suteikia / gauna"
+SodoSavininkas "1" -- "0..*" BendruomenesIrasas : "publikuoja"
+Sklypas "0..1" -- "0..*" BendruomenesIrasas : "prisegtas prie"
+
+enum UserRole {
+  owner
+  admin
+}
+
+enum AccessRole {
+  viewer
+  editor
+}
+
+enum PlantType {
+  berry
+  cereal
+  flower
+  forage
+  fruit
+  herb
+  legume
+  oilseed
+  shrub
+  tree
+  vegetable
+}
+
+enum ConditionType {
+  diseased
+  dried
+  flowering
+  germinating
+  growing
+  mature
+  planted
+  regenerating
+}
+
+enum SoilType {
+  clay
+  greasy
+  peaty
+  rocky
+  sandy
+}
+
+enum TaskType {
+  buy
+  fertilize
+  harvest
+  planting
+  rest
+  spray
+  transplant
+  watering
+}
+
+enum TaskState {
+  pending
+  completed
+  canceled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum InventoryItemType {
+  material
+  tool
+}
+
+enum InventoryUnit {
+  unit
+  g
+  kg
+  ml
+  l
+  bag
+  pack
+  m3
+}
+
+@enduml
+
+@startuml
+title Posritis: naudotojai ir prieigos teisės
+skinparam classAttributeIconSize 0
+
+class "Naudotojas" as U <<entity>> {
+  email: string
+  role: UserRole
+}
+class "Profilis" as P <<entity>> {
+  name: string
+  surname: string
+  last_login: datetime
+}
+class "Sodo savininkas" as O <<entity>>
+class "Administratorius" as A <<entity>>
+class "Sklypas" as Plot <<entity>> {
+  name: string
+}
+class "Prieigos teisė" as AR <<entity>> {
+  granted_at: datetime
+  role: AccessRole
+}
+
+U <|-- O : "owner"
+U <|-- A : "admin"
+U "1" *-- "0..1" P : "turi profilį"
+O "1" -- "0..*" Plot : "valdo"
+O "1" -- "0..*" AR : "suteikia / gauna"
+Plot "1" -- "0..*" AR : "bendrinamas per"
+
+enum UserRole {
+  owner
+  admin
+}
+enum AccessRole {
+  viewer
+  editor
+}
+@enduml
+
+@startuml
+title Posritis: sklypai, augalai, katalogas ir priežiūra
+skinparam classAttributeIconSize 0
+
+class "Sklypas" as Plot <<entity>> {
+  name: string
+  city: string
+  plot_size: decimal
+  geometry: JSON
+}
+class "Augalų zona" as Zone <<entity>> {
+  name: string
+  zone_size: decimal
+  soil_type: SoilType
+  geometry: JSON
+}
+class "Augalas" as Plant <<entity>> {
+  name: string
+  type: PlantType
+  condition: ConditionType
+  plant_date: date
+}
+class "Katalogo augalas" as Catalog <<entity>> {
+  name: string
+  canonical_name: string
+  plant_type: PlantType
+}
+class "Augalo priežiūros profilis" as Care <<entity>> {
+  watering_interval_days: integer
+  fertilizing_interval_days: integer
+  pest_check_interval_days: integer
+  rain_skip_threshold_mm: decimal
+}
+class "Augalo būsenos įrašas" as History <<entity>> {
+  measured_at: datetime
+  condition: ConditionType
+}
+
+Plot "1" *-- "0..*" Zone : "sudarytas iš"
+Plot "1" *-- "0..*" Plant : "turi augalus"
+Zone "1" *-- "0..*" Plant : "talpina"
+Catalog "0..1" -- "0..*" Plant : "naudojamas sodinimui"
+Catalog "0..*" o-- "0..1" Care : "turi priežiūrą"
+Plant "1" *-- "0..*" History : "turi būsenos istoriją"
+
+enum SoilType {
+  clay
+  greasy
+  peaty
+  rocky
+  sandy
+}
+enum PlantType {
+  berry
+  cereal
+  flower
+  forage
+  fruit
+  herb
+  legume
+  oilseed
+  shrub
+  tree
+  vegetable
+}
+enum ConditionType {
+  diseased
+  dried
+  flowering
+  germinating
+  growing
+  mature
+  planted
+  regenerating
+}
+@enduml
+
+@startuml
+title Posritis: kalendorius, užduotys, inventorius ir orai
+skinparam classAttributeIconSize 0
+
+class "Sklypas" as Plot <<entity>>
+class "Rekomendacijų kalendorius" as Calendar <<entity>> {
+  creation_date: datetime
+  start_date: date
+  end_date: date
+}
+class "Užduotis" as Task <<entity>> {
+  date: date
+  name: string
+  task_type: TaskType
+  priority: TaskPriority
+  state: TaskState
+}
+class "Užduoties resurso poreikis" as Req <<entity>> {
+  resource_name: string
+  required_quantity: decimal
+  shortage_quantity: decimal
+  is_consumed: boolean
+}
+class "Inventoriaus elementas" as Item <<entity>> {
+  name: string
+  quantity: decimal
+  inventory_item_type: InventoryItemType
+  unit: InventoryUnit
+}
+class "Inventoriaus naudojimo įrašas" as Log <<entity>> {
+  change_type: string
+  quantity_delta: decimal
+  created_at: datetime
+}
+class "Orų prognozė" as Weather <<entity>> {
+  date: date
+  temp_min: decimal
+  temp_max: decimal
+  precipitation: decimal
+  wind_kmh: decimal
+  source: string
+}
+
+Plot "1" *-- "0..*" Calendar : "turi"
+Calendar "1" *-- "0..*" Task : "sudaro"
+Calendar "1" *-- "0..*" Weather : "saugo prognozes"
+Task "1" *-- "0..*" Req : "reikalauja"
+Item "1" *-- "0..*" Log : "turi istoriją"
+Task "0..1" -- "0..*" Log : "sukelia pokytį"
+Req "0..1" -- "0..*" Log : "įvykdomas"
+
+enum TaskType {
+  buy
+  fertilize
+  harvest
+  planting
+  rest
+  spray
+  transplant
+  watering
+}
+enum TaskState {
+  pending
+  completed
+  canceled
+}
+enum TaskPriority {
+  low
+  medium
+  high
+}
+enum InventoryItemType {
+  material
+  tool
+}
+enum InventoryUnit {
+  unit
+  g
+  kg
+  ml
+  l
+  bag
+  pack
+  m3
+}
+@enduml

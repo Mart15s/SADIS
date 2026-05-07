@@ -18,10 +18,16 @@ function draftSummary(plan) {
   const summary = plan?.summary ?? {}
   return {
     plantCount: summary.plant_count ?? 0,
+    annualCount: summary.annual_plant_count ?? summary.plant_count ?? 0,
+    permanentCount: summary.permanent_plant_count ?? 0,
     assignedCount: summary.assigned_plant_count ?? 0,
     unresolvedCount: summary.unresolved_plant_count ?? 0,
     blockedCount: summary.blocked_plant_count ?? summary.unresolved_plant_count ?? 0,
   }
+}
+
+function pluralize(count, singular, plural = `${singular}s`) {
+  return count === 1 ? singular : plural
 }
 
 export default function PlotRotationPage() {
@@ -214,6 +220,14 @@ export default function PlotRotationPage() {
                 <strong className="plot-rotation-stat-value">{summary.plantCount}</strong>
               </div>
               <div className="plot-rotation-stat">
+                <span className="plot-rotation-stat-label">Annual</span>
+                <strong className="plot-rotation-stat-value">{summary.annualCount}</strong>
+              </div>
+              <div className="plot-rotation-stat">
+                <span className="plot-rotation-stat-label">Permanent</span>
+                <strong className="plot-rotation-stat-value">{summary.permanentCount}</strong>
+              </div>
+              <div className="plot-rotation-stat">
                 <span className="plot-rotation-stat-label">Assigned</span>
                 <strong className="plot-rotation-stat-value">{summary.assignedCount}</strong>
               </div>
@@ -227,19 +241,25 @@ export default function PlotRotationPage() {
               </div>
             </div>
 
-            {summary.assignedCount === 0 ? (
+            {summary.unresolvedCount > 0 ? (
+              <span className="field-error">
+                This draft cannot be confirmed because {summary.unresolvedCount} annual {pluralize(summary.unresolvedCount, 'plant')} still {summary.unresolvedCount === 1 ? 'needs' : 'need'} a valid target zone.
+              </span>
+            ) : summary.annualCount === 0 && summary.permanentCount > 0 ? (
+              <p className="section-copy">No annual rotation is needed for this plot. Permanent plantings are shown for context and can stay in place.</p>
+            ) : summary.assignedCount === 0 ? (
               <span className="field-error">No valid automatic rotation could be generated for the selected date.</span>
-            ) : summary.unresolvedCount > 0 ? (
-              <p className="section-copy">This draft cannot be confirmed until every unresolved plant is reviewed.</p>
             ) : null}
 
             <div className="plot-rotation-draft-list">
               {(draft.plan?.plants ?? []).map((entry) => {
                 const targetZone = entry.selected_target_zone
+                const isRotatable = entry.is_rotatable ?? true
                 const alternatives = entry.alternatives ?? []
                 const fallbackSolutions = entry.fallback_solutions ?? []
                 const positiveReasons = (targetZone?.positive_reasons ?? targetZone?.passed_reasons ?? []).filter(Boolean)
                 const softWarnings = (targetZone?.soft_warnings ?? []).filter(Boolean)
+                const exclusionReason = entry.exclusion_reason
                 const blockedCandidates = (entry.candidate_zones ?? [])
                   .filter((candidate) => !candidate.is_eligible)
                   .slice(0, 4)
@@ -253,25 +273,40 @@ export default function PlotRotationPage() {
                           {entry.current_zone?.name ? `Current zone: ${entry.current_zone.name}` : 'No current zone'}
                         </p>
                       </div>
-                      <StatusBadge kind="selection" tone={targetZone ? 'success' : 'warning'}>
-                        {targetZone ? `Target: ${targetZone.zone_name}` : 'Needs manual review'}
+                      <StatusBadge kind="selection" tone={!isRotatable || targetZone ? 'success' : 'warning'}>
+                        {!isRotatable ? 'Permanent planting' : targetZone ? `Target: ${targetZone.zone_name}` : 'Needs valid target'}
                       </StatusBadge>
                     </div>
 
-                    {targetZone ? (
+                    {!isRotatable ? (
+                      <p className="plot-rotation-draft-summary">
+                        {exclusionReason ?? 'Perennial plant — recommended to stay in its current zone.'}
+                      </p>
+                    ) : targetZone ? (
                       <p className="plot-rotation-draft-summary">
                         Move to <strong>{targetZone.zone_name}</strong>.
                       </p>
                     ) : (
                       <p className="plot-rotation-draft-summary">
-                        No clean placement was selected automatically.
+                        This annual plant still needs a valid target zone. Adjust the zones or choose a later planning date, then regenerate the draft.
                       </p>
                     )}
 
-                    {(positiveReasons.length > 0 || softWarnings.length > 0 || alternatives.length > 0 || fallbackSolutions.length > 0 || blockedCandidates.length > 0) ? (
+                    {(exclusionReason || positiveReasons.length > 0 || softWarnings.length > 0 || alternatives.length > 0 || fallbackSolutions.length > 0 || blockedCandidates.length > 0) ? (
                       <details className="task-card-details">
                         <summary>Why this recommendation</summary>
                         <div className="task-card-detail-stack">
+                          {exclusionReason ? (
+                            <div className="task-card-detail-block">
+                              <strong>Rotation scope</strong>
+                              <div className="task-card-resource-list">
+                                <div className="task-card-resource-row">
+                                  <span>{exclusionReason}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+
                           {targetZone && positiveReasons.length > 0 ? (
                             <div className="task-card-detail-block">
                               <strong>Positive reasons</strong>
@@ -348,7 +383,7 @@ export default function PlotRotationPage() {
 
             {canEdit ? (
               <div className="form-actions">
-                <Button onClick={handleConfirm} disabled={planStatus !== 'ready' || summary.assignedCount === 0} loading={busy}>
+                <Button onClick={handleConfirm} disabled={planStatus !== 'ready'} loading={busy}>
                   Confirm rotation plan
                 </Button>
                 <Button variant="ghost" onClick={handleReject} disabled={busy}>Discard draft</Button>

@@ -35,6 +35,7 @@ use App\Models\TaskResourceRequirement;
 use App\Models\UsedOn;
 use App\Models\User;
 use App\Models\WeatherForecast;
+use App\Services\Plot\RotationPlannerService;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Seeder;
@@ -603,21 +604,11 @@ class CurrentVersionDemoSeeder extends Seeder
             ]);
         }
 
-        RotationPlanDraft::query()->create([
-            'plot_id' => $primary->id,
-            'garden_owner_id' => $owner->id,
-            'planning_date' => now()->addMonths(7)->toDateString(),
-            'plan' => [
-                'season' => now()->addYear()->year.' spring',
-                'recommendations' => [
-                    ['zone' => 'Tomato and Basil Bed', 'next_family' => 'Fabaceae', 'reason' => 'Move nightshades away after the current tomato season.'],
-                    ['zone' => 'Root Vegetable Bed', 'next_family' => 'Brassicaceae', 'reason' => 'Roots can rotate out after two light-feeding seasons.'],
-                    ['zone' => 'Pea and Bean Bed', 'next_family' => 'Solanaceae', 'reason' => 'Legumes leave a good setup for peppers or tomatoes.'],
-                ],
-            ],
-            'created_at' => now()->subDays(2),
-            'updated_at' => now()->subDays(2),
-        ]);
+        app(RotationPlannerService::class)->createDraft(
+            $primary,
+            now()->addMonths(7)->toDateString(),
+            $owner
+        );
     }
 
     /**

@@ -1,0 +1,77 @@
+# Trumpas esybių klasių modelio aprašas
+
+Modelis sudarytas pagal realią Laravel + React implementaciją. Pagrindinė dalykinės srities ašis yra `Sklypas`, kuris priklauso `Sodo savininkui`, turi `Augalų zonas`, `Augalus`, planavimo istoriją, rekomendacijų kalendorius, derliaus įrašus, sėjomainos įrašus ir gali būti bendrinamas bendruomenėje.
+
+## Pagrindinės esybės
+
+- Naudotojas (`User`) - el. paštas ir vaidmuo (`owner`, `admin`).
+- Profilis (`Profile`) - vardas, pavardė, paskutinis prisijungimas.
+- Sodo savininkas (`GardenOwner`) - naudotojo dalykinė tapatybė, valdanti sklypus ir inventorių.
+- Sklypas (`Plot`) - pavadinimas, miestas, plotas, sukūrimo data, aprašas, bendrinimas, geometrija.
+- Augalų zona (`PlantZone`) - pavadinimas, plotas, dirvožemis, sėjomainos etapas, paskutinio sodinimo data, geometrija.
+- Augalas (`Plant`) - pavadinimas, tipas, būsena, sodinimo data, liga, pastabos, augimo parametrai.
+- Katalogo augalas (`CatalogPlant`) - reusable katalogo įrašas, siejamas su priežiūros profiliu.
+- Augalo priežiūros profilis (`PlantCare`) - trukmės, priežiūros intervalai ir orų taisyklių slenksčiai.
+- Augalo būsenos įrašas (`PlantConditionHistory`) - būsenos matavimas, data, pastabos, nuotrauka.
+- Rekomendacijų kalendorius (`TaskCalendar`) - datos intervalas ir sugeneruotos užduotys.
+- Užduotis (`Task`) - data, tipas, prioritetas, būsena, komentarai ir kontekstai.
+- Užduoties resurso poreikis (`TaskResourceRequirement`) - reikalingas inventoriaus resursas ir trūkumas.
+- Orų prognozė (`WeatherForecast`) - Meteo.lt arba fallback orų duomenų kopija.
+- Inventoriaus elementas (`InventoryItem`) - pavadinimas, kiekis, tipas, matavimo vienetas.
+- Inventoriaus naudojimo įrašas (`InventoryUsageLog`) - sunaudojimo arba papildymo faktas.
+- Derliaus įrašas (`HarvestRecord`) - kiekis, derliaus data, pastabos.
+- Sėjomainos įrašas (`RotationHistory`) - zona, augalas ir laikotarpis.
+- Sėjomainos plano juodraštis (`RotationPlanDraft`) - JSON planas iki patvirtinimo.
+- Sklypo versija (`plot_snapshots`) - planavimo istorijos momentinė kopija.
+- Prieigos teisė (`AccessRight`) - sklypo bendrinimas su `viewer` arba `editor` role.
+- Bendruomenės įrašas (`CommunityPost`) - įrašas su pasirenkamai prisegtu sklypu.
+
+## Pagrindiniai ryšiai
+
+- `Naudotojas 1 -- 0..1 Profilis`.
+- `Naudotojas 1 -- 0..1 Sodo savininkas`.
+- `Naudotojas <|-- Sodo savininkas`, `Naudotojas <|-- Administratorius` kaip conceptual specializacijos pagal `UserRole`.
+- `Sodo savininkas 1 -- 0..* Sklypas`.
+- `Sodo savininkas 1 -- 0..* Inventoriaus elementas`.
+- `Sklypas 1 *-- 0..* Augalų zona`.
+- `Sklypas 1 *-- 0..* Augalas`.
+- `Augalų zona 1 *-- 0..* Augalas`.
+- `Augalas 0..* -- 0..1 Katalogo augalas`.
+- `Katalogo augalas 0..* o-- 0..1 Augalo priežiūros profilis`.
+- `Augalas 1 *-- 0..* Augalo būsenos įrašas`.
+- `Sklypas 1 *-- 0..* Rekomendacijų kalendorius`.
+- `Rekomendacijų kalendorius 1 *-- 0..* Užduotis`.
+- `Rekomendacijų kalendorius 1 *-- 0..* Orų prognozė`.
+- `Užduotis 1 *-- 0..* Užduoties resurso poreikis`.
+- `Inventoriaus elementas 1 *-- 0..* Inventoriaus naudojimo įrašas`.
+- `Užduotis 0..1 -- 0..* Inventoriaus naudojimo įrašas`.
+- `Sklypas 1 *-- 0..* Derliaus įrašas`.
+- `Augalas 1 -- 0..* Derliaus įrašas`.
+- `Sklypas 1 *-- 0..* Sėjomainos įrašas`.
+- `Sklypas 1 *-- 0..* Sklypo versija`.
+- `Sklypas 1 -- 0..* Prieigos teisė`.
+- `Sodo savininkas 1 -- 0..* Bendruomenės įrašas`.
+- `Sklypas 0..1 -- 0..* Bendruomenės įrašas`.
+
+## Enumeracijos
+
+- `UserRole`: `admin`, `owner`.
+- `AccessRole`: `viewer`, `editor`.
+- `AnalysisType`: `planning`, `plant_condition`, `harvest`.
+- `ConditionType`: `diseased`, `dried`, `flowering`, `germinating`, `growing`, `mature`, `planted`, `regenerating`.
+- `PlantType`: `berry`, `cereal`, `flower`, `forage`, `fruit`, `herb`, `legume`, `oilseed`, `shrub`, `tree`, `vegetable`.
+- `SoilType`: `clay`, `greasy`, `peaty`, `rocky`, `sandy`.
+- `TaskType`: `buy`, `fertilize`, `harvest`, `planting`, `rest`, `spray`, `transplant`, `watering`.
+- `TaskState`: `pending`, `completed`, `canceled`.
+- `TaskPriority`: `low`, `medium`, `high`.
+- `InventoryItemType`: `material`, `tool`.
+- `InventoryUnit`: `unit`, `g`, `kg`, `ml`, `l`, `bag`, `pack`, `m3`.
+
+## Svarbios pastabos
+
+- Realioje implementacijoje `plants.fk_plant_care_id` pašalintas. Augalo priežiūra gaunama per `Plant -> CatalogPlant -> PlantCare`.
+- `plot_snapshots` turi dalykinę planavimo istorijos prasmę, bet neturi Eloquent modelio.
+- `HasPlot`, `HasInventory` ir `UsedOn` yra techninės jungtys be savarankiškų atributų; pagrindinėje diagramoje jų geriau nerodyti kaip klasių.
+- `AuditLog`, Sanctum tokenai ir slaptažodžio reset tokenai yra techninės esybės.
+- Frontend `SOIL_TYPES` neturi backend enum reikšmės `greasy`.
+- Dublikuoti alias laukai (`type/task_type`, `status/state`, `plot_id/fk_plot_id` ir pan.) diagramoje turėtų būti supaprastinti iki dalykinio atributo.
