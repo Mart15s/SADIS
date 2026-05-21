@@ -12,15 +12,16 @@ vi.mock('../../lib/api.js', () => ({
     listPlantZones: vi.fn(),
     listRotations: vi.fn(),
     createRotationPlan: vi.fn(),
+    updateRotationDraftItem: vi.fn(),
     confirmRotationPlan: vi.fn(),
     rejectRotationPlan: vi.fn(),
   },
 }))
 
 vi.mock('../../components/plot/PlotSectionNav.jsx', () => ({
-  default: ({ plotName, sectionLabel = 'Rotation', description, meta, actions }) => (
+  default: ({ plotName, sectionLabel = 'Rotacija', description, meta, actions }) => (
     <nav data-testid="plot-section-nav">
-      <span>Plots</span>
+      <span>Sklypai</span>
       <span>{sectionLabel}</span>
       <h1>{plotName}</h1>
       <p>{description}</p>
@@ -98,16 +99,60 @@ describe('PlotRotationPage', () => {
         },
       },
     })
+    api.updateRotationDraftItem.mockResolvedValue({
+      draft: {
+        id: 90,
+        plan: {
+          status: 'ready',
+          summary: {
+            plant_count: 1,
+            annual_plant_count: 1,
+            assigned_plant_count: 1,
+            manually_edited_count: 1,
+            unresolved_plant_count: 0,
+            blocked_plant_count: 0,
+          },
+          plants: [
+            {
+              plant: { id: 22, name: 'Pepper' },
+              current_zone: { id: 11, name: 'Seedlings' },
+              generated_target_zone: null,
+              selected_target_zone: {
+                zone_id: 12,
+                zone_name: 'Zone A',
+                is_eligible: true,
+                score: 7,
+                positive_reasons: ['Target zone has enough space for this plant.'],
+              },
+              decision_mode: 'target',
+              resolution_status: 'manual_override',
+              manual_note: null,
+              alternatives: [],
+              fallback_solutions: [],
+              candidate_zones: [
+                {
+                  zone_id: 12,
+                  zone_name: 'Zone A',
+                  is_eligible: true,
+                  score: 7,
+                  hard_blocking_reasons: [],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    })
   })
 
   it('shows blocked rotation zones and keeps an unresolved draft unconfirmable', async () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('North Plot')).toBeInTheDocument()
+      expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation draft' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generuoti rotacijos juodraštį' }))
 
     await waitFor(() => {
       expect(api.createRotationPlan).toHaveBeenCalledWith('5', expect.objectContaining({
@@ -115,14 +160,80 @@ describe('PlotRotationPage', () => {
       }))
     })
 
-    expect(screen.getByText('Needs adjustment')).toBeInTheDocument()
+    expect(screen.getByText('Reikia korekcijos')).toBeInTheDocument()
     expect(screen.getByText('Pepper')).toBeInTheDocument()
     expect(screen.getByText('Zone A')).toBeInTheDocument()
-    expect(screen.getByText('Same family was planted here in 2025.')).toBeInTheDocument()
-    expect(screen.getByText('This draft cannot be confirmed because 1 annual plant still needs a valid target zone.')).toBeInTheDocument()
-    expect(screen.getByText('Needs valid target')).toBeInTheDocument()
+    expect(screen.getByText('Tos pačios šeimos augalas čia sodintas 2025 m.')).toBeInTheDocument()
+    expect(screen.getByText('Šio juodraščio patvirtinti negalima, nes 1 vienmečiams augalams dar reikia tinkamos tikslinės zonos.')).toBeInTheDocument()
+    expect(screen.getByText('Reikia tinkamos tikslinės zonos')).toBeInTheDocument()
+    expect(screen.getByLabelText('Sprendimas')).toBeInTheDocument()
     expect(screen.queryByText('Needs manual review')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' })).toBeDisabled()
+  })
+
+  it('lets a user edit a generated draft item target zone inline', async () => {
+    api.createRotationPlan.mockResolvedValueOnce({
+      draft: {
+        id: 90,
+        plan: {
+          status: 'needs_adjustment',
+          summary: {
+            plant_count: 1,
+            annual_plant_count: 1,
+            assigned_plant_count: 0,
+            unresolved_plant_count: 1,
+            blocked_plant_count: 1,
+          },
+          plants: [
+            {
+              plant: { id: 22, name: 'Pepper' },
+              current_zone: { id: 11, name: 'Seedlings' },
+              generated_target_zone: null,
+              selected_target_zone: null,
+              decision_mode: 'unresolved',
+              resolution_status: 'unresolved',
+              alternatives: [],
+              fallback_solutions: [],
+              candidate_zones: [
+                {
+                  zone_id: 12,
+                  zone_name: 'Zone A',
+                  is_eligible: true,
+                  score: 7,
+                  hard_blocking_reasons: [],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    })
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Generuoti rotacijos juodraštį' }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Sprendimas')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText('Sprendimas'), { target: { value: 'zone:12' } })
+
+    await waitFor(() => {
+      expect(api.updateRotationDraftItem).toHaveBeenCalledWith('5', 90, 22, {
+        decision: 'target',
+        target_zone_id: 12,
+        manual_note: null,
+      })
+    })
+
+    expect(screen.getByText('Paruošta patvirtinti')).toBeInTheDocument()
+    expect(screen.getByText(/Perkelti į/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' })).toBeEnabled()
   })
 
   it('shows permanent plantings as non-blocking annual rotation context', async () => {
@@ -142,22 +253,22 @@ describe('PlotRotationPage', () => {
           plants: [
             {
               plant: { id: 31, name: "Apple Tree 'Auksis'" },
-              current_zone: { id: 12, name: 'Young Apple Guild' },
+              current_zone: { id: 12, name: 'Jaunos obels zona' },
               selected_target_zone: null,
               is_rotatable: false,
               rotation_mode: 'permanent_planting',
-              exclusion_reason: 'Permanent planting — excluded from annual crop rotation.',
+              exclusion_reason: 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.',
               alternatives: [],
               fallback_solutions: [],
               candidate_zones: [],
             },
             {
               plant: { id: 32, name: "Raspberry 'Glen Ample'" },
-              current_zone: { id: 13, name: 'Raspberry Canes' },
+              current_zone: { id: 13, name: 'Aviečių zona' },
               selected_target_zone: null,
               is_rotatable: false,
               rotation_mode: 'permanent_planting',
-              exclusion_reason: 'Permanent planting — excluded from annual crop rotation.',
+              exclusion_reason: 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.',
               alternatives: [],
               fallback_solutions: [],
               candidate_zones: [],
@@ -171,21 +282,21 @@ describe('PlotRotationPage', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('North Plot')).toBeInTheDocument()
+      expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation draft' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generuoti rotacijos juodraštį' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Ready to confirm')).toBeInTheDocument()
+      expect(screen.getByText('Paruošta patvirtinti')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('No annual rotation is needed for this plot. Permanent plantings are shown for context and can stay in place.')).toBeInTheDocument()
-    expect(screen.getAllByText('Permanent planting')).toHaveLength(2)
-    expect(screen.getAllByText('Permanent planting — excluded from annual crop rotation.').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeEnabled()
+    expect(screen.getByText('Šiam sklypui metinė rotacija nereikalinga. Daugiametis sodinimas rodomas kontekstui ir gali likti vietoje.')).toBeInTheDocument()
+    expect(screen.getAllByText('Daugiametis sodinimas')).toHaveLength(2)
+    expect(screen.getAllByText('Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' })).toBeEnabled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm rotation plan' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' }))
 
     await waitFor(() => {
       expect(api.confirmRotationPlan).toHaveBeenCalledWith('5', 91)

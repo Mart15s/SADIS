@@ -50,6 +50,17 @@ class CommunityTest extends TestCase
         $plot = $this->createPlotForOwner($owner, [
             'name' => 'Bendruomenes sklypas',
         ]);
+        $this->createZoneForPlot($plot, [
+            'name' => 'Dalijama zona',
+            'geometry' => [
+                'points' => [
+                    ['x' => 0.18, 'y' => 0.18],
+                    ['x' => 0.48, 'y' => 0.18],
+                    ['x' => 0.48, 'y' => 0.48],
+                    ['x' => 0.18, 'y' => 0.48],
+                ],
+            ],
+        ]);
 
         Sanctum::actingAs($user);
 
@@ -59,7 +70,9 @@ class CommunityTest extends TestCase
             'share' => false,
             'fk_plot_id' => $plot->id,
         ])->assertCreated()
-            ->assertJsonPath('data.plot_name', 'Bendruomenes sklypas');
+            ->assertJsonPath('data.plot_name', 'Bendruomenes sklypas')
+            ->assertJsonPath('data.plot_preview.zones.0.name', 'Dalijama zona')
+            ->assertJsonPath('data.plot_preview.zones.0.geometry.points.2.y', 0.48);
 
         $this->assertDatabaseHas('community_posts', [
             'name' => 'Sklypo naujiena',
@@ -399,6 +412,7 @@ class CommunityTest extends TestCase
             'creation_date' => '2026-03-20',
             'description' => 'Bandymu sklypas',
             'share' => true,
+            'garden_owner_id' => $owner->id,
         ], $overrides));
 
         HasPlot::query()->create([

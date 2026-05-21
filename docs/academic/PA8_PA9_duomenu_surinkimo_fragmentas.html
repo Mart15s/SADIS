@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PA8 / PA9 duomenų surinkimo fragmentas</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #526070;
+      --line: #334155;
+      --paper: #ffffff;
+      --page: #e5e7eb;
+      --lane: #d7d9dd;
+      --lane-soft: #eceef1;
+      --activity: #fff2bf;
+      --activity-border: #8a6d1d;
+      --call: #fff8da;
+      --call-border: #6b46c1;
+      --decision: #fff8da;
+      --decision-border: #6b7280;
+      --note: #f7faff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    main {
+      width: min(1220px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: 0; }
+    h2 { margin: 22px 0 10px; font-size: 18px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .comment {
+      border-left: 4px solid #8aa5d6;
+      background: var(--note);
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      color: #334155;
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    .legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 18px; height: 13px; border: 1px solid #64748b; display: inline-block; }
+    .canvas {
+      overflow: auto;
+      border: 1px solid #cbd5e1;
+      background: #d1d5db;
+      padding: 12px;
+    }
+    svg { display: block; max-width: none; background: #d1d5db; }
+    .uml-title { font-size: 17px; font-weight: 700; fill: #172033; }
+    .lane-title { font-size: 14px; font-weight: 700; fill: #1f2937; }
+    .node-text { font-size: 12px; fill: #172033; font-weight: 600; }
+    .edge-label {
+      font-size: 11px;
+      fill: #1f2937;
+      paint-order: stroke;
+      stroke: #d1d5db;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    th, td { border: 1px solid #d9e1ee; padding: 7px 8px; vertical-align: top; }
+    th { background: #eef3ff; text-align: left; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+    .flow-list {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .flow-list div { margin-bottom: 3px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PA8 / PA9 duomenų surinkimo fragmentas</h1>
+  <div class="meta">Fragmentas rodo tik tą PA8 vietą, kur rotacijos planavimo posistemis naudoja PA9 tipo istorinius duomenis.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#d7d9dd"></i> Swimlane</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> Activity</span>
+    <span><i class="swatch" style="background:#fff8da"></i> Sprendimo taškas</span>
+    <span><i class="swatch" style="background:#fff8da;border:2px dashed #6b46c1"></i> PA9 duomenų funkcija</span>
+    <span><i class="swatch" style="background:#172033"></i> UML start/end</span>
+  </div>
+  <div class="comment">
+    Codebase tai realizuoja kaip vidinį PA8 žingsnį: <code>RotationPlannerService::preparePlot()</code> užkrauna <code>plantZones.rotationHistory</code>, <code>plants.rotationHistory</code> ir <code>rotationHistory</code>. Šie įrašai naudojami prieš galutinį draft sprendimų formavimą, ypač ankstesnės zonos, paskutinės rotacijos, cooldown ir rest interval patikroms.
+  </div>
+
+  <div class="canvas">
+    <svg id="diagram" width="1120" height="1120" role="img" aria-label="PA8 PA9 duomenų surinkimo fragmentas"></svg>
+  </div>
+
+  <h2>Jungčių fragmentas</h2>
+  <div id="flow-list" class="flow-list"></div>
+
+  <h2>Paaiškinimas</h2>
+  <table>
+    <thead><tr><th>Ryšys</th><th>Realizacija</th></tr></thead>
+    <tbody>
+      <tr><td>PA8 → PA9 duomenų gavimas</td><td>Vidinis <code>RotationPlannerService</code> žingsnis, atitinkantis PA9 duomenų gavimo funkciją.</td></tr>
+      <tr><td>Sąlyga</td><td><code>[reikia ankstesnių planavimo sprendimų rotacijos taisyklėms įvertinti]</code></td></tr>
+      <tr><td>Grąžinami duomenys</td><td>Ankstesnė augalo zona, paskutinė rotacijos data, cooldown aktyvumas, zonos rest intervalas, ankstesnio augalo / šeimos / rotation group konfliktai.</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<script>
+const lanes = {
+  plot: { x: 40, y: 55, width: 300, height: 1010, title: 'Sklypo valdymo posistemis' },
+  rotation: { x: 360, y: 55, width: 360, height: 1010, title: 'Rotacijos planavimo posistemis' },
+  history: { x: 740, y: 55, width: 320, height: 1010, title: 'PA9 istorijos duomenų funkcija' }
+};
+
+const labels = {
+  F1: 'F1 Inicijuoti augalų rotacijos valdymą',
+  F2: 'F2 Gauti sklypo zonas, augalus ir planning_date',
+  F3: 'F3 «extend» PA9 gauti planavimo / rotacijos istorijos duomenis',
+  F4: 'F4 Patikrinti ankstesnes augalų zonas ir paskutinę rotaciją',
+  F5: 'F5 Patikrinti cooldown ir zonos rest intervalą',
+  F6: 'F6 Tęsti su tuščiu istorijos kontekstu / numatytosiomis reikšmėmis',
+  F7: 'F7 Generuoti arba atnaujinti rotation draft kandidatus',
+  D1: 'D1 Ar rasta ankstesnių planavimo / rotacijos duomenų?'
+};
+
+const nodes = {
+  start: { type: 'start', x: 190, y: 130 },
+  F1: { type: 'activity', x: 85, y: 190, w: 210, h: 62 },
+  F2: { type: 'activity', x: 425, y: 180, w: 230, h: 76 },
+  F3: { type: 'call', x: 795, y: 310, w: 210, h: 86 },
+  D1: { type: 'decision', x: 430, y: 450, w: 220, h: 96 },
+  F4: { type: 'activity', x: 425, y: 610, w: 230, h: 74 },
+  F5: { type: 'activity', x: 425, y: 740, w: 230, h: 74 },
+  F6: { type: 'activity', x: 795, y: 615, w: 210, h: 86 },
+  F7: { type: 'activity', x: 425, y: 880, w: 230, h: 70 },
+  end: { type: 'end', x: 540, y: 1010 }
+};
+
+const flows = [
+  ['start', 'F1', ''],
+  ['F1', 'F2', ''],
+  ['F2', 'F3', '[reikia ankstesnių planavimo sprendimų rotacijos taisyklėms įvertinti]'],
+  ['F3', 'D1', ''],
+  ['D1', 'F6', 'ne'],
+  ['F6', 'F7', ''],
+  ['D1', 'F4', 'taip'],
+  ['F4', 'F5', ''],
+  ['F5', 'F7', ''],
+  ['F7', 'end', '']
+];
+
+function svgEl(name, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', name);
+  Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+  return el;
+}
+function center(node) {
+  if (node.type === 'start' || node.type === 'end') return { x: node.x, y: node.y };
+  return { x: node.x + node.w / 2, y: node.y + node.h / 2 };
+}
+function pointFor(id, side) {
+  const node = nodes[id];
+  if (node.type === 'start' || node.type === 'end') return { x: node.x, y: node.y };
+  if (side === 'left') return { x: node.x, y: node.y + node.h / 2 };
+  if (side === 'right') return { x: node.x + node.w, y: node.y + node.h / 2 };
+  if (side === 'top') return { x: node.x + node.w / 2, y: node.y };
+  return { x: node.x + node.w / 2, y: node.y + node.h };
+}
+function wrapText(text, maxChars) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  words.forEach((word) => {
+    const test = line ? `${line} ${word}` : word;
+    if (test.length > maxChars && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+function drawText(svg, text, x, y, width) {
+  const lines = wrapText(text, Math.max(16, Math.floor(width / 7)));
+  const t = svgEl('text', { x, y, 'text-anchor': 'middle', class: 'node-text' });
+  const firstDy = -((lines.length - 1) * 14) / 2;
+  lines.forEach((line, index) => {
+    const span = svgEl('tspan', { x, dy: index === 0 ? firstDy : 14 });
+    span.textContent = line;
+    t.appendChild(span);
+  });
+  svg.appendChild(t);
+}
+function drawNode(svg, id, node) {
+  if (node.type === 'start') {
+    svg.appendChild(svgEl('circle', { cx: node.x, cy: node.y, r: 10, fill: '#172033' }));
+    return;
+  }
+  if (node.type === 'end') {
+    svg.appendChild(svgEl('circle', { cx: node.x, cy: node.y, r: 13, fill: '#fff', stroke: '#172033', 'stroke-width': 2 }));
+    svg.appendChild(svgEl('circle', { cx: node.x, cy: node.y, r: 8, fill: '#172033' }));
+    return;
+  }
+  if (node.type === 'decision') {
+    svg.appendChild(svgEl('polygon', {
+      points: `${node.x + node.w / 2},${node.y} ${node.x + node.w},${node.y + node.h / 2} ${node.x + node.w / 2},${node.y + node.h} ${node.x},${node.y + node.h / 2}`,
+      fill: 'var(--decision)', stroke: 'var(--decision-border)', 'stroke-width': 1.7
+    }));
+    drawText(svg, labels[id], node.x + node.w / 2, node.y + node.h / 2 + 4, node.w - 32);
+    return;
+  }
+  const attrs = { x: node.x, y: node.y, width: node.w, height: node.h, rx: 8, ry: 8, fill: 'var(--activity)', stroke: 'var(--activity-border)', 'stroke-width': 1.7 };
+  if (node.type === 'call') {
+    attrs.fill = 'var(--call)';
+    attrs.stroke = 'var(--call-border)';
+    attrs['stroke-dasharray'] = '7 4';
+  }
+  svg.appendChild(svgEl('rect', attrs));
+  drawText(svg, labels[id], node.x + node.w / 2, node.y + node.h / 2 + 4, node.w - 18);
+}
+function routePoints(fromId, toId) {
+  const c1 = center(nodes[fromId]);
+  const c2 = center(nodes[toId]);
+  if (Math.abs(c1.x - c2.x) < 35) return [pointFor(fromId, 'bottom'), pointFor(toId, 'top')];
+  const fromSide = c1.x < c2.x ? 'right' : 'left';
+  const toSide = c1.x < c2.x ? 'left' : 'right';
+  const p1 = pointFor(fromId, fromSide);
+  const p4 = pointFor(toId, toSide);
+  const midX = (p1.x + p4.x) / 2;
+  return [p1, { x: midX, y: p1.y }, { x: midX, y: p4.y }, p4];
+}
+function drawFlow(svg, fromId, toId, label) {
+  const points = routePoints(fromId, toId);
+  svg.appendChild(svgEl('polyline', {
+    points: points.map((p) => `${p.x},${p.y}`).join(' '),
+    fill: 'none', stroke: 'var(--line)', 'stroke-width': 1.65, 'marker-end': 'url(#arrow)'
+  }));
+  if (label) {
+    const mid = points[Math.floor(points.length / 2)];
+    const text = svgEl('text', { x: mid.x + 6, y: mid.y - 6, class: 'edge-label' });
+    text.textContent = label.startsWith('[') ? label : `[${label}]`;
+    svg.appendChild(text);
+  }
+}
+function draw() {
+  const svg = document.getElementById('diagram');
+  const defs = svgEl('defs');
+  const marker = svgEl('marker', { id: 'arrow', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto', markerUnits: 'strokeWidth' });
+  marker.appendChild(svgEl('path', { d: 'M0,0 L10,4 L0,8 Z', fill: 'var(--line)' }));
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+  svg.appendChild(svgEl('text', { x: 40, y: 32, class: 'uml-title' })).textContent = 'PA8 fragmentas: PA9 istorijos duomenys prieš rotacijos sprendimus';
+  Object.values(lanes).forEach((lane) => {
+    svg.appendChild(svgEl('rect', { x: lane.x, y: lane.y, width: lane.width, height: lane.height, fill: 'var(--lane-soft)', stroke: '#94a3b8', 'stroke-width': 1.2 }));
+    svg.appendChild(svgEl('rect', { x: lane.x, y: lane.y, width: lane.width, height: 42, fill: 'var(--lane)', stroke: '#94a3b8', 'stroke-width': 1.2 }));
+    svg.appendChild(svgEl('text', { x: lane.x + lane.width / 2, y: lane.y + 27, 'text-anchor': 'middle', class: 'lane-title' })).textContent = lane.title;
+  });
+  flows.forEach(([from, to, label]) => drawFlow(svg, from, to, label));
+  Object.entries(nodes).forEach(([id, node]) => drawNode(svg, id, node));
+  const flowList = document.getElementById('flow-list');
+  flows.forEach(([from, to, label]) => {
+    const div = document.createElement('div');
+    div.textContent = `${from}${label ? label : ''} -> ${to}`;
+    flowList.appendChild(div);
+  });
+}
+draw();
+</script>
+</body>
+</html>

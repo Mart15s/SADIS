@@ -1,0 +1,168 @@
+@startuml
+title Sklypo plano redaktoriaus, ribų ir zonų klasių modelis
+left to right direction
+skinparam packageStyle rectangle
+
+package "Sąsajos / Views" {
+  class PlotsPage <<boundary>>
+  class PlotCreatePage <<boundary>> {
+    +handleCanvasZoneCreate(shape, boundaryShape)
+    +handleZoneCreateFromForm()
+    +handleZoneApply()
+    +handleZoneDelete()
+    +handleBoundaryCommit()
+    +handleSave(event)
+  }
+  class PlotDetailPage <<boundary>> {
+    +handleCanvasZoneCreate(shape, boundaryShape)
+    +handleZoneCreateFromForm()
+    +handleZoneApply()
+    +handleZoneDelete()
+    +handlePlantCreate(payload)
+    +handleSave()
+  }
+  class PlotEditPage <<boundary>> {
+    +handleSave(event)
+    +handleDelete()
+  }
+  class PlotDesignerCanvas <<boundary>> {
+    +createZoneFromShape(shape, boundaryShape)
+    +handleStageMouseUp()
+  }
+  class PlotLocationMap <<boundary>>
+  class PlotPlantingDrawer <<boundary>> {
+    +handleSubmit(event)
+  }
+}
+
+package "Valdikliai / Controllers" {
+  class PlotController <<control>> {
+    +index(request, accessService)
+    +store(request, plotSnapshotService)
+    +show(request, plot, accessService)
+    +update(request, plot, accessService, plotSnapshotService)
+    +destroy(request, plot, accessService, plotSnapshotService)
+  }
+  class SchemeController <<control>> {
+    +index(request, plot, accessService)
+    +store(request, plot, accessService, plotSnapshotService)
+    +update(request, plot, plantZone, accessService, plotSnapshotService)
+    +destroy(request, plot, plantZone, accessService, plotSnapshotService)
+  }
+  class WorkspaceController <<control>> {
+    +update(request, plot, accessService, plotWorkspaceService, plotSnapshotService)
+  }
+  class ReverseGeocodeController <<control>> {
+    +show(request, reverseGeocodingService)
+  }
+}
+
+package "Paslaugos / Services" {
+  class AccessService <<service>> {
+    +userHasAccess(owner, plot)
+    +userCanEdit(owner, plot)
+    +accessiblePlotIds(owner)
+  }
+  class PlotWorkspaceService <<service>> {
+    +commitDraft(plot, owner, validated, plotSnapshotService)
+  }
+  class PlotSnapshotService <<service>> {
+    +capture(plot, action, owner, metadata)
+    +captureCommittedVersion(plot, owner, metadata)
+  }
+  class ReverseGeocodingService <<service>> {
+    +resolveCity(latitude, longitude)
+  }
+}
+
+package "Esybės / Models" {
+  class Plot <<entity>> {
+    +garden_owner_id
+    +name
+    +city
+    +plot_size
+    +creation_date
+    +description
+    +share
+    +geometry
+    +plantZones()
+    +plants()
+    +snapshots()
+    +gardenOwner()
+  }
+  class PlantZone <<entity>> {
+    +plot_id
+    +name
+    +zone_size
+    +soil_type
+    +rotation_stage
+    +last_planting_date
+    +geometry
+    +plot()
+    +plants()
+  }
+  class Plant <<entity>> {
+    +name
+    +plant_date
+    +type
+    +condition
+    +plant_size
+    +plantZone()
+    +plot()
+  }
+  class PlotSnapshot <<entity>> {
+    +plot_id
+    +garden_owner_id
+    +action
+    +snapshot
+    +created_at
+    +plot()
+    +gardenOwner()
+  }
+  class GardenOwner <<entity>> {
+    +id
+    +ownedPlots()
+  }
+}
+
+package "Išorinės sistemos / External systems" {
+  class "Nominatim reverse geocoding" as Nominatim <<external>>
+}
+
+PlotsPage ..> PlotController : listPlots()
+PlotCreatePage ..> PlotController : createPlot()
+PlotCreatePage ..> WorkspaceController : commitPlotWorkspace()
+PlotCreatePage ..> ReverseGeocodeController : reverseGeocode()
+PlotDetailPage ..> PlotController : getPlot()
+PlotDetailPage ..> WorkspaceController : commitPlotWorkspace()
+PlotDetailPage ..> SchemeController : zones API
+PlotDetailPage ..> PlotDesignerCanvas : edits geometry
+PlotDetailPage ..> PlotPlantingDrawer : creates planting payload
+PlotEditPage ..> PlotController : update/delete
+PlotDesignerCanvas ..> Plot : edits geometry DTO
+PlotDesignerCanvas ..> PlantZone : edits geometry DTO
+PlotLocationMap ..> ReverseGeocodeController : resolves city
+
+PlotController ..> AccessService : authorizes
+PlotController ..> PlotSnapshotService : captures versions
+PlotController ..> Plot : CRUD
+SchemeController ..> AccessService : authorizes
+SchemeController ..> PlotSnapshotService : captures zone change
+SchemeController ..> PlantZone : CRUD
+WorkspaceController ..> AccessService : authorizes
+WorkspaceController ..> PlotWorkspaceService : commits draft
+WorkspaceController ..> PlotSnapshotService : captures committed version
+PlotWorkspaceService ..> Plot : persists plot
+PlotWorkspaceService ..> PlantZone : persists zones
+PlotWorkspaceService ..> Plant : persists plants
+PlotSnapshotService ..> PlotSnapshot : stores JSON snapshot
+ReverseGeocodeController ..> ReverseGeocodingService : delegates
+ReverseGeocodingService ..> Nominatim : HTTP reverse
+
+GardenOwner "1" -- "0..*" Plot : owns
+Plot "1" -- "0..*" PlantZone : contains
+Plot "1" -- "0..*" Plant : contains
+PlantZone "1" -- "0..*" Plant : contains
+Plot "1" -- "0..*" PlotSnapshot : versioned by
+
+@enduml

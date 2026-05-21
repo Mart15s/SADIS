@@ -1,0 +1,149 @@
+@startuml
+title Derliaus ir analitikos klasių modelis
+left to right direction
+skinparam packageStyle rectangle
+
+package "Sąsajos / Views" {
+  class PlotHarvestsPage <<boundary>> {
+    +handleSubmit(event)
+  }
+  class PlotAnalyticsPage <<boundary>> {
+    +handleGenerate(event)
+  }
+}
+
+package "Valdikliai / Controllers" {
+  class HarvestController <<control>> {
+    +index(request, plot, accessService, harvestService)
+    +store(request, plot, accessService, harvestService)
+  }
+  class AnalyticsController <<control>> {
+    +show(request, plot, analyticsService, accessService)
+    +store(request, plot, analyticsService, accessService)
+  }
+}
+
+package "Užklausos / Requests" {
+  class StoreHarvestRecordRequest <<request>> {
+    +authorize()
+    +rules()
+  }
+  class GenerateAnalyticsRequest <<request>> {
+    +authorize()
+    +rules()
+    +messages()
+    +after()
+    +analysisTypes()
+  }
+}
+
+package "Ištekliai / Resources" {
+  class HarvestRecordResource <<resource>> {
+    +toArray(request)
+  }
+  class AnalyticsResource <<resource>> {
+    +toArray(request)
+  }
+}
+
+package "Paslaugos / Services" {
+  class AccessService <<service>>
+  class HarvestService <<service>> {
+    +listForPlot(plot, owner, plantId)
+    +registerForPlot(plot, owner, data)
+    +registerForTask(task, owner, data)
+  }
+  class AnalyticsService <<service>> {
+    +analyzePlot(plot, owner, analysisTypes)
+    +getPlotSummaryMetrics(plot)
+    +getTaskMetrics(plot)
+  }
+  class PlotSnapshotService <<service>> {
+    +listForPlot(plot, limit)
+  }
+  class PlantConditionHistoryService <<service>> {
+    +listForPlot(plot)
+  }
+}
+
+package "Esybės / Models" {
+  class Plot <<entity>> {
+    +name
+    +harvestRecords()
+    +taskCalendars()
+    +plants()
+    +rotationHistory()
+    +snapshots()
+  }
+  class Plant <<entity>> {
+    +name
+    +condition
+    +harvestRecords()
+    +conditionHistory()
+  }
+  class HarvestRecord <<entity>> {
+    +plot_id
+    +plant_id
+    +task_id
+    +garden_owner_id
+    +quantity
+    +harvested_on
+    +notes
+    +plot()
+    +plant()
+    +task()
+    +gardenOwner()
+  }
+  class Task <<entity>> {
+    +task_type
+    +date
+    +state
+    +plant()
+    +harvestRecords()
+  }
+  class PlantConditionHistory <<entity>> {
+    +plant_id
+    +measured_at
+    +condition_type
+    +plant()
+  }
+  class RotationHistory <<entity>> {
+    +from_date
+    +to_date
+    +decision_status
+  }
+  class PlotSnapshot <<entity>> {
+    +action
+    +snapshot
+    +created_at
+  }
+}
+
+PlotHarvestsPage ..> HarvestController : list/create harvests
+PlotAnalyticsPage ..> AnalyticsController : generatePlotAnalytics()
+HarvestController ..> StoreHarvestRecordRequest : validates
+HarvestController ..> AccessService : authorizes
+HarvestController ..> HarvestService : records
+HarvestController ..> HarvestRecordResource : returns
+AnalyticsController ..> GenerateAnalyticsRequest : validates
+AnalyticsController ..> AccessService : authorizes
+AnalyticsController ..> AnalyticsService : analyzePlot()
+AnalyticsController ..> AnalyticsResource : returns
+HarvestService ..> HarvestRecord : creates/reads
+HarvestService ..> Plant : validates plant belongs to plot
+HarvestService ..> Task : validates harvest task
+AnalyticsService ..> PlotSnapshotService : planning history
+AnalyticsService ..> PlantConditionHistoryService : condition history
+AnalyticsService ..> HarvestService : harvest records
+AnalyticsService ..> Task : task metrics
+AnalyticsService ..> RotationHistory : rotation metrics
+
+Plot "1" -- "0..*" HarvestRecord : harvests
+Plant "1" -- "0..*" HarvestRecord : produced by
+Task "0..1" -- "0..1" HarvestRecord : linked harvest task
+Plot "1" -- "0..*" Task : via task calendars
+Plot "1" -- "0..*" PlantConditionHistory : via plants
+Plot "1" -- "0..*" RotationHistory : records
+Plot "1" -- "0..*" PlotSnapshot : versions
+
+@enduml

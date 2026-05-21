@@ -685,7 +685,7 @@ export function getZoneLabelLayout({
   markerText = '',
   viewportBounds = null,
 } = {}) {
-  const labelText = zoneName?.trim() || 'Zone'
+  const labelText = zoneName?.trim() || 'Zona'
   const metrics = getZoneLabelMetrics(screenPoints)
 
   if (!metrics.points.length || metrics.bounds.width <= 0 || metrics.bounds.height <= 0) {
@@ -777,7 +777,7 @@ export function getBoundaryLabelLayout({
   }
 
   const metrics = getBoundaryAnchorMetrics(points)
-  const titleText = [plotName?.trim(), areaText?.trim()].filter(Boolean).join(' | ') || 'Plot boundary'
+  const titleText = [plotName?.trim(), areaText?.trim()].filter(Boolean).join(' | ') || 'Sklypo riba'
   const modeCandidates = [
     {
       mode: 'full',
@@ -785,7 +785,7 @@ export function getBoundaryLabelLayout({
     },
     {
       mode: 'compact',
-      text: areaText?.trim() || plotName?.trim() || 'Plot',
+      text: areaText?.trim() || plotName?.trim() || 'Sklypas',
     },
   ]
 
@@ -808,14 +808,14 @@ export function getBoundaryLabelLayout({
 
   if (canFitMarker(metrics, context, BOUNDARY_LABEL_MODES)) {
     return constrainLabelToViewport({
-      ...buildMarkerBox(areaText?.trim() ? 'm2' : 'Plot', metrics, BOUNDARY_LABEL_MODES),
+      ...buildMarkerBox(areaText?.trim() ? 'm²' : 'Sklypas', metrics, BOUNDARY_LABEL_MODES),
       title: titleText,
       metrics,
     }, viewportBounds, 12)
   }
 
   return constrainLabelToViewport({
-    ...buildMarkerBox('Plot', metrics, BOUNDARY_LABEL_MODES),
+    ...buildMarkerBox('Sklypas', metrics, BOUNDARY_LABEL_MODES),
     title: titleText,
     metrics,
   }, viewportBounds, 12)

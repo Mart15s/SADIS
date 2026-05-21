@@ -38,8 +38,8 @@ function CheckIcon() {
 }
 
 export function LoadingState({
-  title = 'Loading data...',
-  description = 'Preparing the latest workspace data.',
+  title = 'Įkeliami duomenys...',
+  description = 'Ruošiami naujausi darbo srities duomenys.',
   layout = 'cards',
 }) {
   return (
@@ -70,7 +70,7 @@ export function LoadingState({
 
 export function ErrorState({
   error,
-  title = 'Something went wrong',
+  title = 'Įvyko klaida',
   description,
   onRetry,
 }) {
@@ -82,12 +82,12 @@ export function ErrorState({
         </span>
         <div className="status-card-copy">
           <strong>{title}</strong>
-          <p>{description ?? error?.message ?? 'Unexpected error.'}</p>
+          <p>{description ?? error?.message ?? 'Netikėta klaida.'}</p>
         </div>
         {onRetry ? (
           <div className="status-card-actions">
             <Button variant="secondary" onClick={onRetry}>
-              Retry
+              Bandyti dar kartą
             </Button>
           </div>
         ) : null}
@@ -132,7 +132,7 @@ export function ProcessingState({
         {description ? <p>{description}</p> : null}
       </div>
       {steps.length > 0 ? (
-        <div className="processing-steps" aria-label="Processing steps">
+        <div className="processing-steps" aria-label="Apdorojimo žingsniai">
           {steps.map((step) => (
             <span key={step} className="processing-step">
               <span className="processing-step-dot" />
@@ -176,7 +176,7 @@ export function Toast({ message, type = 'success', onDismiss, duration }) {
       </span>
       <span className="toast-message">{message}</span>
       {onDismiss ? (
-        <button type="button" className="toast-dismiss" onClick={onDismiss} aria-label="Dismiss notification">
+        <button type="button" className="toast-dismiss" onClick={onDismiss} aria-label="Uždaryti pranešimą">
           x
         </button>
       ) : null}

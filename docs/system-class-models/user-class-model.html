@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User posistemio sistemos klasių modelis</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5c6475;
+      --package: #dfe8ff;
+      --package-line: #7f8ca8;
+      --boundary: #cfe8ff;
+      --control: #ffd4dc;
+      --service: #e4dcff;
+      --entity: #ffe2ad;
+      --external: #d8f2e1;
+      --library: #e7e9ee;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 1760px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+    .description { max-width: 1180px; color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 22px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 14px; font-size: 12px; color: var(--muted); }
+    .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border: 1px solid #6e7789; margin-right: 5px; vertical-align: -2px; background: var(--swatch); }
+    .diagram-wrap { position: relative; overflow-x: auto; padding: 18px; border: 1px solid #aab3c4; background: linear-gradient(135deg, rgba(222,232,255,.9), rgba(255,255,255,.96)); min-height: 620px; }
+    .connections { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+    .diagram { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px; min-width: 1220px; align-items: start; }
+    .uml-package { position: relative; border: 1px solid var(--package-line); background: rgba(225,234,255,.74); padding: 30px 12px 12px; min-height: 160px; box-shadow: 0 1px 2px rgba(42,52,74,.18); }
+    .package-tab { position: absolute; top: -1px; left: -1px; min-width: 145px; max-width: calc(100% - 24px); padding: 7px 13px; border: 1px solid var(--package-line); border-bottom: 0; background: var(--package); font-weight: 700; font-size: 13px; text-align: center; }
+    .package-body { display: flex; flex-direction: column; gap: 12px; }
+    .uml-class { border: 1px solid #6e7789; background: #fff; min-width: 200px; box-shadow: 1px 1px 2px rgba(34,42,58,.18); font-size: 12px; }
+    .uml-class.boundary { background: linear-gradient(#eaf6ff, var(--boundary)); }
+    .uml-class.control { background: linear-gradient(#fff0f2, var(--control)); }
+    .uml-class.service { background: linear-gradient(#f7f3ff, var(--service)); }
+    .uml-class.entity { background: linear-gradient(#fff5da, var(--entity)); }
+    .uml-class.external { background: linear-gradient(#effaf2, var(--external)); }
+    .uml-class.library { background: linear-gradient(#f6f7f9, var(--library)); }
+    .class-title { border-bottom: 1px solid #6e7789; padding: 7px 8px; text-align: center; display: grid; gap: 2px; }
+    .class-title span { font-size: 11px; font-style: italic; color: #364054; }
+    .class-title strong { font-size: 13px; overflow-wrap: anywhere; }
+    .class-section { padding: 7px 8px; min-height: 28px; line-height: 1.35; overflow-wrap: anywhere; }
+    .class-section + .class-section { border-top: 1px solid #6e7789; }
+    .relation-block { margin-top: 28px; }
+    h2 { margin: 0 0 12px; font-size: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { border: 1px solid #b7bfce; padding: 8px 9px; text-align: left; vertical-align: top; }
+    th { background: #e7edff; font-weight: 700; }
+    td:first-child { width: 46px; text-align: right; color: var(--muted); }
+    @media print { main { max-width: none; padding: 12px; } .diagram-wrap { overflow: visible; } .diagram { min-width: 0; grid-template-columns: repeat(5, 1fr); } table { font-size: 11px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>User posistemio sistemos klasių modelis</h1>
+  <p class="description">User posistemis apima svečio registracijos ir prisijungimo srautus, dabartinio vartotojo sesijos atkūrimą, paskyros redagavimą ir slaptažodžio atkūrimą. Frontend sluoksnyje tai realizuota per React puslapius ir AuthProvider boundary. Backend sluoksnyje REST užklausos nukreipiamos į Laravel controllerius, kurie naudoja AccountService ir el. pašto boundary.</p>
+  <div class="legend">
+    <span style="--swatch: var(--boundary)">React Page / boundary</span>
+    <span style="--swatch: var(--control)">Laravel Controller</span>
+    <span style="--swatch: var(--service)">Service</span>
+    <span style="--swatch: var(--entity)">Eloquent Model</span>
+    <span style="--swatch: var(--external)">External</span>
+    <span style="--swatch: var(--library)">Library</span>
+  </div>
+  <section class="diagram-wrap" aria-label="UML class diagram">
+    <svg class="connections" aria-hidden="true"></svg>
+    <div class="diagram"><section class="uml-package boundary">
+        <div class="package-tab">React Pages / UI boundaries</div>
+        <div class="package-body">
+    <article class="uml-class boundary" id="cls-loginpage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>LoginPage</strong></div>
+      <div class="class-section"><div>-email</div><div>-password</div></div>
+      <div class="class-section"><div>+handleChange()</div><div>+handleSubmit()</div></div>
+    </article>
+
+    <article class="uml-class boundary" id="cls-registerpage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>RegisterPage</strong></div>
+      <div class="class-section"><div>-name</div><div>-surname</div><div>-email</div><div>-password</div></div>
+      <div class="class-section"><div>+handleChange()</div><div>+handleSubmit()</div></div>
+    </article>
+
+    <article class="uml-class boundary" id="cls-forgotpasswordpage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>ForgotPasswordPage</strong></div>
+      <div class="class-section"><div>-email</div></div>
+      <div class="class-section"><div>+handleSubmit()</div></div>
+    </article>
+
+    <article class="uml-class boundary" id="cls-resetpasswordpage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>ResetPasswordPage</strong></div>
+      <div class="class-section"><div>-email</div><div>-reset_code</div><div>-password</div></div>
+      <div class="class-section"><div>+handleChange()</div><div>+handleSubmit()</div></div>
+    </article>
+
+    <article class="uml-class boundary" id="cls-accountpage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>AccountPage</strong></div>
+      <div class="class-section"><div>-account form state</div></div>
+      <div class="class-section"><div>+handleChange()</div><div>+handleSubmit()</div></div>
+    </article>
+
+    <article class="uml-class boundary" id="cls-dashboardpage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>DashboardPage</strong></div>
+      <div class="class-section"><div>-summary data</div></div>
+      <div class="class-section"><div>+load plots, inventory, plants</div></div>
+    </article>
+
+    <article class="uml-class boundary" id="cls-authprovider">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>AuthProvider</strong></div>
+      <div class="class-section"><div>-authState</div><div>-token</div><div>-user</div><div>-profile</div></div>
+      <div class="class-section"><div>+login()</div><div>+register()</div><div>+updateAccount()</div><div>+logout()</div></div>
+    </article></div>
+      </section>
+<section class="uml-package control">
+        <div class="package-tab">Laravel Controllers</div>
+        <div class="package-body">
+    <article class="uml-class control" id="cls-logincontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>LoginController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+store(Request)</div></div>
+    </article>
+
+    <article class="uml-class control" id="cls-signupcontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>SignUpController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+store(Request)</div></div>
+    </article>
+
+    <article class="uml-class control" id="cls-passwordresetcontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>PasswordResetController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+forgot(Request)</div><div>+reset(Request)</div></div>
+    </article>
+
+    <article class="uml-class control" id="cls-currentusercontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>CurrentUserController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+show(Request)</div></div>
+    </article>
+
+    <article class="uml-class control" id="cls-accountcontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>AccountController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+update(UpdateAccountRequest)</div></div>
+    </article>
+
+    <article class="uml-class control" id="cls-logoutcontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>LogoutController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+destroy(Request)</div></div>
+    </article></div>
+      </section>
+<section class="uml-package service">
+        <div class="package-tab">Services</div>
+        <div class="package-body">
+    <article class="uml-class service" id="cls-accountservice">
+      <div class="class-title"><span>&lt;&lt;service&gt;&gt;</span><strong>AccountService</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+updateAccount(User, data)</div></div>
+    </article>
+
+    <article class="uml-class service" id="cls-emailserverboundary">
+      <div class="class-title"><span>&lt;&lt;service&gt;&gt;</span><strong>EmailServerBoundary</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+sendPasswordResetLink(User, token)</div></div>
+    </article></div>
+      </section>
+<section class="uml-package entity">
+        <div class="package-tab">Eloquent Models</div>
+        <div class="package-body">
+    <article class="uml-class entity" id="cls-user">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>User</strong></div>
+      <div class="class-section"><div>-email</div><div>-role</div><div>-reset_code</div></div>
+      <div class="class-section"><div>+gardenOwner()</div><div>+profile()</div><div>+tokens()</div></div>
+    </article>
+
+    <article class="uml-class entity" id="cls-profile">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>Profile</strong></div>
+      <div class="class-section"><div>-name</div><div>-surname</div><div>-last_login</div></div>
+      <div class="class-section"><div>+user()</div><div>+gardenOwner()</div></div>
+    </article>
+
+    <article class="uml-class entity" id="cls-gardenowner">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>GardenOwner</strong></div>
+      <div class="class-section"><div>-user_id</div></div>
+      <div class="class-section"><div>+user()</div><div>+profile()</div><div>+plots()</div><div>+inventoryItems()</div></div>
+    </article></div>
+      </section>
+<section class="uml-package external">
+        <div class="package-tab">External systems</div>
+        <div class="package-body">
+    <article class="uml-class external" id="cls-email-server">
+      <div class="class-title"><span>&lt;&lt;external&gt;&gt;</span><strong>Email server</strong></div>
+      <div class="class-section"><div>-password reset mail</div></div>
+      <div class="class-section"><div>+deliver reset link</div></div>
+    </article></div>
+      </section>
+</div>
+  </section>
+  <section class="relation-block">
+    <h2>Ryšių ir operacijų sąrašas</h2>
+    <table>
+      <thead><tr><th>Nr.</th><th>Iš kurios klasės</th><th>Į kurią klasę</th><th>Operacija / metodas / ryšys</th><th>Ryšio tipas</th><th>Pastaba</th></tr></thead>
+      <tbody><tr>
+    <td>1</td>
+    <td>LoginPage</td>
+    <td>LoginController</td>
+    <td>api.login(payload) -&gt; store(request)</td>
+    <td>REST request</td>
+    <td>POST /api/login</td>
+  </tr>
+<tr>
+    <td>2</td>
+    <td>RegisterPage</td>
+    <td>SignUpController</td>
+    <td>api.register(payload) -&gt; store(request)</td>
+    <td>REST request</td>
+    <td>POST /api/register</td>
+  </tr>
+<tr>
+    <td>3</td>
+    <td>ForgotPasswordPage</td>
+    <td>PasswordResetController</td>
+    <td>api.forgotPassword({email}) -&gt; forgot(request)</td>
+    <td>REST request</td>
+    <td>POST /api/forgot-password</td>
+  </tr>
+<tr>
+    <td>4</td>
+    <td>ResetPasswordPage</td>
+    <td>PasswordResetController</td>
+    <td>api.resetPassword(form) -&gt; reset(request)</td>
+    <td>REST request</td>
+    <td>POST /api/reset-password</td>
+  </tr>
+<tr>
+    <td>5</td>
+    <td>AccountPage</td>
+    <td>AccountController</td>
+    <td>api.updateMe(payload) -&gt; update(request)</td>
+    <td>REST request</td>
+    <td>PATCH /api/me</td>
+  </tr>
+<tr>
+    <td>6</td>
+    <td>AuthProvider</td>
+    <td>CurrentUserController</td>
+    <td>api.getMe() -&gt; show(request)</td>
+    <td>REST request</td>
+    <td>GET /api/me</td>
+  </tr>
+<tr>
+    <td>7</td>
+    <td>AuthProvider</td>
+    <td>LogoutController</td>
+    <td>api.logout() -&gt; destroy(request)</td>
+    <td>REST request</td>
+    <td>POST /api/logout</td>
+  </tr>
+<tr>
+    <td>8</td>
+    <td>AccountController</td>
+    <td>AccountService</td>
+    <td>updateAccount(user, validated)</td>
+    <td>service call</td>
+    <td>Paskyros atnaujinimo logika atskirta nuo controllerio.</td>
+  </tr>
+<tr>
+    <td>9</td>
+    <td>AccountService</td>
+    <td>User</td>
+    <td>update email/password</td>
+    <td>ORM access</td>
+    <td>Atnaujinamas vartotojo įrašas.</td>
+  </tr>
+<tr>
+    <td>10</td>
+    <td>AccountService</td>
+    <td>Profile</td>
+    <td>update name/surname</td>
+    <td>ORM access</td>
+    <td>Profilio duomenys saugomi Profile modelyje.</td>
+  </tr>
+<tr>
+    <td>11</td>
+    <td>SignUpController</td>
+    <td>User</td>
+    <td>User::create(), createToken()</td>
+    <td>ORM access</td>
+    <td>Registruojamas owner rolės vartotojas.</td>
+  </tr>
+<tr>
+    <td>12</td>
+    <td>SignUpController</td>
+    <td>Profile</td>
+    <td>Profile::create()</td>
+    <td>ORM access</td>
+    <td>Sukuriamas profilis.</td>
+  </tr>
+<tr>
+    <td>13</td>
+    <td>SignUpController</td>
+    <td>GardenOwner</td>
+    <td>GardenOwner::create()</td>
+    <td>ORM access</td>
+    <td>Sukuriamas domeno savininko įrašas.</td>
+  </tr>
+<tr>
+    <td>14</td>
+    <td>PasswordResetController</td>
+    <td>EmailServerBoundary</td>
+    <td>sendPasswordResetLink(user, token)</td>
+    <td>service call</td>
+    <td>El. pašto siuntimas atskirtas boundary klase.</td>
+  </tr>
+<tr>
+    <td>15</td>
+    <td>EmailServerBoundary</td>
+    <td>Email server</td>
+    <td>send reset email</td>
+    <td>dependency</td>
+    <td>Išorinė el. pašto infrastruktūra.</td>
+  </tr>
+<tr>
+    <td>16</td>
+    <td>User</td>
+    <td>Profile</td>
+    <td>1 -&gt; 1 profile()</td>
+    <td>association</td>
+    <td>Vienas vartotojas turi vieną profilį.</td>
+  </tr>
+<tr>
+    <td>17</td>
+    <td>User</td>
+    <td>GardenOwner</td>
+    <td>1 -&gt; 1 gardenOwner()</td>
+    <td>association</td>
+    <td>Owner vartotojas turi GardenOwner įrašą.</td>
+  </tr></tbody>
+    </table>
+  </section>
+</main>
+<script>
+  const connections = [{"from":"LoginPage","to":"LoginController","type":"REST request"},{"from":"RegisterPage","to":"SignUpController","type":"REST request"},{"from":"ForgotPasswordPage","to":"PasswordResetController","type":"REST request"},{"from":"ResetPasswordPage","to":"PasswordResetController","type":"REST request"},{"from":"AccountPage","to":"AccountController","type":"REST request"},{"from":"AuthProvider","to":"CurrentUserController","type":"REST request"},{"from":"AuthProvider","to":"LogoutController","type":"REST request"},{"from":"AccountController","to":"AccountService","type":"service call"},{"from":"AccountService","to":"User","type":"ORM access"},{"from":"AccountService","to":"Profile","type":"ORM access"},{"from":"SignUpController","to":"User","type":"ORM access"},{"from":"SignUpController","to":"Profile","type":"ORM access"},{"from":"SignUpController","to":"GardenOwner","type":"ORM access"},{"from":"PasswordResetController","to":"EmailServerBoundary","type":"service call"},{"from":"EmailServerBoundary","to":"Email server","type":"dependency"},{"from":"User","to":"Profile","type":"association"},{"from":"User","to":"GardenOwner","type":"association"}];
+  const idFor = (name) => 'cls-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const lineColor = { 'REST request': '#4d6da8', 'service call': '#7b5da8', 'ORM access': '#9a6a28', association: '#465160', aggregation: '#465160', composition: '#222c3a', dependency: '#568560' };
+  function drawConnections() {
+    const wrap = document.querySelector('.diagram-wrap');
+    const svg = document.querySelector('.connections');
+    const wrapBox = wrap.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + wrap.scrollWidth + ' ' + wrap.scrollHeight);
+    svg.innerHTML = '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#555f71"></path></marker><marker id="diamond-filled" markerWidth="10" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M1,4 L5,1 L9,4 L5,7 Z" fill="#222c3a" stroke="#222c3a"></path></marker></defs>';
+    connections.forEach((conn, index) => {
+      const from = document.getElementById(idFor(conn.from));
+      const to = document.getElementById(idFor(conn.to));
+      if (!from || !to) return;
+      const a = from.getBoundingClientRect();
+      const b = to.getBoundingClientRect();
+      const x1 = a.right - wrapBox.left + wrap.scrollLeft;
+      const y1 = a.top + a.height / 2 - wrapBox.top + wrap.scrollTop;
+      const x2 = b.left - wrapBox.left + wrap.scrollLeft;
+      const y2 = b.top + b.height / 2 - wrapBox.top + wrap.scrollTop;
+      const sameColumn = Math.abs(x2 - x1) < 80;
+      const startX = sameColumn ? a.left + a.width / 2 - wrapBox.left + wrap.scrollLeft : x1;
+      const startY = sameColumn ? a.bottom - wrapBox.top + wrap.scrollTop : y1;
+      const endX = sameColumn ? b.left + b.width / 2 - wrapBox.left + wrap.scrollLeft : x2;
+      const endY = sameColumn ? b.top - wrapBox.top + wrap.scrollTop : y2;
+      const midX = sameColumn ? startX + 16 + (index % 5) * 6 : (startX + endX) / 2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + startX + ' ' + startY + ' C ' + midX + ' ' + startY + ', ' + midX + ' ' + endY + ', ' + endX + ' ' + endY);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', lineColor[conn.type] || '#555f71');
+      path.setAttribute('stroke-width', conn.type === 'composition' ? '1.8' : '1.25');
+      path.setAttribute('stroke-dasharray', conn.type === 'dependency' ? '5 4' : '');
+      if (conn.type === 'composition') path.setAttribute('marker-start', 'url(#diamond-filled)');
+      path.setAttribute('marker-end', 'url(#arrow)');
+      svg.appendChild(path);
+    });
+  }
+  window.addEventListener('load', drawConnections);
+  window.addEventListener('resize', drawConnections);
+</script>
+</body>
+</html>

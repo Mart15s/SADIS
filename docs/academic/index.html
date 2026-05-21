@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <title>DB modelio dokumentacija</title>
+  <style>
+:root {
+  --paper: #fffdf2;
+  --page: #f5f2e8;
+  --ink: #202020;
+  --muted: #5f5b50;
+  --line: #4d4a43;
+  --box: #fff5c8;
+  --box-head: #f1d184;
+  --box-border: #8a7245;
+  --accent: #715a25;
+  --fk: #315f8f;
+  --pk: #8b4e18;
+  --grid: rgba(80, 70, 45, .09);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+}
+a { color: #234f83; }
+code { font-family: Consolas, "Courier New", monospace; }
+.page { padding: 28px 32px 56px; }
+.wide { min-width: 1240px; }
+.readable { max-width: 1380px; margin: 0 auto; }
+.page-header { margin: 0 0 18px; }
+.kicker {
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.15; }
+h2 { margin: 28px 0 10px; font-size: 19px; }
+h3 { margin: 0 0 4px; font-size: 17px; }
+p { margin: 0 0 10px; color: var(--muted); }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin: 12px 0 14px;
+  color: var(--muted);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 16px;
+  border-radius: 2px;
+  padding: 0 4px;
+  margin-right: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+}
+.pk { background: var(--pk); }
+.fk { background: var(--fk); }
+.uq { background: #6b6b6b; }
+.line-sample {
+  width: 44px;
+  height: 0;
+  border-top: 2px solid var(--line);
+  display: inline-block;
+  position: relative;
+}
+.line-sample:after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -5px;
+  border-left: 8px solid var(--line);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+.diagram-shell {
+  overflow: auto;
+  border: 1px solid #8a8578;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    var(--paper);
+  background-size: 28px 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+.diagram {
+  position: relative;
+  width: 2700px;
+  height: 1840px;
+}
+.relationships {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.db-table {
+  position: absolute;
+  border: 1.3px solid var(--box-border);
+  background: linear-gradient(135deg, #ffe29a 0%, var(--box) 44%, #fffbe0 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.10);
+  color: #161616;
+}
+.table-stereo {
+  padding: 5px 8px 0;
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 10px;
+  line-height: 1.05;
+}
+.table-title {
+  padding: 1px 8px 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--box-border);
+}
+.columns {
+  padding: 5px 7px 7px;
+}
+.column-row {
+  min-height: 17px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.column-name { font-weight: 700; }
+.column-type { color: #222; }
+.column-extra, .muted { color: #5f5b50; font-size: 9.5px; }
+.rel-label {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  fill: #1f1f1f;
+  paint-order: stroke;
+  stroke: #fffdf2;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.card-label {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  fill: #333;
+  paint-order: stroke;
+  stroke: #fffdf2;
+  stroke-width: 4px;
+}
+.note-block {
+  background: #fffaf0;
+  border: 1px solid #c6b98f;
+  padding: 14px 16px;
+  margin-top: 18px;
+}
+.table-scroll { overflow: auto; }
+table.spec {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  background: #fffdf8;
+  border: 1px solid #9a927f;
+}
+.spec th,
+.spec td {
+  border: 1px solid #c8c0ad;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.spec th {
+  background: #efe0b6;
+  color: #1f1f1f;
+  font-weight: 700;
+}
+.spec tr:nth-child(even) td { background: #fff9e8; }
+.table-spec-card {
+  margin: 18px 0 24px;
+  padding: 14px;
+  border: 1px solid #c6b98f;
+  background: #fffaf0;
+}
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+.link-grid a {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: linear-gradient(135deg, #ffe29a 0%, #fff7cf 100%);
+  border: 1px solid var(--box-border);
+  padding: 16px;
+}
+.link-grid strong { display: block; margin-bottom: 8px; font-size: 17px; }
+.link-grid span { color: var(--muted); }
+@media print {
+  body { background: white; }
+  .page { padding: 0; }
+  .diagram-shell { overflow: visible; box-shadow: none; }
+}
+</style>
+</head>
+<body>
+  <main class="page readable landing">
+    <header class="page-header">
+      <p class="kicker">Asmeninio sodo ar darzo informacine sistema</p>
+      <h1>Realaus duomenu bazes modelio dokumentacija</h1>
+      <p>Sie failai sugeneruoti pagal dabartines Laravel migracijas ir papildomai patikrinti pagal modelius bei enumus.</p>
+    </header>
+    <nav class="link-grid" aria-label="DB modelio nuorodos">
+      <a href="database-model.html">
+        <strong>database-model.html</strong>
+        <span>Pagrindine DB schema su lenteliu dezutemis, FK rysiais, kardinalumais ir relationship specification lentele.</span>
+      </a>
+      <a href="database-tables-specification.html">
+        <strong>database-tables-specification.html</strong>
+        <span>Visu lenteliu ir stulpeliu specifikacija su tipais, PK/FK, nullable, default, indeksais ir aprasymais.</span>
+      </a>
+    </nav>
+    <section class="note-block">
+      <h2>Itrauktos lenteles</h2>
+      <p>users, profiles, garden_owners, plots, plant_zones, plants, catalog_plants, plant_care, plant_condition_history, rotation_history, rotation_plan_drafts, plot_snapshots, task_calendars, tasks, weather_forecasts, task_resource_requirements, inventory_items, inventory_usage_logs, harvest_records, access_rights, community_posts, has_plot, has_inventory, used_on, audit_logs, personal_access_tokens, password_reset_tokens</p>
+      <p><code>has_plot</code>, <code>has_inventory</code> ir <code>used_on</code> yra realios migracijose sukurtos legacy / tarpines lenteles, o ne is seno DB paveikslo perkelti elementai.</p>
+    </section>
+  </main>
+</body>
+</html>

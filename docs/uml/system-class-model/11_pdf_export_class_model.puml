@@ -1,0 +1,107 @@
+@startuml
+title Sklypo PDF eksporto ir ataskaitų klasių modelis
+left to right direction
+skinparam packageStyle rectangle
+
+package "Sąsajos / Views" {
+  class PlotDetailPage <<boundary>>
+}
+
+package "Valdikliai / Controllers" {
+  class ExportController <<control>> {
+    +pdf(request, plot, pdfExportService, accessService)
+  }
+}
+
+package "Paslaugos / Services" {
+  class AccessService <<service>> {
+    +userHasAccess(owner, plot)
+  }
+  class PdfExportService <<service>> {
+    +exportPlotReport(plot, owner)
+    +renderPlotReportHtml(plot, owner)
+  }
+  class AnalyticsService <<service>> {
+    +analyzePlot(plot, owner, analysisTypes)
+    +getTaskMetrics(plot)
+  }
+}
+
+package "Esybės / Models" {
+  class Plot <<entity>> {
+    +name
+    +city
+    +plot_size
+    +description
+    +geometry
+    +plantZones()
+    +plants()
+    +taskCalendars()
+  }
+  class PlantZone <<entity>> {
+    +name
+    +zone_size
+    +soil_type
+    +geometry
+    +plants()
+  }
+  class Plant <<entity>> {
+    +name
+    +condition
+    +plant_date
+    +catalogPlant()
+    +conditionHistory()
+  }
+  class TaskCalendar <<entity>> {
+    +creation_date
+    +start_date
+    +end_date
+    +tasks()
+  }
+  class Task <<entity>> {
+    +date
+    +name
+    +task_type
+    +state
+    +plant()
+  }
+  class RotationHistory <<entity>> {
+    +from_date
+    +to_date
+    +decision_status
+    +plant()
+    +plantZone()
+  }
+  class PlantConditionHistory <<entity>> {
+    +measured_at
+    +condition_type
+    +notes
+  }
+}
+
+package "Atvaizdai / Templates" {
+  class "resources/views/pdf/plot-report.blade.php" as PlotReportBlade <<boundary>>
+}
+
+package "Išorinės sistemos / External systems" {
+  class "Dompdf" as Dompdf <<external>>
+}
+
+PlotDetailPage ..> ExportController : GET /plots/{plot}/export/pdf
+ExportController ..> AccessService : authorizes view
+ExportController ..> PdfExportService : exportPlotReport()
+PdfExportService ..> AnalyticsService : analyzePlot()/getTaskMetrics()
+PdfExportService ..> Plot : loads report data
+PdfExportService ..> RotationHistory : recent rotations
+PdfExportService ..> PlantConditionHistory : recent conditions
+PdfExportService ..> PlotReportBlade : renders HTML
+PdfExportService ..> Dompdf : renders PDF bytes
+
+Plot "1" -- "0..*" PlantZone : contains
+Plot "1" -- "0..*" Plant : contains
+Plot "1" -- "0..*" TaskCalendar : report calendars
+TaskCalendar "1" -- "0..*" Task : report tasks
+Plot "1" -- "0..*" RotationHistory : recent rotations
+Plant "1" -- "0..*" PlantConditionHistory : condition entries
+
+@enduml

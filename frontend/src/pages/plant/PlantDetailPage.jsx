@@ -12,6 +12,8 @@ import {
   formatDayCount,
   formatDisplayValue,
   formatNumberWithUnit,
+  formatPlantCondition,
+  formatPlantType,
   formatTemperatureC,
 } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
@@ -33,6 +35,10 @@ function createReviewForm(task) {
     measured_at: task?.date ?? new Date().toISOString().slice(0, 10),
     notes: '',
   }
+}
+
+function rotationZoneName(zone, fallback = 'Nežinoma zona') {
+  return zone?.name || zone?.zone_name || fallback
 }
 
 export default function PlantDetailPage() {
@@ -94,20 +100,20 @@ export default function PlantDetailPage() {
     if (location.state?.backTo) {
       return {
         to: location.state.backTo,
-        label: location.state.backLabel ?? 'Back',
+        label: location.state.backLabel ?? 'Atgal',
       }
     }
 
     if (plotId) {
       return {
         to: `/plots/${plotId}`,
-        label: 'Back to plot',
+        label: 'Grįžti į sklypą',
       }
     }
 
     return {
       to: '/plants',
-      label: 'Back to plants',
+      label: 'Grįžti į augalus',
     }
   }, [location.state, plotId, resolvedPlotId])
 
@@ -156,7 +162,7 @@ export default function PlantDetailPage() {
         ...initialConditionForm,
         condition: created.condition ?? initialConditionForm.condition,
       })
-      setNotice('Condition logged successfully.')
+      setNotice('Būklė įrašyta.')
       await pageState.reload()
     } catch (requestError) {
       setError(requestError.message)
@@ -216,7 +222,7 @@ export default function PlantDetailPage() {
 
       setReviewTask(null)
       setReviewForm(createReviewForm(null))
-      setNotice('Lifecycle review completed successfully.')
+      setNotice('Būklės peržiūra atlikta.')
       await pageState.reload()
     } catch (requestError) {
       setError(requestError.message)
@@ -226,7 +232,7 @@ export default function PlantDetailPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title="Loading plant detail..." />
+    return <LoadingState title="Įkeliama augalo informacija..." />
   }
 
   if (pageState.error) {
@@ -234,14 +240,14 @@ export default function PlantDetailPage() {
   }
 
   if (!plant) {
-    return <EmptyState title="Plant not found" description="The requested plant could not be loaded." />
+    return <EmptyState title="Augalas nerastas" description="Pasirinkto augalo nepavyko įkelti." />
   }
 
   return (
     <div className="page-stack">
       <PageHeader
         title={plant.name}
-        description={`${plant.plant_type} in ${plant.plot?.name ?? 'Unknown plot'} / ${linkedZone?.name ?? 'Unknown zone'}`}
+        description={`${formatPlantType(plant.plant_type)}: ${plant.plot?.name ?? 'Nežinomas sklypas'} / ${linkedZone?.name ?? 'Nežinoma zona'}`}
         actions={(
           <>
             <Link to={backTarget.to}>
@@ -249,12 +255,12 @@ export default function PlantDetailPage() {
             </Link>
             {resolvedPlotId && !plotId ? (
               <Link to={`/plots/${resolvedPlotId}`}>
-                <Button variant="ghost">Open plot</Button>
+                <Button variant="ghost">Atidaryti sklypą</Button>
               </Link>
             ) : null}
             {canEdit ? (
               <Link to={`/plants/${plant.id}/edit`}>
-                <Button>Edit</Button>
+                <Button>Redaguoti</Button>
               </Link>
             ) : null}
           </>
@@ -267,17 +273,17 @@ export default function PlantDetailPage() {
       {reviewTask ? (
         <section className="panel page-stack">
           <div>
-            <h3 className="section-title">Pending Lifecycle Review</h3>
-            <p className="section-copy">This review task was opened from the calendar and will update the plant's confirmed condition once you submit the review.</p>
+            <h3 className="section-title">Laukianti būklės peržiūra</h3>
+            <p className="section-copy">Ši peržiūros užduotis atidaryta iš kalendoriaus ir atnaujins patvirtintą augalo būklę.</p>
           </div>
           <div className="meta-cluster">
-            <span>Task {reviewTask.name}</span>
-            <span>Suggested {reviewTask.workflow_context?.review?.target_condition ?? 'Not set'}</span>
-            <span>Expected {formatDate(reviewTask.workflow_context?.review?.expected_on ?? reviewTask.date)}</span>
+            <span>Užduotis: {reviewTask.name}</span>
+            <span>Siūloma: {formatPlantCondition(reviewTask.workflow_context?.review?.target_condition)}</span>
+            <span>Tikimasi: {formatDate(reviewTask.workflow_context?.review?.expected_on ?? reviewTask.date)}</span>
           </div>
           <form className="input-grid" onSubmit={handleReviewSubmit}>
             <div className="field">
-              <label htmlFor="review-action">Decision</label>
+              <label htmlFor="review-action">Sprendimas</label>
               <select
                 id="review-action"
                 value={reviewForm.action}
@@ -289,14 +295,14 @@ export default function PlantDetailPage() {
                     : current.condition,
                 }))}
               >
-                <option value="confirm">Confirm suggested transition</option>
-                <option value="keep_current">Keep current stage</option>
-                <option value="adjust">Adjust manually</option>
+                <option value="confirm">Patvirtinti siūlomą perėjimą</option>
+                <option value="keep_current">Palikti dabartinę stadiją</option>
+                <option value="adjust">Pakoreguoti rankiniu būdu</option>
               </select>
             </div>
             {reviewForm.action === 'adjust' ? (
               <div className="field">
-                <label htmlFor="review-condition">Condition</label>
+                <label htmlFor="review-condition">Būklė</label>
                 <select
                   id="review-condition"
                   value={reviewForm.condition}
@@ -305,14 +311,14 @@ export default function PlantDetailPage() {
                 >
                   {CONDITION_TYPES.map((condition) => (
                     <option key={condition} value={condition}>
-                      {condition}
+                      {formatPlantCondition(condition)}
                     </option>
                   ))}
                 </select>
               </div>
             ) : null}
             <div className="field">
-              <label htmlFor="review-date">Reviewed on</label>
+              <label htmlFor="review-date">Peržiūrėta</label>
               <input
                 id="review-date"
                 type="date"
@@ -322,7 +328,7 @@ export default function PlantDetailPage() {
               />
             </div>
             <div className="field field-span-2">
-              <label htmlFor="review-notes">Notes</label>
+              <label htmlFor="review-notes">Pastabos</label>
               <textarea
                 id="review-notes"
                 value={reviewForm.notes}
@@ -331,7 +337,7 @@ export default function PlantDetailPage() {
             </div>
             <div className="form-actions">
               <Button type="submit" disabled={submittingReview}>
-                {submittingReview ? 'Submitting review...' : 'Complete review'}
+                {submittingReview ? 'Pateikiama peržiūra...' : 'Baigti peržiūrą'}
               </Button>
               <Button
                 variant="secondary"
@@ -340,7 +346,7 @@ export default function PlantDetailPage() {
                   setReviewForm(createReviewForm(null))
                 }}
               >
-                Dismiss panel
+                Uždaryti panelį
               </Button>
             </div>
           </form>
@@ -350,28 +356,28 @@ export default function PlantDetailPage() {
       <div className="detail-grid">
         <section className="panel page-stack">
           <div>
-            <h3 className="section-title">Plant Overview</h3>
-            <p className="section-copy">Authoritative detail view for this planted instance, regardless of whether it was opened from the plot workspace or from the plants list.</p>
+            <h3 className="section-title">Augalo apžvalga</h3>
+            <p className="section-copy">Pagrindinė šio pasodinto augalo informacija.</p>
           </div>
 
           <div className="meta-cluster">
-            <StatRow label="Condition" value={plant.condition} />
-            <StatRow label="Planted" value={formatDate(plant.plant_date)} />
-            <StatRow label="Plot" value={plant.plot?.name ?? 'Unknown'} />
-            <StatRow label="Zone" value={linkedZone?.name ?? 'Unknown'} />
-            <StatRow label="Catalog" value={linkedCatalogPlant?.name ?? 'Not linked'} />
-            <StatRow label="Disease" value={plant.disease ? 'Yes' : 'No'} />
+            <StatRow label="Būklė" value={formatPlantCondition(plant.condition)} />
+            <StatRow label="Pasodinta" value={formatDate(plant.plant_date)} />
+            <StatRow label="Sklypas" value={plant.plot?.name ?? 'Nežinoma'} />
+            <StatRow label="Zona" value={linkedZone?.name ?? 'Nežinoma'} />
+            <StatRow label="Katalogas" value={linkedCatalogPlant?.name ?? 'Nesusieta'} />
+            <StatRow label="Liga" value={plant.disease ? 'Taip' : 'Ne'} />
           </div>
 
           <KeyValueGrid
             className="plants-detail-grid"
             items={[
-              { label: 'Growing time', value: formatDayCount(plant.growing_time_days) },
-              { label: 'Recommended temperature', value: formatTemperatureC(plant.recommended_temperature) },
-              { label: 'Recommended humidity', value: formatNumberWithUnit(plant.recommended_humidity, '%', 1) },
-              { label: 'Rest time', value: formatDayCount(plant.rest_time_days) },
-              { label: 'Plant size', value: formatDisplayValue(plant.plant_size) },
-              { label: 'Linked care profile', value: plant.fk_plant_care_id ?? linkedCare?.id ?? 'Not linked' },
+              { label: 'Augimo laikas', value: formatDayCount(plant.growing_time_days) },
+              { label: 'Rekomenduojama temperatūra', value: formatTemperatureC(plant.recommended_temperature) },
+              { label: 'Rekomenduojama drėgmė', value: formatNumberWithUnit(plant.recommended_humidity, '%', 1) },
+              { label: 'Poilsio laikas', value: formatDayCount(plant.rest_time_days) },
+              { label: 'Augalo dydis', value: formatDisplayValue(plant.plant_size) },
+              { label: 'Susietas priežiūros profilis', value: plant.fk_plant_care_id ?? linkedCare?.id ?? 'Nesusieta' },
             ]}
           />
 
@@ -380,47 +386,47 @@ export default function PlantDetailPage() {
           {linkedCatalogPlant ? (
             <div className="row-actions">
               <Link to={`/plants/catalog/${linkedCatalogPlant.id}`}>
-                <Button variant="ghost">Open catalog plant</Button>
+                <Button variant="ghost">Atidaryti katalogo augalą</Button>
               </Link>
               <Link to={`/plants/catalog/${linkedCatalogPlant.id}/edit`}>
-                <Button variant="secondary">Edit shared care</Button>
+                <Button variant="secondary">Redaguoti bendrinamą priežiūrą</Button>
               </Link>
             </div>
           ) : null}
 
           <section className="panel page-stack">
             <div>
-              <h3 className="section-title">Lifecycle Guidance</h3>
-              <p className="section-copy">Expected lifecycle checkpoints are derived from the linked plant care durations. They guide review tasks, but they do not silently change the confirmed plant condition.</p>
+              <h3 className="section-title">Gyvavimo ciklo gairės</h3>
+              <p className="section-copy">Tikėtini etapai skaičiuojami pagal susietą priežiūros profilį ir padeda planuoti peržiūros užduotis.</p>
             </div>
             {lifecycle ? (
               <>
                 <div className="meta-cluster">
-                  <StatRow label="Confirmed stage" value={lifecycle.current_condition} />
-                  <StatRow label="Anchor date" value={formatDate(lifecycle.current_condition_anchor_date)} />
-                  <StatRow label="Regenerating path" value={lifecycle.supports_regeneration ? 'Supported' : 'No'} />
+                  <StatRow label="Patvirtinta stadija" value={formatPlantCondition(lifecycle.current_condition)} />
+                  <StatRow label="Atraminė data" value={formatDate(lifecycle.current_condition_anchor_date)} />
+                  <StatRow label="Atsigavimo kelias" value={lifecycle.supports_regeneration ? 'Palaikoma' : 'Ne'} />
                 </div>
                 {lifecycle.next_review ? (
                   <StatRow
-                    label="Next review"
-                    value={`Review transition to ${lifecycle.next_review.target_condition} on ${formatDate(lifecycle.next_review.expected_on)}${lifecycle.next_review.is_overdue ? ' (overdue)' : ''}`}
+                    label="Kita peržiūra"
+                    value={`Peržiūrėti perėjimą į ${formatPlantCondition(lifecycle.next_review.target_condition)}: ${formatDate(lifecycle.next_review.expected_on)}${lifecycle.next_review.is_overdue ? ' (vėluoja)' : ''}`}
                   />
                 ) : null}
                 {lifecycle.next_harvest ? (
                   <StatRow
-                    label="Next harvest checkpoint"
-                    value={`Harvest expected on ${formatDate(lifecycle.next_harvest.expected_on)}${lifecycle.next_harvest.is_overdue ? ' (overdue)' : ''}`}
+                    label="Kitas derliaus taškas"
+                    value={`Derlius tikėtinas ${formatDate(lifecycle.next_harvest.expected_on)}${lifecycle.next_harvest.is_overdue ? ' (vėluoja)' : ''}`}
                   />
                 ) : null}
                 <DefinitionList
                   items={Object.entries(lifecycle.scheduled_stage_starts ?? {}).map(([condition, date]) => ({
-                    label: condition,
+                    label: formatPlantCondition(condition),
                     value: formatDate(date),
                   }))}
                 />
               </>
             ) : (
-              <EmptyState title="No lifecycle guidance" description="Link a plant care profile to derive expected stage transitions." />
+              <EmptyState title="Gyvavimo ciklo gairių nėra" description="Susiekite augalo priežiūros profilį, kad būtų skaičiuojami etapai." />
             )}
           </section>
         </section>
@@ -428,52 +434,52 @@ export default function PlantDetailPage() {
         <aside className="page-stack">
           <section className="panel page-stack">
             <div>
-              <h3 className="section-title">Effective Care Profile</h3>
-              <p className="section-copy">The shared plant care record used to derive lifecycle guidance and recommendation tasks.</p>
+              <h3 className="section-title">Naudojamas priežiūros profilis</h3>
+              <p className="section-copy">Bendrinamas augalo priežiūros įrašas, naudojamas etapams ir rekomendacijoms.</p>
             </div>
 
             {linkedCare ? (
               <KeyValueGrid
                 className="plants-detail-grid"
                 items={[
-                  { label: 'Watering interval', value: formatDayCount(linkedCare.watering_interval_days) },
-                  { label: 'Fertilizing interval', value: formatDayCount(linkedCare.fertilizing_interval_days) },
-                  { label: 'Pest check interval', value: formatDayCount(linkedCare.pest_check_interval_days) },
-                  { label: 'Germinating duration', value: formatDayCount(linkedCare.germinating_duration_days) },
-                  { label: 'Growing duration', value: formatDayCount(linkedCare.growing_duration_days) },
-                  { label: 'Flowering duration', value: formatDayCount(linkedCare.flowering_duration_days) },
-                  { label: 'Mature duration', value: formatDayCount(linkedCare.mature_duration_days) },
-                  { label: 'Regenerating duration', value: formatDayCount(linkedCare.regenerating_duration_days) },
+                  { label: 'Laistymo intervalas', value: formatDayCount(linkedCare.watering_interval_days) },
+                  { label: 'Tręšimo intervalas', value: formatDayCount(linkedCare.fertilizing_interval_days) },
+                  { label: 'Kenkėjų patikros intervalas', value: formatDayCount(linkedCare.pest_check_interval_days) },
+                  { label: 'Dygimo trukmė', value: formatDayCount(linkedCare.germinating_duration_days) },
+                  { label: 'Augimo trukmė', value: formatDayCount(linkedCare.growing_duration_days) },
+                  { label: 'Žydėjimo trukmė', value: formatDayCount(linkedCare.flowering_duration_days) },
+                  { label: 'Brandos trukmė', value: formatDayCount(linkedCare.mature_duration_days) },
+                  { label: 'Atsigavimo trukmė', value: formatDayCount(linkedCare.regenerating_duration_days) },
                 ]}
               />
             ) : (
-              <EmptyState title="No plant care linked" description="This plant does not currently have a linked care profile." />
+              <EmptyState title="Priežiūros profilis nesusietas" description="Šis augalas šiuo metu neturi susieto priežiūros profilio." />
             )}
           </section>
 
           <section className="panel page-stack">
             <div>
-              <h3 className="section-title">Condition History</h3>
-              <p className="section-copy">Confirmed condition updates are recorded here and remain the source of truth for the current plant condition.</p>
+              <h3 className="section-title">Būklės istorija</h3>
+              <p className="section-copy">Patvirtinti būklės pakeitimai registruojami čia.</p>
             </div>
             {pageState.data.conditions.length === 0 ? (
-              <EmptyState title="No condition history" description="No condition logs exist for this plant yet." />
+              <EmptyState title="Būklės istorijos nėra" description="Šiam augalui dar nėra būklės įrašų." />
             ) : (
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Measured</th>
-                      <th>Condition</th>
-                      <th>Notes</th>
+                      <th>Data</th>
+                      <th>Būklė</th>
+                      <th>Pastabos</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageState.data.conditions.map((entry) => (
                       <tr key={entry.id}>
                         <td>{formatDateTime(entry.measured_at)}</td>
-                        <td>{entry.condition}</td>
-                        <td>{entry.notes || 'No notes'}</td>
+                        <td>{formatPlantCondition(entry.condition)}</td>
+                        <td>{entry.notes || 'Pastabų nėra'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -484,7 +490,7 @@ export default function PlantDetailPage() {
             {canEdit && resolvedPlotId ? (
               <form className="input-grid" onSubmit={handleConditionSubmit}>
                 <div className="field">
-                  <label htmlFor="condition-date">Measured at</label>
+                  <label htmlFor="condition-date">Matavimo data</label>
                   <input
                     id="condition-date"
                     type="date"
@@ -494,7 +500,7 @@ export default function PlantDetailPage() {
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="condition-type">Condition</label>
+                  <label htmlFor="condition-type">Būklė</label>
                   <select
                     id="condition-type"
                     value={conditionForm.condition}
@@ -502,25 +508,25 @@ export default function PlantDetailPage() {
                   >
                     {CONDITION_TYPES.map((condition) => (
                       <option key={condition} value={condition}>
-                        {condition}
+                        {formatPlantCondition(condition)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="field">
-                  <label htmlFor="condition-disease">Disease present</label>
+                  <label htmlFor="condition-disease">Yra liga</label>
                   <select
                     id="condition-disease"
                     value={conditionForm.disease}
                     onChange={(event) => setConditionForm((current) => ({ ...current, disease: event.target.value }))}
                   >
-                    <option value="">Infer from condition</option>
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
+                    <option value="">Nustatyti pagal būklę</option>
+                    <option value="false">Ne</option>
+                    <option value="true">Taip</option>
                   </select>
                 </div>
                 <div className="field field-span-2">
-                  <label htmlFor="condition-notes">Notes</label>
+                  <label htmlFor="condition-notes">Pastabos</label>
                   <textarea
                     id="condition-notes"
                     value={conditionForm.notes}
@@ -529,7 +535,7 @@ export default function PlantDetailPage() {
                 </div>
                 <div className="form-actions">
                   <Button type="submit" disabled={submittingCondition}>
-                    {submittingCondition ? 'Saving...' : 'Log condition'}
+                    {submittingCondition ? 'Saugoma...' : 'Įrašyti būklę'}
                   </Button>
                 </div>
               </form>
@@ -538,26 +544,26 @@ export default function PlantDetailPage() {
 
           <section className="panel page-stack">
             <div>
-              <h3 className="section-title">Harvest History</h3>
-              <p className="section-copy">Explicit harvest records persist here and feed harvest analytics later.</p>
+              <h3 className="section-title">Derliaus istorija</h3>
+              <p className="section-copy">Čia saugomi derliaus įrašai, vėliau naudojami analitikoje.</p>
             </div>
             {resolvedPlotId ? (
               <div className="row-actions">
                 <Link to={`/plots/${resolvedPlotId}/harvests?plantId=${plant.id}`}>
-                  <Button variant="secondary">Open harvest workflow</Button>
+                  <Button variant="secondary">Atidaryti derliaus registravimą</Button>
                 </Link>
               </div>
             ) : null}
             {pageState.data.harvests.length === 0 ? (
-              <EmptyState title="No harvest history" description="No harvest records are stored for this plant yet." />
+              <EmptyState title="Derliaus istorijos nėra" description="Šiam augalui derliaus įrašų dar nėra." />
             ) : (
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Quantity</th>
-                      <th>Task</th>
+                      <th>Data</th>
+                      <th>Kiekis</th>
+                      <th>Užduotis</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -565,7 +571,7 @@ export default function PlantDetailPage() {
                       <tr key={record.id}>
                         <td>{formatDate(record.harvested_on)}</td>
                         <td>{formatDisplayValue(record.quantity)}</td>
-                        <td>{record.task_name || record.task_id || 'Manual'}</td>
+                        <td>{record.task_name || record.task_id || 'Rankinis įrašas'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -576,27 +582,27 @@ export default function PlantDetailPage() {
 
           <section className="panel page-stack">
             <div>
-              <h3 className="section-title">Rotation History</h3>
-              <p className="section-copy">Past rotation records involving this plant instance.</p>
+              <h3 className="section-title">Rotacijos istorija</h3>
+              <p className="section-copy">Ankstesni rotacijos įrašai, kuriuose dalyvavo šis augalas.</p>
             </div>
             {pageState.data.rotations.length === 0 ? (
-              <EmptyState title="No rotations" description="This plant has not appeared in recorded rotation history yet." />
+              <EmptyState title="Rotacijų nėra" description="Šis augalas dar nebuvo įtrauktas į rotacijos istoriją." />
             ) : (
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>From</th>
-                      <th>To</th>
-                      <th>Zone</th>
+                      <th>Rotacijos data</th>
+                      <th>Iš zonos</th>
+                      <th>Į zoną</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageState.data.rotations.map((rotation) => (
                       <tr key={rotation.id}>
                         <td>{formatDate(rotation.from_date)}</td>
-                        <td>{formatDate(rotation.to_date)}</td>
-                        <td>{rotation.fk_plant_zone_id}</td>
+                        <td>{rotationZoneName(rotation.from_zone)}</td>
+                        <td>{rotationZoneName(rotation.to_zone ?? rotation.plant_zone)}</td>
                       </tr>
                     ))}
                   </tbody>

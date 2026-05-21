@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community posistemio sistemos klasių modelis</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5c6475;
+      --package: #dfe8ff;
+      --package-line: #7f8ca8;
+      --boundary: #cfe8ff;
+      --control: #ffd4dc;
+      --service: #e4dcff;
+      --entity: #ffe2ad;
+      --external: #d8f2e1;
+      --library: #e7e9ee;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 1760px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+    .description { max-width: 1180px; color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 22px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 14px; font-size: 12px; color: var(--muted); }
+    .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border: 1px solid #6e7789; margin-right: 5px; vertical-align: -2px; background: var(--swatch); }
+    .diagram-wrap { position: relative; overflow-x: auto; padding: 18px; border: 1px solid #aab3c4; background: linear-gradient(135deg, rgba(222,232,255,.9), rgba(255,255,255,.96)); min-height: 620px; }
+    .connections { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+    .diagram { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px; min-width: 1220px; align-items: start; }
+    .uml-package { position: relative; border: 1px solid var(--package-line); background: rgba(225,234,255,.74); padding: 30px 12px 12px; min-height: 160px; box-shadow: 0 1px 2px rgba(42,52,74,.18); }
+    .package-tab { position: absolute; top: -1px; left: -1px; min-width: 145px; max-width: calc(100% - 24px); padding: 7px 13px; border: 1px solid var(--package-line); border-bottom: 0; background: var(--package); font-weight: 700; font-size: 13px; text-align: center; }
+    .package-body { display: flex; flex-direction: column; gap: 12px; }
+    .uml-class { border: 1px solid #6e7789; background: #fff; min-width: 200px; box-shadow: 1px 1px 2px rgba(34,42,58,.18); font-size: 12px; }
+    .uml-class.boundary { background: linear-gradient(#eaf6ff, var(--boundary)); }
+    .uml-class.control { background: linear-gradient(#fff0f2, var(--control)); }
+    .uml-class.service { background: linear-gradient(#f7f3ff, var(--service)); }
+    .uml-class.entity { background: linear-gradient(#fff5da, var(--entity)); }
+    .uml-class.external { background: linear-gradient(#effaf2, var(--external)); }
+    .uml-class.library { background: linear-gradient(#f6f7f9, var(--library)); }
+    .class-title { border-bottom: 1px solid #6e7789; padding: 7px 8px; text-align: center; display: grid; gap: 2px; }
+    .class-title span { font-size: 11px; font-style: italic; color: #364054; }
+    .class-title strong { font-size: 13px; overflow-wrap: anywhere; }
+    .class-section { padding: 7px 8px; min-height: 28px; line-height: 1.35; overflow-wrap: anywhere; }
+    .class-section + .class-section { border-top: 1px solid #6e7789; }
+    .relation-block { margin-top: 28px; }
+    h2 { margin: 0 0 12px; font-size: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { border: 1px solid #b7bfce; padding: 8px 9px; text-align: left; vertical-align: top; }
+    th { background: #e7edff; font-weight: 700; }
+    td:first-child { width: 46px; text-align: right; color: var(--muted); }
+    @media print { main { max-width: none; padding: 12px; } .diagram-wrap { overflow: visible; } .diagram { min-width: 0; grid-template-columns: repeat(5, 1fr); } table { font-size: 11px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Community posistemio sistemos klasių modelis</h1>
+  <p class="description">Community posistemis turi vieną pagrindinį CommunityPage boundary ir backend CommunityController / CommunityService grandinę. CommunityPost gali būti globalus arba susietas su Plot, o matomumas priklauso nuo share reikšmės ir vartotojo prieigos prie sklypo. Plot šiame modelyje rodomas tik kaip susijęs domeno modelis, nes pati sklypo logika lieka Plot posistemyje.</p>
+  <div class="legend">
+    <span style="--swatch: var(--boundary)">React Page / boundary</span>
+    <span style="--swatch: var(--control)">Laravel Controller</span>
+    <span style="--swatch: var(--service)">Service</span>
+    <span style="--swatch: var(--entity)">Eloquent Model</span>
+    <span style="--swatch: var(--external)">External</span>
+    <span style="--swatch: var(--library)">Library</span>
+  </div>
+  <section class="diagram-wrap" aria-label="UML class diagram">
+    <svg class="connections" aria-hidden="true"></svg>
+    <div class="diagram"><section class="uml-package boundary">
+        <div class="package-tab">React Pages / UI boundaries</div>
+        <div class="package-body">
+    <article class="uml-class boundary" id="cls-communitypage">
+      <div class="class-title"><span>&lt;&lt;boundary&gt;&gt;</span><strong>CommunityPage</strong></div>
+      <div class="class-section"><div>-selectedPlotId</div><div>-form</div><div>-postsState</div></div>
+      <div class="class-section"><div>+handleFormChange(event)</div><div>+handleCreatePost(event)</div></div>
+    </article></div>
+      </section>
+<section class="uml-package control">
+        <div class="package-tab">Laravel Controllers</div>
+        <div class="package-body">
+    <article class="uml-class control" id="cls-communitycontroller">
+      <div class="class-title"><span>&lt;&lt;control&gt;&gt;</span><strong>CommunityController</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+index(request)</div><div>+plotFeed(request, plot)</div><div>+store(request)</div><div>+update(request, post)</div><div>+destroy(request, post)</div></div>
+    </article></div>
+      </section>
+<section class="uml-package service">
+        <div class="package-tab">Services</div>
+        <div class="package-body">
+    <article class="uml-class service" id="cls-communityservice">
+      <div class="class-title"><span>&lt;&lt;service&gt;&gt;</span><strong>CommunityService</strong></div>
+      <div class="class-section"><div>--</div></div>
+      <div class="class-section"><div>+listPublicFeed()</div><div>+listFeed(owner)</div><div>+listByPlot(owner, plot)</div><div>+createPost(owner, profile, data)</div><div>+updatePost(owner, post, data)</div><div>+deletePost(owner, post)</div></div>
+    </article></div>
+      </section>
+<section class="uml-package entity">
+        <div class="package-tab">Eloquent Models</div>
+        <div class="package-body">
+    <article class="uml-class entity" id="cls-communitypost">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>CommunityPost</strong></div>
+      <div class="class-section"><div>-name</div><div>-text</div><div>-share</div><div>-created_at</div></div>
+      <div class="class-section"><div>+owner()</div><div>+ownerUser()</div><div>+profile()</div><div>+plot()</div></div>
+    </article>
+
+    <article class="uml-class entity" id="cls-gardenowner">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>GardenOwner</strong></div>
+      <div class="class-section"><div>-user_id</div></div>
+      <div class="class-section"><div>+communityPosts()</div><div>+plots()</div></div>
+    </article>
+
+    <article class="uml-class entity" id="cls-profile">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>Profile</strong></div>
+      <div class="class-section"><div>-name</div><div>-surname</div></div>
+      <div class="class-section"><div>+communityPosts()</div><div>+user()</div></div>
+    </article>
+
+    <article class="uml-class entity" id="cls-user">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>User</strong></div>
+      <div class="class-section"><div>-email</div></div>
+      <div class="class-section"><div>+communityPosts()</div><div>+profile()</div></div>
+    </article>
+
+    <article class="uml-class entity" id="cls-plot">
+      <div class="class-title"><span>&lt;&lt;entity&gt;&gt;</span><strong>Plot</strong></div>
+      <div class="class-section"><div>-name</div><div>-geometry</div><div>-share</div></div>
+      <div class="class-section"><div>+communityPosts()</div><div>+accessRights()</div></div>
+    </article></div>
+      </section>
+
+</div>
+  </section>
+  <section class="relation-block">
+    <h2>Ryšių ir operacijų sąrašas</h2>
+    <table>
+      <thead><tr><th>Nr.</th><th>Iš kurios klasės</th><th>Į kurią klasę</th><th>Operacija / metodas / ryšys</th><th>Ryšio tipas</th><th>Pastaba</th></tr></thead>
+      <tbody><tr>
+    <td>1</td>
+    <td>CommunityPage</td>
+    <td>CommunityController</td>
+    <td>api.listCommunityPosts(null) -&gt; index(request)</td>
+    <td>REST request</td>
+    <td>GET /api/community</td>
+  </tr>
+<tr>
+    <td>2</td>
+    <td>CommunityPage</td>
+    <td>CommunityController</td>
+    <td>api.listCommunityPosts(plotId) -&gt; plotFeed(request, plot)</td>
+    <td>REST request</td>
+    <td>GET /api/plots/{plot}/community</td>
+  </tr>
+<tr>
+    <td>3</td>
+    <td>CommunityPage</td>
+    <td>CommunityController</td>
+    <td>api.createCommunityPost(payload) -&gt; store(request)</td>
+    <td>REST request</td>
+    <td>POST /api/community</td>
+  </tr>
+<tr>
+    <td>4</td>
+    <td>CommunityController</td>
+    <td>CommunityService</td>
+    <td>listFeed(), listByPlot(), createPost(), updatePost(), deletePost()</td>
+    <td>service call</td>
+    <td>Community logic laikoma service sluoksnyje.</td>
+  </tr>
+<tr>
+    <td>5</td>
+    <td>CommunityService</td>
+    <td>CommunityPost</td>
+    <td>query/create/update/delete posts</td>
+    <td>ORM access</td>
+    <td>Įrašai saugomi CommunityPost modelyje.</td>
+  </tr>
+<tr>
+    <td>6</td>
+    <td>CommunityService</td>
+    <td>Plot</td>
+    <td>filter by accessible/shared plot</td>
+    <td>ORM access</td>
+    <td>Sklypo feed priklauso nuo Plot ir access.</td>
+  </tr>
+<tr>
+    <td>7</td>
+    <td>CommunityService</td>
+    <td>GardenOwner</td>
+    <td>owner context for feed and authorship</td>
+    <td>ORM access</td>
+    <td>Autorius yra GardenOwner/Profile.</td>
+  </tr>
+<tr>
+    <td>8</td>
+    <td>CommunityPost</td>
+    <td>Plot</td>
+    <td>0..* -&gt; 0..1 plot()</td>
+    <td>association</td>
+    <td>Įrašas gali būti pririštas prie sklypo.</td>
+  </tr>
+<tr>
+    <td>9</td>
+    <td>CommunityPost</td>
+    <td>GardenOwner</td>
+    <td>0..* -&gt; 1 owner()</td>
+    <td>association</td>
+    <td>Įrašas turi savininką.</td>
+  </tr>
+<tr>
+    <td>10</td>
+    <td>CommunityPost</td>
+    <td>Profile</td>
+    <td>0..* -&gt; 1 profile()</td>
+    <td>association</td>
+    <td>Rodomas autoriaus profilis.</td>
+  </tr></tbody>
+    </table>
+  </section>
+</main>
+<script>
+  const connections = [{"from":"CommunityPage","to":"CommunityController","type":"REST request"},{"from":"CommunityPage","to":"CommunityController","type":"REST request"},{"from":"CommunityPage","to":"CommunityController","type":"REST request"},{"from":"CommunityController","to":"CommunityService","type":"service call"},{"from":"CommunityService","to":"CommunityPost","type":"ORM access"},{"from":"CommunityService","to":"Plot","type":"ORM access"},{"from":"CommunityService","to":"GardenOwner","type":"ORM access"},{"from":"CommunityPost","to":"Plot","type":"association"},{"from":"CommunityPost","to":"GardenOwner","type":"association"},{"from":"CommunityPost","to":"Profile","type":"association"}];
+  const idFor = (name) => 'cls-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const lineColor = { 'REST request': '#4d6da8', 'service call': '#7b5da8', 'ORM access': '#9a6a28', association: '#465160', aggregation: '#465160', composition: '#222c3a', dependency: '#568560' };
+  function drawConnections() {
+    const wrap = document.querySelector('.diagram-wrap');
+    const svg = document.querySelector('.connections');
+    const wrapBox = wrap.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + wrap.scrollWidth + ' ' + wrap.scrollHeight);
+    svg.innerHTML = '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#555f71"></path></marker><marker id="diamond-filled" markerWidth="10" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M1,4 L5,1 L9,4 L5,7 Z" fill="#222c3a" stroke="#222c3a"></path></marker></defs>';
+    connections.forEach((conn, index) => {
+      const from = document.getElementById(idFor(conn.from));
+      const to = document.getElementById(idFor(conn.to));
+      if (!from || !to) return;
+      const a = from.getBoundingClientRect();
+      const b = to.getBoundingClientRect();
+      const x1 = a.right - wrapBox.left + wrap.scrollLeft;
+      const y1 = a.top + a.height / 2 - wrapBox.top + wrap.scrollTop;
+      const x2 = b.left - wrapBox.left + wrap.scrollLeft;
+      const y2 = b.top + b.height / 2 - wrapBox.top + wrap.scrollTop;
+      const sameColumn = Math.abs(x2 - x1) < 80;
+      const startX = sameColumn ? a.left + a.width / 2 - wrapBox.left + wrap.scrollLeft : x1;
+      const startY = sameColumn ? a.bottom - wrapBox.top + wrap.scrollTop : y1;
+      const endX = sameColumn ? b.left + b.width / 2 - wrapBox.left + wrap.scrollLeft : x2;
+      const endY = sameColumn ? b.top - wrapBox.top + wrap.scrollTop : y2;
+      const midX = sameColumn ? startX + 16 + (index % 5) * 6 : (startX + endX) / 2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + startX + ' ' + startY + ' C ' + midX + ' ' + startY + ', ' + midX + ' ' + endY + ', ' + endX + ' ' + endY);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', lineColor[conn.type] || '#555f71');
+      path.setAttribute('stroke-width', conn.type === 'composition' ? '1.8' : '1.25');
+      path.setAttribute('stroke-dasharray', conn.type === 'dependency' ? '5 4' : '');
+      if (conn.type === 'composition') path.setAttribute('marker-start', 'url(#diamond-filled)');
+      path.setAttribute('marker-end', 'url(#arrow)');
+      svg.appendChild(path);
+    });
+  }
+  window.addEventListener('load', drawConnections);
+  window.addEventListener('resize', drawConnections);
+</script>
+</body>
+</html>

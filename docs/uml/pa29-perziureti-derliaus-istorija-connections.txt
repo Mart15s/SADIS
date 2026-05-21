@@ -1,0 +1,519 @@
+PA29 Peržiūrėti derliaus istoriją — sekų jungčių specifikacija
+
+1. Lifeline sąrašas
+
+- Garden owner — «actor»
+- PlotsPage — «boundary»; source: frontend/src/pages/plot/PlotsPage.jsx:78
+- PlotHarvestsPage — «boundary»; source: frontend/src/pages/plot/PlotHarvestsPage.jsx:27
+- PlotSectionNav — «boundary»; source: frontend/src/components/plot/PlotSectionNav.jsx:4
+- EmptyState — «boundary»; source: frontend/src/components/shared/StatusView.jsx; used by frontend/src/pages/plot/PlotHarvestsPage.jsx:205
+- PlotController — «control»; source: backend/app/Http/Controllers/Plot/PlotController.php:18
+- PlantController — «control»; source: backend/app/Http/Controllers/Plant/PlantController.php:54
+- HarvestController — «control»; source: backend/app/Http/Controllers/Plot/HarvestController.php:19
+- AccessService — «service»; source: backend/app/Services/Plot/AccessService.php:117,134,155
+- HarvestService — «service»; source: backend/app/Services/Plot/HarvestService.php:19
+- GardenOwner — «entity»; source: backend/app/Models/GardenOwner.php:11
+- AccessRight — «entity»; source: backend/app/Models/AccessRight.php; used by backend/app/Services/Plot/AccessService.php:160-163,173-177
+- Plot — «entity»; source: backend/app/Models/Plot.php:38,43,68
+- Plant — «entity»; source: backend/app/Models/Plant.php:60,99
+- PlantZone — «entity»; source: backend/app/Models/PlantZone.php:47; displayed as zone_name by backend/app/Http/Resources/Harvest/HarvestRecordResource.php:22
+- Task — «entity»; source: backend/app/Models/Task.php:117; displayed as task_name by backend/app/Http/Resources/Harvest/HarvestRecordResource.php:24
+- HarvestRecord — «entity»; source: backend/app/Models/HarvestRecord.php:9,31,36,41
+
+2. Visų sekų sąrašas
+
+1. Garden owner -> PlotsPage: openHarvestHistorySelection()
+   Type: async/ui event
+   Source: frontend/src/pages/plot/PlotsPage.jsx:78-79
+
+2. PlotsPage -> PlotController: index()
+   Type: call
+   Source: frontend/src/lib/api.js:149-151; backend/routes/api.php:57; backend/app/Http/Controllers/Plot/PlotController.php:18
+
+3. PlotController -> PlotController: resolveGardenOwner(request)
+   Type: call
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:12
+
+4. PlotController -> GardenOwner: gardenOwner()
+   Type: call
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:14
+
+5. GardenOwner -> PlotController: owner
+   Type: return
+   Replies to: 4
+   Source: backend/app/Models/GardenOwner.php:11
+
+6. PlotController -> PlotController: owner
+   Type: return
+   Replies to: 3
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:12-18
+
+7. PlotController -> AccessService: accessiblePlotIds(owner)
+   Type: call
+   Source: backend/app/Http/Controllers/Plot/PlotController.php:21; backend/app/Services/Plot/AccessService.php:155
+
+8. AccessService -> Plot: where('garden_owner_id', owner.id).pluck('id')
+   Type: call
+   Source: backend/app/Services/Plot/AccessService.php:157-159
+
+9. Plot -> AccessService: direct_plot_ids
+   Type: return
+   Replies to: 8
+   Source: backend/app/Models/Plot.php
+
+10. AccessService -> AccessRight: where('garden_owner_id', owner.id).pluck('plot_id')
+    Type: call
+    Source: backend/app/Services/Plot/AccessService.php:161-163
+
+11. AccessRight -> AccessService: shared_plot_ids
+    Type: return
+    Replies to: 10
+    Source: backend/app/Models/AccessRight.php
+
+12. AccessService -> PlotController: accessible_plot_ids
+    Type: return
+    Replies to: 7
+    Source: backend/app/Services/Plot/AccessService.php:165-170
+
+13. PlotController -> Plot: query()
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:23
+
+14. Plot -> PlotController: plot_query
+    Type: return
+    Replies to: 13
+    Source: backend/app/Models/Plot.php
+
+15. PlotController -> Plot: whereIn('id', accessiblePlotIds)
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:24
+
+16. Plot -> PlotController: filtered_plot_query
+    Type: return
+    Replies to: 15
+    Source: backend/app/Models/Plot.php
+
+17. PlotController -> Plot: withCount(['plantZones', 'plants'])
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:25; backend/app/Models/Plot.php:38,43
+
+18. Plot -> PlotController: counted_plot_query
+    Type: return
+    Replies to: 17
+    Source: backend/app/Models/Plot.php
+
+19. PlotController -> Plot: get()
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:26
+
+20. Plot -> PlotController: plot_collection
+    Type: return
+    Replies to: 19
+    Source: backend/app/Models/Plot.php
+
+21. PlotController -> AccessService: getUserRoleForPlot(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:31; backend/app/Services/Plot/AccessService.php:117
+
+22. AccessService -> PlotController: access_role
+    Type: return
+    Replies to: 21
+    Source: backend/app/Services/Plot/AccessService.php:117-131
+
+23. PlotController -> PlotsPage: plot_list
+    Type: return
+    Replies to: 2
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:28-34
+
+24. PlotsPage -> PlotsPage: filter(...)
+    Type: call
+    Source: frontend/src/pages/plot/PlotsPage.jsx:83-89
+
+25. PlotsPage -> PlotsPage: filtered_plots
+    Type: return
+    Replies to: 24
+    Source: frontend/src/pages/plot/PlotsPage.jsx:83-89
+
+26. PlotsPage -> PlotsPage: map((plot) => ResourceCard)
+    Type: call
+    Source: frontend/src/pages/plot/PlotsPage.jsx:137
+
+27. PlotsPage -> PlotsPage: plot_cards_rendered
+    Type: return
+    Replies to: 26
+    Source: frontend/src/pages/plot/PlotsPage.jsx:137-180
+
+loop pradžia [until user finishes harvest history view]
+
+28. Garden owner -> PlotHarvestsPage: openHarvestHistory(plotId)
+    Type: async/ui event
+    Source: frontend/src/App.jsx:230-234; frontend/src/components/plot/PlotSectionNav.jsx:8
+
+29. PlotHarvestsPage -> PlotController: index()
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:37; frontend/src/lib/api.js:149-151; backend/app/Http/Controllers/Plot/PlotController.php:18
+
+30. PlotController -> AccessService: accessiblePlotIds(owner)
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:21; backend/app/Services/Plot/AccessService.php:155
+
+31. AccessService -> PlotController: accessible_plot_ids
+    Type: return
+    Replies to: 30
+    Source: backend/app/Services/Plot/AccessService.php:155-170
+
+32. PlotController -> Plot: whereIn('id', accessiblePlotIds).withCount(...).get()
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:23-26
+
+33. Plot -> PlotController: plot_collection
+    Type: return
+    Replies to: 32
+    Source: backend/app/Models/Plot.php
+
+34. PlotController -> AccessService: getUserRoleForPlot(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:31; backend/app/Services/Plot/AccessService.php:117
+
+35. AccessService -> PlotController: access_role
+    Type: return
+    Replies to: 34
+    Source: backend/app/Services/Plot/AccessService.php:117-131
+
+36. PlotController -> PlotHarvestsPage: plot_list
+    Type: return
+    Replies to: 29
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:28-34
+
+37. PlotHarvestsPage -> PlotController: show(plot)
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:40; frontend/src/lib/api.js:157-159; backend/app/Http/Controllers/Plot/PlotController.php:60
+
+38. PlotController -> PlotController: ensureUserCanViewPlot(request, plot, accessService)
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:62; backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:21
+
+39. PlotController -> AccessService: userHasAccess(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:26; backend/app/Services/Plot/AccessService.php:134
+
+40. AccessService -> PlotController: true
+    Type: return
+    Replies to: 39
+    Source: backend/app/Services/Plot/AccessService.php:134-138
+
+41. PlotController -> PlotController: owner
+    Type: return
+    Replies to: 38
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:21-32
+
+42. PlotController -> Plot: load(['plantZones', 'plants'])
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:65
+
+43. Plot -> PlotController: plot_with_relations
+    Type: return
+    Replies to: 42
+    Source: backend/app/Models/Plot.php:38,43
+
+44. PlotController -> PlotHarvestsPage: plot
+    Type: return
+    Replies to: 37
+    Source: backend/app/Http/Controllers/Plot/PlotController.php:64-66
+
+45. PlotHarvestsPage -> PlantController: index(plot)
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:41; frontend/src/lib/api.js:191-193; backend/app/Http/Controllers/Plant/PlantController.php:54
+
+46. PlantController -> PlantController: ensureUserCanViewPlot(request, plot, accessService)
+    Type: call
+    Source: backend/app/Http/Controllers/Plant/PlantController.php:56; backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:21
+
+47. PlantController -> AccessService: userHasAccess(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:26; backend/app/Services/Plot/AccessService.php:134
+
+48. AccessService -> PlantController: true
+    Type: return
+    Replies to: 47
+    Source: backend/app/Services/Plot/AccessService.php:134-138
+
+49. PlantController -> PlantController: owner
+    Type: return
+    Replies to: 46
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:21-32
+
+50. PlantController -> Plot: plants()
+    Type: call
+    Source: backend/app/Http/Controllers/Plant/PlantController.php:60; backend/app/Models/Plot.php:43
+
+51. Plot -> PlantController: plant_relation
+    Type: return
+    Replies to: 50
+    Source: backend/app/Models/Plot.php:43-46
+
+52. PlantController -> Plant: with(['plot', 'plantZone', 'catalogPlant.plantCare'])
+    Type: call
+    Source: backend/app/Http/Controllers/Plant/PlantController.php:60; backend/app/Models/Plant.php:60,65
+
+53. Plant -> PlantController: plant_query_with_relations
+    Type: return
+    Replies to: 52
+    Source: backend/app/Models/Plant.php
+
+54. PlantController -> Plant: get()
+    Type: call
+    Source: backend/app/Http/Controllers/Plant/PlantController.php:60
+
+55. Plant -> PlantController: plant_collection
+    Type: return
+    Replies to: 54
+    Source: backend/app/Models/Plant.php
+
+56. PlantController -> PlotHarvestsPage: plant_list
+    Type: return
+    Replies to: 45
+    Source: backend/app/Http/Controllers/Plant/PlantController.php:58-62
+
+57. PlotHarvestsPage -> HarvestController: index(plot)
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:42; frontend/src/lib/api.js:364-366; backend/routes/api.php:104; backend/app/Http/Controllers/Plot/HarvestController.php:19
+
+58. HarvestController -> HarvestController: ensureUserCanViewPlot(request, plot, accessService)
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/HarvestController.php:25; backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:21
+
+59. HarvestController -> AccessService: userHasAccess(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:26; backend/app/Services/Plot/AccessService.php:134
+
+60. AccessService -> HarvestController: true
+    Type: return
+    Replies to: 59
+    Source: backend/app/Services/Plot/AccessService.php:134-138
+
+61. HarvestController -> HarvestController: owner
+    Type: return
+    Replies to: 58
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php:21-32
+
+62. HarvestController -> HarvestService: listForPlot(plot, owner, request->query('plant_id'))
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/HarvestController.php:26; backend/app/Services/Plot/HarvestService.php:19
+
+63. HarvestService -> HarvestRecord: query()
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:23; backend/app/Models/HarvestRecord.php:9
+
+64. HarvestRecord -> HarvestService: harvest_query
+    Type: return
+    Replies to: 63
+    Source: backend/app/Models/HarvestRecord.php
+
+65. HarvestService -> HarvestRecord: with(['plant.plantZone', 'task'])
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:24; backend/app/Models/HarvestRecord.php:36,41
+
+66. HarvestRecord -> HarvestService: harvest_query_with_relations
+    Type: return
+    Replies to: 65
+    Source: backend/app/Models/HarvestRecord.php
+
+67. HarvestService -> HarvestRecord: where('plot_id', plot.id)
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:25
+
+68. HarvestRecord -> HarvestService: plot_filtered_query
+    Type: return
+    Replies to: 67
+    Source: backend/app/Models/HarvestRecord.php
+
+69. HarvestService -> HarvestRecord: when(plantId, wherePlant)
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:26
+
+70. HarvestRecord -> HarvestService: plant_filtered_query
+    Type: return
+    Replies to: 69
+    Source: backend/app/Models/HarvestRecord.php
+
+71. HarvestService -> HarvestRecord: orderByDesc('harvested_on')
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:27
+
+72. HarvestRecord -> HarvestService: date_ordered_query
+    Type: return
+    Replies to: 71
+    Source: backend/app/Models/HarvestRecord.php
+
+73. HarvestService -> HarvestRecord: orderByDesc('id')
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:28
+
+74. HarvestRecord -> HarvestService: ordered_query
+    Type: return
+    Replies to: 73
+    Source: backend/app/Models/HarvestRecord.php
+
+75. HarvestService -> HarvestRecord: get()
+    Type: call
+    Source: backend/app/Services/Plot/HarvestService.php:29
+
+76. HarvestRecord -> HarvestService: harvest_records
+    Type: return
+    Replies to: 75
+    Source: backend/app/Models/HarvestRecord.php
+
+77. HarvestService -> HarvestController: harvest_records
+    Type: return
+    Replies to: 62
+    Source: backend/app/Services/Plot/HarvestService.php:19-30
+
+alt pradžia: Harvest history availability
+[1 if: harvest records exist]
+
+78. HarvestController -> HarvestRecord: plant()
+    Type: call
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:12; backend/app/Models/HarvestRecord.php:36
+
+79. HarvestRecord -> HarvestController: plant
+    Type: return
+    Replies to: 78
+    Source: backend/app/Models/HarvestRecord.php:36-39
+
+80. HarvestController -> Plant: plantZone()
+    Type: call
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:13; backend/app/Models/Plant.php:60
+
+81. Plant -> HarvestController: plant_zone
+    Type: return
+    Replies to: 80
+    Source: backend/app/Models/Plant.php:60-63
+
+82. HarvestController -> PlantZone: getAttribute('name')
+    Type: call
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:22
+
+83. PlantZone -> HarvestController: zone_name
+    Type: return
+    Replies to: 82
+    Source: backend/app/Models/PlantZone.php
+
+84. HarvestController -> HarvestRecord: task()
+    Type: call
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:14; backend/app/Models/HarvestRecord.php:41
+
+85. HarvestRecord -> HarvestController: task
+    Type: return
+    Replies to: 84
+    Source: backend/app/Models/HarvestRecord.php:41-44
+
+86. HarvestController -> Task: getAttribute('name')
+    Type: call
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:24
+
+87. Task -> HarvestController: task_name
+    Type: return
+    Replies to: 86
+    Source: backend/app/Models/Task.php
+
+88. HarvestController -> HarvestController: HarvestRecordResource::collection(records)->resolve()
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/HarvestController.php:29; backend/app/Http/Resources/Harvest/HarvestRecordResource.php:10
+
+89. HarvestController -> HarvestController: harvest_history_resource
+    Type: return
+    Replies to: 88
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:10-30
+
+90. HarvestController -> PlotHarvestsPage: harvest_history
+    Type: return
+    Replies to: 57
+    Source: backend/app/Http/Controllers/Plot/HarvestController.php:28-30
+
+91. PlotHarvestsPage -> PlotHarvestsPage: map((record) => tableRow)
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:219-230
+
+92. PlotHarvestsPage -> PlotHarvestsPage: harvest_rows_rendered
+    Type: return
+    Replies to: 91
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:219-230
+
+[1 if pabaiga]
+[2 if: harvest records do not exist]
+
+93. HarvestController -> HarvestController: HarvestRecordResource::collection(records)->resolve()
+    Type: call
+    Source: backend/app/Http/Controllers/Plot/HarvestController.php:29; empty collection response
+
+94. HarvestController -> HarvestController: empty_harvest_history_resource
+    Type: return
+    Replies to: 93
+    Source: backend/app/Http/Resources/Harvest/HarvestRecordResource.php:10
+
+95. HarvestController -> PlotHarvestsPage: empty_harvest_history
+    Type: return
+    Replies to: 57
+    Source: backend/app/Http/Controllers/Plot/HarvestController.php:28-30
+
+96. PlotHarvestsPage -> PlotHarvestsPage: harvests.length === 0
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:204
+
+97. PlotHarvestsPage -> PlotHarvestsPage: true
+    Type: return
+    Replies to: 96
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:204
+
+98. PlotHarvestsPage -> EmptyState: EmptyState(title, description)
+    Type: call
+    Source: frontend/src/pages/plot/PlotHarvestsPage.jsx:205
+
+99. EmptyState -> PlotHarvestsPage: empty_message_rendered
+    Type: return
+    Replies to: 98
+    Source: frontend/src/components/shared/StatusView.jsx
+
+[2 if pabaiga]
+alt pabaiga
+
+opt pradžia [user finishes harvest history view]
+
+100. Garden owner -> PlotSectionNav: clickBackToPlots()
+     Type: async/ui event
+     Source: frontend/src/components/plot/PlotSectionNav.jsx:172
+
+101. PlotSectionNav -> PlotsPage: Link(to="/plots")
+     Type: async/ui event
+     Source: frontend/src/components/plot/PlotSectionNav.jsx:172
+
+opt pabaiga
+loop pabaiga
+
+3. UML fragmentai
+
+- loop: Harvest history browsing
+  - Guard: [until user finishes harvest history view]
+  - Messages: 28-101
+  - Pastaba: ciklas atspindi naudotojo kartotinį kito plano pasirinkimą UI sraute; backend neturi atskiro ciklo.
+
+- alt: Harvest history availability
+  - Operand 1 [harvest records exist]: messages 78-92
+  - Operand 2 [harvest records do not exist]: messages 93-99
+  - Pastaba: bendras derliaus įrašų gavimas yra prieš alt, o kiekviena šaka turi atskirą controller response ir UI pateikimą.
+
+- opt: User finishes harvest history view
+  - Guard: [user finishes harvest history view]
+  - Messages: 100-101
+  - Pastaba: realizuota per realų PlotSectionNav back link į /plots.
+
+4. Santrauka
+
+- Synchronous calls: 48
+- Returns: 49
+- Async/UI events: 4
+- Calls without return: 0
+- Alt fragments: 1
+- Loop fragments: 1
+- Opt fragments: 1

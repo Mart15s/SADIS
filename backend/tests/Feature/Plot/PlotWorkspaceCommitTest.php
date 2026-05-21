@@ -91,7 +91,7 @@ class PlotWorkspaceCommitTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('history_entry.label', 'Saved plot version');
+            ->assertJsonPath('history_entry.label', 'Išsaugota sklypo versija');
 
         $this->assertDatabaseHas('plant_zones', [
             'id' => $zone->id,
@@ -109,14 +109,14 @@ class PlotWorkspaceCommitTest extends TestCase
 
         $historyResponse->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.label', 'Saved plot version')
+            ->assertJsonPath('data.0.label', 'Išsaugota sklypo versija')
             ->assertJsonPath('data.0.plant_count', 1)
             ->assertJsonPath('data.0.zone_count', 1);
 
         $snapshotPayload = json_decode((string) DB::table('plot_snapshots')->value('snapshot'), true);
 
         $this->assertSame('North bed', data_get($snapshotPayload, 'zones.0.name'));
-        $this->assertSame('Saved plot version', data_get($snapshotPayload, 'metadata.label'));
+        $this->assertSame('Išsaugota sklypo versija', data_get($snapshotPayload, 'metadata.label'));
     }
 
     public function test_workspace_commit_appends_temp_id_zone_without_overwriting_existing_zones(): void

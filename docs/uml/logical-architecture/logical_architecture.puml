@@ -1,0 +1,294 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+
+package "Naudotojo aplinka" as UserEnvironment {
+  actor "Darzo savininkas /\nadministratorius" as User
+  node "Naudotojo narsykle" as Browser
+}
+
+package "Frontend: React SPA" as Frontend <<frontend>> {
+  package "Marsrutai ir programos karkasas" as FrontShell {
+    class App <<boundary>>
+    class AppShell <<boundary>>
+    class Sidebar <<boundary>>
+    class Topbar <<boundary>>
+  }
+
+  package "Autentifikavimas ir paskyra" as FrontAuth {
+    class LoginPage <<boundary>>
+    class RegisterPage <<boundary>>
+    class ForgotPasswordPage <<boundary>>
+    class ResetPasswordPage <<boundary>>
+    class AccountPage <<boundary>>
+    class DashboardPage <<boundary>>
+    class AdminUsersPage <<boundary>>
+  }
+
+  package "Sklypai ir plano redaktorius" as FrontPlots {
+    class PlotsPage <<boundary>>
+    class PlotCreatePage <<boundary>>
+    class PlotDetailPage <<boundary>>
+    class PlotEditPage <<boundary>>
+    class PlotSharingPage <<boundary>>
+    class PlotWorkspaceShell <<boundary>>
+    class PlotDesignerCanvas <<boundary>>
+    class PlotPlantingDrawer <<boundary>>
+    class PlotLocationMap <<boundary>>
+    class PlanPreview <<boundary>>
+  }
+
+  package "Augalai ir katalogas" as FrontPlants {
+    class PlantsPage <<boundary>>
+    class PlantFormPage <<boundary>>
+    class PlantDetailPage <<boundary>>
+    class CatalogPlantsPage <<boundary>>
+    class CatalogPlantFormPage <<boundary>>
+    class CatalogPlantDetailPage <<boundary>>
+  }
+
+  package "Kalendorius, inventorius, rotacija ir analitika" as FrontPlanning {
+    class PlotCalendarPage <<boundary>>
+    class InventoryPage <<boundary>>
+    class PlotRotationPage <<boundary>>
+    class PlotHistoryPage <<boundary>>
+    class PlotHarvestsPage <<boundary>>
+    class PlotAnalyticsPage <<boundary>>
+  }
+
+  package "Bendruomene" as FrontCommunity {
+    class CommunityPage <<boundary>>
+  }
+
+  package "API klientas ir busena" as FrontApiPackage {
+    class "api.js / apiClient" as ApiClient <<service>>
+    class "api.js / api" as ApiFacade <<service>>
+    class AuthContext <<service>>
+    class ProtectedRoute <<boundary>>
+    class AdminRoute <<boundary>>
+  }
+}
+
+package "Backend: Laravel REST API" as Backend <<backend>> {
+  package "API marsrutai" as RoutePackage {
+    class "routes/api.php" as ApiRoutes <<control>>
+    class "routes/web.php" as WebRoutes <<control>>
+  }
+
+  package "Auth, naudotojai ir administravimas" as AuthControllers {
+    class SignUpController <<control>>
+    class LoginController <<control>>
+    class LogoutController <<control>>
+    class PasswordResetController <<control>>
+    class CurrentUserController <<control>>
+    class "User\\AccountController" as UserAccountController <<control>>
+    class "Admin\\AccountController" as AdminAccountController <<control>>
+    class AuditLogController <<control>>
+  }
+
+  package "Sklypu valdikliai" as PlotControllers {
+    class PlotController <<control>>
+    class SchemeController <<control>>
+    class WorkspaceController <<control>>
+    class ShareController <<control>>
+    class ExportController <<control>>
+    class AnalyticsController <<control>>
+    class HistoryController <<control>>
+    class RotationController <<control>>
+    class HarvestController <<control>>
+  }
+
+  package "Augalai ir katalogas" as PlantControllers {
+    class PlantController <<control>>
+    class CatalogPlantController <<control>>
+    class PlantConditionController <<control>>
+  }
+
+  package "Kalendorius, inventorius, bendruomene ir lokacija" as OtherControllers {
+    class CalendarController <<control>>
+    class TaskController <<control>>
+    class InventoryController <<control>>
+    class CommunityController <<control>>
+    class ReverseGeocodeController <<control>>
+  }
+
+  package "Uzklausos, resursai ir teises" as RequestsResources {
+    class UpdateAccountRequest <<request>>
+    class UpdateUserRoleRequest <<request>>
+    class StoreShareRequest <<request>>
+    class GenerateAnalyticsRequest <<request>>
+    class GenerateCalendarRequest <<request>>
+    class CompleteTaskRequest <<request>>
+    class RejectTaskRequest <<request>>
+    class ListCalendarTasksRequest <<request>>
+    class StoreInventoryItemRequest <<request>>
+    class UpdateInventoryItemRequest <<request>>
+    class StoreHarvestRecordRequest <<request>>
+    class StoreCommunityPostRequest <<request>>
+    class UpdateCommunityPostRequest <<request>>
+    class AuthorizesPlotAccess <<policy>>
+    class AdminMiddleware <<policy>>
+    class AuthenticatedUserResource <<resource>>
+    class "Admin\\UserResource" as AdminUserResource <<resource>>
+    class PlantResource <<resource>>
+    class CatalogPlantResource <<resource>>
+    class PlantConditionHistoryResource <<resource>>
+    class TaskCalendarResource <<resource>>
+    class TaskCalendarListResource <<resource>>
+    class "Calendar\\TaskResource" as TaskJsonResource <<resource>>
+    class InventoryItemResource <<resource>>
+    class CommunityPostResource <<resource>>
+    class AccessRightResource <<resource>>
+    class AnalyticsResource <<resource>>
+    class HarvestRecordResource <<resource>>
+    class WeatherForecastResource <<resource>>
+  }
+}
+
+package "Backend: Paslaugos / Dalykinė logika" as Services <<service>> {
+  package "Naudotojai ir administravimas" as UserServices {
+    class AccountService <<service>>
+    class AdminService <<service>>
+  }
+
+  package "Sklypai, prieiga, istorija ir PDF" as PlotServices {
+    class AccessService <<service>>
+    class PlotWorkspaceService <<service>>
+    class PlotSnapshotService <<service>>
+    class PdfExportService <<service>>
+    class RotationPlannerService <<service>>
+    class CropRotationClassifier <<service>>
+    class HarvestService <<service>>
+    class AnalyticsService <<service>>
+  }
+
+  package "Augalai ir prieziuros zinios" as PlantServices {
+    class CatalogPlantService <<service>>
+    class PlantCareService <<service>>
+    class PlantCareNormalizer <<service>>
+    class PlantLifecycleService <<service>>
+    class PlantLifecyclePhaseService <<service>>
+    class PlantStateService <<service>>
+    class PlantConditionHistoryService <<service>>
+  }
+
+  package "Kalendorius, orai ir inventorius" as CalendarInventoryServices {
+    class CalendarGenerationService <<service>>
+    class TaskCalendarService <<service>>
+    class TaskWorkflowService <<service>>
+    class TaskInventoryCoverageService <<service>>
+    class WeatherService <<service>>
+    class WeatherForecastRepairService <<service>>
+    class InventoryService <<service>>
+    class InventoryPlanningRepairService <<service>>
+  }
+
+  package "Bendruomene ir isorines ribos" as BoundaryServices {
+    class CommunityService <<service>>
+    class MeteoLtClient <<service>>
+    class PerenualService <<service>>
+    class ReverseGeocodingService <<service>>
+    class EmailServerBoundary <<service>>
+  }
+}
+
+package "Backend: Esybes / Modeliai" as Models <<entity>> {
+  package "Naudotojai ir prieiga" {
+    class User <<entity>>
+    class Profile <<entity>>
+    class GardenOwner <<entity>>
+    class AccessRight <<entity>>
+    class HasPlot <<entity>>
+    class AuditLog <<entity>>
+  }
+
+  package "Sklypai, zonos ir istorija" {
+    class Plot <<entity>>
+    class PlantZone <<entity>>
+    class PlotSnapshot <<entity>>
+    class RotationHistory <<entity>>
+    class RotationPlanDraft <<entity>>
+    class HarvestRecord <<entity>>
+  }
+
+  package "Augalai ir prieziura" {
+    class Plant <<entity>>
+    class CatalogPlant <<entity>>
+    class PlantCare <<entity>>
+    class PlantConditionHistory <<entity>>
+  }
+
+  package "Kalendorius, inventorius ir bendruomene" {
+    class TaskCalendar <<entity>>
+    class Task <<entity>>
+    class TaskResourceRequirement <<entity>>
+    class WeatherForecast <<entity>>
+    class InventoryItem <<entity>>
+    class InventoryUsageLog <<entity>>
+    class UsedOn <<entity>>
+    class HasInventory <<entity>>
+    class CommunityPost <<entity>>
+  }
+}
+
+database "PostgreSQL" as DB <<database>>
+
+package "Išorinės sistemos ir bibliotekos" as External <<external>> {
+  class "Meteo.lt API" as Meteo <<external>>
+  class "Perenual API" as Perenual <<external>>
+  class "Nominatim API" as Nominatim <<external>>
+  class "Dompdf" as Dompdf <<external>>
+  class "Laravel Sanctum" as Sanctum <<external>>
+  class "Laravel Mail / SMTP" as Mailer <<external>>
+}
+
+User --> Browser : naudojasi
+Browser --> Frontend : atvaizduoja UI
+Frontend --> FrontApiPackage : naudoja
+FrontAuth --> FrontApiPackage : kviecia API
+FrontPlots --> FrontApiPackage : kviecia API
+FrontPlants --> FrontApiPackage : kviecia API
+FrontPlanning --> FrontApiPackage : kviecia API
+FrontCommunity --> FrontApiPackage : kviecia API
+ApiFacade --> ApiClient : naudoja
+ApiClient --> ApiRoutes : HTTP/JSON
+
+ApiRoutes --> Sanctum : auth:sanctum
+ApiRoutes --> AuthControllers : nukreipia uzklausas
+ApiRoutes --> PlotControllers : nukreipia uzklausas
+ApiRoutes --> PlantControllers : nukreipia uzklausas
+ApiRoutes --> OtherControllers : nukreipia uzklausas
+AuthControllers --> RequestsResources : validuoja / serializuoja
+PlotControllers --> RequestsResources : validuoja / tikrina teises
+PlantControllers --> RequestsResources : validuoja / tikrina teises
+OtherControllers --> RequestsResources : validuoja / serializuoja
+
+RequestsResources --> Sanctum : tikrina autentifikavima
+RequestsResources --> PlotServices : tikrina teises
+AuthControllers --> UserServices : perduoda vykdyma
+PlotControllers --> PlotServices : perduoda vykdyma
+PlantControllers --> PlantServices : perduoda vykdyma
+OtherControllers --> CalendarInventoryServices : perduoda vykdyma
+OtherControllers --> BoundaryServices : perduoda vykdyma
+OtherControllers --> PlotServices : tikrina teises
+
+UserServices --> Models : skaito / raso
+PlotServices --> Models : skaito / raso
+PlantServices --> Models : skaito / raso
+CalendarInventoryServices --> Models : skaito / raso
+BoundaryServices --> Models : skaito / raso
+Models --> DB : saugoma
+
+WeatherService --> MeteoLtClient : naudoja
+MeteoLtClient --> Meteo : integruojasi
+PlantCareService --> PerenualService : naudoja
+CatalogPlantService --> PerenualService : naudoja
+PerenualService --> Perenual : integruojasi
+ReverseGeocodingService --> Nominatim : integruojasi
+PdfExportService --> Dompdf : generuoja PDF
+EmailServerBoundary --> Mailer : siuncia laiskus
+
+@enduml

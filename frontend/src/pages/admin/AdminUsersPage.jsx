@@ -4,7 +4,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/shared/St
 import Button from '../../components/ui/Button.jsx'
 import Card from '../../components/ui/Card.jsx'
 import { api } from '../../lib/api.js'
-import { formatDateTime, USER_ROLES } from '../../lib/constants.js'
+import { formatDateTime, formatUserRole, USER_ROLES } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 export default function AdminUsersPage() {
@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
   }
 
   if (usersState.loading) {
-    return <LoadingState title="Loading admin users..." />
+    return <LoadingState title="Įkeliami naudotojai..." />
   }
 
   if (usersState.error) {
@@ -79,31 +79,31 @@ export default function AdminUsersPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Admin user management"
-        description="Search, filter, inspect, change roles, and delete user accounts through the admin-only account management flow."
+        title="Naudotojų administravimas"
+        description="Ieškokite, filtruokite, peržiūrėkite, keiskite roles ir šalinkite naudotojų paskyras."
       />
 
       <div className="search-row">
         <div className="field">
-          <label htmlFor="admin-user-search">Search users</label>
+          <label htmlFor="admin-user-search">Ieškoti naudotojų</label>
           <input
             id="admin-user-search"
             value={filters.search}
             onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-            placeholder="Search by email, name, or surname"
+            placeholder="El. paštas, vardas arba pavardė"
           />
         </div>
         <div className="field">
-          <label htmlFor="admin-user-role">Role filter</label>
+          <label htmlFor="admin-user-role">Rolės filtras</label>
           <select
             id="admin-user-role"
             value={filters.role}
             onChange={(event) => setFilters((current) => ({ ...current, role: event.target.value }))}
           >
-            <option value="">All roles</option>
+            <option value="">Visos rolės</option>
             {USER_ROLES.map((role) => (
               <option key={role} value={role}>
-                {role}
+                {formatUserRole(role)}
               </option>
             ))}
           </select>
@@ -111,7 +111,7 @@ export default function AdminUsersPage() {
       </div>
 
       {usersState.data.length === 0 ? (
-        <EmptyState title="No users found" description="No accounts matched the current admin search and filter criteria." />
+        <EmptyState title="Naudotojų nerasta" description="Pagal pasirinktus paieškos ir filtro kriterijus paskyrų nerasta." />
       ) : (
         <div className="detail-grid">
           <div className="panel table-stack">
@@ -119,10 +119,10 @@ export default function AdminUsersPage() {
               <table>
                 <thead>
                   <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Last login</th>
+                    <th>El. paštas</th>
+                    <th>Vardas</th>
+                    <th>Rolė</th>
+                    <th>Paskutinis prisijungimas</th>
                     <th />
                   </tr>
                 </thead>
@@ -130,12 +130,12 @@ export default function AdminUsersPage() {
                   {usersState.data.map((user) => (
                     <tr key={user.id}>
                       <td>{user.email}</td>
-                      <td>{[user.name, user.surname].filter(Boolean).join(' ') || 'Not set'}</td>
-                      <td>{user.role}</td>
+                      <td>{[user.name, user.surname].filter(Boolean).join(' ') || 'Nenurodyta'}</td>
+                      <td>{formatUserRole(user.role)}</td>
                       <td>{formatDateTime(user.profile?.last_login)}</td>
                       <td>
                         <Button variant="ghost" onClick={() => handleInspect(user.id)}>
-                          Inspect
+                          Peržiūrėti
                         </Button>
                       </td>
                     </tr>
@@ -146,18 +146,18 @@ export default function AdminUsersPage() {
           </div>
 
           <Card>
-            <h3>User detail</h3>
+            <h3>Naudotojo informacija</h3>
             {selectedUser ? (
               <div className="stack">
                 <strong>{selectedUser.email}</strong>
                 <span className="muted">
-                  {[selectedUser.name, selectedUser.surname].filter(Boolean).join(' ') || 'No profile name'}
+                  {[selectedUser.name, selectedUser.surname].filter(Boolean).join(' ') || 'Profilio vardas nenurodytas'}
                 </span>
                 <span className="muted">
-                  Created: {formatDateTime(selectedUser.created_at)}
+                  Sukurta: {formatDateTime(selectedUser.created_at)}
                 </span>
                 <div className="field">
-                  <label htmlFor="user-role">Role</label>
+                  <label htmlFor="user-role">Rolė</label>
                   <select
                     id="user-role"
                     value={selectedUser.role}
@@ -166,19 +166,19 @@ export default function AdminUsersPage() {
                   >
                     {USER_ROLES.map((role) => (
                       <option key={role} value={role}>
-                        {role}
+                        {formatUserRole(role)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <Button variant="danger" onClick={() => handleDelete(selectedUser.id)} disabled={saving}>
-                  Delete user
+                  Pašalinti naudotoją
                 </Button>
               </div>
             ) : (
               <EmptyState
-                title="Choose a user"
-                description="Click Inspect on the left to load the single-user admin endpoint."
+                title="Pasirinkite naudotoją"
+                description="Paspauskite „Peržiūrėti“, kad įkeltumėte naudotojo informaciją."
               />
             )}
             {detailError ? <span className="field-error">{detailError}</span> : null}

@@ -39,6 +39,7 @@ APP_ENV=production
 APP_KEY=base64:GENERATED_APP_KEY
 APP_DEBUG=false
 APP_URL=https://your-service-name.onrender.com
+FRONTEND_URL=https://your-service-name.onrender.com
 TRUSTED_PROXIES=*
 
 LOG_CHANNEL=stderr
@@ -48,6 +49,7 @@ DB_CONNECTION=pgsql
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 RUN_MIGRATIONS=true
 RUN_DEMO_SEEDER=false
+RUN_DEMO1_RICH_SEEDER=false
 DEMO_SEEDER_CLASS=CurrentVersionDemoSeeder
 
 SESSION_DRIVER=file
@@ -73,6 +75,38 @@ METEO_LT_BASE_URL=https://api.meteo.lt/v1
 ```
 
 If you do not use `DATABASE_URL`, set Laravel's standard `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` variables instead.
+
+Required demo/review variables to check before the defense:
+
+| Variable | Purpose |
+| --- | --- |
+| `APP_KEY` | Laravel encryption key. Generate with `php artisan key:generate --show`; never commit the real value. |
+| `APP_URL` | Public Render URL used by Laravel links and password reset URLs. |
+| `DATABASE_URL` | Render PostgreSQL connection string. Keep `DB_CONNECTION=pgsql`. |
+| `SANCTUM_STATEFUL_DOMAINS` | Domain allowed for Sanctum SPA auth behavior, usually `your-service-name.onrender.com`. |
+| `SESSION_SECURE_COOKIE` | Use `true` on Render HTTPS. |
+| `PERENUAL_API_KEY` | Optional but recommended for live Perenual import demo. Do not commit the real key. |
+| `METEO_LT_BASE_URL` | Meteo.lt API base URL, normally `https://api.meteo.lt/v1`. |
+| `MAIL_*` | SMTP settings for real password reset email, or `MAIL_MAILER=log` for safe demo fallback. |
+| `RUN_MIGRATIONS` | Set `true` during deploys that must apply migrations. |
+| `RUN_DEMO_SEEDER` | Set `true` only when intentionally seeding demo data. Turn it back to `false` after success. |
+| `RUN_DEMO1_RICH_SEEDER` | Set `true` only when intentionally enriching an existing `demo1@gmail.com` demo world with `Demo1RichDataSeeder`. |
+| `DEMO_SEEDER_CLASS` | Use `CurrentVersionDemoSeeder`. |
+
+If no real SMTP account is available for the demo, use the safe log mailer instead of fake credentials:
+
+```env
+MAIL_MAILER=log
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS=no-reply@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+With `MAIL_MAILER=log`, password reset messages are written to Laravel logs. This proves the application flow without exposing a real SMTP password.
 
 ## 4. Generate APP_KEY
 
@@ -107,6 +141,7 @@ For a demo environment, set these Render environment variables:
 ```env
 RUN_MIGRATIONS=true
 RUN_DEMO_SEEDER=true
+RUN_DEMO1_RICH_SEEDER=false
 DEMO_SEEDER_CLASS=CurrentVersionDemoSeeder
 ```
 
@@ -122,6 +157,8 @@ Demo seeder [CurrentVersionDemoSeeder] completed.
 After the seed succeeds, set `RUN_DEMO_SEEDER=false` and redeploy again for normal operation. The seeder is idempotent and cleans only the known demo accounts' owned records before recreating them, but leaving demo seeding enabled on every production restart is not recommended.
 
 Demo seeding is intended for demonstration databases only. Do not run it against a real production database containing real users unless you intentionally want the demo accounts and catalog examples added.
+
+`RUN_DEMO1_RICH_SEEDER=true` is separate from the maintained deployment demo seed. It runs `Demo1RichDataSeeder` only when the target `demo1@gmail.com` demo account and its base plots already exist.
 
 Current demo accounts all use password `password`:
 
@@ -153,6 +190,5 @@ On low-cost or free plans, the first request after inactivity can take longer be
 - The container listens on the `PORT` environment variable assigned by Render.
 - Render terminates HTTPS before forwarding traffic to the container; `TRUSTED_PROXIES=*` lets Laravel respect forwarded scheme and host headers.
 - `DATABASE_URL` is mapped to Laravel's `DB_URL` inside `docker/start.sh` when `DB_URL` is not already set.
-- `php artisan config:cache` and `php artisan view:cache` run on startup after Render environment variables are available.
-- `php artisan route:cache` is intentionally not used because the project has Closure web routes.
+- `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache` run on startup after Render environment variables are available.
 - `php artisan storage:link` is attempted on startup for public storage support.

@@ -59,7 +59,7 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
         [TODAY]: {
           day_inventory_status: 'blocked',
           blocked_task_count: 1,
-          summary_text: '1 planned task is blocked by Fertilizer shortage.',
+          summary_text: '1 suplanuotų užduočių blokuojama dėl inventoriaus: Trąšos.',
           grouped_resource_summary: [
             {
               resource_key: 'material|kg|consumable|fertilizer',
@@ -152,24 +152,24 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
     await user.click(container.querySelector('.month-day.is-selected'))
 
     await waitFor(() => {
-      expect(screen.getByText(/stays blocked until/i)).toBeInTheDocument()
+      expect(screen.getByText(/bus blokuota, kol bus atlikta/i)).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/Day resources/i)).toBeInTheDocument()
-    expect(screen.getByText('1 planned task is blocked by Fertilizer shortage.')).toBeInTheDocument()
-    expect(screen.getByText(/Generated replenishment tasks/i)).toBeInTheDocument()
-    expect(screen.getByText(/Actual planted/i)).toBeInTheDocument()
-    expect(screen.getByText(/Expected germinating/i)).toBeInTheDocument()
+    expect(screen.getByText(/Dienos resursai/i)).toBeInTheDocument()
+    expect(screen.getByText('1 suplanuotų užduočių blokuojama dėl inventoriaus: Trąšos.')).toBeInTheDocument()
+    expect(screen.getByText(/Sugeneruotos papildymo užduotys/i)).toBeInTheDocument()
+    expect(screen.getByText(/Faktinė būklė: Pasodintas/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tikėtina būklė: Dygsta/i)).toBeInTheDocument()
     expect(screen.getByText(/planted -> germinating/i)).toBeInTheDocument()
     expect(
       screen.getAllByText((_, element) => element?.textContent?.includes('Consumable') ?? false).length,
     ).toBeGreaterThan(0)
 
-    expect(screen.getByRole('link', { name: /Go to inventory/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Eiti į inventorių/i })).toHaveAttribute(
       'href',
       expect.stringContaining(`returnTo=%2Fplots%2F5%2Fcalendar%3FcalendarId%3D9%26date%3D${TODAY}`),
     )
-    expect(screen.getByRole('button', { name: /Complete/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Atlikti/i })).toBeDisabled()
     expect(api.completeTask).not.toHaveBeenCalled()
   })
 
@@ -188,7 +188,7 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
         [TODAY]: {
           day_inventory_status: 'partially_blocked',
           blocked_task_count: 1,
-          summary_text: '1 planned task is blocked by Fertilizer shortage.',
+          summary_text: '1 suplanuotų užduočių blokuojama dėl inventoriaus: Trąšos.',
           grouped_resource_summary: [],
           replenishment_tasks: [{ id: 70, name: 'Buy Fertilizer', item: 'Fertilizer', item_quantity: 1 }],
         },
@@ -246,18 +246,14 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
     await user.click(container.querySelector('.month-day.is-selected'))
 
     await waitFor(() => {
-      expect(screen.getByText(/Completing this task adds stock to inventory/i)).toBeInTheDocument()
+      expect(screen.getByText(/Atlikus šią užduotį inventorius papildomas/i)).toBeInTheDocument()
     })
 
-    expect(
-      screen.getAllByText((_, element) => {
-        const text = element?.textContent ?? ''
-        return text.includes('Missing 1.00 kg of Fertilizer') && text.includes('for 1 blocked task')
-      }).length,
-    ).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: /Complete restock/i })).toBeInTheDocument()
-    expect(screen.queryByText(/Completing this task will deduct consumables/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Update stock, then mark this reminder complete/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/Trąšos/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/atblokuojamų užduočių: 1/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Atlikti papildymą/i })).toBeInTheDocument()
+    expect(screen.queryByText(/nurašys sunaudojamas atsargas/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Atnaujinkite atsargas/i)).not.toBeInTheDocument()
   })
 
   it('marks the restock task completed and refreshes dependent tasks after replenishment', async () => {
@@ -276,7 +272,7 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
           [TODAY]: {
             day_inventory_status: 'blocked',
             blocked_task_count: 1,
-            summary_text: '1 planned task is blocked by Fertilizer shortage.',
+            summary_text: '1 suplanuotų užduočių blokuojama dėl inventoriaus: Trąšos.',
             grouped_resource_summary: [
               {
                 resource_key: 'material|kg|consumable|fertilizer',
@@ -309,7 +305,7 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
           [TODAY]: {
             day_inventory_status: 'fully_covered',
             blocked_task_count: 0,
-            summary_text: 'Inventory is fully covered for planned work on this day.',
+            summary_text: 'Inventoriaus pakanka visiems šios dienos suplanuotiems darbams.',
             grouped_resource_summary: [
               {
                 resource_key: 'material|kg|consumable|fertilizer',
@@ -473,10 +469,10 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
     await user.click(container.querySelector('.month-day.is-selected'))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Complete restock/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Atlikti papildymą/i })).toBeInTheDocument()
     })
 
-    await user.click(screen.getByRole('button', { name: /Complete restock/i }))
+    await user.click(screen.getByRole('button', { name: /Atlikti papildymą/i }))
 
     await waitFor(() => {
       expect(api.completeTask).toHaveBeenCalledWith(70)
@@ -487,13 +483,15 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
       expect(api.getCalendar).toHaveBeenCalledTimes(2)
     })
 
-    expect(screen.queryByRole('button', { name: /Complete restock/i })).not.toBeInTheDocument()
-    expect(screen.getByText('Inventory is fully covered for planned work on this day.')).toBeInTheDocument()
-    expect(screen.queryByText(/Generated replenishment tasks/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Go to inventory/i })).not.toBeInTheDocument()
-    expect(screen.queryByText(/stays blocked until/i)).not.toBeInTheDocument()
-    expect(screen.getAllByText(/^completed$/i).length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: /^Complete$/i })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: /Atlikti papildymą/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Inventoriaus pakanka visiems šios dienos suplanuotiems darbams.')).toBeInTheDocument()
+    expect(screen.queryByText(/Sugeneruotos papildymo užduotys/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Eiti į inventorių/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/bus blokuota, kol bus atlikta/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/^Atlikta$/i).length).toBeGreaterThan(0)
+    expect(screen.getByText('Papildyta: Trąšos (1,00 kg)')).toBeInTheDocument()
+    expect(screen.queryByText(/Restocked/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Atlikti$/i })).toBeEnabled()
   })
 
   it('restores the requested calendar day from the query string', async () => {
@@ -572,31 +570,31 @@ describe('PlotCalendarPage inventory and lifecycle rendering', () => {
     const { container } = renderPage(`/plots/5/calendar?calendarId=9&date=${FIRST_DAY}`)
 
     await waitFor(() => {
-      expect(screen.getByText(/Weather forecast includes fallback data/i)).toBeInTheDocument()
+      expect(screen.getByText(/Orų prognozėje naudojami atsarginiai duomenys/i)).toBeInTheDocument()
     })
 
     await user.click(container.querySelector('.month-day.is-selected'))
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/Close/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Uždaryti/i)).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/Source: Stored forecast \(same city\/date\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/2\.7 .*C/i)).toBeInTheDocument()
-    expect(screen.getByText(/7\.8 .*C/i)).toBeInTheDocument()
-    expect(screen.getByText('1.7 mm')).toBeInTheDocument()
-    expect(screen.getByText('25.2 km/h')).toBeInTheDocument()
+    expect(screen.getByText(/Šaltinis: atsarginė Kaunas prognozė pagal .* duomenis/i)).toBeInTheDocument()
+    expect(screen.getByText(/2,7 .*C/i)).toBeInTheDocument()
+    expect(screen.getByText(/7,8 .*C/i)).toBeInTheDocument()
+    expect(screen.getByText('1,7 mm')).toBeInTheDocument()
+    expect(screen.getByText('25,2 km/h')).toBeInTheDocument()
 
-    await user.click(screen.getByLabelText(/Close/i))
+    await user.click(screen.getByLabelText(/Uždaryti/i))
     await user.click(screen.getByRole('button', { name: '22' }))
 
     await waitFor(() => {
-      expect(screen.getByText(/8\.1 .*C/i)).toBeInTheDocument()
+      expect(screen.getByText(/8,1 .*C/i)).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/15\.4 .*C/i)).toBeInTheDocument()
-    expect(screen.getByText('0.2 mm')).toBeInTheDocument()
-    expect(screen.getByText('12.6 km/h')).toBeInTheDocument()
-    expect(screen.queryByText(/Source: Stored forecast/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/15,4 .*C/i)).toBeInTheDocument()
+    expect(screen.getByText('0,2 mm')).toBeInTheDocument()
+    expect(screen.getByText('12,6 km/h')).toBeInTheDocument()
+    expect(screen.queryByText(/Šaltinis: atsarginė/i)).not.toBeInTheDocument()
   })
 })

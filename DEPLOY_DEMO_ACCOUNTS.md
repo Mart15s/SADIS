@@ -21,6 +21,7 @@ Render demo seeding:
 ```env
 RUN_MIGRATIONS=true
 RUN_DEMO_SEEDER=true
+RUN_DEMO1_RICH_SEEDER=false
 DEMO_SEEDER_CLASS=CurrentVersionDemoSeeder
 ```
 

@@ -4,15 +4,15 @@ import Button from '../ui/Button.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 
 const baseLinks = [
-  { to: '/', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/', label: 'Pradžia', icon: 'dashboard' },
 ]
 
 const authLinks = [
-  { to: '/account', label: 'Account', icon: 'account' },
-  { to: '/community', label: 'Community', icon: 'community' },
-  { to: '/plots', label: 'Plots', icon: 'plots' },
-  { to: '/plants', label: 'Plants', icon: 'plants' },
-  { to: '/inventory', label: 'Inventory', icon: 'inventory' },
+  { to: '/account', label: 'Paskyra', icon: 'account' },
+  { to: '/community', label: 'Bendruomenė', icon: 'community' },
+  { to: '/plots', label: 'Sklypai', icon: 'plots' },
+  { to: '/plants', label: 'Augalai', icon: 'plants' },
+  { to: '/inventory', label: 'Inventorius', icon: 'inventory' },
 ]
 
 function SidebarIcon({ name }) {
@@ -95,11 +95,11 @@ export default function Sidebar({
   const links = [
     ...baseLinks,
     ...(isAuthenticated ? authLinks : []),
-    ...(isAdmin ? [{ to: '/admin/users', label: 'Admin', icon: 'admin', badge: { tone: 'warning', text: 'Admin' } }] : []),
+    ...(isAdmin ? [{ to: '/admin/users', label: 'Administravimas', icon: 'admin', badge: { tone: 'warning', text: 'Administratorius' } }] : []),
     ...(!isAuthenticated
       ? [
-          { to: '/login', label: 'Sign in', icon: 'auth' },
-          { to: '/register', label: 'Register', icon: 'auth' },
+          { to: '/login', label: 'Prisijungti', icon: 'auth' },
+          { to: '/register', label: 'Registruotis', icon: 'auth' },
         ]
       : []),
   ]
@@ -115,7 +115,7 @@ export default function Sidebar({
       id={variant === 'drawer' ? 'app-navigation-drawer' : undefined}
       className={`shell-sidebar shell-sidebar--${variant} ${isCollapsed ? 'is-collapsed' : ''}`.trim()}
       role={variant === 'drawer' ? 'dialog' : undefined}
-      aria-label="Application navigation"
+      aria-label="Programos navigacija"
       aria-modal={variant === 'drawer' ? 'true' : undefined}
     >
       <div className="brand-lockup">
@@ -128,16 +128,16 @@ export default function Sidebar({
         </span>
         <span className="brand-copy">
           <span className="brand-title">SAD<em>iS</em></span>
-          <span className="brand-subtitle">Plot GIS and care planner</span>
+          <span className="brand-subtitle">Asmeninio sodo ar daržo informacinė sistema</span>
         </span>
         {variant === 'desktop' ? (
           <button
             type="button"
             className="sidebar-collapse-button"
             onClick={onToggleCollapse}
-            aria-label={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+            aria-label={isCollapsed ? 'Išskleisti navigaciją' : 'Suskleisti navigaciją'}
             aria-pressed={isCollapsed}
-            title={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+            title={isCollapsed ? 'Išskleisti navigaciją' : 'Suskleisti navigaciją'}
           >
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={isCollapsed ? 'M8 5l5 5-5 5' : 'M12 5l-5 5 5 5'} />
@@ -146,7 +146,7 @@ export default function Sidebar({
         ) : null}
       </div>
 
-      <nav className="sidebar-nav" aria-label="Primary">
+      <nav className="sidebar-nav" aria-label="Pagrindinė navigacija">
         {links.map((link) => (
           <NavLink
             key={link.to}
@@ -180,13 +180,13 @@ export default function Sidebar({
               </div>
             </div>
             <Button variant="ghost" onClick={handleLogout} fullWidth>
-              Log out
+              Atsijungti
             </Button>
           </>
         ) : (
           <div className="sidebar-user-info">
-            <span className="sidebar-user-name">Guest</span>
-            <span className="sidebar-user-email">Sign in to access all features</span>
+            <span className="sidebar-user-name">Svečias</span>
+            <span className="sidebar-user-email">Prisijunkite, kad naudotumėte visas funkcijas</span>
           </div>
         )}
       </div>

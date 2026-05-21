@@ -37,4 +37,18 @@ enum InventoryUnit: string
     {
         return [self::Unit];
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Unit => 'vnt.',
+            self::Gram => 'g',
+            self::Kilogram => 'kg',
+            self::Milliliter => 'ml',
+            self::Liter => 'l',
+            self::Bag => 'maiš.',
+            self::Pack => 'pak.',
+            self::CubicMeter => 'm3',
+        };
+    }
 }

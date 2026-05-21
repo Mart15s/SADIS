@@ -11,7 +11,7 @@ import Button from '../../components/ui/Button.jsx'
 import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
-import { formatDateTime } from '../../lib/constants.js'
+import { formatAccessRole, formatDateTime } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 export default function PlotSharingPage() {
@@ -53,7 +53,7 @@ export default function PlotSharingPage() {
         recipient_email: '',
         role: 'viewer',
       })
-      setSuccess('Sharing access updated.')
+      setSuccess('Bendrinimo prieiga atnaujinta.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -68,7 +68,7 @@ export default function PlotSharingPage() {
     try {
       await api.revokeAccessRight(accessRightId)
       await pageState.reload()
-      setSuccess('Sharing access revoked.')
+      setSuccess('Bendrinimo prieiga pašalinta.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -77,7 +77,7 @@ export default function PlotSharingPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title="Loading sharing..." />
+    return <LoadingState title="Įkeliamas bendrinimas..." />
   }
 
   if (pageState.error) {
@@ -85,7 +85,7 @@ export default function PlotSharingPage() {
   }
 
   if (!pageState.data.plot) {
-    return <EmptyState title="Plot not found" description="The requested plot could not be loaded." />
+    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
   }
 
   return (
@@ -95,11 +95,11 @@ export default function PlotSharingPage() {
         plotName={pageState.data.plot.name}
         sectionKey="sharing"
         isOwner={isOwner}
-        description="Keep sharing decisions separate from live layout work. Owners manage collaborators here without cluttering the editor."
+        description="Bendrinimo sprendimai laikomi atskirai nuo plano redagavimo. Savininkai čia valdo bendradarbius."
         meta={(
           <>
-            <StatusBadge kind="selection" tone="neutral">{pageState.data.accessRole ?? 'viewer'}</StatusBadge>
-            {isOwner ? <StatusBadge kind="status" tone="success">Owner controls access</StatusBadge> : null}
+            <StatusBadge kind="selection" tone="neutral">{formatAccessRole(pageState.data.accessRole)}</StatusBadge>
+            {isOwner ? <StatusBadge kind="status" tone="success">Savininko valdymas</StatusBadge> : null}
           </>
         )}
       />
@@ -107,47 +107,47 @@ export default function PlotSharingPage() {
 
       {!isOwner ? (
         <EmptyState
-          title="Owner access required"
-          description="Only the plot owner can grant or revoke sharing access. You can still use the other plot workspaces you already have access to."
+          title="Reikalinga savininko prieiga"
+          description="Tik sklypo savininkas gali suteikti arba panaikinti bendrinimo prieigą."
         />
       ) : (
         <div className="detail-grid plot-sharing-grid">
           <section className="panel page-stack plot-sharing-panel">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Invite collaborator</h2>
-                <p className="section-copy">Grant view-only or editing access without mixing sharing controls into the editor rail.</p>
+                <h2 className="section-title">Pakviesti bendradarbį</h2>
+                <p className="section-copy">Suteikite peržiūros arba redagavimo teisę kitam naudotojui.</p>
               </div>
             </div>
 
             <form className="input-grid" onSubmit={handleShare}>
               <div className="field field-span-2">
-                <label htmlFor="share-email">User email</label>
+                <label htmlFor="share-email">Naudotojo el. paštas</label>
                 <input
                   id="share-email"
                   type="email"
                   value={form.recipient_email}
                   onChange={(event) => setForm((current) => ({ ...current, recipient_email: event.target.value }))}
-                  placeholder="teammate@example.com"
+                  placeholder="naudotojas@example.com"
                   required
                 />
               </div>
               <div className="field">
-                <label htmlFor="share-role">Access level</label>
+                <label htmlFor="share-role">Prieigos lygis</label>
                 <select
                   id="share-role"
                   value={form.role}
                   onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
                 >
-                  <option value="viewer">Viewer</option>
-                  <option value="editor">Editor</option>
+                  <option value="viewer">{formatAccessRole('viewer')}</option>
+                  <option value="editor">{formatAccessRole('editor')}</option>
                 </select>
               </div>
 
               {error ? <span className="field-error">{error}</span> : null}
 
               <div className="form-actions">
-                <Button type="submit" loading={busy}>Share plot</Button>
+                <Button type="submit" loading={busy}>Bendrinti sklypą</Button>
               </div>
             </form>
           </section>
@@ -155,16 +155,16 @@ export default function PlotSharingPage() {
           <section className="panel page-stack plot-sharing-panel">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Current access</h2>
-                <p className="section-copy">Keep the list readable and compact so it feels like access management, not an admin table.</p>
+                <h2 className="section-title">Dabartinės prieigos</h2>
+                <p className="section-copy">Čia matomi visi naudotojai, turintys prieigą prie šio sklypo.</p>
               </div>
-              <StatusBadge kind="selection" tone="neutral">{pageState.data.accessRights.length} active</StatusBadge>
+              <StatusBadge kind="selection" tone="neutral">{pageState.data.accessRights.length} aktyvių</StatusBadge>
             </div>
 
             {pageState.data.accessRights.length === 0 ? (
               <EmptyStatePanel
-                title="No collaborators yet"
-                description="Share this plot when you want someone else to review the plan or help edit it."
+                title="Aktyvių prieigų nėra"
+                description="Šis sklypas dar nėra bendrinamas su kitais naudotojais."
                 tone="subtle"
               />
             ) : (
@@ -175,11 +175,11 @@ export default function PlotSharingPage() {
                       <div className="plot-sharing-item-head">
                         <strong>{accessRight.name || accessRight.email}</strong>
                         <StatusBadge kind="status" tone={accessRight.role === 'editor' ? 'warning' : 'neutral'}>
-                          {accessRight.role}
+                          {formatAccessRole(accessRight.role)}
                         </StatusBadge>
                       </div>
                       <span className="muted">{accessRight.email}</span>
-                      <span className="plot-sharing-meta">Granted {formatDateTime(accessRight.granted_at)}</span>
+                      <span className="plot-sharing-meta">Suteikta {formatDateTime(accessRight.granted_at)}</span>
                     </div>
                     <Button
                       variant="ghost"
@@ -187,7 +187,7 @@ export default function PlotSharingPage() {
                       onClick={() => handleRevoke(accessRight.access_right_id)}
                       disabled={busy}
                     >
-                      Remove
+                      Pašalinti
                     </Button>
                   </article>
                 ))}

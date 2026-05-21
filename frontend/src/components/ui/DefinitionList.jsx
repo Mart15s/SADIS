@@ -14,7 +14,7 @@ export function DefinitionItem({
     <div className={`definition-item ${className}`.trim()}>
       <dt className="definition-item-label">{label}</dt>
       <dd className="definition-item-value">
-        {hasRenderableValue(renderedValue) ? renderedValue : 'Not set'}
+        {hasRenderableValue(renderedValue) ? renderedValue : 'Nenurodyta'}
       </dd>
     </div>
   )
@@ -57,7 +57,7 @@ export function StatRow({ label, value, children, className = '' }) {
     <div className={`stat-row ${className}`.trim()}>
       <span className="stat-row-label">{label}</span>
       <strong className="stat-row-value">
-        {hasRenderableValue(renderedValue) ? renderedValue : 'Not set'}
+        {hasRenderableValue(renderedValue) ? renderedValue : 'Nenurodyta'}
       </strong>
     </div>
   )

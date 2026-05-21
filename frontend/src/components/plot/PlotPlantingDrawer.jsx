@@ -9,6 +9,9 @@ import { api } from '../../lib/api.js'
 import {
   CONDITION_TYPES,
   formatDayCount,
+  formatPlantCondition,
+  formatPlantType,
+  formatSoilType,
   formatSquareMetersValue,
 } from '../../lib/constants.js'
 import { useDebouncedValue } from '../../lib/hooks/useDebouncedValue.js'
@@ -156,9 +159,9 @@ export default function PlotPlantingDrawer({
       <section className="inspector-section workspace-context-card plant-placement-card">
         <div className="list-head">
           <div className="page-stack">
-            <h3 className="section-title">Plant placement</h3>
+            <h3 className="section-title">Augalo sodinimas</h3>
             <p className="section-copy">
-              Pick a zone, choose a catalog plant, and place it with the shared care already linked in the catalog.
+              Pasirinkite zoną, katalogo augalą ir įdėkite jį su jau susieta bendrine priežiūra.
             </p>
           </div>
           <Button
@@ -166,20 +169,20 @@ export default function PlotPlantingDrawer({
             disabled={!canEdit || !selectedZone}
             data-testid="open-plant-drawer"
           >
-            {selectedZone ? 'Add plant to draft' : 'Zone required'}
+            {selectedZone ? 'Pridėti augalą į juodraštį' : 'Reikia pasirinkti zoną'}
           </Button>
         </div>
 
         {selectedZone ? (
           <div className="meta-cluster">
-            <StatRow label="Active zone" value={selectedZone.name} />
-            <StatRow label="Area" value={formatSquareMetersValue(selectedZone.zone_size, 2)} />
-            <StatRow label="Soil" value={selectedZone.soil_type} />
+            <StatRow label="Aktyvi zona" value={selectedZone.name} />
+            <StatRow label="Plotas" value={formatSquareMetersValue(selectedZone.zone_size, 2)} />
+            <StatRow label="Dirvožemis" value={formatSoilType(selectedZone.soil_type)} />
           </div>
         ) : (
           <EmptyStatePanel
-            title="Select a zone first"
-            description="Choose a zone on the canvas to unlock planting. The rest of the workspace stays visible so the next step is clear without looking like a clickable CTA."
+            title="Pirmiausia pasirinkite zoną"
+            description="Pasirinkite zoną plane, kad galėtumėte į ją įdėti augalą."
             tone="subtle"
           />
         )}
@@ -194,37 +197,37 @@ export default function PlotPlantingDrawer({
         className="plant-flow-panel"
       >
         <DialogHeader
-          title={`Add plant to ${selectedZone?.name ?? 'selected zone'}`}
-          subtitle="Choose a reusable catalog plant and place it into the selected zone. This stays in the editor draft until the main plot save is committed."
+          title={`Pridėti augalą į ${selectedZone?.name ?? 'pasirinktą zoną'}`}
+          subtitle="Pasirinkite daugkartinį katalogo augalą ir įdėkite jį į pasirinktą zoną. Pakeitimas liks redaktoriaus juodraštyje iki pagrindinio išsaugojimo."
           titleId="plant-placement-title"
           subtitleId="plant-placement-subtitle"
           onClose={closeDrawer}
-          closeLabel="Close plant drawer"
+          closeLabel="Uždaryti augalo langą"
         />
         <DialogBody className="plant-flow-body page-stack">
 
             <div className="inline-note">
-              Zone context is locked to <strong>{selectedZone?.name ?? 'selected zone'}</strong>.
+              Zonos kontekstas užrakintas: <strong>{selectedZone?.name ?? 'pasirinkta zona'}</strong>.
             </div>
 
             <section className="page-stack">
               <div className="field">
-                <label htmlFor="drawer-catalog-search">Find catalog plant</label>
+                <label htmlFor="drawer-catalog-search">Rasti katalogo augalą</label>
                 <input
                   id="drawer-catalog-search"
                   value={catalogSearch}
                   onChange={(event) => setCatalogSearch(event.target.value)}
-                  placeholder="Search by name, scientific name, or family"
+                  placeholder="Ieškoti pagal pavadinimą, mokslinį pavadinimą arba šeimą"
                 />
               </div>
 
               <div className="row-actions">
                 <Link to="/plants/catalog/new">
-                  <Button variant="secondary">New catalog plant</Button>
+                  <Button variant="secondary">Naujas katalogo augalas</Button>
                 </Link>
               </div>
 
-              {catalogLoading ? <span className="muted">Loading catalog plants...</span> : null}
+              {catalogLoading ? <span className="muted">Įkeliami katalogo augalai...</span> : null}
               {catalogError ? <span className="field-error">{catalogError}</span> : null}
 
               {catalogResults.length > 0 ? (
@@ -247,14 +250,14 @@ export default function PlotPlantingDrawer({
                         </div>
 
                         <div className="catalog-plant-meta">
-                          <span className="badge badge-soft">{catalogPlant.plant_type || 'unknown type'}</span>
+                          <span className="badge badge-soft">{formatPlantType(catalogPlant.plant_type) || 'Nežinomas tipas'}</span>
                           {catalogPlant.source_family ? <span className="badge badge-neutral">{catalogPlant.source_family}</span> : null}
                         </div>
 
                         <div className="meta-cluster">
-                          <StatRow label="Water every" value={formatDayCount(preview?.watering_interval_days)} />
-                          <StatRow label="Feed every" value={formatDayCount(preview?.fertilizing_interval_days)} />
-                          <StatRow label="Placed" value={catalogPlant.usage_count ?? 0} />
+                          <StatRow label="Laistyti kas" value={formatDayCount(preview?.watering_interval_days)} />
+                          <StatRow label="Tręšti kas" value={formatDayCount(preview?.fertilizing_interval_days)} />
+                          <StatRow label="Pasodinta" value={catalogPlant.usage_count ?? 0} />
                         </div>
                       </button>
                     )
@@ -263,7 +266,7 @@ export default function PlotPlantingDrawer({
               ) : (
                 !catalogLoading ? (
                   <div className="inline-note">
-                    No catalog plants matched that search yet. You can create a reusable catalog entry first if needed.
+                    Pagal paiešką katalogo augalų nerasta. Jei reikia, pirmiausia sukurkite daugkartinį katalogo įrašą.
                   </div>
                 ) : null
               )}
@@ -274,20 +277,20 @@ export default function PlotPlantingDrawer({
                 <section className="panel page-stack plant-flow-summary">
                   <div className="list-head">
                     <div className="page-stack">
-                      <h4 className="section-title">Selected catalog plant</h4>
+                      <h4 className="section-title">Pasirinktas katalogo augalas</h4>
                       <p className="section-copy">
                         {selectedCatalogPlant.name}
                         {selectedCatalogPlant.source_scientific_name ? ` | ${selectedCatalogPlant.source_scientific_name}` : ''}
                       </p>
                     </div>
                     <div className="meta-cluster">
-                      <span className="badge badge-soft">{selectedCatalogPlant.plant_type || 'unknown type'}</span>
+                      <span className="badge badge-soft">{formatPlantType(selectedCatalogPlant.plant_type) || 'Nežinomas tipas'}</span>
                     </div>
                   </div>
 
                   <div className="form-grid plant-flow-instance-grid">
                     <div className="field">
-                      <label htmlFor="placement-name">Display name</label>
+                      <label htmlFor="placement-name">Rodomas pavadinimas</label>
                       <input
                         id="placement-name"
                         value={form.name}
@@ -297,7 +300,7 @@ export default function PlotPlantingDrawer({
                     </div>
 
                     <div className="field">
-                      <label htmlFor="placement-date">Plant date</label>
+                      <label htmlFor="placement-date">Sodinimo data</label>
                       <input
                         id="placement-date"
                         type="date"
@@ -308,7 +311,7 @@ export default function PlotPlantingDrawer({
                     </div>
 
                     <div className="field">
-                      <label htmlFor="placement-condition">Condition</label>
+                      <label htmlFor="placement-condition">Būklė</label>
                       <select
                         id="placement-condition"
                         value={form.condition}
@@ -316,31 +319,31 @@ export default function PlotPlantingDrawer({
                       >
                         {CONDITION_TYPES.map((condition) => (
                           <option key={condition} value={condition}>
-                            {condition}
+                            {formatPlantCondition(condition)}
                           </option>
                         ))}
                       </select>
                     </div>
 
                     <div className="field">
-                      <label htmlFor="placement-disease">Disease present</label>
+                      <label htmlFor="placement-disease">Yra liga</label>
                       <select
                         id="placement-disease"
                         value={form.disease ? 'true' : 'false'}
                         onChange={(event) => setForm((current) => ({ ...current, disease: event.target.value === 'true' }))}
                       >
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
+                        <option value="false">Ne</option>
+                        <option value="true">Taip</option>
                       </select>
                     </div>
 
                     <div className="field field-span-2">
-                      <label htmlFor="placement-disease-notes">Disease notes</label>
+                      <label htmlFor="placement-disease-notes">Ligos pastabos</label>
                       <textarea
                         id="placement-disease-notes"
                         value={form.disease_notes}
                         onChange={(event) => setForm((current) => ({ ...current, disease_notes: event.target.value }))}
-                        placeholder="Optional notes specific to this planted instance"
+                        placeholder="Pasirinktinės pastabos apie šį pasodintą augalą"
                       />
                     </div>
                   </div>
@@ -349,9 +352,9 @@ export default function PlotPlantingDrawer({
                 <section className="panel page-stack">
                   <div className="list-head">
                     <div className="page-stack">
-                      <h4 className="section-title">Shared plant care preview</h4>
+                      <h4 className="section-title">Bendrinamos priežiūros peržiūra</h4>
                       <p className="section-copy">
-                        This planted instance will use the catalog plant&apos;s shared care. To change care, edit the catalog plant.
+                        Šis pasodintas augalas naudos kataloge susietą bendrinamą priežiūrą. Norėdami ją keisti, redaguokite katalogo augalą.
                       </p>
                     </div>
                   </div>
@@ -360,24 +363,24 @@ export default function PlotPlantingDrawer({
                     <KeyValueGrid
                       className="plants-detail-grid"
                       items={[
-                        { label: 'Watering interval', value: formatDayCount(selectedCare.watering_interval_days) },
-                        { label: 'Fertilizing interval', value: formatDayCount(selectedCare.fertilizing_interval_days) },
-                        { label: 'Pest checks', value: formatDayCount(selectedCare.pest_check_interval_days) },
-                        { label: 'Conditions', value: selectedCare.conditions || 'Not set' },
+                        { label: 'Laistymo intervalas', value: formatDayCount(selectedCare.watering_interval_days) },
+                        { label: 'Tręšimo intervalas', value: formatDayCount(selectedCare.fertilizing_interval_days) },
+                        { label: 'Kenkėjų patikros', value: formatDayCount(selectedCare.pest_check_interval_days) },
+                        { label: 'Sąlygos', value: selectedCare.conditions || 'Nenurodyta' },
                       ]}
                     />
                   ) : (
                     <div className="inline-note">
-                      This catalog plant does not have a shared care profile yet. Open the catalog plant to add it before planting.
+                      Šis katalogo augalas dar neturi bendrinamo priežiūros profilio. Atidarykite katalogo augalą ir pridėkite jį prieš sodinimą.
                     </div>
                   )}
 
                   <div className="row-actions">
                     <Link to={`/plants/catalog/${selectedCatalogPlant.id}`}>
-                      <Button variant="ghost">Open catalog plant</Button>
+                      <Button variant="ghost">Atidaryti katalogo augalą</Button>
                     </Link>
                     <Link to={`/plants/catalog/${selectedCatalogPlant.id}/edit`}>
-                      <Button variant="secondary">Edit shared care</Button>
+                      <Button variant="secondary">Redaguoti bendrinamą priežiūrą</Button>
                     </Link>
                   </div>
                 </section>
@@ -388,8 +391,8 @@ export default function PlotPlantingDrawer({
             ) : (
               <div className="panel page-stack">
                 <EmptyState
-                  title="Choose a catalog plant"
-                  description="Search the catalog above and select a reusable plant to place it into the current zone."
+                  title="Pasirinkite katalogo augalą"
+                  description="Ieškokite kataloge ir pasirinkite daugkartinį augalą, kurį norite įdėti į dabartinę zoną."
                 />
               </div>
             )}
@@ -398,15 +401,15 @@ export default function PlotPlantingDrawer({
           {selectedCatalogPlant ? (
             <>
               <Button type="submit" form="plant-placement-form" disabled={busy}>
-                {busy ? 'Adding to draft...' : 'Add plant to draft'}
+                {busy ? 'Pridedama į juodraštį...' : 'Pridėti augalą į juodraštį'}
               </Button>
               <Button type="button" variant="secondary" onClick={closeDrawer} disabled={busy}>
-                Cancel
+                Atšaukti
               </Button>
             </>
           ) : (
             <Button type="button" variant="secondary" onClick={closeDrawer}>
-              Close
+              Uždaryti
             </Button>
           )}
         </DialogFooter>

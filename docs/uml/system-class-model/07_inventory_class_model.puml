@@ -1,0 +1,163 @@
+@startuml
+title Inventoriaus ir sunaudotų medžiagų klasių modelis
+left to right direction
+skinparam packageStyle rectangle
+
+package "Sąsajos / Views" {
+  class InventoryPage <<boundary>> {
+    +handleEdit(itemId)
+    +handleDelete(itemId)
+    +handleSubmit(event)
+  }
+  class PlotCalendarPage <<boundary>> {
+    +handleTaskAction(taskId, action)
+  }
+}
+
+package "Valdikliai / Controllers" {
+  class InventoryController <<control>> {
+    +index(request, service)
+    +store(request, service)
+    +show(request, inventoryItem, service)
+    +update(request, inventoryItem, service)
+    +destroy(request, inventoryItem, service)
+  }
+  class TaskController <<control>> {
+    +complete(request, task, service, accessService)
+  }
+}
+
+package "Užklausos / Requests" {
+  class StoreInventoryItemRequest <<request>> {
+    +authorize()
+    +rules()
+    +withValidator(validator)
+  }
+  class UpdateInventoryItemRequest <<request>> {
+    +authorize()
+    +rules()
+    +withValidator(validator)
+  }
+}
+
+package "Ištekliai / Resources" {
+  class InventoryItemResource <<resource>> {
+    +toArray(request)
+  }
+  class TaskResourceRequirementResource <<resource>> {
+    +toArray(request)
+  }
+}
+
+package "Paslaugos / Services" {
+  class InventoryService <<service>> {
+    +listForOwner(owner)
+    +getForOwner(owner, item)
+    +createForOwner(owner, data)
+    +updateForOwner(owner, item, data)
+    +deleteForOwner(owner, item)
+    +deductMaterialForOwner(owner, name, quantity)
+    +checkIfEnough(owner, name, quantity)
+    +describeTaskInventory(owner, task)
+    +attachLiveTaskInventory(owner, tasks)
+    +summarizeTasksByDate(owner, tasks)
+    +assertTaskCanBeCompletedForDay(owner, task, dayTasks)
+    +consumeTaskRequirements(owner, task)
+    +replenishFromTask(owner, task)
+    +buildPlanningLedger(owner)
+    +reserveRequirementForPlan(ledger, requirement)
+  }
+  class TaskInventoryCoverageService <<service>> {
+    +buildPlanningLedger(owner)
+    +reserveRequirementForPlan(ledger, requirement)
+    +summarizeTasksByDate(owner, tasks, lock)
+    +buildDayRequirementSummaries(owner, primaryPendingTasks, buyTasks, lock)
+    +buildTaskInventoryContext(task, resourceSummariesByKey)
+    +matchingItems(owner, requirement)
+    +stockKey(resource)
+  }
+  class TaskWorkflowService <<service>> {
+    +complete(task, materialsUsed, conditionReview, harvest)
+  }
+  class InventoryPlanningRepairService <<service>> {
+    +repair()
+  }
+}
+
+package "Esybės / Models" {
+  class GardenOwner <<entity>> {
+    +id
+    +ownedInventoryItems()
+  }
+  class InventoryItem <<entity>> {
+    +garden_owner_id
+    +name
+    +normalized_name
+    +quantity
+    +inventory_item_type
+    +type
+    +unit
+    +owner()
+    +inventoryLinks()
+    +usageLogs()
+  }
+  class InventoryUsageLog <<entity>> {
+    +inventory_item_id
+    +task_id
+    +task_resource_requirement_id
+    +garden_owner_id
+    +change_type
+    +quantity_before
+    +quantity_delta
+    +quantity_after
+    +unit
+    +metadata
+    +inventoryItem()
+    +task()
+    +taskResourceRequirement()
+    +owner()
+  }
+  class Task <<entity>> {
+    +task_type
+    +item
+    +item_quantity
+    +inventory_context
+    +state
+    +requiredResources()
+    +inventoryUsageLogs()
+  }
+  class TaskResourceRequirement <<entity>> {
+    +task_id
+    +resource_name
+    +normalized_name
+    +inventory_item_type
+    +unit
+    +required_quantity
+    +shortage_quantity
+    +is_consumed
+    +usageLogs()
+  }
+}
+
+InventoryPage ..> InventoryController : CRUD
+PlotCalendarPage ..> TaskController : completes task
+InventoryController ..> StoreInventoryItemRequest : validates create
+InventoryController ..> UpdateInventoryItemRequest : validates update
+InventoryController ..> InventoryService : delegates
+InventoryController ..> InventoryItemResource : returns
+TaskController ..> TaskWorkflowService : complete()
+TaskWorkflowService ..> InventoryService : consume/replenish
+InventoryService ..> TaskInventoryCoverageService : coverage summary
+InventoryService ..> InventoryItem : CRUD stock
+InventoryService ..> InventoryUsageLog : records changes
+InventoryService ..> TaskResourceRequirement : reads requirements
+InventoryPlanningRepairService ..> Task : repairs planning data
+InventoryPlanningRepairService ..> TaskResourceRequirement : repairs requirements
+
+GardenOwner "1" -- "0..*" InventoryItem : owns
+InventoryItem "1" -- "0..*" InventoryUsageLog : logs
+Task "1" -- "0..*" TaskResourceRequirement : requires
+Task "1" -- "0..*" InventoryUsageLog : produces
+TaskResourceRequirement "1" -- "0..*" InventoryUsageLog : usage source
+
+@enduml

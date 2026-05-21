@@ -1,0 +1,31 @@
+PA8 ir PA9 ryšys pagal dabartinį codebase
+
+PA9 "Peržiūrėti planavimo istoriją" PA8 scenarijuje gali būti inicijuojamas naudotojo per sklypo sekcijų navigaciją: rotacijos puslapyje tas pats PlotSectionNav turi "History" skirtuką, kuris veda į /plots/{plotId}/history ir vykdo planavimo istorijos peržiūrą per HistoryController bei PlotSnapshotService.
+
+Be to, rotacijos draft generavimo metu RotationPlannerService gauna rotacijos / planavimo istorijos duomenis kaip vidinį PA8 žingsnį. Tai realizuota per preparePlot() užkraunamus Eloquent ryšius: plantZones.rotationHistory.plant, plants.rotationHistory, rotationHistory.plantZone, rotationHistory.fromPlantZone ir rotationHistory.plant. Šie duomenys naudojami ankstesnėms zonoms, cooldown laikotarpiui, rest intervalui ir tos pačios augalo / šeimos / rotation group konfliktams įvertinti.
+
+Svarbi pastaba:
+Naudotojo PA9 peržiūra ir vidinis rotacijos istorijos užkrovimas nėra tas pats UI veiksmas. UI peržiūra rodo plot_snapshots planavimo istoriją, o rotacijos algoritmas sprendimams naudoja rotation_history lentelę ir susijusius modelių ryšius.
+
+Naudotojo inicijuotos istorijos peržiūros jungčių fragmentas:
+A6 Pasirinkti rotacijos valdymo veiksmą
+-> D2 Ar naudotojas pasirenka PA9 planavimo istoriją?
+D2[taip]
+-> A7 «extend» PA9 "Peržiūrėti planavimo istoriją"
+-> A8 Grįžti į PA8 rotacijos valdymą
+-> A6 Pasirinkti rotacijos valdymo veiksmą
+
+Generavimo duomenų gavimo jungčių fragmentas:
+A14 Užkrauti sklypą su zonomis, augalais, katalogu ir plant_care duomenimis
+-> A15 Gauti rotacijos / planavimo istorijos duomenis per rotationHistory ryšius
+-> A16 Normalizuoti planavimo datą ir sudaryti rotuojamų augalų eiliškumą
+-> A23 Patikrinti ankstesnes zonas, cooldown ir rotation rest intervalą
+-> A25 Apskaičiuoti zonos score, positive reasons, soft warnings ir hard blocking reasons
+
+Codebase atitikmenys:
+- frontend/src/components/plot/PlotSectionNav.jsx – "History" ir "Rotation" sklypo sekcijų navigacija.
+- frontend/src/pages/plot/PlotHistoryPage.jsx – PA9 planavimo istorijos peržiūra.
+- backend/app/Http/Controllers/Plot/HistoryController.php – /api/plots/{plot}/history endpoint.
+- backend/app/Services/Plot/PlotSnapshotService.php – plot_snapshots istorijos gavimas PA9 peržiūrai.
+- backend/app/Services/Plot/RotationPlannerService.php – vidinis rotationHistory duomenų gavimas ir naudojimas PA8 draft generavimui.
+- backend/app/Models/RotationHistory.php – rotacijos istorijos duomenys, naudojami PA8 sprendimams.

@@ -257,7 +257,7 @@ class RotationRecommendationTest extends TestCase
             ->assertJsonPath('data.target_zone.rotation_profile.group', null);
 
         $this->assertContains(
-            'Rotation family or group data is missing, so family-based rotation checks are neutral for this plant.',
+            'Trūksta rotacijos šeimos arba grupės duomenų, todėl šiam augalui šeimos rotacijos patikros laikomos neutraliomis.',
             data_get($response->json(), 'data.target_zone.soft_warnings', [])
         );
     }
@@ -460,7 +460,7 @@ class RotationRecommendationTest extends TestCase
             ->assertJsonPath('draft.plan.summary.unresolved_plant_count', 0)
             ->assertJsonPath('draft.plan.plants.0.is_rotatable', false)
             ->assertJsonPath('draft.plan.plants.0.rotation_mode', 'permanent_planting')
-            ->assertJsonPath('draft.plan.plants.0.exclusion_reason', 'Permanent planting — excluded from annual crop rotation.');
+            ->assertJsonPath('draft.plan.plants.0.exclusion_reason', 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.');
 
         $draftId = data_get($draftResponse->json(), 'draft.id');
 
@@ -511,7 +511,7 @@ class RotationRecommendationTest extends TestCase
         $this->assertStringContainsString('Target zone has not completed the required rotation rest interval.', $json);
         $this->assertStringContainsString('Target zone does not have enough space for this plant.', $json);
         $this->assertStringContainsString('Postpone the rotation to a later date so zones can complete the required rest interval.', $json);
-        $this->assertStringNotContainsString('Tikslin', $json);
+        $this->assertStringContainsString('Tikslin', $json);
         $this->assertStringNotContainsString('Atid', $json);
         $this->assertStringNotContainsString('Ä', $json);
         $this->assertStringNotContainsString('Å', $json);
@@ -560,6 +560,175 @@ class RotationRecommendationTest extends TestCase
             'plot_id' => $plot->id,
             'action' => 'rotation_plan_confirmed',
         ]);
+    }
+
+    public function test_rotation_history_response_includes_readable_from_and_to_zone_names(): void
+    {
+        [$user, $owner] = $this->createGardenOwner('owner@example.com');
+        $plot = $this->createPlotForOwner($owner);
+        $fromZone = $this->createZoneForPlot($plot, ['name' => 'Root Vegetable Bed']);
+        $toZone = $this->createZoneForPlot($plot, ['name' => 'Corn Block']);
+        $plant = $this->createPlantForPlot($plot, $toZone, ['name' => 'Carrot']);
+
+        $this->createRotationHistoryForPlot($plot, $toZone, $plant, [
+            'from_plant_zone_id' => $fromZone->id,
+            'from_zone_name' => $fromZone->name,
+            'to_zone_name' => $toZone->name,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/plots/{$plot->id}/rotations")
+            ->assertOk()
+            ->assertJsonPath('0.from_zone.name', 'Root Vegetable Bed')
+            ->assertJsonPath('0.to_zone.name', 'Corn Block');
+    }
+
+    public function test_manual_draft_override_can_be_confirmed_and_writes_final_target_history(): void
+    {
+        [$user, $owner] = $this->createGardenOwner('owner@example.com');
+        $plot = $this->createPlotForOwner($owner);
+        $currentZone = $this->createZoneForPlot($plot, ['name' => 'Root Vegetable Bed', 'zone_size' => 20]);
+        $generatedZone = $this->createZoneForPlot($plot, ['name' => 'Legume Break Bed', 'zone_size' => 20]);
+        $manualZone = $this->createZoneForPlot($plot, ['name' => 'Corn Block', 'zone_size' => 20]);
+        $plant = $this->createPlantForPlot($plot, $currentZone, [
+            'name' => 'Carrot',
+            'plant_size' => 3,
+            'rest_time_days' => 0,
+            'type' => PlantType::Vegetable,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $draftResponse = $this->postJson("/api/plots/{$plot->id}/rotations/plans", [
+            'planning_date' => '2026-04-20',
+        ])->assertCreated();
+
+        $draftId = data_get($draftResponse->json(), 'draft.id');
+        $this->assertNotNull($generatedZone->id);
+
+        $this->patchJson("/api/plots/{$plot->id}/rotations/plans/{$draftId}/items/{$plant->id}", [
+            'decision' => 'target',
+            'target_zone_id' => $manualZone->id,
+            'manual_note' => 'Demo override to keep beds balanced.',
+        ])
+            ->assertOk()
+            ->assertJsonPath('draft.plan.status', 'ready')
+            ->assertJsonPath('draft.plan.plants.0.decision_mode', 'target')
+            ->assertJsonPath('draft.plan.plants.0.selected_target_zone.zone_name', 'Corn Block');
+
+        $this->postJson("/api/plots/{$plot->id}/rotations/plans/{$draftId}/confirm")
+            ->assertOk()
+            ->assertJsonPath('changed_plant_ids.0', $plant->id)
+            ->assertJsonPath('rotation_history.0.from_zone.name', 'Root Vegetable Bed')
+            ->assertJsonPath('rotation_history.0.to_zone.name', 'Corn Block');
+
+        $plant->refresh();
+
+        $this->assertSame($manualZone->id, $plant->plant_zone_id);
+        $this->assertDatabaseHas('rotation_history', [
+            'fk_plot_id' => $plot->id,
+            'fk_plant_id' => $plant->id,
+            'from_plant_zone_id' => $currentZone->id,
+            'fk_plant_zone_id' => $manualZone->id,
+            'from_zone_name' => 'Root Vegetable Bed',
+            'to_zone_name' => 'Corn Block',
+            'decision_status' => 'manual_override',
+        ]);
+    }
+
+    public function test_manual_draft_edit_rejects_target_zone_outside_plot(): void
+    {
+        [$user, $owner] = $this->createGardenOwner('owner@example.com');
+        [, $otherOwner] = $this->createGardenOwner('other@example.com');
+        $plot = $this->createPlotForOwner($owner);
+        $otherPlot = $this->createPlotForOwner($otherOwner);
+        $currentZone = $this->createZoneForPlot($plot, ['name' => 'Current', 'zone_size' => 20]);
+        $this->createZoneForPlot($plot, ['name' => 'Valid target', 'zone_size' => 20]);
+        $otherZone = $this->createZoneForPlot($otherPlot, ['name' => 'Other target', 'zone_size' => 20]);
+        $plant = $this->createPlantForPlot($plot, $currentZone, [
+            'name' => 'Bean',
+            'plant_size' => 3,
+            'rest_time_days' => 0,
+            'type' => PlantType::Vegetable,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $draftId = data_get($this->postJson("/api/plots/{$plot->id}/rotations/plans", [
+            'planning_date' => '2026-04-20',
+        ])->assertCreated()->json(), 'draft.id');
+
+        $this->patchJson("/api/plots/{$plot->id}/rotations/plans/{$draftId}/items/{$plant->id}", [
+            'decision' => 'target',
+            'target_zone_id' => $otherZone->id,
+        ])->assertUnprocessable();
+    }
+
+    public function test_recently_rotated_plant_is_blocked_by_movement_cooldown_in_generated_draft(): void
+    {
+        [$user, $owner] = $this->createGardenOwner('owner@example.com');
+        $plot = $this->createPlotForOwner($owner);
+        $currentZone = $this->createZoneForPlot($plot, ['name' => 'Current', 'zone_size' => 20]);
+        $this->createZoneForPlot($plot, ['name' => 'Target', 'zone_size' => 20]);
+        $previousZone = $this->createZoneForPlot($plot, ['name' => 'Previous', 'zone_size' => 20]);
+        $plant = $this->createPlantForPlot($plot, $currentZone, [
+            'name' => 'Cucumber',
+            'plant_size' => 3,
+            'rest_time_days' => 0,
+            'type' => PlantType::Vegetable,
+        ]);
+        $this->createRotationHistoryForPlot($plot, $currentZone, $plant, [
+            'from_plant_zone_id' => $previousZone->id,
+            'from_zone_name' => 'Previous',
+            'to_zone_name' => 'Current',
+            'from_date' => '2026-04-01',
+            'to_date' => null,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson("/api/plots/{$plot->id}/rotations/plans", [
+            'planning_date' => '2026-04-20',
+        ])->assertCreated();
+
+        $response
+            ->assertJsonPath('draft.plan.status', 'needs_adjustment')
+            ->assertJsonPath('draft.plan.summary.cooldown_blocked_count', 1);
+
+        $json = json_encode($response->json(), JSON_THROW_ON_ERROR);
+        $this->assertStringContainsString('Cooldown active until 2027-04-01', $json);
+    }
+
+    public function test_confirm_revalidates_cooldown_against_current_database_state(): void
+    {
+        [$user, $owner] = $this->createGardenOwner('owner@example.com');
+        $plot = $this->createPlotForOwner($owner);
+        $currentZone = $this->createZoneForPlot($plot, ['name' => 'Current', 'zone_size' => 20]);
+        $targetZone = $this->createZoneForPlot($plot, ['name' => 'Target', 'zone_size' => 20]);
+        $plant = $this->createPlantForPlot($plot, $currentZone, [
+            'name' => 'Lettuce',
+            'plant_size' => 3,
+            'rest_time_days' => 0,
+            'type' => PlantType::Vegetable,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $draftId = data_get($this->postJson("/api/plots/{$plot->id}/rotations/plans", [
+            'planning_date' => '2026-06-20',
+        ])->assertCreated()->json(), 'draft.id');
+
+        $this->createRotationHistoryForPlot($plot, $targetZone, $plant, [
+            'from_plant_zone_id' => $currentZone->id,
+            'from_zone_name' => 'Current',
+            'to_zone_name' => 'Target',
+            'from_date' => '2026-06-01',
+            'to_date' => null,
+        ]);
+
+        $this->postJson("/api/plots/{$plot->id}/rotations/plans/{$draftId}/confirm")
+            ->assertUnprocessable();
     }
 
     public function test_rejecting_rotation_scheme_keeps_previous_state_and_removes_draft(): void
@@ -718,7 +887,7 @@ class RotationRecommendationTest extends TestCase
         $this->assertSame([], $freeCandidate['current_occupants']);
         $this->assertContains($freeCandidate['draft_assigned_occupants'][0]['name'], ['Bean', 'Carrot']);
         $this->assertTrue(collect($freeCandidate['soft_warnings'])->contains(
-            fn (string $reason) => str_contains($reason, 'Broad plant type matches are informational only')
+            fn (string $reason) => str_contains($reason, 'Bendro augalo tipo sutapimai yra tik informaciniai')
         ));
     }
 

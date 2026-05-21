@@ -3619,6 +3619,16 @@ tbody tr:last-child td {
   fill: rgba(247, 242, 234, 0.88);
 }
 
+.plan-preview-grid {
+  opacity: 0.72;
+}
+
+.plan-preview-grid-line {
+  fill: none;
+  stroke: rgba(73, 104, 63, 0.16);
+  stroke-width: 0.44;
+}
+
 .plan-preview-outline {
   fill: rgba(255, 252, 247, 0.96);
   stroke: #47633b;
@@ -3675,6 +3685,85 @@ tbody tr:last-child td {
   color: var(--text-soft);
   font-size: 0.76rem;
   font-weight: 800;
+}
+
+.plot-boundary-mini-map {
+  position: relative;
+  min-width: 0;
+  min-height: 148px;
+  padding: 0;
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(83, 61, 39, 0.12);
+  background: #f8f2e9;
+  overflow: hidden;
+}
+
+.plot-boundary-mini-map-canvas {
+  width: 100%;
+  min-height: 148px;
+  aspect-ratio: 5 / 3.5;
+  z-index: 0;
+}
+
+.plot-boundary-mini-map .leaflet-pane,
+.plot-boundary-mini-map .leaflet-tile-pane {
+  z-index: 1;
+}
+
+.plot-boundary-mini-map .leaflet-overlay-pane {
+  z-index: 2;
+}
+
+.plot-boundary-mini-map .leaflet-control-container {
+  display: none;
+}
+
+.plot-boundary-mini-map-placeholder {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  min-height: 148px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.plot-boundary-mini-map-placeholder svg {
+  width: min(78%, 170px);
+  color: rgba(71, 99, 59, 0.65);
+}
+
+.plot-boundary-mini-map-placeholder rect {
+  fill: rgba(255, 252, 247, 0.86);
+  stroke: rgba(71, 99, 59, 0.2);
+}
+
+.plot-boundary-mini-map-placeholder path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plot-boundary-mini-map-placeholder circle {
+  fill: #fffdf9;
+  stroke: currentColor;
+  stroke-width: 3;
+}
+
+.plot-boundary-mini-map-caption {
+  position: absolute;
+  left: 0.55rem;
+  bottom: 0.55rem;
+  padding: 0.22rem 0.42rem;
+  border-radius: var(--radius-control);
+  background: rgba(255, 253, 249, 0.88);
+  color: var(--text-faint);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 /* Garden planning identity */
@@ -4036,7 +4125,7 @@ tbody tr:last-child td {
 }
 
 .dashboard-plot-preview {
-  padding: 0.45rem;
+  padding: 0;
   border-radius: var(--radius-card);
   box-shadow: none;
 }
@@ -4116,12 +4205,17 @@ tbody tr:last-child td {
   box-shadow: none;
 }
 
-.plot-browser-preview .plan-preview-svg {
-  aspect-ratio: 16 / 9;
+.plot-browser-preview.plot-boundary-mini-map {
+  width: min(100%, 220px);
+  min-height: 132px;
+  margin-inline: auto;
+  padding: 0;
 }
 
-.plot-browser-preview .plan-preview-caption {
-  display: none;
+.plot-browser-preview.plot-boundary-mini-map .plot-boundary-mini-map-canvas,
+.plot-browser-preview.plot-boundary-mini-map .plot-boundary-mini-map-placeholder {
+  min-height: 132px;
+  aspect-ratio: 16 / 9;
 }
 
 .plot-browser-metrics {
@@ -4888,6 +4982,63 @@ tbody tr:last-child td {
   background: rgba(255, 255, 255, 0.56);
 }
 
+.plot-rotation-draft-item {
+  display: grid;
+  align-items: stretch;
+}
+
+.plot-rotation-editor {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(220px, 1.1fr);
+  width: 100%;
+  padding: 0.72rem;
+  border-radius: var(--radius-control);
+  background: rgba(248, 244, 236, 0.72);
+}
+
+.plot-rotation-warning-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.plot-rotation-history-main {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+}
+
+.plot-rotation-history-zones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.plot-rotation-history-zones > span {
+  display: grid;
+  gap: 0.12rem;
+  min-width: min(180px, 100%);
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-control);
+  background: rgba(248, 244, 236, 0.72);
+}
+
+.plot-rotation-history-label {
+  color: var(--text-faint);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.plot-rotation-history-zones strong {
+  color: var(--text-strong);
+  font-size: 0.86rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 .plot-sharing-grid {
   align-items: start;
 }
@@ -5031,6 +5182,10 @@ tbody tr:last-child td {
 
   .plot-rotation-toolbar .field {
     max-width: none;
+  }
+
+  .plot-rotation-editor {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -8386,8 +8541,8 @@ tbody tr:hover td {
 
 .workspace-page--editor {
   position: relative;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
   height: 100%;
   min-height: 0;
@@ -8556,7 +8711,9 @@ tbody tr:hover td {
 .workspace-page--editor .plot-create-workspace,
 .workspace-page--editor .plot-editor-main,
 .workspace-page--editor .plot-editor-main .designer-panel,
-.workspace-page--editor .plot-editor-main .designer-stage {
+.workspace-page--editor .plot-editor-main .designer-stage,
+.workspace-page--editor .plot-create-workspace > .designer-panel,
+.workspace-page--editor .plot-create-workspace > .designer-panel .designer-stage {
   height: 100%;
   min-height: 0;
 }
@@ -8564,8 +8721,7 @@ tbody tr:hover td {
 .workspace-page--editor .plot-editor-layout,
 .workspace-page--editor .plot-create-workspace {
   position: relative;
-  grid-row: 2;
-  display: block;
+  flex: 1 1 auto;
   overflow: hidden;
   border-radius: var(--radius-card);
 }
@@ -10881,4 +11037,600 @@ tbody tr:hover td {
     padding: 0 11px;
     font-size: 13px;
   }
+}
+
+/* Final LT UX polish */
+.plot-section-switcher-shell.plot-page-header {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 1fr) minmax(220px, 320px) max-content !important;
+  align-items: center !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+.plot-section-switcher-shell .plot-compact-left,
+.plot-section-switcher-shell .plot-compact-identity,
+.plot-section-switcher-shell .plot-compact-title-block {
+  max-width: none !important;
+}
+
+.plot-section-switcher-description {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-section-switcher {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.plot-section-switcher > span {
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.plot-section-select-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.plot-section-select-wrap select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.plot-section-select-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 38px 0 12px;
+  border: 1px solid rgba(40, 36, 28, 0.12);
+  border-radius: var(--radius-button);
+  background: rgba(255, 254, 250, 0.96);
+  color: var(--text-strong);
+  font-size: 0.92rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plot-section-select-value::after {
+  content: "⌄";
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-55%);
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.plot-section-select-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-card);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  flex: 0 0 auto;
+}
+
+.harvest-layout {
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  align-items: start;
+}
+
+.harvest-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.harvest-form > .button,
+.harvest-form > button[type="submit"] {
+  width: fit-content;
+}
+
+.harvest-history-panel {
+  gap: 14px;
+}
+
+.plot-sharing-grid {
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+  align-items: start;
+}
+
+.plot-sharing-panel {
+  gap: 16px;
+}
+
+.plot-sharing-panel .input-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  align-items: end;
+  gap: 14px;
+}
+
+.plot-sharing-panel .input-grid .field-span-2 {
+  grid-column: auto;
+}
+
+.plot-sharing-panel .form-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+  .plot-section-switcher-shell.plot-page-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-left {
+    width: 100% !important;
+  }
+
+  .plot-section-switcher-description {
+    display: none;
+  }
+
+  .plot-section-switcher,
+  .plot-compact-actions,
+  .plot-compact-actions > *,
+  .plot-compact-actions button,
+  .plot-compact-actions a {
+    width: 100% !important;
+  }
+
+  .plot-compact-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+    min-width: 0 !important;
+  }
+
+  .plot-compact-actions > :first-child,
+  .plot-compact-actions > :last-child {
+    grid-column: auto;
+  }
+
+  .harvest-layout,
+  .plot-sharing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .harvest-form,
+  .plot-sharing-panel .input-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plot-sharing-panel .form-actions,
+  .harvest-form > .button,
+  .harvest-form > button[type="submit"] {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .page-container,
+  .page-container-wide,
+  .page-container-workspace {
+    width: 100%;
+  }
+
+  .plot-compact-meta,
+  .page-header-meta,
+  .topbar-page-meta {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .dashboard-context-grid,
+  .dashboard-context-grid-secondary,
+  .detail-grid,
+  .analytics-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Final plot workspace header polish */
+.plot-section-switcher-shell.plot-page-header {
+  grid-template-columns: minmax(260px, 1fr) minmax(240px, 320px) minmax(0, auto) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 72px;
+  overflow: visible !important;
+}
+
+.plot-section-switcher-shell .plot-compact-left {
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.plot-section-switcher-shell .plot-compact-identity {
+  min-width: 0 !important;
+  max-width: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.plot-section-switcher-shell .plot-compact-title-block {
+  min-width: 0 !important;
+  max-width: min(34vw, 460px) !important;
+}
+
+.plot-section-switcher-shell .plot-compact-title {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.plot-section-switcher-shell .plot-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.plot-section-switcher {
+  position: relative;
+  min-width: 0;
+  z-index: 40;
+}
+
+.plot-section-trigger {
+  width: 100%;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 38px 0 12px;
+  border: 1px solid rgba(40, 36, 28, 0.14);
+  border-radius: var(--radius-button);
+  background: #fffefa;
+  color: var(--text-strong);
+  box-shadow: 0 1px 2px rgba(30, 26, 20, 0.04);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: left;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.plot-section-trigger:hover,
+.plot-section-trigger.is-open {
+  border-color: rgba(234, 88, 12, 0.28);
+  background: #fffaf4;
+  box-shadow: 0 8px 20px rgba(74, 47, 22, 0.1);
+}
+
+.plot-section-trigger-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-section-trigger-caret {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.16s ease, border-color 0.16s ease;
+}
+
+.plot-section-trigger.is-open .plot-section-trigger-caret {
+  border-color: #c2410c;
+  transform: translateY(-35%) rotate(225deg);
+}
+
+.plot-section-select-icon,
+.plot-section-menu-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-card);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 900;
+}
+
+.plot-section-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 100%;
+  padding: 6px;
+  border: 1px solid rgba(40, 36, 28, 0.12);
+  border-radius: var(--radius-section);
+  background: #fffefa;
+  box-shadow: 0 18px 34px rgba(33, 28, 21, 0.16);
+  z-index: 60;
+}
+
+.plot-section-menu-item {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--text-strong);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 750;
+  text-align: left;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.plot-section-menu-item:hover {
+  background: rgba(234, 88, 12, 0.08);
+  color: #c2410c;
+}
+
+.plot-section-menu-item.is-active {
+  background: #fff1e7;
+  color: #c2410c;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.16);
+}
+
+.plot-section-menu-item.is-active .plot-section-menu-icon {
+  background: #ef6d22;
+  color: #fffdfa;
+}
+
+.plot-section-switcher-shell .plot-compact-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.plot-section-switcher-shell .plot-compact-actions > * {
+  margin: 0 !important;
+}
+
+.plot-section-switcher-shell .plot-compact-actions a {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.plot-section-switcher-shell .plot-compact-actions .button,
+.plot-section-switcher-shell .plot-compact-actions button {
+  min-height: 42px !important;
+  height: 42px !important;
+  padding: 0 14px !important;
+  white-space: nowrap !important;
+}
+
+.plot-section-switcher-shell .plot-compact-actions .button:disabled {
+  opacity: 1;
+  background: rgba(242, 236, 228, 0.88);
+  border-color: rgba(83, 61, 39, 0.16);
+  color: #8a8175;
+}
+
+@media (max-width: 1180px) {
+  .plot-section-switcher-shell.plot-page-header {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end !important;
+    flex-wrap: wrap;
+  }
+
+  .plot-section-switcher-shell .plot-compact-title-block {
+    max-width: min(48vw, 420px) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .plot-section-switcher-shell.plot-page-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+    min-height: 0;
+    padding: 12px !important;
+    gap: 10px !important;
+    overflow: visible !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-identity {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 6px !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-title-block {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .plot-section-switcher,
+  .plot-section-switcher-shell .plot-compact-actions,
+  .plot-section-switcher-shell .plot-compact-actions > *,
+  .plot-section-switcher-shell .plot-compact-actions a,
+  .plot-section-switcher-shell .plot-compact-actions .button,
+  .plot-section-switcher-shell .plot-compact-actions button {
+    width: 100% !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions .button,
+  .plot-section-switcher-shell .plot-compact-actions button {
+    padding: 0 10px !important;
+    white-space: normal !important;
+    line-height: 1.15 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .plot-section-switcher-shell .plot-compact-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plot-section-menu {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@media (max-width: 760px) {
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: none !important;
+    align-items: start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-left,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-identity,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-title-block,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-section-switcher,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions {
+    grid-area: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-left {
+    display: flex !important;
+    align-items: flex-start !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-identity {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-title-block {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-kicker {
+    height: auto !important;
+    max-height: 16px !important;
+    line-height: 1 !important;
+    overflow: hidden !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-title {
+    height: auto !important;
+    max-height: 24px !important;
+    line-height: 1.2 !important;
+    max-width: 100% !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-meta {
+    height: auto !important;
+    max-height: none !important;
+    align-content: flex-start !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions {
+    grid-column: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions > *,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions a,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions button,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions .button {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Analytics header keeps only the role and active plot badges inside the title row. */
+.analytics-page > .plot-section-switcher-shell .plot-compact-meta {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  max-width: min(100%, 22rem) !important;
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+}
+
+.analytics-page > .plot-section-switcher-shell .plot-compact-meta > .analytics-header-role-badge {
+  flex: 0 0 auto !important;
+}
+
+.analytics-page > .plot-section-switcher-shell .plot-compact-meta > .analytics-header-plot-badge {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: min(18rem, 100%) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }

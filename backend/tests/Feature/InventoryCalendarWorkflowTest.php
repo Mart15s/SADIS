@@ -62,7 +62,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         ]);
 
         $this->createInventoryItemForOwner($owner, [
-            'name' => 'Fertilizer',
+            'name' => 'Trąšos',
             'quantity' => 2,
             'type' => InventoryItemType::Material,
             'unit' => InventoryUnit::Kilogram,
@@ -83,7 +83,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         $this->assertDatabaseMissing('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Fertilizer',
+            'item' => 'Trąšos',
         ]);
     }
 
@@ -112,7 +112,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         $this->assertDatabaseHas('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Fertilizer',
+            'item' => 'Trąšos',
         ]);
     }
 
@@ -132,7 +132,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         ]);
 
         $this->createInventoryItemForOwner($owner, [
-            'name' => 'Plant support',
+            'name' => 'Augalų atramos',
             'quantity' => 1,
             'type' => InventoryItemType::Tool,
             'unit' => InventoryUnit::Unit,
@@ -147,7 +147,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         $this->assertDatabaseMissing('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Plant support',
+            'item' => 'Augalų atramos',
         ]);
     }
 
@@ -175,7 +175,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         $this->assertDatabaseHas('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Plant support',
+            'item' => 'Augalų atramos',
         ]);
     }
 
@@ -201,7 +201,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         }
 
         $this->createInventoryItemForOwner($owner, [
-            'name' => 'Protective cover',
+            'name' => 'Apsauginė danga',
             'quantity' => 1,
             'type' => InventoryItemType::Tool,
             'unit' => InventoryUnit::Unit,
@@ -216,7 +216,7 @@ class InventoryCalendarWorkflowTest extends TestCase
 
         $daySummary = app(InventoryService::class)->summarizeTasksByDate($owner, $calendar->tasks)['2026-03-20'];
         $protectiveCoverSummary = collect($daySummary['resources'])
-            ->firstWhere('normalized_name', 'protective cover');
+            ->firstWhere('normalized_name', 'apsauginė danga');
 
         $this->assertNotNull($protectiveCoverSummary);
         $this->assertSame(3.0, $protectiveCoverSummary['required_quantity']);
@@ -226,7 +226,7 @@ class InventoryCalendarWorkflowTest extends TestCase
         $buyTasks = Task::query()
             ->where('fk_task_calendar_id', $calendar->id)
             ->where('type', 'buy')
-            ->where('item', 'Protective cover')
+            ->where('item', 'Apsauginė danga')
             ->get();
 
         $this->assertCount(1, $buyTasks);
@@ -668,14 +668,14 @@ class InventoryCalendarWorkflowTest extends TestCase
         ]);
 
         [$existingBuyTask] = $this->createTaskWithRequirement($plot, null, [
-            'resource_name' => 'Fertilizer',
+            'resource_name' => 'Trąšos',
             'inventory_item_type' => InventoryItemType::Material,
             'unit' => InventoryUnit::Kilogram,
             'required_quantity' => 1,
             'shortage_quantity' => 1,
             'is_consumed' => false,
             'type' => 'buy',
-            'name' => 'Buy Fertilizer',
+            'name' => 'Nupirkti: Trąšos',
         ], '2026-03-19');
 
         $this->fakeWeather([
@@ -729,11 +729,11 @@ class InventoryCalendarWorkflowTest extends TestCase
         $buyTask = Task::query()
             ->where('fk_task_calendar_id', $calendar->id)
             ->where('type', 'buy')
-            ->where('item', 'Protective cover')
+            ->where('item', 'Apsauginė danga')
             ->firstOrFail();
 
         $this->assertSame(
-            'Missing 2 unit for 1 blocked task.',
+            'Trūksta 2 vnt. blokuojamoms užduotims: 1.',
             $buyTask->comment
         );
     }

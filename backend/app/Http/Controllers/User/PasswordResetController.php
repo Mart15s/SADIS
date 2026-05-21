@@ -15,7 +15,7 @@ class PasswordResetController extends Controller
 {
     private const FORGOT_MAX_ATTEMPTS = 3;
     private const FORGOT_DECAY_SECONDS = 600;
-    private const RESET_LINK_SENT_MESSAGE = 'If the email address exists, a password reset link has been sent.';
+    private const RESET_LINK_SENT_MESSAGE = 'Jei el. pašto adresas yra registruotas, slaptažodžio atkūrimo nuoroda išsiųsta.';
 
     public function __construct(
         private readonly EmailServerBoundary $emailServerBoundary
@@ -24,9 +24,15 @@ class PasswordResetController extends Controller
 
     public function forgot(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
-        ]);
+        $validated = $request->validate(
+            [
+                'email' => ['required', 'email'],
+            ],
+            [
+                'email.required' => 'Įveskite el. pašto adresą.',
+                'email.email' => 'Įveskite tinkamą el. pašto adresą.',
+            ],
+        );
 
         $throttleKey = 'pwreset|'.Str::lower($validated['email']).'|'.$request->ip();
 
@@ -34,7 +40,7 @@ class PasswordResetController extends Controller
             $retryAfter = RateLimiter::availableIn($throttleKey);
 
             return response()->json([
-                'message' => "Too many password reset requests. Try again in {$retryAfter} seconds.",
+                'message' => "Per daug slaptažodžio atkūrimo užklausų. Bandykite dar kartą po {$retryAfter} sek.",
                 'retry_after' => $retryAfter,
             ], 429);
         }
@@ -55,12 +61,23 @@ class PasswordResetController extends Controller
 
     public function reset(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
-            'reset_code' => ['required_without:token', 'nullable', 'string'],
-            'token' => ['required_without:reset_code', 'nullable', 'string'],
-            'password' => ['required', 'confirmed', 'min:8'],
-        ]);
+        $validated = $request->validate(
+            [
+                'email' => ['required', 'email'],
+                'reset_code' => ['required_without:token', 'nullable', 'string'],
+                'token' => ['required_without:reset_code', 'nullable', 'string'],
+                'password' => ['required', 'confirmed', 'min:8'],
+            ],
+            [
+                'email.required' => 'Įveskite el. pašto adresą.',
+                'email.email' => 'Įveskite tinkamą el. pašto adresą.',
+                'reset_code.required_without' => 'Pateikite slaptažodžio atkūrimo kodą.',
+                'token.required_without' => 'Pateikite slaptažodžio atkūrimo nuorodos kodą.',
+                'password.required' => 'Įveskite naują slaptažodį.',
+                'password.confirmed' => 'Slaptažodžio pakartojimas nesutampa.',
+                'password.min' => 'Slaptažodis turi būti bent 8 simbolių.',
+            ],
+        );
 
         $status = Password::broker()->reset(
             [
@@ -81,12 +98,12 @@ class PasswordResetController extends Controller
 
         if ($status !== Password::PASSWORD_RESET) {
             return response()->json([
-                'message' => 'The provided password reset token is invalid or expired.',
+                'message' => 'Pateiktas slaptažodžio atkūrimo kodas neteisingas arba nebegalioja.',
             ], 422);
         }
 
         return response()->json([
-            'message' => 'Password updated successfully.',
+            'message' => 'Slaptažodis sėkmingai atnaujintas.',
         ]);
     }
 }

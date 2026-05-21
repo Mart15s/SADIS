@@ -6,12 +6,12 @@ export default function NotFoundPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Page not found"
-        description="This route does not exist in the SPA. Use the sidebar to jump back into the supported modules."
+        title="Puslapis nerastas"
+        description="Tokio puslapio nėra. Naudokite šoninę navigaciją ir grįžkite į sistemos modulius."
       />
       <div className="panel">
         <Link to="/">
-          <Button>Return to dashboard</Button>
+          <Button>Grįžti į pradžią</Button>
         </Link>
       </div>
     </div>

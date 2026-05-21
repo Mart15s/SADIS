@@ -21,8 +21,10 @@ if [ ! -e public/storage ]; then
 fi
 
 php artisan config:clear --no-interaction
+php artisan route:clear --no-interaction
 php artisan view:clear --no-interaction
 php artisan config:cache --no-interaction
+php artisan route:cache --no-interaction
 php artisan view:cache --no-interaction
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
@@ -49,6 +51,12 @@ if [ "${RUN_DEMO_SEEDER:-false}" = "true" ]; then
     echo "RUN_DEMO_SEEDER=true; running demo seeder [${DEMO_SEEDER_CLASS}]..."
     php artisan db:seed --class="${DEMO_SEEDER_CLASS}" --force --no-interaction
     echo "Demo seeder [${DEMO_SEEDER_CLASS}] completed."
+fi
+
+if [ "${RUN_DEMO1_RICH_SEEDER:-false}" = "true" ]; then
+    echo "RUN_DEMO1_RICH_SEEDER=true; enriching the existing demo1 dataset..."
+    php artisan db:seed --class="Demo1RichDataSeeder" --force --no-interaction
+    echo "Demo1 rich data seeding completed."
 fi
 
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf

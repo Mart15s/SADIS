@@ -3,7 +3,7 @@ import Button from './Button.jsx'
 export default function FilterBar({
   children,
   resultCount,
-  resultLabel = 'results',
+  resultLabel = 'rezultatai',
   onClear = null,
   clearDisabled = false,
   className = '',
@@ -15,7 +15,7 @@ export default function FilterBar({
         {typeof resultCount === 'number' ? <span>{resultCount} {resultLabel}</span> : resultCount}
         {onClear ? (
           <Button variant="ghost" size="sm" onClick={onClear} disabled={clearDisabled}>
-            Clear
+            Valyti
           </Button>
         ) : null}
       </div>

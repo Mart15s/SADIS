@@ -4,6 +4,7 @@ namespace App\Services\Calendar;
 
 use App\Enums\ConditionType;
 use App\Enums\InventoryItemType;
+use App\Enums\InventoryUnit;
 use App\Enums\TaskPriority;
 use App\Enums\TaskState;
 use App\Enums\TaskType;
@@ -144,10 +145,10 @@ class CalendarGenerationService
                     if ($this->hasPreviousZoneRotation($plant) && $generationDate->isSameDay($plant->plant_date)) {
                         $actions[] = [
                             'type' => TaskType::Transplant->value,
-                            'name' => "Review rotation for {$plant->name}",
+                            'name' => "Peržiūrėti rotaciją: {$plant->name}",
                             'priority' => TaskPriority::Medium->value,
-                            'reason' => 'Rotation history shows the same zone was used previously.',
-                            'comment' => 'Review the previous seasons before planting in the same zone again.',
+                            'reason' => 'Rotacijos istorija rodo, kad ta pati zona jau buvo naudota anksčiau.',
+                            'comment' => 'Prieš sodindami toje pačioje zonoje peržiūrėkite ankstesnius sezonus.',
                         ];
                     }
 
@@ -296,13 +297,13 @@ class CalendarGenerationService
         if ($plant->disease || $actualCondition === ConditionType::Diseased->value) {
             return [[
                 'type' => TaskType::Spray->value,
-                'name' => "Treat {$plant->name}",
+                'name' => "Gydyti ligos požymius: {$plant->name}",
                 'priority' => TaskPriority::High->value,
-                'reason' => 'The plant is marked as diseased and needs immediate attention.',
-                'comment' => 'Disease status overrides the normal phase simulation for treatment.',
+                'reason' => 'Augalas pažymėtas kaip sergantis ir jam reikia skubaus dėmesio.',
+                'comment' => 'Ligos būsena turi pirmenybę prieš įprastą fazės simuliaciją.',
                 'required_resources' => [
-                    $this->resourceRequirement('Fungicide', InventoryItemType::Material, 1, 'l', true),
-                    $this->resourceRequirement('Sprayer', InventoryItemType::Tool, 1, 'unit', false),
+                    $this->resourceRequirement('Fungicidas', InventoryItemType::Material, 1, 'l', true),
+                    $this->resourceRequirement('Purkštuvas', InventoryItemType::Tool, 1, 'unit', false),
                 ],
             ]];
         }
@@ -311,21 +312,21 @@ class CalendarGenerationService
             && (($simulatedState['is_transition_day'] ?? false) || $daysSincePlanting <= 3)) {
             $actions[] = [
                 'type' => TaskType::Rest->value,
-                'name' => "Monitor {$plant->name} establishment",
+                'name' => "Stebėti įsitvirtinimą: {$plant->name}",
                 'priority' => TaskPriority::Low->value,
-                'reason' => 'Young plants should be checked closely while they establish.',
-                'comment' => 'Observe early growth, moisture balance, and transplant shock.',
+                'reason' => 'Jaunus augalus įsitvirtinimo metu reikia stebėti atidžiau.',
+                'comment' => 'Stebėkite ankstyvą augimą, drėgmės balansą ir persodinimo stresą.',
             ];
         }
 
         if ($phase !== '' && $this->isIntervalDue($daysSincePlanting, $care->watering_interval_days, 0)) {
             $actions[] = [
                 'type' => TaskType::Watering->value,
-                'name' => "Water {$plant->name}",
+                'name' => "Palaistyti: {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
-                'reason' => 'The watering interval is due for this simulated day.',
+                'reason' => 'Šiai simuliuojamai dienai atėjo laistymo intervalo terminas.',
                 'comment' => sprintf(
-                    'Watering interval aligned with the expected %s phase for this day.',
+                    'Laistymo intervalas suderintas su šiai dienai prognozuojama faze: %s.',
                     $simulatedState['phase_label'] ?? $phase
                 ),
             ];
@@ -340,15 +341,15 @@ class CalendarGenerationService
             && $this->isIntervalDue($daysSincePlanting, $care->fertilizing_interval_days, max(1, (int) ($care->germinating_duration_days ?? 0) + 1))) {
             $actions[] = [
                 'type' => TaskType::Fertilize->value,
-                'name' => "Fertilize {$plant->name}",
+                'name' => "Patręšti: {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
-                'reason' => 'The fertilizing interval is due for the simulated lifecycle phase on this day.',
+                'reason' => 'Šiai simuliuojamai gyvavimo ciklo fazei atėjo tręšimo intervalo terminas.',
                 'comment' => sprintf(
-                    'Fertilize after establishment, using the expected %s phase for scheduling.',
+                    'Tręškite po įsitvirtinimo, planuojant pagal prognozuojamą fazę: %s.',
                     $simulatedState['phase_label'] ?? $phase
                 ),
                 'required_resources' => [
-                    $this->resourceRequirement('Fertilizer', InventoryItemType::Material, 1, 'kg', true),
+                    $this->resourceRequirement('Trąšos', InventoryItemType::Material, 1, 'kg', true),
                 ],
             ];
         }
@@ -362,22 +363,22 @@ class CalendarGenerationService
             && $this->isIntervalDue($daysSincePlanting, $care->pest_check_interval_days, 0)) {
             $actions[] = [
                 'type' => TaskType::Spray->value,
-                'name' => "Inspect {$plant->name} for pests",
+                'name' => "Patikrinti kenkėjus: {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
-                'reason' => 'The pest inspection interval is due for this plant.',
-                'comment' => 'Inspect leaves, stems, and surrounding soil for pests or disease.',
+                'reason' => 'Šiam augalui atėjo kenkėjų patikros intervalo terminas.',
+                'comment' => 'Patikrinkite lapus, stiebus ir aplinkinę dirvą dėl kenkėjų ar ligų.',
             ];
         }
 
         if (($simulatedState['transition']['to'] ?? null) === ConditionType::Mature->value) {
             $actions[] = [
                 'type' => TaskType::Rest->value,
-                'name' => "Inspect {$plant->name} support and canopy",
+                'name' => "Patikrinti atramas ir lają: {$plant->name}",
                 'priority' => TaskPriority::Low->value,
-                'reason' => 'Mature plants benefit from a maintenance check when the mature phase begins.',
-                'comment' => 'Check support, spacing, and overall plant structure.',
+                'reason' => 'Brandos fazės pradžioje augalams naudinga priežiūros patikra.',
+                'comment' => 'Patikrinkite atramas, tarpus ir bendrą augalo struktūrą.',
                 'required_resources' => [
-                    $this->resourceRequirement('Plant support', InventoryItemType::Tool, 1, 'unit', false),
+                    $this->resourceRequirement('Augalų atramos', InventoryItemType::Tool, 1, 'unit', false),
                 ],
             ];
         }
@@ -427,10 +428,10 @@ class CalendarGenerationService
 
             $actions[] = [
                 'type' => TaskType::Rest->value,
-                'name' => "Inspect drainage around {$plant->name}",
+                'name' => "Patikrinti drenažą aplink: {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
-                'reason' => 'Heavy rain is forecast for this exact day.',
-                'comment' => 'Inspect for waterlogging and soil compaction after the rain event.',
+                'reason' => 'Šiai dienai prognozuojamas smarkus lietus.',
+                'comment' => 'Po lietaus patikrinkite, ar nėra užmirkimo ir dirvos suslėgimo.',
             ];
         }
 
@@ -442,14 +443,14 @@ class CalendarGenerationService
 
             $actions[] = [
                 'type' => TaskType::Rest->value,
-                'name' => "Protect {$plant->name} from frost",
+                'name' => "Apsaugoti nuo šalnos: {$plant->name}",
                 'priority' => TaskPriority::High->value,
                 'reason' => $weatherContext['is_snow']
-                    ? 'Snow or freezing conditions are forecast for this day.'
-                    : 'The minimum temperature is below the configured frost threshold.',
-                'comment' => 'Cover the plant or delay exposure until conditions improve.',
+                    ? 'Šiai dienai prognozuojamas sniegas arba šalčio sąlygos.'
+                    : 'Minimali temperatūra žemesnė nei nustatytas šalnos slenkstis.',
+                'comment' => 'Uždenkite augalą arba atidėkite atidengimą, kol sąlygos pagerės.',
                 'required_resources' => [
-                    $this->resourceRequirement('Protective cover', InventoryItemType::Tool, 1, 'unit', false),
+                    $this->resourceRequirement('Apsauginė danga', InventoryItemType::Tool, 1, 'unit', false),
                 ],
             ];
         }
@@ -461,12 +462,12 @@ class CalendarGenerationService
         ) {
             $actions[] = [
                 'type' => TaskType::Watering->value,
-                'name' => "Relieve heat stress for {$plant->name}",
+                'name' => "Sumažinti karščio stresą: {$plant->name}",
                 'priority' => $weatherData->tempMax >= ($heatThreshold + 5)
                     ? TaskPriority::High->value
                     : TaskPriority::Medium->value,
-                'reason' => 'High heat is forecast and rainfall is not sufficient to offset stress.',
-                'comment' => 'Add water or temporary shade to reduce heat stress.',
+                'reason' => 'Prognozuojamas karštis, o kritulių nepakanka stresui sumažinti.',
+                'comment' => 'Papildomai palaistykite arba laikinai pridenkite nuo saulės.',
             ];
         }
 
@@ -475,22 +476,22 @@ class CalendarGenerationService
             && ! $weatherContext['is_heavy_rain']) {
             $actions[] = [
                 'type' => TaskType::Watering->value,
-                'name' => "Drought recovery watering for {$plant->name}",
+                'name' => "Atsistatomasis laistymas po sausros: {$plant->name}",
                 'priority' => TaskPriority::High->value,
-                'reason' => 'Multiple hot and dry forecast days increase drought stress.',
-                'comment' => 'Conservative drought support triggered by a rolling dry-weather pattern.',
+                'reason' => 'Kelios karštos ir sausos prognozės dienos didina sausros stresą.',
+                'comment' => 'Atsargus sausros palaikymas pritaikytas pagal besitęsiantį sausų orų modelį.',
             ];
         }
 
         if ($windThreshold !== null && $weatherData->windKmh > $windThreshold) {
             $actions[] = [
                 'type' => TaskType::Rest->value,
-                'name' => "Secure {$plant->name} against wind",
+                'name' => "Sutvirtinti nuo vėjo: {$plant->name}",
                 'priority' => TaskPriority::Medium->value,
-                'reason' => 'Wind speed is above the plant-care protection threshold.',
-                'comment' => 'Secure stems, supports, or nearby structures before the wind picks up.',
+                'reason' => 'Vėjo greitis viršija augalo priežiūrai nustatytą apsaugos slenkstį.',
+                'comment' => 'Prieš sustiprėjant vėjui sutvirtinkite stiebus, atramas arba šalia esančias konstrukcijas.',
                 'required_resources' => [
-                    $this->resourceRequirement('Plant support', InventoryItemType::Tool, 1, 'unit', false),
+                    $this->resourceRequirement('Augalų atramos', InventoryItemType::Tool, 1, 'unit', false),
                 ],
             ];
         }
@@ -589,7 +590,7 @@ class CalendarGenerationService
         $plannedTaskNames = [$sourceAction['name']];
         $plannedPlants = [$plant->name];
         $taskComment = sprintf(
-            'Required for %s before the planned work can be completed.',
+            'Reikalinga užduočiai „%s“, kad suplanuotą darbą būtų galima atlikti.',
             $sourceAction['name']
         );
 
@@ -597,9 +598,9 @@ class CalendarGenerationService
             return [
                 'date' => $generationDate->toDateString(),
                 'type' => TaskType::Buy->value,
-                'name' => "Buy {$item}",
+                'name' => "Nupirkti: {$item}",
                 'priority' => TaskPriority::High->value,
-                'reason' => "Projected inventory is insufficient for {$sourceAction['name']}.",
+                'reason' => "Prognozuojamo inventoriaus nepakanka užduočiai „{$sourceAction['name']}“.",
                 'comment' => $taskComment,
                 'plant_id' => null,
                 'zone_id' => null,
@@ -648,7 +649,7 @@ class CalendarGenerationService
         if ($shouldAppendComment) {
             $existing['comment'] = $this->mergeText(
                 $existing['comment'] ?? null,
-                "Also needed for {$sourceAction['name']}.",
+                "Taip pat reikalinga užduočiai „{$sourceAction['name']}“.",
                 PHP_EOL
             );
         }
@@ -990,19 +991,18 @@ class CalendarGenerationService
             'buy_action_key' => $buyActionKey,
             'date' => $date,
             'type' => TaskType::Buy->value,
-            'name' => "Buy {$missingResource['resource_name']}",
+            'name' => "Nupirkti: {$missingResource['resource_name']}",
             'priority' => TaskPriority::High->value,
             'reason' => sprintf(
-                'Day-level inventory shortage blocks %d planned task(s) on %s.',
+                'Dienos inventoriaus trūkumas blokuoja suplanuotas užduotis (%d) datai %s.',
                 count($taskNames),
                 $date,
             ),
             'comment' => sprintf(
-                'Missing %s %s for %d blocked task%s.',
-                number_format($quantity, $itemType === InventoryItemType::Tool->value ? 0 : 2, '.', ''),
-                $unit,
+                'Trūksta %s %s blokuojamoms užduotims: %d.',
+                number_format($quantity, $itemType === InventoryItemType::Tool->value ? 0 : 2, ',', ''),
+                $this->inventoryUnitLabel($unit),
                 count($taskNames),
-                count($taskNames) === 1 ? '' : 's',
             ),
             'plant_id' => null,
             'zone_id' => null,
@@ -1235,5 +1235,10 @@ class CalendarGenerationService
             'resource_mode' => $isConsumed ? 'consumable' : 'reusable',
             'is_consumed' => $isConsumed,
         ];
+    }
+
+    private function inventoryUnitLabel(string $unit): string
+    {
+        return InventoryUnit::tryFrom($unit)?->label() ?? $unit;
     }
 }

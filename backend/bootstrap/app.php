@@ -24,7 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->alias([
             'admin' => AdminMiddleware::class,
-            'dev.only' => \App\Http\Middleware\DevOnlyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -36,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return response()->json([
-                'message' => $exception->getMessage(),
+                'message' => 'Patikrinkite pateiktus duomenis.',
                 'errors' => $exception->errors(),
             ], $exception->status);
         });
@@ -47,7 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return response()->json([
-                'message' => $exception->getMessage() ?: 'Unauthenticated.',
+                'message' => $exception->getMessage() ?: 'Prisijungimas reikalingas.',
             ], 401);
         });
 

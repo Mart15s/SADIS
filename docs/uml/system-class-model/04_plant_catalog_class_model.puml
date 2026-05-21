@@ -1,0 +1,195 @@
+@startuml
+title Augalų valdymo, katalogo ir Perenual integracijos klasių modelis
+left to right direction
+skinparam packageStyle rectangle
+
+package "Sąsajos / Views" {
+  class PlantsPage <<boundary>> {
+    +handleDelete(entry)
+  }
+  class PlantFormPage <<boundary>> {
+    +handleCatalogSelect(catalogPlant)
+    +handleSubmit(event)
+  }
+  class PlantDetailPage <<boundary>> {
+    +handleConditionSubmit(event)
+    +handleReviewSubmit(event)
+  }
+  class CatalogPlantsPage <<boundary>>
+  class CatalogPlantFormPage <<boundary>> {
+    +runPerenualSearch(limit, options)
+    +handlePerenualSearchSubmit(event)
+    +handleShowMoreResults()
+    +handlePerenualSelect(result)
+    +handleSubmit(event)
+  }
+  class CatalogPlantDetailPage <<boundary>>
+}
+
+package "Valdikliai / Controllers" {
+  class PlantController <<control>> {
+    +listAll(request, accessService)
+    +index(request, plot, accessService)
+    +search(request, perenualService)
+    +storeGlobal(request, accessService, catalogPlantService, plantCareService, plotSnapshotService)
+    +store(request, plot, accessService, catalogPlantService, plantCareService, plotSnapshotService)
+    +showGlobal(request, plant, accessService, plantCareService, plantLifecycleService)
+    +show(request, plot, plant, accessService, plantCareService, plantLifecycleService)
+    +updateGlobal(request, plant, accessService, catalogPlantService, plantCareService, plotSnapshotService)
+    +update(request, plot, plant, accessService, catalogPlantService, plantCareService, plotSnapshotService)
+    +destroyGlobal(request, plant, accessService, plotSnapshotService)
+    +destroy(request, plot, plant, accessService, plotSnapshotService)
+  }
+  class CatalogPlantController <<control>> {
+    +searchPerenual(request, perenualService)
+    +previewPerenualSpecies(speciesId, catalogPlantService)
+    +index(request)
+    +show(catalogPlant)
+    +store(request, catalogPlantService)
+    +update(request, catalogPlant, catalogPlantService)
+    +destroy(catalogPlant)
+  }
+}
+
+package "Ištekliai / Resources" {
+  class PlantResource <<resource>> {
+    +toArray(request)
+  }
+  class CatalogPlantResource <<resource>> {
+    +toArray(request)
+  }
+}
+
+package "Paslaugos / Services" {
+  class AccessService <<service>>
+  class PlotSnapshotService <<service>>
+  class CatalogPlantService <<service>> {
+    +saveCatalogPlant(data, catalogPlant)
+    +assignCatalogPlantToPlant(plant, catalogPlant)
+    +syncPlantsFromCatalog(catalogPlant)
+    +canonicalName(name)
+    +buildPerenualDraft(speciesId)
+  }
+  class PlantCareService <<service>> {
+    +syncPlantCareConfiguration(plant, overrides, selectedCare, resetOverrides, speciesId)
+    +resolveEffectivePlantCare(plant, speciesId)
+    +ensureLinkedCareProfile(plant, speciesId)
+    +previewLinkedCareProfile(plant, speciesId, seed, normalizedResult)
+  }
+  class PlantCareNormalizer <<service>> {
+    +normalize(plant, seed)
+    +normalizeWithTrace(plant, seed)
+  }
+  class PlantCareDefaults <<service>> {
+    +forPlant(plantName, plantType)
+  }
+  class PerenualService <<service>> {
+    +searchPlants(query, limit)
+    +debugSearchPlants(query, limit)
+    +fetchSpeciesSeed(plantName, speciesId)
+    +debugLoadSpecies(speciesId, careGuideType)
+  }
+}
+
+package "Esybės / Models" {
+  class Plot <<entity>> {
+    +plants()
+    +plantZones()
+  }
+  class PlantZone <<entity>> {
+    +plants()
+  }
+  class Plant <<entity>> {
+    +name
+    +growing_time_days
+    +recommended_temperature
+    +recommended_humidity
+    +plant_date
+    +disease_notes
+    +disease
+    +rest_time_days
+    +plant_size
+    +photo_url
+    +reusable
+    +type
+    +condition
+    +fk_catalog_plant_id
+    +plantZone()
+    +plot()
+    +catalogPlant()
+    +effectivePlantCare()
+  }
+  class CatalogPlant <<entity>> {
+    +name
+    +canonical_name
+    +plant_type
+    +fk_plant_care_id
+    +description
+    +source_provider
+    +source_quality
+    +source_scientific_name
+    +source_family
+    +source_image_url
+    +metadata
+    +plantCare()
+    +plants()
+  }
+  class PlantCare <<entity>> {
+    +plant_name
+    +canonical_name
+    +description
+    +conditions
+    +growing_duration_days
+    +germinating_duration_days
+    +flowering_duration_days
+    +mature_duration_days
+    +regenerating_duration_days
+    +watering_interval_days
+    +fertilizing_interval_days
+    +pest_check_interval_days
+    +rain_skip_threshold_mm
+    +frost_temp_threshold_c
+    +heat_extra_water_temp_c
+    +wind_protection_kmh
+    +source_perenual_species_id
+    +plants()
+    +catalogPlants()
+  }
+}
+
+package "Išorinės sistemos / External systems" {
+  class "Perenual API" as PerenualAPI <<external>>
+}
+
+PlantsPage ..> PlantController : listManagedPlants/delete
+PlantsPage ..> CatalogPlantController : list/delete catalog
+PlantFormPage ..> PlantController : create/update plant
+PlantFormPage ..> CatalogPlantController : listCatalogPlants
+PlantDetailPage ..> PlantController : get plant
+CatalogPlantsPage ..> CatalogPlantController : list
+CatalogPlantFormPage ..> CatalogPlantController : create/update/searchPerenual
+CatalogPlantDetailPage ..> CatalogPlantController : show
+
+PlantController ..> AccessService : authorizes plot access
+PlantController ..> CatalogPlantService : assigns catalog plant
+PlantController ..> PlantCareService : ensures linked care
+PlantController ..> PlotSnapshotService : captures plant changes
+PlantController ..> PlantResource : returns
+PlantController ..> Plant : CRUD
+CatalogPlantController ..> CatalogPlantService : persists catalog
+CatalogPlantController ..> PerenualService : searches external
+CatalogPlantController ..> CatalogPlantResource : returns
+CatalogPlantService ..> PlantCareService : builds linked care
+CatalogPlantService ..> PerenualService : builds draft from species
+PlantCareService ..> PerenualService : fetches seed
+PlantCareService ..> PlantCareNormalizer : normalizes
+PlantCareNormalizer ..> PlantCareDefaults : fallback profile
+PerenualService ..> PerenualAPI : HTTP
+
+Plot "1" -- "0..*" Plant : contains
+PlantZone "1" -- "0..*" Plant : contains
+Plant "0..*" -- "0..1" CatalogPlant : catalogPlant()
+CatalogPlant "0..*" -- "0..1" PlantCare : plantCare()
+PlantCare "1" -- "0..*" CatalogPlant : catalogPlants()
+
+@enduml

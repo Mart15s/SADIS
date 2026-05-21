@@ -18,6 +18,9 @@ function getFocusableElements(container) {
 }
 
 function useModalBehavior(open, panelRef, onClose) {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
     if (!open) return undefined
 
@@ -34,7 +37,7 @@ function useModalBehavior(open, panelRef, onClose) {
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         event.preventDefault()
-        onClose?.()
+        onCloseRef.current?.()
         return
       }
 
@@ -73,7 +76,7 @@ function useModalBehavior(open, panelRef, onClose) {
         previousActiveElement.focus()
       }
     }
-  }, [onClose, open, panelRef])
+  }, [open, panelRef])
 }
 
 function ModalFrame({
@@ -135,7 +138,7 @@ export function DialogHeader({
   onClose,
   titleId,
   subtitleId,
-  closeLabel = 'Close',
+  closeLabel = 'Uždaryti',
   className = '',
 }) {
   const fallbackTitleId = useId()
@@ -171,7 +174,7 @@ export function DialogFooter({ children, className = '' }) {
   )
 }
 
-export function CloseButton({ onClick, ariaLabel = 'Close', className = '' }) {
+export function CloseButton({ onClick, ariaLabel = 'Uždaryti', className = '' }) {
   return (
     <button
       type="button"

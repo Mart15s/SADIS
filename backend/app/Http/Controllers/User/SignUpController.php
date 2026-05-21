@@ -15,12 +15,24 @@ class SignUpController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', 'min:8'],
-            'name' => ['required', 'string', 'max:255'],
-            'surname' => ['required', 'string', 'max:255'],
-        ]);
+        $validated = $request->validate(
+            [
+                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'confirmed', 'min:8'],
+                'name' => ['required', 'string', 'max:255'],
+                'surname' => ['required', 'string', 'max:255'],
+            ],
+            [
+                'email.required' => 'Įveskite el. pašto adresą.',
+                'email.email' => 'Įveskite tinkamą el. pašto adresą.',
+                'email.unique' => 'Šis el. pašto adresas jau naudojamas.',
+                'password.required' => 'Įveskite slaptažodį.',
+                'password.confirmed' => 'Slaptažodžio pakartojimas nesutampa.',
+                'password.min' => 'Slaptažodis turi būti bent 8 simbolių.',
+                'name.required' => 'Įveskite vardą.',
+                'surname.required' => 'Įveskite pavardę.',
+            ],
+        );
 
         $payload = DB::transaction(function () use ($validated) {
             $user = User::create([

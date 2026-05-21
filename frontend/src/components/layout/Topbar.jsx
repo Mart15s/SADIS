@@ -1,36 +1,33 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext.jsx'
-import StatusBadge from '../ui/StatusBadge.jsx'
 
 const routeLabels = [
-  { pattern: /^\/$/, label: 'Dashboard' },
-  { pattern: /^\/account$/, label: 'Account' },
-  { pattern: /^\/community$/, label: 'Community' },
-  { pattern: /^\/plots\/new$/, label: 'New plot' },
-  { pattern: /^\/plots\/[^/]+\/edit$/, label: 'Edit plot' },
-  { pattern: /^\/plots\/[^/]+\/calendar$/, label: 'Calendar' },
-  { pattern: /^\/plots\/[^/]+\/history$/, label: 'Planning history' },
-  { pattern: /^\/plots\/[^/]+\/harvests$/, label: 'Harvests' },
-  { pattern: /^\/plots\/[^/]+\/analytics$/, label: 'Analytics' },
-  { pattern: /^\/plots\/[^/]+\/sharing$/, label: 'Sharing' },
-  { pattern: /^\/plots\/[^/]+\/rotation$/, label: 'Rotation' },
-  { pattern: /^\/plots\/[^/]+$/, label: 'Plot workspace' },
-  { pattern: /^\/plots$/, label: 'Plots' },
-  { pattern: /^\/plants\/new$/, label: 'New plant' },
-  { pattern: /^\/plants\/[^/]+\/edit$/, label: 'Edit plant' },
-  { pattern: /^\/plants\/[^/]+$/, label: 'Plant details' },
-  { pattern: /^\/plants$/, label: 'Plants' },
-  { pattern: /^\/catalog-plants/, label: 'Plant catalog' },
-  { pattern: /^\/inventory$/, label: 'Inventory' },
-  { pattern: /^\/admin\/users$/, label: 'User management' },
+  { pattern: /^\/$/, label: 'Pradžia' },
+  { pattern: /^\/account$/, label: 'Paskyra' },
+  { pattern: /^\/community$/, label: 'Bendruomenė' },
+  { pattern: /^\/plots\/new$/, label: 'Naujas sklypas' },
+  { pattern: /^\/plots\/[^/]+\/edit$/, label: 'Sklypo redagavimas' },
+  { pattern: /^\/plots\/[^/]+\/calendar$/, label: 'Kalendorius' },
+  { pattern: /^\/plots\/[^/]+\/history$/, label: 'Planavimo istorija' },
+  { pattern: /^\/plots\/[^/]+\/harvests$/, label: 'Derlius' },
+  { pattern: /^\/plots\/[^/]+\/analytics$/, label: 'Analitika' },
+  { pattern: /^\/plots\/[^/]+\/sharing$/, label: 'Bendrinimas' },
+  { pattern: /^\/plots\/[^/]+\/rotation$/, label: 'Rotacija' },
+  { pattern: /^\/plots\/[^/]+$/, label: 'Sklypo planas' },
+  { pattern: /^\/plots$/, label: 'Sklypai' },
+  { pattern: /^\/plants\/new$/, label: 'Naujas augalas' },
+  { pattern: /^\/plants\/[^/]+\/edit$/, label: 'Augalo redagavimas' },
+  { pattern: /^\/plants\/[^/]+$/, label: 'Augalo informacija' },
+  { pattern: /^\/plants$/, label: 'Augalai' },
+  { pattern: /^\/catalog-plants/, label: 'Augalų katalogas' },
+  { pattern: /^\/inventory$/, label: 'Inventorius' },
+  { pattern: /^\/admin\/users$/, label: 'Naudotojų valdymas' },
 ]
 
 function getRouteLabel(pathname) {
-  return routeLabels.find((route) => route.pattern.test(pathname))?.label ?? 'Workspace'
+  return routeLabels.find((route) => route.pattern.test(pathname))?.label ?? 'Darbo sritis'
 }
 
 export default function Topbar({ isWide = false, pageHeader = null }) {
-  const { isAdmin, isAuthenticated, displayName } = useAuth()
   const location = useLocation()
   const currentLabel = getRouteLabel(location.pathname)
   const title = pageHeader?.title ?? currentLabel
@@ -44,10 +41,10 @@ export default function Topbar({ isWide = false, pageHeader = null }) {
         isWide ? 'topbar-wide' : '',
         pageHeader ? 'topbar--page-header' : '',
       ].filter(Boolean).join(' ')}
-      aria-label="Workspace bar"
+      aria-label="Darbo srities juosta"
     >
       <div className="topbar-left">
-        <Link to="/" className="topbar-mark" aria-label="Go to dashboard">
+        <Link to="/" className="topbar-mark" aria-label="Eiti į pradžią">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M10 17V9" />
             <path d="M10 9.5c-2.2-.1-4.1-1.6-4.8-4 3-.1 4.6 1.1 4.8 4Z" />
@@ -67,17 +64,7 @@ export default function Topbar({ isWide = false, pageHeader = null }) {
         </div>
       ) : null}
 
-      <div className="topbar-actions" aria-label="Session status">
-        <StatusBadge kind="connection" tone={isAuthenticated ? 'success' : 'warning'}>
-          {isAuthenticated ? 'Connected' : 'Guest'}
-        </StatusBadge>
-        {isAdmin ? <StatusBadge kind="ownership" tone="warning">Admin</StatusBadge> : null}
-        {isAuthenticated ? (
-          <Link to="/account" className="topbar-user-link">
-            {displayName}
-          </Link>
-        ) : null}
-      </div>
+      {!hasPageChrome ? <div className="topbar-actions" aria-hidden="true" /> : null}
     </header>
   )
 }

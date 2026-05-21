@@ -5,7 +5,6 @@ use App\Http\Controllers\Calendar\TaskController as CalendarTaskController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Community\CommunityController;
-use App\Http\Controllers\Plant\PlantCareDebugController;
 use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Location\ReverseGeocodeController;
 use App\Http\Controllers\Plot\AnalyticsController;
@@ -40,12 +39,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/access/{accessRight}', [ShareController::class, 'destroyById']);
     Route::get('/community', [CommunityController::class, 'index']);
     Route::get('/geocode/reverse', [ReverseGeocodeController::class, 'show']);
-    Route::prefix('dev')->middleware('dev.only')->group(function () {
-        Route::get('/plant-care-test/search', [PlantCareDebugController::class, 'search']);
-        Route::get('/plant-care-test/species/{speciesId}', [PlantCareDebugController::class, 'species']);
-        Route::get('/plant-care-test/weather', [PlantCareDebugController::class, 'weather']);
-    });
-
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/users', [AccountController::class, 'index']);
         Route::get('/users/{user}', [AccountController::class, 'show']);
@@ -98,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/plots/{plot}/rotations/recommendations', [RotationController::class, 'recommendations']);
     Route::post('/plots/{plot}/rotations', [RotationController::class, 'store']);
     Route::post('/plots/{plot}/rotations/plans', [RotationController::class, 'plan']);
+    Route::patch('/plots/{plot}/rotations/plans/{rotationPlanDraft}/items/{plant}', [RotationController::class, 'updateDraftItem']);
     Route::post('/plots/{plot}/rotations/plans/{rotationPlanDraft}/confirm', [RotationController::class, 'confirm']);
     Route::delete('/plots/{plot}/rotations/plans/{rotationPlanDraft}', [RotationController::class, 'reject']);
     Route::get('/plots/{plot}/harvests', [HarvestController::class, 'index']);

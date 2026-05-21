@@ -103,6 +103,11 @@ class GardenOwner extends Model
         return $this->hasMany(HarvestRecord::class, 'garden_owner_id');
     }
 
+    public function plotSnapshots(): HasMany
+    {
+        return $this->hasMany(PlotSnapshot::class, 'garden_owner_id');
+    }
+
     public function plotLinks(): HasMany
     {
         return $this->hasMany(HasPlot::class, 'fk_owner_id', 'id_user');

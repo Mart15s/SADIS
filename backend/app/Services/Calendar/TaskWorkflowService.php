@@ -2,6 +2,7 @@
 
 namespace App\Services\Calendar;
 
+use App\Enums\InventoryUnit;
 use App\Enums\TaskState;
 use App\Enums\TaskType;
 use App\Models\HarvestRecord;
@@ -121,7 +122,7 @@ class TaskWorkflowService
 
                 $harvestRecord = $this->harvestService->registerForTask($task, $inventoryOwner, $harvest);
                 $workflowComments[] = sprintf(
-                    'Harvest recorded: %s on %s.',
+                    'Derlius užregistruotas: %s, data %s.',
                     number_format((float) $harvestRecord->quantity, 2, '.', ''),
                     $harvestRecord->harvested_on?->toDateString()
                 );
@@ -132,7 +133,7 @@ class TaskWorkflowService
                         $task->plant,
                         $care,
                         $harvest['harvested_on'],
-                        $harvest['notes'] ?? 'Harvest workflow completed.',
+                        $harvest['notes'] ?? 'Derliaus darbo eiga užbaigta.',
                     );
                     $workflowComments[] = sprintf(
                         'Post-harvest condition confirmed: %s.',
@@ -210,8 +211,10 @@ class TaskWorkflowService
 
         $parts = collect($summary)
             ->map(function (array $entry): string {
-                $quantity = number_format((float) ($entry['quantity'] ?? 0), 2, '.', '');
-                $unit = $entry['unit'] ? ' '.$entry['unit'] : '';
+                $quantity = number_format((float) ($entry['quantity'] ?? 0), 2, ',', '');
+                $unit = $entry['unit']
+                    ? ' '.(InventoryUnit::tryFrom((string) $entry['unit'])?->label() ?? $entry['unit'])
+                    : '';
                 $prefix = $entry['action_label']
                     ?? (($entry['consumed'] ?? false) ? 'Panaudota' : 'Patikrintas resursas');
 

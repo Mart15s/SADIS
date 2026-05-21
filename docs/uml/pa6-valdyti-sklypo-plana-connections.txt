@@ -1,0 +1,1328 @@
+PA6 Valdyti sklypo planą - jungčių specifikacija
+
+1. Lifeline sąrašas
+- Garden owner — «actor»; source: BBP PA6 actor: Darzo savininkas
+- PlotsPage — «boundary»; source: frontend/src/pages/plot/PlotsPage.jsx
+- PlotCreatePage — «boundary»; source: frontend/src/pages/plot/PlotCreatePage.jsx
+- PlotDetailPage — «boundary»; source: frontend/src/pages/plot/PlotDetailPage.jsx
+- PlotSectionNav — «boundary»; source: frontend/src/components/plot/PlotSectionNav.jsx
+- PlotEditPage — «boundary»; source: frontend/src/pages/plot/PlotEditPage.jsx
+- PlotDesignerCanvas — «boundary»; source: frontend/src/components/plot/PlotDesignerCanvas.jsx
+- PlotLocationMap — «boundary»; source: frontend/src/components/plot/PlotLocationMap.jsx
+- PlotPlantingDrawer — «boundary»; source: frontend/src/components/plot/PlotPlantingDrawer.jsx
+- PlantFormPage — «boundary»; source: frontend/src/pages/plant/PlantFormPage.jsx
+- PlotController — «control»; source: backend/app/Http/Controllers/Plot/PlotController.php
+- WorkspaceController — «control»; source: backend/app/Http/Controllers/Plot/WorkspaceController.php
+- SchemeController — «control»; source: backend/app/Http/Controllers/Plot/SchemeController.php
+- PlantController — «control»; source: backend/app/Http/Controllers/Plant/PlantController.php
+- CatalogPlantController — «control»; source: backend/app/Http/Controllers/Plant/CatalogPlantController.php
+- AccessService — «service»; source: backend/app/Services/Plot/AccessService.php
+- PlotWorkspaceService — «service»; source: backend/app/Services/Plot/PlotWorkspaceService.php
+- PlotSnapshotService — «service»; source: backend/app/Services/Plot/PlotSnapshotService.php
+- CatalogPlantService — «service»; source: backend/app/Services/Plant/CatalogPlantService.php
+- PlantCareService — «service»; source: backend/app/Services/Plant/PlantCareService.php
+- Plot — «entity»; source: backend/app/Models/Plot.php
+- PlantZone — «entity»; source: backend/app/Models/PlantZone.php
+- Plant — «entity»; source: backend/app/Models/Plant.php
+- CatalogPlant — «entity»; source: backend/app/Models/CatalogPlant.php
+- PlantCare — «entity»; source: backend/app/Models/PlantCare.php
+- AccessRight — «entity»; source: backend/app/Models/AccessRight.php
+- PA10 Eksportuoti planą į PDF — «ref»; source: separate PA10 sequence diagram; route audited: backend/routes/api.php /plots/{plot}/export/pdf
+
+2. Visų sekų sąrašas
+1. Garden owner -> PlotsPage: openPlotManagement()
+   Type: async/ui event
+   Source: PlotsPage render; useAsyncData(api.listPlots)
+
+2. PlotsPage -> PlotController: index(request)
+   Type: call
+   Source: api.listPlots(); PlotController::index()
+
+3. PlotController -> PlotController: resolveGardenOwner(request)
+   Type: call
+   Source: AuthorizesPlotAccess::resolveGardenOwner()
+
+4. PlotController -> PlotController: owner
+   Type: return
+   Replies to: 3
+   Source: AuthorizesPlotAccess::resolveGardenOwner()
+
+5. PlotController -> AccessService: accessiblePlotIds(owner)
+   Type: call
+   Source: AccessService::accessiblePlotIds()
+
+6. AccessService -> Plot: where('garden_owner_id', owner.id)
+   Type: call
+   Source: AccessService::accessiblePlotIds()
+
+7. Plot -> AccessService: direct_plot_ids
+   Type: return
+   Replies to: 6
+   Source: Plot::query()->where()->pluck()
+
+8. AccessService -> AccessRight: where('garden_owner_id', owner.id)
+   Type: call
+   Source: AccessService::accessiblePlotIds()
+
+9. AccessRight -> AccessService: shared_plot_ids
+   Type: return
+   Replies to: 8
+   Source: AccessRight::query()->where()->pluck()
+
+10. AccessService -> PlotController: accessible_plot_ids
+   Type: return
+   Replies to: 5
+   Source: AccessService::accessiblePlotIds()
+
+11. PlotController -> Plot: whereIn(id, accessiblePlotIds)
+   Type: call
+   Source: PlotController::index()
+
+12. Plot -> PlotController: filtered_plot_query
+   Type: return
+   Replies to: 11
+   Source: Plot::query()->whereIn()
+
+13. PlotController -> Plot: withCount(['plantZones','plants'])
+   Type: call
+   Source: PlotController::index()
+
+14. Plot -> PlotController: counted_plot_query
+   Type: return
+   Replies to: 13
+   Source: Plot::withCount()
+
+15. PlotController -> Plot: get()
+   Type: call
+   Source: PlotController::index()
+
+16. Plot -> PlotController: plot_collection
+   Type: return
+   Replies to: 15
+   Source: Eloquent get()
+
+17. PlotController -> AccessService: getUserRoleForPlot(owner, plot)
+   Type: call
+   Source: PlotController::index(); AccessService::getUserRoleForPlot()
+
+18. AccessService -> AccessService: userIsOwner(owner, plot)
+   Type: call
+   Source: AccessService::userIsOwner()
+
+19. AccessService -> AccessService: owner_match_result
+   Type: return
+   Replies to: 18
+   Source: AccessService::userIsOwner()
+
+20. AccessService -> AccessRight: where('plot_id', plot.id)
+   Type: call
+   Source: AccessService::sharedAccessQuery()
+
+21. AccessRight -> AccessService: shared_access_query
+   Type: return
+   Replies to: 20
+   Source: AccessRight::query()->where()
+
+22. AccessService -> AccessRight: first()
+   Type: call
+   Source: AccessService::getUserRoleForPlot()
+
+23. AccessRight -> AccessService: access_right
+   Type: return
+   Replies to: 22
+   Source: AccessRight::first()
+
+24. AccessService -> PlotController: access_role
+   Type: return
+   Replies to: 17
+   Source: AccessService::getUserRoleForPlot()
+
+25. PlotController -> PlotsPage: plot_list
+   Type: return
+   Replies to: 2
+   Source: PlotController::index() response
+
+26. PlotsPage -> PlotsPage: renderPlotList()
+   Type: call
+   Source: PlotsPage JSX
+
+27. PlotsPage -> PlotsPage: plot_list_rendered
+   Type: return
+   Replies to: 26
+   Source: PlotsPage JSX
+
+28. Garden owner -> PlotsPage: selectExistingPlot(plotId)
+   Type: async/ui event
+   Source: PlotsPage Link to /plots/:plotId
+
+29. PlotsPage -> PlotDetailPage: openPlotDetails(plotId)
+   Type: async/ui event
+   Source: React route renders PlotDetailPage
+
+30. PlotDetailPage -> PlotController: show(plot)
+   Type: call
+   Source: api.getPlot(); PlotController::show()
+
+31. PlotController -> AccessService: userHasAccess(owner, plot)
+   Type: call
+   Source: ensureUserCanViewPlot(); AccessService::userHasAccess()
+
+32. AccessService -> PlotController: true
+   Type: return
+   Replies to: 31
+   Source: AccessService::userHasAccess()
+
+33. PlotController -> Plot: load(['plantZones','plants'])
+   Type: call
+   Source: PlotController::show()
+
+34. Plot -> PlotController: plot_with_zones_and_plants
+   Type: return
+   Replies to: 33
+   Source: Plot::load()
+
+35. PlotController -> PlotDetailPage: plot_data
+   Type: return
+   Replies to: 30
+   Source: PlotController::show() response
+
+36. PlotDetailPage -> SchemeController: index(request, plot)
+   Type: call
+   Source: api.listPlantZones(); SchemeController::index()
+
+37. SchemeController -> AccessService: userHasAccess(owner, plot)
+   Type: call
+   Source: ensureUserCanViewPlot(); AccessService::userHasAccess()
+
+38. AccessService -> SchemeController: true
+   Type: return
+   Replies to: 37
+   Source: AccessService::userHasAccess()
+
+39. SchemeController -> Plot: plantZones()
+   Type: call
+   Source: SchemeController::index(); Plot::plantZones()
+
+40. Plot -> SchemeController: plant_zone_relation
+   Type: return
+   Replies to: 39
+   Source: Plot::plantZones()
+
+41. SchemeController -> PlantZone: get()
+   Type: call
+   Source: SchemeController::index()
+
+42. PlantZone -> SchemeController: zone_collection
+   Type: return
+   Replies to: 41
+   Source: PlantZone get()
+
+43. SchemeController -> PlotDetailPage: zone_collection
+   Type: return
+   Replies to: 36
+   Source: SchemeController::index() response
+
+44. PlotDetailPage -> PlantController: index(request, plot)
+   Type: call
+   Source: api.listPlants(); PlantController::index()
+
+45. PlantController -> AccessService: userHasAccess(owner, plot)
+   Type: call
+   Source: ensureUserCanViewPlot(); AccessService::userHasAccess()
+
+46. AccessService -> PlantController: true
+   Type: return
+   Replies to: 45
+   Source: AccessService::userHasAccess()
+
+47. PlantController -> Plot: plants()
+   Type: call
+   Source: PlantController::index(); Plot::plants()
+
+48. Plot -> PlantController: plant_relation
+   Type: return
+   Replies to: 47
+   Source: Plot::plants()
+
+49. PlantController -> Plant: with(['plot','plantZone','catalogPlant.plantCare'])
+   Type: call
+   Source: PlantController::index()
+
+50. Plant -> PlantController: plant_query
+   Type: return
+   Replies to: 49
+   Source: Plant query with relations
+
+51. PlantController -> Plant: get()
+   Type: call
+   Source: PlantController::index()
+
+52. Plant -> PlantController: plant_collection
+   Type: return
+   Replies to: 51
+   Source: Plant get()
+
+53. PlantController -> PlotDetailPage: PlantResource::collection(plants)
+   Type: return
+   Replies to: 44
+   Source: PlantController::index() response
+
+54. PlotDetailPage -> PlotDetailPage: createPersistedWorkspace(data)
+   Type: call
+   Source: PlotDetailPage::createPersistedWorkspace()
+
+55. PlotDetailPage -> PlotDetailPage: persisted_workspace
+   Type: return
+   Replies to: 54
+   Source: createPersistedWorkspace()
+
+56. PlotDetailPage -> PlotDesignerCanvas: buildDesignerStateFromPersistence({plotGeometry,zones})
+   Type: call
+   Source: PlotDesignerCanvas; plotDesigner.js
+
+57. PlotDesignerCanvas -> PlotDetailPage: designer_state
+   Type: return
+   Replies to: 56
+   Source: buildDesignerStateFromPersistence()
+
+58. PlotDetailPage -> PlotDetailPage: renderPlotEditor()
+   Type: call
+   Source: PlotDetailPage JSX
+
+59. PlotDetailPage -> PlotDetailPage: editor_rendered
+   Type: return
+   Replies to: 58
+   Source: PlotDetailPage JSX
+
+60. Garden owner -> PlotsPage: selectCreateNewPlot()
+   Type: async/ui event
+   Source: PlotsPage Link to /plots/new
+
+61. PlotsPage -> PlotCreatePage: renderNewPlotForm()
+   Type: call
+   Source: React route renders PlotCreatePage
+
+62. PlotCreatePage -> PlotsPage: new_plot_form_rendered
+   Type: return
+   Replies to: 61
+   Source: PlotCreatePage JSX
+
+63. Garden owner -> PlotsPage: finishPlotManagement()
+   Type: async/ui event
+   Source: User leaves /plots page or stops interaction
+
+64. Garden owner -> PlotCreatePage: drawBoundary(boundaryPoints)
+   Type: async/ui event
+   Source: PlotCreatePage boundary step
+
+65. PlotCreatePage -> PlotLocationMap: handleBoundaryPointAdd(point)
+   Type: call
+   Source: PlotCreatePage::handleBoundaryPointAdd()
+
+66. PlotLocationMap -> PlotCreatePage: boundary_point_added
+   Type: return
+   Replies to: 65
+   Source: PlotLocationMap callback
+
+67. PlotCreatePage -> PlotCreatePage: handleBoundaryClose()
+   Type: call
+   Source: PlotCreatePage::handleBoundaryClose()
+
+68. PlotCreatePage -> PlotCreatePage: boundary_closed
+   Type: return
+   Replies to: 67
+   Source: handleBoundaryClose()
+
+69. PlotCreatePage -> PlotCreatePage: isBoundaryReady
+   Type: call
+   Source: PlotCreatePage computed state
+
+70. PlotCreatePage -> PlotCreatePage: true
+   Type: return
+   Replies to: 69
+   Source: isBoundaryReady
+
+71. PlotCreatePage -> PlotCreatePage: isBoundaryReady
+   Type: call
+   Source: PlotCreatePage computed state
+
+72. PlotCreatePage -> PlotCreatePage: false
+   Type: return
+   Replies to: 71
+   Source: isBoundaryReady
+
+73. PlotCreatePage -> Garden owner: showBoundaryError()
+   Type: async/ui event
+   Source: PlotCreatePage saveError / disabled zones step
+
+74. Garden owner -> PlotCreatePage: drawZone(shape)
+   Type: async/ui event
+   Source: PlotCreatePage zones step
+
+75. PlotCreatePage -> PlotDesignerCanvas: createZoneFromShape(shape, boundaryShape)
+   Type: call
+   Source: PlotDesignerCanvas::createZoneFromShape()
+
+76. PlotDesignerCanvas -> PlotDesignerCanvas: resolveNewZoneShape(shape, boundaryShape)
+   Type: call
+   Source: PlotDesignerCanvas::resolveNewZoneShape()
+
+77. PlotDesignerCanvas -> PlotDesignerCanvas: nextShape_or_null
+   Type: return
+   Replies to: 76
+   Source: resolveNewZoneShape()
+
+78. PlotDesignerCanvas -> PlotDesignerCanvas: isZonePlacementValid(nextShape, boundaryShape, existingShapes)
+   Type: call
+   Source: plotDesigner.js::isZonePlacementValid()
+
+79. PlotDesignerCanvas -> PlotDesignerCanvas: true
+   Type: return
+   Replies to: 78
+   Source: isZonePlacementValid()
+
+80. PlotDesignerCanvas -> PlotCreatePage: handleCanvasZoneCreate(shape, boundaryShape)
+   Type: call
+   Source: PlotCreatePage::handleCanvasZoneCreate()
+
+81. PlotCreatePage -> PlotDesignerCanvas: created_zone
+   Type: return
+   Replies to: 80
+   Source: handleCanvasZoneCreate()
+
+82. PlotDesignerCanvas -> PlotDesignerCanvas: isZonePlacementValid(nextShape, boundaryShape, existingShapes)
+   Type: call
+   Source: plotDesigner.js::isZonePlacementValid()
+
+83. PlotDesignerCanvas -> PlotDesignerCanvas: false
+   Type: return
+   Replies to: 82
+   Source: isZonePlacementValid()
+
+84. PlotDesignerCanvas -> PlotCreatePage: reportZoneCreateBlocked()
+   Type: call
+   Source: PlotDesignerCanvas::reportZoneCreateBlocked()
+
+85. PlotCreatePage -> PlotDesignerCanvas: zone_create_blocked
+   Type: return
+   Replies to: 84
+   Source: onZoneCreateBlocked
+
+86. PlotCreatePage -> Garden owner: showZoneError()
+   Type: async/ui event
+   Source: PlotCreatePage zoneError
+
+87. PlotDesignerCanvas -> PlotCreatePage: zone_create_result
+   Type: return
+   Replies to: 75
+   Source: createZoneFromShape()
+
+88. Garden owner -> PlotCreatePage: inputPlotData(form)
+   Type: async/ui event
+   Source: PlotCreatePage summary form
+
+89. Garden owner -> PlotCreatePage: submitNewPlot()
+   Type: async/ui event
+   Source: PlotCreatePage Save plot button
+
+90. PlotCreatePage -> PlotCreatePage: handleSave(event)
+   Type: call
+   Source: PlotCreatePage::handleSave()
+
+91. PlotCreatePage -> PlotCreatePage: assertSanitizedGeometryPayload('Plot geometry', planGeometry)
+   Type: call
+   Source: frontend/src/lib/plotGeometry.js
+
+92. PlotCreatePage -> PlotCreatePage: sanitized_plot
+   Type: return
+   Replies to: 91
+   Source: assertSanitizedGeometryPayload()
+
+93. PlotCreatePage -> PlotCreatePage: assertSanitizedGeometryPayload('Zone geometry', zone.geometry)
+   Type: call
+   Source: PlotCreatePage for draftZones loop; plotGeometry.js
+
+94. PlotCreatePage -> PlotCreatePage: sanitized_zone
+   Type: return
+   Replies to: 93
+   Source: assertSanitizedGeometryPayload()
+
+95. PlotCreatePage -> PlotController: store(request)
+   Type: call
+   Source: api.createPlot(); PlotController::store()
+
+96. PlotController -> PlotController: validate(plotPayload)
+   Type: call
+   Source: Request::validate() in PlotController::store()
+
+97. PlotController -> PlotController: validated_data
+   Type: return
+   Replies to: 96
+   Source: Request::validate() success
+
+98. PlotController -> Plot: create(attributes)
+   Type: call
+   Source: Plot::create()
+
+99. Plot -> PlotController: plot
+   Type: return
+   Replies to: 98
+   Source: Plot::create()
+
+100. PlotController -> PlotSnapshotService: capture(fresh_plot, 'plot_created', owner)
+   Type: call
+   Source: PlotSnapshotService::capture()
+
+101. PlotSnapshotService -> PlotController: snapshot_captured
+   Type: return
+   Replies to: 100
+   Source: PlotSnapshotService::capture()
+
+102. PlotController -> PlotCreatePage: created_plot
+   Type: return
+   Replies to: 95
+   Source: PlotController::store() response
+
+103. PlotController -> PlotCreatePage: validation_errors
+   Type: return
+   Replies to: 95
+   Source: Request::validate() throws ValidationException
+
+104. PlotCreatePage -> WorkspaceController: update(request, plot)
+   Type: call
+   Source: api.commitPlotWorkspace(); WorkspaceController::update()
+
+105. WorkspaceController -> AccessService: userCanEdit(owner, plot)
+   Type: call
+   Source: ensureUserCanEditPlot(); AccessService::userCanEdit()
+
+106. AccessService -> WorkspaceController: true
+   Type: return
+   Replies to: 105
+   Source: AccessService::userCanEdit()
+
+107. WorkspaceController -> WorkspaceController: validate(workspacePayload)
+   Type: call
+   Source: Request::validate() in WorkspaceController::update()
+
+108. WorkspaceController -> WorkspaceController: validated_data
+   Type: return
+   Replies to: 107
+   Source: workspace validation success
+
+109. WorkspaceController -> PlotWorkspaceService: commitDraft(plot, owner, validated, plotSnapshotService)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+110. PlotWorkspaceService -> Plot: fresh(['plantZones','plants.catalogPlant.plantCare'])
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+111. Plot -> PlotWorkspaceService: fresh_plot
+   Type: return
+   Replies to: 110
+   Source: Plot::fresh()
+
+112. PlotWorkspaceService -> PlantZone: create(zoneAttributes)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft() new draft zone path
+
+113. PlantZone -> PlotWorkspaceService: created_zone
+   Type: return
+   Replies to: 112
+   Source: PlantZone::query()->create()
+
+114. PlotWorkspaceService -> PlotSnapshotService: captureCommittedVersion(plot, owner, metadata)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+115. PlotSnapshotService -> PlotWorkspaceService: history_captured
+   Type: return
+   Replies to: 114
+   Source: PlotSnapshotService::captureCommittedVersion()
+
+116. PlotWorkspaceService -> WorkspaceController: workspace_result
+   Type: return
+   Replies to: 109
+   Source: PlotWorkspaceService::commitDraft()
+
+117. WorkspaceController -> PlotCreatePage: workspace_response
+   Type: return
+   Replies to: 104
+   Source: WorkspaceController::update() response
+
+118. PlotCreatePage -> PlotDetailPage: navigate(`/plots/${created.id}`)
+   Type: async/ui event
+   Source: PlotCreatePage navigate()
+
+119. PlotCreatePage -> PlotCreatePage: new_plot_saved
+   Type: return
+   Replies to: 90
+   Source: PlotCreatePage::handleSave()
+
+120. Garden owner -> PlotDetailPage: editPlotBoundary()
+   Type: async/ui event
+   Source: PlotDetailPage boundary editor mode
+
+121. PlotDetailPage -> PlotLocationMap: handleBoundaryPointMove(index, point)
+   Type: call
+   Source: PlotLocationMap onBoundaryPointMove; PlotDetailPage::handleBoundaryPointMove()
+
+122. PlotLocationMap -> PlotDetailPage: boundary_point_moved
+   Type: return
+   Replies to: 121
+   Source: PlotLocationMap event callback
+
+123. PlotDetailPage -> PlotDetailPage: commitMapBoundaryPoints(nextBoundaryPoints)
+   Type: call
+   Source: PlotDetailPage::commitMapBoundaryPoints()
+
+124. PlotDetailPage -> PlotDetailPage: draft_boundary_updated
+   Type: return
+   Replies to: 123
+   Source: commitMapBoundaryPoints()
+
+125. Garden owner -> PlotDetailPage: selectZone(zoneId)
+   Type: async/ui event
+   Source: PlotDetailPage::handleZoneSelect()
+
+126. PlotDetailPage -> PlotDesignerCanvas: onSelectZone(zone)
+   Type: call
+   Source: PlotDesignerCanvas onSelectZone prop
+
+127. PlotDesignerCanvas -> PlotDetailPage: zone_selected
+   Type: return
+   Replies to: 126
+   Source: PlotDetailPage::handleZoneSelect()
+
+128. Garden owner -> PlotDetailPage: drawZone(shape)
+   Type: async/ui event
+   Source: PlotDesignerCanvas drawing zone mode
+
+129. PlotDetailPage -> PlotDesignerCanvas: createZoneFromShape(shape, boundaryShape)
+   Type: call
+   Source: PlotDesignerCanvas::createZoneFromShape()
+
+130. PlotDesignerCanvas -> PlotDesignerCanvas: resolveNewZoneShape(shape, boundaryShape)
+   Type: call
+   Source: PlotDesignerCanvas::resolveNewZoneShape()
+
+131. PlotDesignerCanvas -> PlotDesignerCanvas: nextShape_or_null
+   Type: return
+   Replies to: 130
+   Source: resolveNewZoneShape()
+
+132. PlotDesignerCanvas -> PlotDesignerCanvas: isZonePlacementValid(nextShape, boundaryShape, existingShapes)
+   Type: call
+   Source: plotDesigner.js::isZonePlacementValid()
+
+133. PlotDesignerCanvas -> PlotDesignerCanvas: true
+   Type: return
+   Replies to: 132
+   Source: isZonePlacementValid()
+
+134. PlotDesignerCanvas -> PlotDetailPage: handleCanvasZoneCreate(shape, boundaryShape)
+   Type: call
+   Source: PlotDetailPage::handleCanvasZoneCreate()
+
+135. PlotDetailPage -> PlotDesignerCanvas: created_zone
+   Type: return
+   Replies to: 134
+   Source: handleCanvasZoneCreate()
+
+136. PlotDesignerCanvas -> PlotDesignerCanvas: isZonePlacementValid(nextShape, boundaryShape, existingShapes)
+   Type: call
+   Source: plotDesigner.js::isZonePlacementValid()
+
+137. PlotDesignerCanvas -> PlotDesignerCanvas: false
+   Type: return
+   Replies to: 136
+   Source: isZonePlacementValid()
+
+138. PlotDesignerCanvas -> PlotDetailPage: reportZoneCreateBlocked()
+   Type: call
+   Source: PlotDesignerCanvas::reportZoneCreateBlocked()
+
+139. PlotDetailPage -> PlotDesignerCanvas: zone_create_blocked
+   Type: return
+   Replies to: 138
+   Source: onZoneCreateBlocked
+
+140. PlotDetailPage -> Garden owner: showZoneError()
+   Type: async/ui event
+   Source: PlotDetailPage zoneError
+
+141. PlotDesignerCanvas -> PlotDetailPage: zone_create_result
+   Type: return
+   Replies to: 129
+   Source: createZoneFromShape()
+
+142. Garden owner -> PlotDetailPage: editZoneData(zoneForm)
+   Type: async/ui event
+   Source: Zone inspector form
+
+143. PlotDetailPage -> PlotDetailPage: handleZoneApply(event)
+   Type: call
+   Source: PlotDetailPage::handleZoneApply()
+
+144. PlotDetailPage -> PlotDetailPage: zone_details_applied
+   Type: return
+   Replies to: 143
+   Source: handleZoneApply()
+
+145. Garden owner -> PlotDetailPage: deleteZone(zoneId)
+   Type: async/ui event
+   Source: Zone inspector Delete zone button
+
+146. PlotDetailPage -> PlotDetailPage: handleZoneDelete()
+   Type: call
+   Source: PlotDetailPage::handleZoneDelete()
+
+147. PlotDetailPage -> PlotDetailPage: zone_removed_from_draft
+   Type: return
+   Replies to: 146
+   Source: handleZoneDelete() when no plants in zone
+
+148. PlotDetailPage -> PlotDetailPage: zone_delete_blocked
+   Type: return
+   Replies to: 146
+   Source: handleZoneDelete() when plantsInZone.length > 0
+
+149. Garden owner -> PlotPlantingDrawer: openDrawer()
+   Type: async/ui event
+   Source: PlotPlantingDrawer::openDrawer()
+
+150. PlotPlantingDrawer -> CatalogPlantController: index(request)
+   Type: call
+   Source: PlotPlantingDrawer api.listCatalogPlants(); CatalogPlantController::index()
+
+151. CatalogPlantController -> CatalogPlant: with(['plantCare'])
+   Type: call
+   Source: CatalogPlantController::index()
+
+152. CatalogPlant -> CatalogPlantController: catalog_query
+   Type: return
+   Replies to: 151
+   Source: CatalogPlant::with()
+
+153. CatalogPlantController -> CatalogPlant: get()
+   Type: call
+   Source: CatalogPlantController::index()
+
+154. CatalogPlant -> CatalogPlantController: catalog_plants
+   Type: return
+   Replies to: 153
+   Source: CatalogPlant::get()
+
+155. CatalogPlantController -> PlotPlantingDrawer: CatalogPlantResource::collection(catalogPlants)
+   Type: return
+   Replies to: 150
+   Source: CatalogPlantController::index() response
+
+156. Garden owner -> PlotPlantingDrawer: handleCatalogSelect(catalogPlant)
+   Type: async/ui event
+   Source: PlotPlantingDrawer::handleCatalogSelect()
+
+157. PlotPlantingDrawer -> PlotPlantingDrawer: carePreview(catalogPlant)
+   Type: call
+   Source: PlotPlantingDrawer carePreview()
+
+158. PlotPlantingDrawer -> PlotPlantingDrawer: plant_care_preview
+   Type: return
+   Replies to: 157
+   Source: carePreview()
+
+159. Garden owner -> PlotPlantingDrawer: handleSubmit(event)
+   Type: async/ui event
+   Source: PlotPlantingDrawer::handleSubmit()
+
+160. PlotPlantingDrawer -> PlotDetailPage: handlePlantCreate(payload)
+   Type: call
+   Source: PlotDetailPage::handlePlantCreate()
+
+161. PlotDetailPage -> PlotDetailPage: setDraftPlants([nextPlant, ...current])
+   Type: call
+   Source: PlotDetailPage::handlePlantCreate()
+
+162. PlotDetailPage -> PlotDetailPage: nextPlant
+   Type: return
+   Replies to: 161
+   Source: setDraftPlants()
+
+163. PlotDetailPage -> PlotPlantingDrawer: nextPlant
+   Type: return
+   Replies to: 160
+   Source: handlePlantCreate()
+
+164. PlotDetailPage -> PlotPlantingDrawer: plant_draft_error
+   Type: return
+   Replies to: 160
+   Source: handlePlantCreate() error path
+
+165. Garden owner -> PlantFormPage: editPlant(plantId)
+   Type: async/ui event
+   Source: PlantDetailPage Edit link to /plants/:plantId/edit
+
+166. PlantFormPage -> PlantController: showGlobal(request, plant)
+   Type: call
+   Source: PlantFormPage api.getManagedPlant(); PlantController::showGlobal()
+
+167. PlantController -> AccessService: userHasAccess(owner, plot)
+   Type: call
+   Source: ensureUserCanViewPlot(); AccessService::userHasAccess()
+
+168. AccessService -> PlantController: true
+   Type: return
+   Replies to: 167
+   Source: AccessService::userHasAccess()
+
+169. PlantController -> Plant: fresh(['plot','plantZone','catalogPlant.plantCare','conditionHistory','harvestRecords'])
+   Type: call
+   Source: PlantController::showGlobal()
+
+170. Plant -> PlantController: plant_details
+   Type: return
+   Replies to: 169
+   Source: Plant::fresh()
+
+171. PlantController -> Plant: effectivePlantCare()
+   Type: call
+   Source: PlantController::showGlobal(); Plant::effectivePlantCare()
+
+172. Plant -> PlantController: plant_care
+   Type: return
+   Replies to: 171
+   Source: Plant::effectivePlantCare()
+
+173. PlantController -> PlantFormPage: PlantResource::make(plant)
+   Type: return
+   Replies to: 166
+   Source: PlantController::showGlobal() response
+
+174. Garden owner -> PlantFormPage: handleSubmit(event)
+   Type: async/ui event
+   Source: PlantFormPage::handleSubmit()
+
+175. PlantFormPage -> PlantController: updateGlobal(request, plant)
+   Type: call
+   Source: PlantFormPage api.updateManagedPlant(); PlantController::updateGlobal()
+
+176. PlantController -> AccessService: userCanEdit(owner, plot)
+   Type: call
+   Source: ensureUserCanEditPlot(); AccessService::userCanEdit()
+
+177. AccessService -> PlantController: true
+   Type: return
+   Replies to: 176
+   Source: AccessService::userCanEdit()
+
+178. PlantController -> PlantController: validateGlobalPlantPayload(request, true)
+   Type: call
+   Source: PlantController::validateGlobalPlantPayload()
+
+179. PlantController -> PlantController: validated_data
+   Type: return
+   Replies to: 178
+   Source: validateGlobalPlantPayload() success
+
+180. PlantController -> PlantZone: whereKey(zoneId)
+   Type: call
+   Source: PlantController::resolveZoneForPlot()
+
+181. PlantZone -> PlantController: zone
+   Type: return
+   Replies to: 180
+   Source: PlantZone::query()->whereKey()->first()
+
+182. PlantController -> Plant: update(attributes)
+   Type: call
+   Source: PlantController::updateGlobal()
+
+183. Plant -> PlantController: updated_plant
+   Type: return
+   Replies to: 182
+   Source: Plant::update()
+
+184. PlantController -> CatalogPlantService: assignCatalogPlantToPlant(plant, catalogPlant)
+   Type: call
+   Source: PlantController::syncCatalogPlant(); CatalogPlantService::assignCatalogPlantToPlant()
+
+185. CatalogPlantService -> PlantController: catalog_synced
+   Type: return
+   Replies to: 184
+   Source: CatalogPlantService::assignCatalogPlantToPlant()
+
+186. PlantController -> PlantCareService: syncPlantCareConfiguration(plant, [], null, false, speciesId)
+   Type: call
+   Source: PlantController::syncPlantCare(); PlantCareService::syncPlantCareConfiguration()
+
+187. PlantCareService -> PlantController: care_synced
+   Type: return
+   Replies to: 186
+   Source: PlantCareService::syncPlantCareConfiguration()
+
+188. PlantController -> PlotSnapshotService: capture(plot, 'plant_updated', owner, metadata)
+   Type: call
+   Source: PlotSnapshotService::capture()
+
+189. PlotSnapshotService -> PlantController: snapshot_captured
+   Type: return
+   Replies to: 188
+   Source: PlotSnapshotService::capture()
+
+190. PlantController -> PlantFormPage: PlantResource::make(plant)
+   Type: return
+   Replies to: 175
+   Source: PlantController::updateGlobal() response
+
+191. PlantController -> PlantFormPage: validation_errors
+   Type: return
+   Replies to: 175
+   Source: validateGlobalPlantPayload() ValidationException
+
+192. Garden owner -> PlotDetailPage: deletePlant(plantId)
+   Type: async/ui event
+   Source: PlotDetailPage Remove button
+
+193. PlotDetailPage -> PlotDetailPage: handlePlantDelete(plantId)
+   Type: call
+   Source: PlotDetailPage::handlePlantDelete()
+
+194. PlotDetailPage -> PlotDetailPage: plant_removed_from_draft
+   Type: return
+   Replies to: 193
+   Source: handlePlantDelete()
+
+195. Garden owner -> PlotDetailPage: savePlotChanges()
+   Type: async/ui event
+   Source: PlotDetailPage Save plot changes button
+
+196. PlotDetailPage -> PlotDetailPage: handleSave()
+   Type: call
+   Source: PlotDetailPage::handleSave()
+
+197. PlotDetailPage -> PlotDetailPage: assertSanitizedGeometryPayload('Plot geometry', draftPlot.geometry)
+   Type: call
+   Source: PlotDetailPage::handleSave(); plotGeometry.js
+
+198. PlotDetailPage -> PlotDetailPage: sanitized_plot_geometry
+   Type: return
+   Replies to: 197
+   Source: assertSanitizedGeometryPayload()
+
+199. PlotDetailPage -> PlotDetailPage: assertSanitizedGeometryPayload('Zone geometry', zone.geometry)
+   Type: call
+   Source: PlotDetailPage for draftZones loop; plotGeometry.js
+
+200. PlotDetailPage -> PlotDetailPage: sanitized_zone_geometry
+   Type: return
+   Replies to: 199
+   Source: assertSanitizedGeometryPayload()
+
+201. PlotDetailPage -> WorkspaceController: update(request, plot)
+   Type: call
+   Source: api.commitPlotWorkspace(); WorkspaceController::update()
+
+202. WorkspaceController -> AccessService: userCanEdit(owner, plot)
+   Type: call
+   Source: ensureUserCanEditPlot(); AccessService::userCanEdit()
+
+203. AccessService -> WorkspaceController: true
+   Type: return
+   Replies to: 202
+   Source: AccessService::userCanEdit()
+
+204. WorkspaceController -> WorkspaceController: validate(workspacePayload)
+   Type: call
+   Source: Request::validate() in WorkspaceController::update()
+
+205. WorkspaceController -> WorkspaceController: validated_data
+   Type: return
+   Replies to: 204
+   Source: workspace validation success
+
+206. WorkspaceController -> PlotWorkspaceService: commitDraft(plot, owner, validated, plotSnapshotService)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+207. PlotWorkspaceService -> Plot: fresh(['plantZones','plants.catalogPlant.plantCare'])
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+208. Plot -> PlotWorkspaceService: fresh_plot
+   Type: return
+   Replies to: 207
+   Source: Plot::fresh()
+
+209. PlotWorkspaceService -> Plot: update(plotAttributes)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft() if plot changed
+
+210. Plot -> PlotWorkspaceService: updated_plot
+   Type: return
+   Replies to: 209
+   Source: Plot::update()
+
+211. PlotWorkspaceService -> PlantZone: update(zoneAttributes)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft() persisted zone path
+
+212. PlantZone -> PlotWorkspaceService: updated_zone
+   Type: return
+   Replies to: 211
+   Source: PlantZone::update()
+
+213. PlotWorkspaceService -> PlantZone: create(zoneAttributes)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft() new draft zone path
+
+214. PlantZone -> PlotWorkspaceService: created_zone
+   Type: return
+   Replies to: 213
+   Source: PlantZone::query()->create()
+
+215. PlotWorkspaceService -> Plant: update(plantAttributes)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft() persisted plant path
+
+216. Plant -> PlotWorkspaceService: updated_plant
+   Type: return
+   Replies to: 215
+   Source: Plant::update()
+
+217. PlotWorkspaceService -> Plant: create(plantAttributes)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft() new draft plant path
+
+218. Plant -> PlotWorkspaceService: created_plant
+   Type: return
+   Replies to: 217
+   Source: Plant::query()->create()
+
+219. PlotWorkspaceService -> CatalogPlantService: assignCatalogPlantToPlant(plant, catalogPlant)
+   Type: call
+   Source: PlotWorkspaceService::syncCatalogPlant()
+
+220. CatalogPlantService -> PlotWorkspaceService: catalog_synced
+   Type: return
+   Replies to: 219
+   Source: CatalogPlantService::assignCatalogPlantToPlant()
+
+221. PlotWorkspaceService -> PlantCareService: syncPlantCareConfiguration(plant, [], null, false, speciesId)
+   Type: call
+   Source: PlotWorkspaceService::syncPlantCare()
+
+222. PlantCareService -> PlotWorkspaceService: care_synced
+   Type: return
+   Replies to: 221
+   Source: PlantCareService::syncPlantCareConfiguration()
+
+223. PlotWorkspaceService -> Plant: whereIn('id', plantsToDelete).delete()
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+224. Plant -> PlotWorkspaceService: deleted_plants
+   Type: return
+   Replies to: 223
+   Source: Plant::query()->whereIn()->delete()
+
+225. PlotWorkspaceService -> PlantZone: whereIn('id', zonesToDelete).delete()
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+226. PlantZone -> PlotWorkspaceService: deleted_zones
+   Type: return
+   Replies to: 225
+   Source: PlantZone::query()->whereIn()->delete()
+
+227. PlotWorkspaceService -> PlotSnapshotService: captureCommittedVersion(plot, owner, metadata)
+   Type: call
+   Source: PlotWorkspaceService::commitDraft()
+
+228. PlotSnapshotService -> PlotWorkspaceService: history_captured
+   Type: return
+   Replies to: 227
+   Source: PlotSnapshotService::captureCommittedVersion()
+
+229. PlotWorkspaceService -> WorkspaceController: workspace_result
+   Type: return
+   Replies to: 206
+   Source: PlotWorkspaceService::commitDraft()
+
+230. WorkspaceController -> PlotDetailPage: workspace_response
+   Type: return
+   Replies to: 201
+   Source: WorkspaceController::update() response
+
+231. PlotDetailPage -> PlotDetailPage: plot_changes_saved
+   Type: return
+   Replies to: 196
+   Source: PlotDetailPage::handleSave()
+
+232. WorkspaceController -> PlotDetailPage: validation_errors
+   Type: return
+   Replies to: 201
+   Source: Request::validate() ValidationException
+
+233. Garden owner -> PlotEditPage: editPlotMetadata()
+   Type: async/ui event
+   Source: PlotDetailPage Edit metadata link to /plots/:plotId/edit
+
+234. PlotEditPage -> PlotController: show(plot)
+   Type: call
+   Source: PlotEditPage api.getPlot(); PlotController::show()
+
+235. PlotController -> AccessService: userHasAccess(owner, plot)
+   Type: call
+   Source: ensureUserCanViewPlot(); AccessService::userHasAccess()
+
+236. AccessService -> PlotController: true
+   Type: return
+   Replies to: 235
+   Source: AccessService::userHasAccess()
+
+237. PlotController -> Plot: load(['plantZones','plants'])
+   Type: call
+   Source: PlotController::show()
+
+238. Plot -> PlotController: plot_with_relations
+   Type: return
+   Replies to: 237
+   Source: Plot::load()
+
+239. PlotController -> PlotEditPage: plot_data
+   Type: return
+   Replies to: 234
+   Source: PlotController::show() response
+
+240. Garden owner -> PlotEditPage: handleSave(event)
+   Type: async/ui event
+   Source: PlotEditPage::handleSave()
+
+241. PlotEditPage -> PlotController: update(request, plot)
+   Type: call
+   Source: PlotEditPage api.updatePlot(); PlotController::update()
+
+242. PlotController -> AccessService: userCanEdit(owner, plot)
+   Type: call
+   Source: ensureUserCanEditPlot(); AccessService::userCanEdit()
+
+243. AccessService -> PlotController: true
+   Type: return
+   Replies to: 242
+   Source: AccessService::userCanEdit()
+
+244. PlotController -> PlotController: validate(plotPayload)
+   Type: call
+   Source: Request::validate() in PlotController::update()
+
+245. PlotController -> PlotController: validated_data
+   Type: return
+   Replies to: 244
+   Source: Request::validate() success
+
+246. PlotController -> Plot: update(validated)
+   Type: call
+   Source: PlotController::update()
+
+247. Plot -> PlotController: updated_plot
+   Type: return
+   Replies to: 246
+   Source: Plot::update()
+
+248. PlotController -> PlotSnapshotService: capture(plot, 'plot_updated', owner)
+   Type: call
+   Source: PlotSnapshotService::capture()
+
+249. PlotSnapshotService -> PlotController: snapshot_captured
+   Type: return
+   Replies to: 248
+   Source: PlotSnapshotService::capture()
+
+250. PlotController -> PlotEditPage: updated_plot
+   Type: return
+   Replies to: 241
+   Source: PlotController::update() response
+
+251. PlotController -> PlotEditPage: validation_errors
+   Type: return
+   Replies to: 241
+   Source: Request::validate() ValidationException
+
+252. Garden owner -> PlotDetailPage: exportPlotToPdf(plotId)
+   Type: async/ui event
+   Source: PlotDetailPage Export PDF button
+
+253. PlotDetailPage -> PA10 Eksportuoti planą į PDF: exportPdf(plotId)
+   Type: ref
+   Source: api.downloadPlotPdf(); ExportController::pdf() belongs to PA10
+
+254. PA10 Eksportuoti planą į PDF -> PlotDetailPage: pdf_download_response
+   Type: return
+   Replies to: 253
+   Source: PA10 separate sequence diagram
+
+255. Garden owner -> PlotEditPage: deletePlot(plotId)
+   Type: async/ui event
+   Source: PlotEditPage::handleDelete()
+
+256. PlotEditPage -> PlotController: destroy(request, plot)
+   Type: call
+   Source: PlotEditPage api.deletePlot(); PlotController::destroy()
+
+257. PlotController -> AccessService: userIsOwner(owner, plot)
+   Type: call
+   Source: ensureUserOwnsPlot(); AccessService::userIsOwner()
+
+258. AccessService -> PlotController: true
+   Type: return
+   Replies to: 257
+   Source: AccessService::userIsOwner()
+
+259. PlotController -> PlotSnapshotService: capture(plot, 'plot_deleted', owner)
+   Type: call
+   Source: PlotSnapshotService::capture()
+
+260. PlotSnapshotService -> PlotController: snapshot_captured
+   Type: return
+   Replies to: 259
+   Source: PlotSnapshotService::capture()
+
+261. PlotController -> Plot: delete()
+   Type: call
+   Source: PlotController::destroy()
+
+262. Plot -> PlotController: deleted_plot
+   Type: return
+   Replies to: 261
+   Source: Plot::delete()
+
+263. PlotController -> PlotEditPage: no_content
+   Type: return
+   Replies to: 256
+   Source: PlotController::destroy() response 204
+
+264. PlotEditPage -> PlotsPage: navigate('/plots')
+   Type: async/ui event
+   Source: PlotEditPage::handleDelete()
+
+265. Garden owner -> PlotSectionNav: clickBackToPlots()
+   Type: async/ui event
+   Source: PlotSectionNav Link to /plots
+
+266. PlotDetailPage -> PlotDetailPage: handleDiscardDraft()
+   Type: call
+   Source: PlotDetailPage::handleDiscardDraft() if unsaved draft exists
+
+267. PlotDetailPage -> PlotDetailPage: resetDraftToPersisted()
+   Type: call
+   Source: PlotDetailPage::resetDraftToPersisted()
+
+268. PlotDetailPage -> PlotDetailPage: reset_done
+   Type: return
+   Replies to: 267
+   Source: resetDraftToPersisted()
+
+269. PlotDetailPage -> PlotDetailPage: draft_discarded
+   Type: return
+   Replies to: 266
+   Source: handleDiscardDraft()
+
+270. PlotSectionNav -> PlotsPage: navigate('/plots')
+   Type: async/ui event
+   Source: PlotSectionNav Back link
+
+3. UML fragmentai
+- loop: Access role mapping
+  - Guard: [for each accessible plot]
+  - Messages: 17-24
+
+- alt: Plot management choice
+  - Operand 1 [user selects existing plot]: messages 28-59
+  - Operand 2 [user creates new plot]: messages 60-62
+  - Operand 3 [user ends plot management]: messages 63-63
+
+- alt: Plot boundary validation
+  - Operand 1 [boundary is valid]: messages 69-70
+  - Operand 2 [boundary is invalid]: messages 71-73
+
+- alt: Zone geometry validation
+  - Operand 1 [zone geometry is valid]: messages 78-81
+  - Operand 2 [zone geometry is invalid]: messages 82-86
+
+- loop: New plot zone sanitization
+  - Guard: [for each draft zone]
+  - Messages: 93-94
+
+- alt: Plot metadata validation
+  - Operand 1 [plot data is valid]: messages 97-102
+  - Operand 2 [plot data is invalid]: messages 103-103
+
+- opt: Commit new plot zones
+  - Guard: [sanitizedZones.length > 0]
+  - Messages: 104-118
+
+- loop: Persist new draft zones
+  - Guard: [for each zone in payload]
+  - Messages: 112-113
+
+- alt: Zone update validation
+  - Operand 1 [zone placement is valid]: messages 132-135
+  - Operand 2 [zone placement is invalid]: messages 136-140
+
+- alt: Zone delete validation
+  - Operand 1 [zone has no plants]: messages 147-147
+  - Operand 2 [zone still has plants]: messages 148-148
+
+- alt: Plant draft validation
+  - Operand 1 [selected zone and catalog plant exist]: messages 161-163
+  - Operand 2 [plant draft data is invalid]: messages 164-164
+
+- alt: Plant data validation
+  - Operand 1 [updated plant data is valid]: messages 179-190
+  - Operand 2 [updated plant data is invalid]: messages 191-191
+
+- loop: Existing plot zone sanitization
+  - Guard: [for each draft zone]
+  - Messages: 199-200
+
+- alt: Workspace payload validation
+  - Operand 1 [workspace payload is valid]: messages 205-231
+  - Operand 2 [workspace payload is invalid]: messages 232-232
+
+- alt: Zone persistence choice
+  - Operand 1 [zone has persisted id]: messages 211-212
+  - Operand 2 [zone has draft client id]: messages 213-214
+
+- alt: Plant persistence choice
+  - Operand 1 [plant has persisted id]: messages 215-216
+  - Operand 2 [plant has draft client id]: messages 217-218
+
+- opt: Catalog plant care synchronization
+  - Guard: [fk_catalog_plant_id is present]
+  - Messages: 219-222
+
+- alt: Plot metadata validation
+  - Operand 1 [plot data is valid]: messages 245-250
+  - Operand 2 [plot data is invalid]: messages 251-251
+
+- ref: PA10 Eksportuoti planą į PDF
+  - Used in: plot management special actions
+  - Purpose: export selected plot plan to PDF
+  - Messages: 252-254
+  - Note: PA10 is a separate sequence diagram; its internal calls are not expanded in PA6.
+
+- opt: Discard unsaved draft before leaving
+  - Guard: [isDirty]
+  - Messages: 266-269
+
+4. Santrauka
+- Synchronous calls: 115
+- Returns: 122
+- Async/UI events: 32
+- Ref fragments: 1
+- Ref sequence entries: 1
+- Calls without return: 0
+- Alt fragments: 12
+- Loop fragments: 4
+- Opt fragments: 3

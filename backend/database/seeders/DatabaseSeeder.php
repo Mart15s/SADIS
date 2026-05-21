@@ -11,6 +11,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(CurrentVersionDemoSeeder::class);
+        if (filter_var(env('RUN_DEMO_SEEDER', false), FILTER_VALIDATE_BOOL)) {
+            $this->call(CurrentVersionDemoSeeder::class);
+        }
+
+        if (filter_var(env('RUN_DEMO1_RICH_SEEDER', false), FILTER_VALIDATE_BOOL)) {
+            $this->call(Demo1RichDataSeeder::class);
+        }
     }
 }

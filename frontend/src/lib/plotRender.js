@@ -160,7 +160,7 @@ export function buildPreviewModel({
       return {
         id: zone.id ?? index,
         index: index + 1,
-        name: zone.name ?? 'Zone',
+        name: zone.name ?? 'Zona',
         color,
         points: shapePointsToSvg(shape, viewport),
         label: getProjectedLabelConfig(zone.name, shape, viewport, {

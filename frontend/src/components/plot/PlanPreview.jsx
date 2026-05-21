@@ -24,15 +24,19 @@ export default memo(function PlanPreview({
     () => `plan-preview-${String(plotName ?? 'plot').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${zones.length}`,
     [plotName, zones.length],
   )
+  const gridPatternId = `${clipPathId}-grid`
 
   return (
     <figure className={`plan-preview-card ${className}`.trim()} data-plan-source={preview.source}>
       <svg
         className="plan-preview-svg"
         viewBox={`0 0 ${preview.viewBox.width} ${preview.viewBox.height}`}
-        aria-label={`${plotName || 'Plot'} visual preview`}
+        aria-label={`${plotName || 'Sklypas'} vizualinė peržiūra`}
       >
         <defs>
+          <pattern id={gridPatternId} width="10" height="10" patternUnits="userSpaceOnUse">
+            <path className="plan-preview-grid-line" d="M 10 0 L 0 0 0 10" />
+          </pattern>
           <clipPath id={clipPathId}>
             <polygon points={preview.plot} />
           </clipPath>
@@ -40,6 +44,7 @@ export default memo(function PlanPreview({
 
         <rect className="plan-preview-frame" x="2.5" y="2.5" width={preview.viewBox.width - 5} height={preview.viewBox.height - 5} rx="18" ry="18" />
         <rect className="plan-preview-surface" x="8" y="8" width={preview.viewBox.width - 16} height={preview.viewBox.height - 16} rx="14" ry="14" />
+        <rect className="plan-preview-grid" x="8" y="8" width={preview.viewBox.width - 16} height={preview.viewBox.height - 16} rx="14" ry="14" fill={`url(#${gridPatternId})`} />
         <polygon className="plan-preview-outline" points={preview.plot} />
 
         <g clipPath={`url(#${clipPathId})`}>
@@ -78,7 +83,7 @@ export default memo(function PlanPreview({
         </g>
       </svg>
       {preview.zones.length > 0 ? (
-        <div className="plan-preview-legend" aria-label="Zone legend">
+        <div className="plan-preview-legend" aria-label="Zonų legenda">
           {preview.legend.map((zone) => (
             <span
               key={`legend-${zone.id}`}
@@ -98,7 +103,7 @@ export default memo(function PlanPreview({
         </div>
       ) : null}
       <figcaption className="plan-preview-caption">
-        {preview.source === 'geometry' ? 'Synced plot geometry preview' : 'Fallback plot preview'}
+        {preview.source === 'geometry' ? 'Sinchronizuota sklypo geometrijos peržiūra' : 'Atsarginė sklypo peržiūra'}
       </figcaption>
     </figure>
   )

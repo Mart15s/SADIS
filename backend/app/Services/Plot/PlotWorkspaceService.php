@@ -244,40 +244,39 @@ class PlotWorkspaceService
         $parts = [];
 
         if ($changes['plot_changed']) {
-            $parts[] = 'layout updated';
+            $parts[] = 'išdėstymas atnaujintas';
         }
 
         foreach ([
-            ['count' => $zoneSummary['created'], 'label' => 'zone added'],
-            ['count' => $zoneSummary['updated'], 'label' => 'zone updated'],
-            ['count' => $zoneSummary['deleted'], 'label' => 'zone removed'],
-            ['count' => $plantSummary['created'], 'label' => 'plant added'],
-            ['count' => $plantSummary['updated'], 'label' => 'plant updated'],
-            ['count' => $plantSummary['deleted'], 'label' => 'plant removed'],
+            ['count' => $zoneSummary['created'], 'label' => 'zona pridėta'],
+            ['count' => $zoneSummary['updated'], 'label' => 'zona atnaujinta'],
+            ['count' => $zoneSummary['deleted'], 'label' => 'zona pašalinta'],
+            ['count' => $plantSummary['created'], 'label' => 'augalas pridėtas'],
+            ['count' => $plantSummary['updated'], 'label' => 'augalas atnaujintas'],
+            ['count' => $plantSummary['deleted'], 'label' => 'augalas pašalintas'],
         ] as $entry) {
             if ($entry['count'] > 0) {
                 $parts[] = sprintf(
-                    '%d %s%s',
+                    '%d: %s',
                     $entry['count'],
                     $entry['label'],
-                    $entry['count'] === 1 ? '' : 's',
                 );
             }
         }
 
-        $label = 'Saved plot version';
+        $label = 'Išsaugota sklypo versija';
 
         if ($changes['plot_changed'] && ($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) === 0) {
-            $label = 'Saved layout update';
+            $label = 'Išsaugotas išdėstymo pakeitimas';
         } elseif (($zoneSummary['created'] + $zoneSummary['updated'] + $zoneSummary['deleted']) > 0 && ($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) === 0) {
-            $label = 'Committed zone changes';
+            $label = 'Išsaugoti zonų pakeitimai';
         } elseif (($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) > 0 && ! $changes['plot_changed']) {
-            $label = 'Saved planting update';
+            $label = 'Išsaugotas sodinimo pakeitimas';
         }
 
         return [
             'label' => $label,
-            'summary' => $parts === [] ? 'No visible workspace changes were detected.' : ucfirst(implode(', ', $parts)).'.',
+            'summary' => $parts === [] ? 'Matomų darbo srities pakeitimų neaptikta.' : ucfirst(implode(', ', $parts)).'.',
             'changes' => $changes,
         ];
     }

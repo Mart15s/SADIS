@@ -1,0 +1,216 @@
+PA9 Perziureti planavimo istorija - supaprastinta sekos diagramos jungciu specifikacija
+
+A. Lifeline sarasas
+
+1. System trigger - ?actor?
+2. Garden owner - ?actor?
+3. PlotSectionNav - ?boundary?
+4. PlotHistoryPage - ?boundary?
+5. PlanPreview - ?boundary?
+6. PlotController - ?control?
+7. HistoryController - ?control?
+8. AccessService - ?service?
+9. PlotSnapshotService - ?service?
+10. RotationPlannerService - ?service?
+11. Plot - ?entity?
+12. PlotSnapshot - ?entity?
+13. RotationHistory - ?entity?
+
+B. Numeruotas visu seku sarasas
+
+1. System trigger -> HistoryController: index(plotId, limit)
+   Type: call
+   Source: System-started history context request, same HistoryController@index entry point
+
+2. HistoryController -> PlotSnapshotService: listHistoryForPlot(plot, limit)
+   Type: call
+   Source: PlotSnapshotService::listHistoryForPlot()
+
+3. PlotSnapshotService -> PlotSnapshot: getHistorySnapshots(plot, limit)
+   Type: call
+   Source: plot_snapshots table via service
+
+4. PlotSnapshot -> PlotSnapshotService: history_snapshots
+   Type: return
+   Replies to: 3
+
+5. PlotSnapshotService -> PlotSnapshotService: prepareHistoryPresentation(history_snapshots)
+   Type: call
+   Source: labels, summaries, zone/plant counts
+
+6. PlotSnapshotService -> PlotSnapshotService: history_collection
+   Type: return
+   Replies to: 5
+
+7. PlotSnapshotService -> HistoryController: history_collection
+   Type: return
+   Replies to: 2
+
+8. HistoryController -> RotationPlannerService: evaluatePlot(plot, fromDate)
+   Type: call
+   Source: RotationPlannerService::evaluatePlot() for rotation context
+
+9. RotationPlannerService -> RotationHistory: getRotationContext(plot)
+   Type: call
+   Source: Rotation history context used by rotation evaluation
+
+10. RotationHistory -> RotationPlannerService: rotation_context
+   Type: return
+   Replies to: 9
+
+11. RotationPlannerService -> HistoryController: rotation_context
+   Type: return
+   Replies to: 8
+
+12. HistoryController -> HistoryController: buildRotationHistoryDataset(history_collection, rotation_context)
+   Type: call
+   Source: System-started history context preparation
+
+13. HistoryController -> HistoryController: rotation_history_dataset
+   Type: return
+   Replies to: 12
+
+14. HistoryController -> System trigger: history_context_response
+   Type: return
+   Replies to: 1
+
+15. HistoryController -> System trigger: empty_history_context
+   Type: return
+   Replies to: 1
+
+16. Garden owner -> PlotSectionNav: clickHistoryTab(plotId)
+   Type: async/ui event
+   Source: frontend/src/components/plot/PlotSectionNav.jsx
+
+17. PlotSectionNav -> PlotHistoryPage: render(plotId)
+   Type: async/ui event
+   Source: frontend/src/pages/plot/PlotHistoryPage.jsx
+
+18. PlotHistoryPage -> PlotController: show(plotId)
+   Type: call
+   Source: frontend/src/pages/plot/PlotHistoryPage.jsx; PlotController::show()
+
+19. PlotController -> AccessService: ensureUserCanViewPlot(owner, plotId)
+   Type: call
+   Source: AuthorizesPlotAccess + AccessService
+
+20. AccessService -> PlotController: access_granted
+   Type: return
+   Replies to: 19
+
+21. PlotController -> Plot: loadPlotWithRelations(plotId)
+   Type: call
+   Source: PlotController::show()
+
+22. Plot -> PlotController: plot_with_zones_and_plants
+   Type: return
+   Replies to: 21
+
+23. PlotController -> PlotHistoryPage: plot_data
+   Type: return
+   Replies to: 18
+
+24. PlotHistoryPage -> HistoryController: index(plotId, limit)
+   Type: call
+   Source: PlotHistoryPage api.listPlotHistory(); HistoryController::index()
+
+25. HistoryController -> AccessService: ensureUserCanViewPlot(owner, plotId)
+   Type: call
+   Source: HistoryController::index()
+
+26. AccessService -> HistoryController: access_granted
+   Type: return
+   Replies to: 25
+
+27. HistoryController -> PlotSnapshotService: listHistoryForPlot(plot, limit)
+   Type: call
+   Source: PlotSnapshotService::listHistoryForPlot()
+
+28. PlotSnapshotService -> PlotSnapshot: getHistorySnapshots(plot, limit)
+   Type: call
+   Source: plot_snapshots table via service
+
+29. PlotSnapshot -> PlotSnapshotService: history_snapshots
+   Type: return
+   Replies to: 28
+
+30. PlotSnapshotService -> PlotSnapshotService: prepareHistoryPresentation(history_snapshots)
+   Type: call
+   Source: labels, summaries, zone/plant counts
+
+31. PlotSnapshotService -> PlotSnapshotService: history_collection
+   Type: return
+   Replies to: 30
+
+32. PlotSnapshotService -> HistoryController: history_collection
+   Type: return
+   Replies to: 27
+
+33. HistoryController -> PlotHistoryPage: history_response
+   Type: return
+   Replies to: 24
+
+34. PlotHistoryPage -> PlanPreview: renderSelectedSnapshot(snapshot)
+   Type: call
+   Source: PlotHistoryPage renders PlanPreview
+
+35. PlanPreview -> PlotHistoryPage: preview_view
+   Type: return
+   Replies to: 34
+
+36. Garden owner -> PlotHistoryPage: selectHistoryEntry(snapshotId)
+   Type: async/ui event
+   Source: PlotHistoryPage onClick
+
+37. PlotHistoryPage -> PlanPreview: renderSelectedSnapshot(snapshot)
+   Type: call
+   Source: Selected snapshot preview
+
+38. PlanPreview -> PlotHistoryPage: preview_view
+   Type: return
+   Replies to: 37
+
+39. PlotHistoryPage -> Garden owner: showVersionPlants()
+   Type: return
+   Source: Visible selected snapshot plants
+
+40. PlotHistoryPage -> Garden owner: showNoPlantsInVersion()
+   Type: return
+   Source: Visible empty plant state
+
+41. PlotHistoryPage -> Garden owner: showHistoryListAndPreview()
+   Type: return
+   Source: Visible history browser
+
+42. PlotHistoryPage -> Garden owner: showEmptyHistoryState()
+   Type: return
+   Source: Visible no-history state
+
+43. Garden owner -> PlotSectionNav: clickBackToPlots()
+   Type: async/ui event
+   Source: PlotSectionNav back link
+
+44. PlotSectionNav -> Garden owner: showPlotsPage()
+   Type: async/ui event
+   Source: Navigation complete
+
+C. UML fragmentai
+
+- opt: [function_started_by_the_system]
+  - Messages: 1-14
+- alt: System-started history context availability
+  - Messages: 12-14
+  - Operand 1 [history data exists]: messages 12-13
+  - Operand 2 [history data does not exist]: messages 14-14
+- alt: History availability
+  - Messages: 35-42
+  - Operand 1 [history exists]: messages 35-41
+  - Operand 2 [history does not exist]: messages 42-42
+- loop: [while user selects saved versions]
+  - Messages: 37-40
+- alt: Selected version plants
+  - Messages: 39-40
+  - Operand 1 [selected version has plants]: messages 39-39
+  - Operand 2 [selected version has no plants]: messages 40-40
+- opt: [end view]
+  - Messages: 43-44

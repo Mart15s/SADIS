@@ -237,7 +237,7 @@ class AnalyticsService
         }
 
         if ($rotationHistory->isEmpty()) {
-            $warnings[] = 'Rotation history records are missing, so rotation violations cannot be evaluated.';
+            $warnings[] = 'Trūksta rotacijos istorijos įrašų, todėl rotacijos pažeidimų įvertinti negalima.';
         }
 
         $historyMetrics = $this->buildPlanningHistoryMetrics($snapshots);

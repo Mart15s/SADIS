@@ -16,6 +16,11 @@ class RotationHistory extends Model
 
     protected $fillable = [
         'plant_zone_id',
+        'from_plant_zone_id',
+        'from_zone_name',
+        'to_zone_name',
+        'decision_status',
+        'decision_note',
         'from_date',
         'to_date',
         'fk_plot_id',
@@ -53,6 +58,11 @@ class RotationHistory extends Model
     public function plantZone(): BelongsTo
     {
         return $this->belongsTo(PlantZone::class, 'plant_zone_id');
+    }
+
+    public function fromPlantZone(): BelongsTo
+    {
+        return $this->belongsTo(PlantZone::class, 'from_plant_zone_id');
     }
 
     public function plant(): BelongsTo

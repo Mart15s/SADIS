@@ -46,7 +46,7 @@ class RotationDemoSeeder extends Seeder
             ]);
             $profile = Profile::query()->create([
                 'user_id' => $user->id,
-                'name' => 'Rotation',
+                'name' => 'Rotacijos',
                 'surname' => 'Demo',
             ]);
             $owner = GardenOwner::query()->create([
@@ -59,11 +59,11 @@ class RotationDemoSeeder extends Seeder
             $catalog = $this->seedCatalog();
             $plot = Plot::query()->create([
                 'garden_owner_id' => $owner->id,
-                'name' => 'Rotation demo garden',
+                'name' => 'Rotacijos demo daržas',
                 'city' => 'Vilnius',
                 'plot_size' => 120,
                 'creation_date' => '2026-04-01',
-                'description' => 'Demo plot for crop rotation checks.',
+                'description' => 'Demo sklypas augalų rotacijos patikroms.',
                 'share' => false,
             ]);
             HasPlot::query()->create([
@@ -73,20 +73,20 @@ class RotationDemoSeeder extends Seeder
             ]);
 
             $zones = [
-                'a' => $this->createZone($plot, 'Zone A - old nightshades', 0, 0),
-                'b' => $this->createZone($plot, 'Zone B - brassicas', 260, 0),
-                'c' => $this->createZone($plot, 'Zone C - legumes', 0, 160),
-                'd' => $this->createZone($plot, 'Zone D - empty rotation', 260, 160),
+                'a' => $this->createZone($plot, 'Zona A - ankstesni bulviniai', 0, 0),
+                'b' => $this->createZone($plot, 'Zona B - kopūstiniai', 260, 0),
+                'c' => $this->createZone($plot, 'Zona C - ankštiniai', 0, 160),
+                'd' => $this->createZone($plot, 'Zona D - tuščia rotacija', 260, 160),
             ];
 
             $plants = [
-                'tomato_2025' => $this->createPlant($plot, $zones['a'], $catalog['tomato'], 'Tomato 2025', '2025-04-15'),
-                'pepper_2026' => $this->createPlant($plot, $zones['d'], $catalog['pepper'], 'Pepper planned 2026', '2026-04-15'),
-                'cabbage_2025' => $this->createPlant($plot, $zones['b'], $catalog['cabbage'], 'Cabbage 2025', '2025-04-20'),
-                'bean_2025' => $this->createPlant($plot, $zones['c'], $catalog['bean'], 'Bean 2025', '2025-04-25'),
-                'carrot_2024' => $this->createPlant($plot, $zones['d'], $catalog['carrot'], 'Carrot 2024', '2024-04-20'),
-                'potato_2024' => $this->createPlant($plot, $zones['a'], $catalog['potato'], 'Potato 2024', '2024-04-15'),
-                'lettuce_2026' => $this->createPlant($plot, $zones['d'], $catalog['lettuce'], 'Lettuce planned 2026', '2026-04-18'),
+                'tomato_2025' => $this->createPlant($plot, $zones['a'], $catalog['tomato'], 'Pomidoras 2025', '2025-04-15'),
+                'pepper_2026' => $this->createPlant($plot, $zones['d'], $catalog['pepper'], 'Planuojama paprika 2026', '2026-04-15'),
+                'cabbage_2025' => $this->createPlant($plot, $zones['b'], $catalog['cabbage'], 'Kopūstas 2025', '2025-04-20'),
+                'bean_2025' => $this->createPlant($plot, $zones['c'], $catalog['bean'], 'Pupelė 2025', '2025-04-25'),
+                'carrot_2024' => $this->createPlant($plot, $zones['d'], $catalog['carrot'], 'Morka 2024', '2024-04-20'),
+                'potato_2024' => $this->createPlant($plot, $zones['a'], $catalog['potato'], 'Bulvė 2024', '2024-04-15'),
+                'lettuce_2026' => $this->createPlant($plot, $zones['d'], $catalog['lettuce'], 'Planuojama salota 2026', '2026-04-18'),
             ];
 
             $this->recordHistory($plot, $zones['a'], $plants['potato_2024'], '2024-04-15', '2024-09-01');
@@ -96,7 +96,7 @@ class RotationDemoSeeder extends Seeder
             $this->recordHistory($plot, $zones['d'], $plants['carrot_2024'], '2024-04-20', '2024-08-15');
 
             if ($this->command) {
-                $this->command->info('Rotation demo data prepared.');
+                $this->command->info('Rotacijos demo duomenys paruošti.');
                 $this->command->line('Email: '.self::EMAIL);
                 $this->command->line('Password: RotationDemo123!');
             }

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PA17 Pažymėti sunaudotas medžiagas realizacija projekto klasėmis</title>
+  <style>
+    :root { --ink:#172033; --muted:#526070; --paper:#fff; --page:#f5f7fb; --actor:#e8f5e9; --boundary:#dcecff; --control:#ffe1e7; --service:#e7f7ef; --entity:#fff2bf; --fragment:#f8fafc; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
+    main { width:min(2500px, calc(100vw - 32px)); margin:24px auto; background:var(--paper); border:1px solid #d5dbe7; box-shadow:0 12px 30px rgba(15,23,42,.08); padding:24px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:0; }
+    h2 { margin:28px 0 10px; font-size:18px; }
+    .meta { color:var(--muted); font-size:13px; margin-bottom:14px; max-width:1400px; }
+    .comment { border-left:4px solid #8aa5d6; background:#f7faff; padding:10px 14px; margin:12px 0 18px; color:#334155; max-width:1400px; }
+    .legend { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0 18px; font-size:13px; }
+    .legend span { display:inline-flex; gap:6px; align-items:center; }
+    .swatch { width:16px; height:12px; border:1px solid #64748b; display:inline-block; }
+    .canvas { overflow:auto; border:1px solid #dbe3ef; background:#fff; margin-bottom:20px; }
+    svg { display:block; max-width:none; background:#fff; }
+    .uml-title { font-size:18px; font-weight:700; }
+    .participant-name { font-size:11px; font-weight:700; }
+    .stereo { font-size:10px; fill:#5b6472; font-style:italic; }
+    .message { font-size:10.5px; fill:#1f2937; paint-order:stroke; stroke:#fff; stroke-width:4px; stroke-linejoin:round; }
+    .fragment-title { font-size:12px; font-weight:700; fill:#0f172a; }
+    .fragment-cond { font-size:11px; fill:#334155; }
+    .lifeline { stroke:#94a3b8; stroke-width:1.1; stroke-dasharray:6 6; }
+    .call { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .async { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .return { stroke:#64748b; stroke-width:1.05; stroke-dasharray:6 4; marker-end:url(#openArrow); }
+    .fragment { fill:var(--fragment); stroke:#64748b; stroke-width:1.05; }
+    .divider { stroke:#94a3b8; stroke-width:1; stroke-dasharray:5 4; }
+    table { width:100%; border-collapse:collapse; margin:10px 0 18px; font-size:13px; }
+    th, td { border:1px solid #d9e1ee; padding:7px 8px; vertical-align:top; }
+    th { background:#eef3ff; text-align:left; }
+    .sequence-fragment-row td { background:#f8fafc; color:#0f172a; font-weight:700; }
+    .sequence-operand-row td { background:#fff7ed; color:#7c2d12; font-weight:700; }
+    .sequence-end-row td { background:#f1f5f9; color:#475569; font-style:italic; }
+    code { background:#eef2f7; padding:1px 4px; border-radius:3px; }
+    @media print { body { background:#fff; } main { width:100%; margin:0; border:0; box-shadow:none; } .canvas { overflow:visible; page-break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PA17 Pažymėti sunaudotas medžiagas realizacija projekto klasėmis</h1>
+  <div class="meta">Diagrama sudaryta pagal realų React ir Laravel kodą. PA17 realizacijoje sunaudotos medžiagos žymimos ne per atskirą inventoriaus controllerį, o kaip rekomendacinio kalendoriaus užduoties užbaigimo dalis per <code>TaskController::complete()</code>, <code>TaskWorkflowService::complete()</code> ir <code>InventoryService::consumeTaskRequirements()</code>.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#e8f5e9"></i> «actor»</span>
+    <span><i class="swatch" style="background:#dcecff"></i> «boundary»</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> «control»</span>
+    <span><i class="swatch" style="background:#e7f7ef"></i> «service»</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> «entity»</span>
+  </div>
+  <div class="comment">Diagramoje sąmoningai nerodomi techniniai maršrutizavimo, HTTP pagalbinių funkcijų ir grupiniai modelių lifeline. Jie paminėti tik auditui ir jungčių specifikacijai skirtuose failuose.</div>
+
+  <h2>1. Užduoties resursų gavimas</h2>
+  <div class="canvas"><svg id="diagram-load" role="img" aria-label="Užduoties resursų gavimas"></svg></div>
+
+  <h2>2. Užduoties medžiagų nurašymas</h2>
+  <div class="canvas"><svg id="diagram-complete" role="img" aria-label="Užduoties medžiagų nurašymas"></svg></div>
+
+  <table>
+    <tr><th>Patikrinimas</th><th>Rezultatas</th></tr>
+    <tr><td>PA17 realizacija</td><td>Pagrindinis kelias yra užduoties užbaigimas: <code>PlotCalendarPage.handleTaskAction()</code> kviečia <code>TaskController::complete()</code>, o kiekis nurašomas <code>InventoryService::consumeTaskRequirements()</code>.</td></tr>
+    <tr><td>Pakankamumo taisyklė</td><td>Nepakankamo kiekio šakoje grąžinama validacijos klaida ir nevykdomi <code>update()</code> bei <code>InventoryUsageLog::create()</code>.</td></tr>
+    <tr><td>Sunaudojimo taisyklė</td><td>Kiekis mažinamas tik tada, kai realus <code>TaskResourceRequirement.is_consumed</code> yra <code>true</code>. Reusable resurso šakoje paliekamas nepakeistas kiekis.</td></tr>
+    <tr><td>Reply taisyklė</td><td>Kiekvienas sinchroninis <code>call</code> turi vėlesnį <code>reply</code>. UI įvykiai yra asinchroniniai ir be reply.</td></tr>
+  </table>
+
+  <h2>Visų sekų sąrašas</h2>
+  <table id="sequence-table">
+    <thead>
+      <tr>
+        <th>Nr.</th>
+        <th>Iš</th>
+        <th>Į</th>
+        <th>Operacija</th>
+        <th>Jungties tipas</th>
+        <th>Fragmentas / pastaba</th>
+        <th>Replies to</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script>
+const colors = {
+  actor: { fill: '#e8f5e9', stroke: '#4f7f52' },
+  boundary: { fill: '#dcecff', stroke: '#4f7fb8' },
+  control: { fill: '#ffe1e7', stroke: '#bf5a6b' },
+  service: { fill: '#e7f7ef', stroke: '#4f8a67' },
+  entity: { fill: '#fff2bf', stroke: '#b08900' },
+};
+
+const participantsByDiagram = {
+  'diagram-load': [
+    ['Garden owner', 'actor'],
+    ['PlotCalendarPage', 'boundary'],
+    ['TaskController', 'control'],
+    ['AccessService', 'service'],
+    ['InventoryService', 'service'],
+    ['TaskInventoryCoverageService', 'service'],
+    ['TaskCalendar', 'entity'],
+    ['Task', 'entity'],
+    ['TaskResourceRequirement', 'entity'],
+    ['InventoryItem', 'entity'],
+  ],
+  'diagram-complete': [
+    ['Garden owner', 'actor'],
+    ['PlotCalendarPage', 'boundary'],
+    ['TaskController', 'control'],
+    ['CompleteTaskRequest', 'control'],
+    ['AccessService', 'service'],
+    ['TaskWorkflowService', 'service'],
+    ['InventoryService', 'service'],
+    ['TaskInventoryCoverageService', 'service'],
+    ['Task', 'entity'],
+    ['TaskResourceRequirement', 'entity'],
+    ['InventoryItem', 'entity'],
+    ['InventoryUsageLog', 'entity'],
+  ],
+};
+
+const messages = [
+  { nr:1, diagram:'diagram-load', from:'Garden owner', to:'PlotCalendarPage', operation:'handleDayClick(day)', type:'async', note:'UI event opens day details.' },
+  { nr:2, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'setSelectedDate(day)', type:'call', note:'Real state update in handleDayClick().' },
+  { nr:3, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'selected_date_state', type:'return', replyTo:2, note:'' },
+  { nr:4, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'setDayModalOpen(true)', type:'call', note:'Open day modal.' },
+  { nr:5, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'day_modal_open', type:'return', replyTo:4, note:'' },
+  { nr:6, diagram:'diagram-load', from:'PlotCalendarPage', to:'TaskController', operation:'index(calendarId, params)', type:'call', note:'Boundary requests selected day tasks.' },
+  { nr:7, diagram:'diagram-load', from:'TaskController', to:'TaskController', operation:'authorizeCalendarView(request, calendar, accessService)', type:'call', note:'Private controller authorization helper.' },
+  { nr:8, diagram:'diagram-load', from:'TaskController', to:'TaskCalendar', operation:"loadMissing('plot')", type:'call', note:'Load plot for access check.' },
+  { nr:9, diagram:'diagram-load', from:'TaskCalendar', to:'TaskController', operation:'calendar_plot', type:'return', replyTo:8, note:'' },
+  { nr:10, diagram:'diagram-load', from:'TaskController', to:'AccessService', operation:'userHasAccess(owner, plot)', type:'call', note:'ensureUserCanViewPlot().' },
+  { nr:11, diagram:'diagram-load', from:'AccessService', to:'TaskController', operation:'true', type:'return', replyTo:10, note:'access_granted' },
+  { nr:12, diagram:'diagram-load', from:'TaskController', to:'TaskController', operation:'calendar_view_authorized', type:'return', replyTo:7, note:'' },
+  { nr:13, diagram:'diagram-load', from:'TaskController', to:'TaskCalendar', operation:'tasks()', type:'call', note:'Start calendar task query.' },
+  { nr:14, diagram:'diagram-load', from:'TaskCalendar', to:'TaskController', operation:'task_query_builder', type:'return', replyTo:13, note:'' },
+  { nr:15, diagram:'diagram-load', from:'TaskController', to:'Task', operation:"with(['plant.plantZone','plantZone','requiredResources'])->get()", type:'call', note:'Fetch tasks with required resources.' },
+  { nr:16, diagram:'diagram-load', from:'Task', to:'TaskController', operation:'tasks', type:'return', replyTo:15, note:'' },
+  { nr:17, diagram:'diagram-load', from:'TaskController', to:'InventoryService', operation:'attachLiveTaskInventory(owner, tasks)', type:'call', note:'Add live inventory context before resource serialization.' },
+  { nr:18, diagram:'diagram-load', from:'InventoryService', to:'TaskInventoryCoverageService', operation:'summarizeTasksByDate(owner, tasks, false)', type:'call', note:'Computes required, available and shortage quantities.' },
+  { nr:19, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'Task', operation:"loadMissing('requiredResources')", type:'call', note:'Ensure requirements are available.' },
+  { nr:20, diagram:'diagram-load', from:'Task', to:'TaskInventoryCoverageService', operation:'tasks_with_requiredResources', type:'return', replyTo:19, note:'' },
+  { nr:21, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'TaskResourceRequirement', operation:'required_quantity', type:'call', note:'Requirement amount from model field.' },
+  { nr:22, diagram:'diagram-load', from:'TaskResourceRequirement', to:'TaskInventoryCoverageService', operation:'required_quantity', type:'return', replyTo:21, note:'' },
+  { nr:23, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'matchingItems(owner, normalizedName, type, unit, false)', type:'call', note:'Real service method.' },
+  { nr:24, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'InventoryItem', operation:"where(...)->orderBy('id')->get()", type:'call', note:'Query matching stock rows.' },
+  { nr:25, diagram:'diagram-load', from:'InventoryItem', to:'TaskInventoryCoverageService', operation:'matching_inventory_items', type:'return', replyTo:24, note:'' },
+  { nr:26, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'matching_items', type:'return', replyTo:23, note:'' },
+  { nr:27, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'InventoryItem', operation:"sum('quantity')", type:'call', note:'Available quantity.' },
+  { nr:28, diagram:'diagram-load', from:'InventoryItem', to:'TaskInventoryCoverageService', operation:'availableQuantity', type:'return', replyTo:27, note:'' },
+  { nr:29, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'max(0, required_quantity - available_quantity)', type:'call', note:'Shortage calculation.' },
+  { nr:30, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'shortageQuantity', type:'return', replyTo:29, note:'' },
+  { nr:31, diagram:'diagram-load', from:'TaskInventoryCoverageService', to:'InventoryService', operation:'summaries_by_date', type:'return', replyTo:18, note:'' },
+  { nr:32, diagram:'diagram-load', from:'InventoryService', to:'TaskResourceRequirement', operation:"setAttribute('available_quantity', detail['available_quantity'])", type:'call', note:'Live attribute for response.' },
+  { nr:33, diagram:'diagram-load', from:'TaskResourceRequirement', to:'InventoryService', operation:'available_quantity_set', type:'return', replyTo:32, note:'' },
+  { nr:34, diagram:'diagram-load', from:'InventoryService', to:'TaskResourceRequirement', operation:"setAttribute('live_shortage_quantity', detail['shortage_quantity'])", type:'call', note:'Live shortage value.' },
+  { nr:35, diagram:'diagram-load', from:'TaskResourceRequirement', to:'InventoryService', operation:'live_shortage_quantity_set', type:'return', replyTo:34, note:'' },
+  { nr:36, diagram:'diagram-load', from:'InventoryService', to:'TaskController', operation:'day_resource_summary', type:'return', replyTo:17, note:'' },
+  { nr:37, diagram:'diagram-load', from:'TaskController', to:'PlotCalendarPage', operation:'TaskResource::collection(tasks)->response()', type:'return', replyTo:6, note:'Http resource class not shown as lifeline.' },
+  { nr:38, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'resourceRequirements.map(...)', type:'call', note:'Render Resource requirements list.' },
+  { nr:39, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'required_resource_quantities_rendered', type:'return', replyTo:38, note:'' },
+  { nr:40, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'missingResources.filter(...)', type:'call', note:'Compute shortage state for Complete button.' },
+  { nr:41, diagram:'diagram-load', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'task_action_state_rendered', type:'return', replyTo:40, note:'' },
+
+  { nr:42, diagram:'diagram-complete', from:'Garden owner', to:'PlotCalendarPage', operation:"handleTaskAction(taskId, 'complete')", type:'async', note:'UI event from Complete button.' },
+  { nr:43, diagram:'diagram-complete', from:'PlotCalendarPage', to:'TaskController', operation:'complete(taskId)', type:'call', note:'Boundary submits task completion.' },
+  { nr:44, diagram:'diagram-complete', from:'TaskController', to:'CompleteTaskRequest', operation:"validated('materials_used')", type:'call', note:'Request validation value, usually null in current UI.' },
+  { nr:45, diagram:'diagram-complete', from:'CompleteTaskRequest', to:'TaskController', operation:'materials_used', type:'return', replyTo:44, note:'' },
+  { nr:46, diagram:'diagram-complete', from:'TaskController', to:'CompleteTaskRequest', operation:"validated('condition_review')", type:'call', note:'Request validation value.' },
+  { nr:47, diagram:'diagram-complete', from:'CompleteTaskRequest', to:'TaskController', operation:'condition_review', type:'return', replyTo:46, note:'' },
+  { nr:48, diagram:'diagram-complete', from:'TaskController', to:'CompleteTaskRequest', operation:"validated('harvest')", type:'call', note:'Request validation value.' },
+  { nr:49, diagram:'diagram-complete', from:'CompleteTaskRequest', to:'TaskController', operation:'harvest', type:'return', replyTo:48, note:'' },
+  { nr:50, diagram:'diagram-complete', from:'TaskController', to:'TaskController', operation:'authorizeTaskEdit(request, task, accessService)', type:'call', note:'Private controller authorization helper.' },
+  { nr:51, diagram:'diagram-complete', from:'TaskController', to:'Task', operation:"loadMissing('taskCalendar.plot')", type:'call', note:'Load plot through task calendar.' },
+  { nr:52, diagram:'diagram-complete', from:'Task', to:'TaskController', operation:'task_calendar_plot', type:'return', replyTo:51, note:'' },
+  { nr:53, diagram:'diagram-complete', from:'TaskController', to:'AccessService', operation:'userCanEdit(owner, plot)', type:'call', note:'ensureUserCanEditPlot().' },
+  { nr:54, diagram:'diagram-complete', from:'AccessService', to:'TaskController', operation:'true', type:'return', replyTo:53, note:'edit_access_granted' },
+  { nr:55, diagram:'diagram-complete', from:'TaskController', to:'TaskController', operation:'task_edit_authorized', type:'return', replyTo:50, note:'' },
+  { nr:56, diagram:'diagram-complete', from:'TaskController', to:'TaskWorkflowService', operation:'complete(task, materialsUsed, conditionReview, harvest)', type:'call', note:'Main workflow service call.' },
+  { nr:57, diagram:'diagram-complete', from:'TaskWorkflowService', to:'Task', operation:"whereKey(task.id)->lockForUpdate()->with([...])->firstOrFail()", type:'call', note:'DB::transaction body.' },
+  { nr:58, diagram:'diagram-complete', from:'Task', to:'TaskWorkflowService', operation:'locked_task_with_requiredResources', type:'return', replyTo:57, note:'' },
+  { nr:59, diagram:'diagram-complete', from:'TaskWorkflowService', to:'TaskWorkflowService', operation:"ensureTaskPending(task, 'ivykdyti')", type:'call', note:'Rejects completed/canceled tasks.' },
+  { nr:60, diagram:'diagram-complete', from:'TaskWorkflowService', to:'TaskWorkflowService', operation:'pending_state_confirmed', type:'return', replyTo:59, note:'' },
+  { nr:61, diagram:'diagram-complete', from:'TaskWorkflowService', to:'Task', operation:'requiredResources->isNotEmpty()', type:'call', note:'Decides required-resource path.' },
+  { nr:62, diagram:'diagram-complete', from:'Task', to:'TaskWorkflowService', operation:'true', type:'return', replyTo:61, note:'' },
+  { nr:63, diagram:'diagram-complete', from:'TaskWorkflowService', to:'Task', operation:"where(...)->with('requiredResources')->lockForUpdate()->get()", type:'call', note:'Same-day pending non-buy tasks.' },
+  { nr:64, diagram:'diagram-complete', from:'Task', to:'TaskWorkflowService', operation:'dayTasks', type:'return', replyTo:63, note:'' },
+  { nr:65, diagram:'diagram-complete', from:'TaskWorkflowService', to:'InventoryService', operation:'assertTaskCanBeCompletedForDay(owner, task, dayTasks)', type:'call', note:'Checks day-level inventory sufficiency.' },
+  { nr:66, diagram:'diagram-complete', from:'InventoryService', to:'TaskInventoryCoverageService', operation:'summarizeTasksByDate(owner, taskCollection, true)', type:'call', note:'Locking coverage check.' },
+  { nr:67, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'Task', operation:"loadMissing('requiredResources')", type:'call', note:'Ensure resources are loaded.' },
+  { nr:68, diagram:'diagram-complete', from:'Task', to:'TaskInventoryCoverageService', operation:'tasks_with_requiredResources', type:'return', replyTo:67, note:'' },
+  { nr:69, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'TaskResourceRequirement', operation:'required_quantity', type:'call', note:'Per required resource.' },
+  { nr:70, diagram:'diagram-complete', from:'TaskResourceRequirement', to:'TaskInventoryCoverageService', operation:'required_quantity', type:'return', replyTo:69, note:'' },
+  { nr:71, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'TaskResourceRequirement', operation:'is_consumed', type:'call', note:'Real boolean field used for consumable/reusable mode.' },
+  { nr:72, diagram:'diagram-complete', from:'TaskResourceRequirement', to:'TaskInventoryCoverageService', operation:'is_consumed', type:'return', replyTo:71, note:'' },
+  { nr:73, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'matchingItems(owner, normalizedName, type, unit, true)', type:'call', note:'Real service method with lock.' },
+  { nr:74, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'InventoryItem', operation:"where(...)->lockForUpdate()->get()", type:'call', note:'Lock matching inventory rows.' },
+  { nr:75, diagram:'diagram-complete', from:'InventoryItem', to:'TaskInventoryCoverageService', operation:'locked_matching_inventory_items', type:'return', replyTo:74, note:'' },
+  { nr:76, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'matching_items', type:'return', replyTo:73, note:'' },
+  { nr:77, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'InventoryItem', operation:"sum('quantity')", type:'call', note:'Available quantity.' },
+  { nr:78, diagram:'diagram-complete', from:'InventoryItem', to:'TaskInventoryCoverageService', operation:'available_quantity', type:'return', replyTo:77, note:'' },
+  { nr:79, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'max(0, required_quantity - available_quantity)', type:'call', note:'Shortage calculation.' },
+  { nr:80, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'TaskInventoryCoverageService', operation:'shortage_quantity', type:'return', replyTo:79, note:'' },
+  { nr:81, diagram:'diagram-complete', from:'TaskInventoryCoverageService', to:'InventoryService', operation:'inventory_context', type:'return', replyTo:66, note:'' },
+  { nr:82, diagram:'diagram-complete', from:'InventoryService', to:'TaskWorkflowService', operation:'inventory_context', type:'return', replyTo:65, note:'Sufficient branch reply.' },
+  { nr:83, diagram:'diagram-complete', from:'TaskWorkflowService', to:'InventoryService', operation:'consumeTaskRequirements(owner, task)', type:'call', note:'Actual PA17 consumption.' },
+  { nr:84, diagram:'diagram-complete', from:'InventoryService', to:'Task', operation:"loadMissing('requiredResources')", type:'call', note:'Ensure consumption requirements are loaded.' },
+  { nr:85, diagram:'diagram-complete', from:'Task', to:'InventoryService', operation:'requiredResources_loaded', type:'return', replyTo:84, note:'' },
+  { nr:86, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'prepareTaskRequirementSnapshots(owner, task, true)', type:'call', note:'Private method prepares locked snapshots.' },
+  { nr:87, diagram:'diagram-complete', from:'InventoryService', to:'TaskResourceRequirement', operation:'required_quantity', type:'call', note:'Snapshot reads requirement data.' },
+  { nr:88, diagram:'diagram-complete', from:'TaskResourceRequirement', to:'InventoryService', operation:'required_quantity', type:'return', replyTo:87, note:'' },
+  { nr:89, diagram:'diagram-complete', from:'InventoryService', to:'InventoryItem', operation:"matchingItemsQuery(...)->lockForUpdate()->get()", type:'call', note:'Load inventory rows for snapshot.' },
+  { nr:90, diagram:'diagram-complete', from:'InventoryItem', to:'InventoryService', operation:'items', type:'return', replyTo:89, note:'' },
+  { nr:91, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'task_requirement_snapshots', type:'return', replyTo:86, note:'' },
+  { nr:92, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'buildTaskInventoryContext(snapshots)', type:'call', note:'Verifies status before updating stock.' },
+  { nr:93, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'context_available', type:'return', replyTo:92, note:'' },
+  { nr:94, diagram:'diagram-complete', from:'InventoryService', to:'TaskResourceRequirement', operation:'is_consumed', type:'call', note:'Branch condition for reusable/consumable.' },
+  { nr:95, diagram:'diagram-complete', from:'TaskResourceRequirement', to:'InventoryService', operation:'is_consumed', type:'return', replyTo:94, note:'' },
+  { nr:96, diagram:'diagram-complete', from:'InventoryService', to:'InventoryItem', operation:'quantity', type:'call', note:'Read current stock amount.' },
+  { nr:97, diagram:'diagram-complete', from:'InventoryItem', to:'InventoryService', operation:'availableOnItem', type:'return', replyTo:96, note:'' },
+  { nr:98, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'min(availableOnItem, remainingToConsume)', type:'call', note:'Calculate deductedQuantity.' },
+  { nr:99, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'deductedQuantity', type:'return', replyTo:98, note:'' },
+  { nr:100, diagram:'diagram-complete', from:'InventoryService', to:'InventoryItem', operation:"update(['quantity' => quantityAfter])", type:'call', note:'Persist decremented amount.' },
+  { nr:101, diagram:'diagram-complete', from:'InventoryItem', to:'InventoryService', operation:'updated_inventory_item', type:'return', replyTo:100, note:'' },
+  { nr:102, diagram:'diagram-complete', from:'InventoryService', to:'InventoryUsageLog', operation:'create([...])', type:'call', note:"Creates change_type = 'consumed'." },
+  { nr:103, diagram:'diagram-complete', from:'InventoryUsageLog', to:'InventoryService', operation:'usage_log', type:'return', replyTo:102, note:'' },
+  { nr:104, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'remainingToConsume = round(...)', type:'call', note:'Update loop state.' },
+  { nr:105, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'remaining_to_consume', type:'return', replyTo:104, note:'' },
+  { nr:106, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:"summary[] = ['consumed' => false]", type:'call', note:'Reusable resource branch; no update and no usage log.' },
+  { nr:107, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'unchanged_inventory_item', type:'return', replyTo:106, note:'' },
+  { nr:108, diagram:'diagram-complete', from:'InventoryService', to:'TaskWorkflowService', operation:'summary', type:'return', replyTo:83, note:'' },
+  { nr:109, diagram:'diagram-complete', from:'TaskWorkflowService', to:'Task', operation:"update(['state' => TaskState::Completed, ...])", type:'call', note:'Complete task after inventory changes.' },
+  { nr:110, diagram:'diagram-complete', from:'Task', to:'TaskWorkflowService', operation:'completed_task', type:'return', replyTo:109, note:'' },
+  { nr:111, diagram:'diagram-complete', from:'TaskWorkflowService', to:'TaskController', operation:'completion_payload', type:'return', replyTo:56, note:'' },
+  { nr:112, diagram:'diagram-complete', from:'TaskController', to:'PlotCalendarPage', operation:'response()->json([...])', type:'return', replyTo:43, note:'Success response.' },
+  { nr:113, diagram:'diagram-complete', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:"setToastMessage('Task completed.')", type:'call', note:'Render success feedback.' },
+  { nr:114, diagram:'diagram-complete', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'toast_message_rendered', type:'return', replyTo:113, note:'' },
+  { nr:115, diagram:'diagram-complete', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'Promise.all([tasksState.reload(), detailState.reload()])', type:'call', note:'Refresh task and calendar summary.' },
+  { nr:116, diagram:'diagram-complete', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'reloaded_calendar_state', type:'return', replyTo:115, note:'' },
+  { nr:117, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'throwInsufficientTaskInventory(context)', type:'call', note:'Builds ValidationException messages.' },
+  { nr:118, diagram:'diagram-complete', from:'InventoryService', to:'InventoryService', operation:'ValidationException', type:'return', replyTo:117, note:'No decrement happens.' },
+  { nr:119, diagram:'diagram-complete', from:'InventoryService', to:'TaskWorkflowService', operation:'ValidationException', type:'return', replyTo:65, note:'Insufficient branch reply.' },
+  { nr:120, diagram:'diagram-complete', from:'TaskWorkflowService', to:'TaskController', operation:'ValidationException', type:'return', replyTo:56, note:'Transaction rolls back.' },
+  { nr:121, diagram:'diagram-complete', from:'TaskController', to:'PlotCalendarPage', operation:'validation_error_response', type:'return', replyTo:43, note:'422 response.' },
+  { nr:122, diagram:'diagram-complete', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'setError(requestError.message)', type:'call', note:'Render insufficient resources error.' },
+  { nr:123, diagram:'diagram-complete', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'error_message_rendered', type:'return', replyTo:122, note:'' },
+];
+
+const fragments = [
+  { id:'f1', diagram:'diagram-load', kind:'loop', title:'Required resources visibility', guard:'[for each required resource]', start:21, end:30 },
+  { id:'f2', diagram:'diagram-complete', kind:'loop', title:'Availability scan', guard:'[for each required resource]', start:69, end:80 },
+  {
+    id:'f3', diagram:'diagram-complete', kind:'alt', title:'Resource availability', start:82, end:123,
+    operands:[
+      { guard:'[available quantity is sufficient]', start:82, end:116 },
+      { guard:'[available quantity is insufficient]', start:117, end:123 },
+    ],
+  },
+  { id:'f4', diagram:'diagram-complete', kind:'loop', title:'Task resource consumption', guard:'[for each task requirement snapshot]', start:94, end:107 },
+  {
+    id:'f5', diagram:'diagram-complete', kind:'alt', title:'Resource consumption requirement', start:96, end:107,
+    operands:[
+      { guard:'[resource is consumable / is_consumed is true]', start:96, end:105 },
+      { guard:'[resource is reusable / is_consumed is false]', start:106, end:107 },
+    ],
+  },
+];
+
+function el(name, attrs = {}) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  return node;
+}
+
+function text(svg, value, x, y, attrs = {}) {
+  const node = el('text', { x, y, ...attrs });
+  node.textContent = value;
+  svg.appendChild(node);
+  return node;
+}
+
+function markerDefs(svg) {
+  const defs = el('defs');
+  defs.innerHTML = '<marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#334155"/></marker><marker id="openArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8" fill="none" stroke="#64748b" stroke-width="1.2"/></marker>';
+  svg.appendChild(defs);
+}
+
+function renderDiagram(svgId, title) {
+  const svg = document.getElementById(svgId);
+  const participants = participantsByDiagram[svgId];
+  const diagramMessages = messages.filter((message) => message.diagram === svgId);
+  const diagramFragments = fragments.filter((fragment) => fragment.diagram === svgId);
+  const gap = 176;
+  const startX = 88;
+  const headerY = 74;
+  const rowH = 34;
+  const width = Math.max(1300, startX * 2 + gap * (participants.length - 1) + 110);
+  const height = headerY + 94 + rowH * diagramMessages.length;
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  markerDefs(svg);
+  text(svg, title, 24, 30, { class:'uml-title' });
+  const indexByNr = new Map(diagramMessages.map((message, index) => [message.nr, index]));
+  const xByName = new Map(participants.map(([name], index) => [name, startX + index * gap]));
+  const yForNr = (nr) => headerY + 78 + (indexByNr.get(nr) ?? 0) * rowH;
+
+  diagramFragments.forEach((fragment, idx) => {
+    const top = yForNr(fragment.start) - 24 - idx * 2;
+    const bottom = yForNr(fragment.end) + 17 + idx * 2;
+    svg.appendChild(el('rect', { x:18 + idx * 8, y:top, width:width - 36 - idx * 16, height:bottom - top, rx:0, class:'fragment' }));
+    text(svg, fragment.kind, 28 + idx * 8, top + 15, { class:'fragment-title' });
+    text(svg, fragment.guard ?? fragment.title, 72 + idx * 8, top + 15, { class:'fragment-cond' });
+    if (fragment.kind === 'alt') {
+      fragment.operands.forEach((operand, operandIndex) => {
+        const y = yForNr(operand.start) - 18;
+        if (operandIndex > 0) {
+          svg.appendChild(el('line', { x1:18 + idx * 8, x2:width - 18 - idx * 8, y1:y, y2:y, class:'divider' }));
+        }
+        text(svg, operand.guard, 72 + idx * 8, y + 14, { class:'fragment-cond' });
+      });
+    }
+  });
+
+  participants.forEach(([name, kind], index) => {
+    const x = startX + index * gap;
+    const color = colors[kind];
+    svg.appendChild(el('rect', { x:x - 64, y:headerY - 34, width:128, height:44, rx:3, fill:color.fill, stroke:color.stroke }));
+    text(svg, `«${kind}»`, x, headerY - 16, { class:'stereo', 'text-anchor':'middle' });
+    text(svg, name, x, headerY + 1, { class:'participant-name', 'text-anchor':'middle' });
+    svg.appendChild(el('line', { x1:x, y1:headerY + 10, x2:x, y2:height - 28, class:'lifeline' }));
+  });
+
+  diagramMessages.forEach((message, index) => {
+    const y = headerY + 78 + index * rowH;
+    const x1 = xByName.get(message.from);
+    const x2 = xByName.get(message.to);
+    const same = x1 === x2;
+    text(svg, `${message.nr}. ${message.operation}`, same ? x1 + 12 : (x1 + x2) / 2, y - 6, { class:'message', 'text-anchor': same ? 'start' : 'middle' });
+    if (same) {
+      const w = 42;
+      const d = `M ${x1} ${y} h ${w} v 15 h ${-w}`;
+      svg.appendChild(el('path', { d, class:message.type === 'return' ? 'return' : message.type }));
+    } else {
+      svg.appendChild(el('line', { x1, y1:y, x2, y2:y, class:message.type === 'return' ? 'return' : message.type }));
+    }
+  });
+}
+
+function addCell(row, value) {
+  const td = document.createElement('td');
+  td.textContent = value ?? '';
+  row.appendChild(td);
+}
+
+function addMarkerRow(tbody, label, className) {
+  const row = document.createElement('tr');
+  row.className = className;
+  addCell(row, '');
+  addCell(row, '');
+  addCell(row, '');
+  addCell(row, label);
+  addCell(row, '');
+  addCell(row, label);
+  addCell(row, '');
+  tbody.appendChild(row);
+}
+
+function buildMarkerMaps() {
+  const starts = new Map();
+  const ends = new Map();
+  const push = (map, nr, marker) => {
+    if (!map.has(nr)) map.set(nr, []);
+    map.get(nr).push(marker);
+  };
+  fragments.forEach((fragment) => {
+    push(starts, fragment.start, { text:`${fragment.kind} pradžia ${fragment.guard ?? fragment.title}`, className:'sequence-fragment-row' });
+    if (fragment.kind === 'alt') {
+      fragment.operands.forEach((operand, index) => {
+        push(starts, operand.start, { text:`[${index + 1} if: ${operand.guard.replace(/^\[|\]$/g, '')}]`, className:'sequence-operand-row' });
+        push(ends, operand.end, { text:`[${index + 1} if pabaiga]`, className:'sequence-end-row' });
+      });
+    }
+    push(ends, fragment.end, { text:`${fragment.kind} pabaiga`, className:'sequence-end-row' });
+  });
+  return { starts, ends };
+}
+
+function renderSequenceTable() {
+  const tbody = document.querySelector('#sequence-table tbody');
+  const { starts, ends } = buildMarkerMaps();
+  messages.forEach((message) => {
+    (starts.get(message.nr) ?? []).forEach((marker) => addMarkerRow(tbody, marker.text, marker.className));
+    const row = document.createElement('tr');
+    addCell(row, message.nr);
+    addCell(row, message.from);
+    addCell(row, message.to);
+    addCell(row, message.operation);
+    addCell(row, message.type === 'return' ? 'reply' : (message.type === 'async' ? 'asinchroninis' : 'sinchroninis'));
+    addCell(row, message.note);
+    addCell(row, message.replyTo ? String(message.replyTo) : '');
+    tbody.appendChild(row);
+    (ends.get(message.nr) ?? []).forEach((marker) => addMarkerRow(tbody, marker.text, marker.className));
+  });
+}
+
+renderDiagram('diagram-load', 'Užduoties resursų gavimas');
+renderDiagram('diagram-complete', 'Užduoties medžiagų nurašymas');
+renderSequenceTable();
+</script>
+</body>
+</html>

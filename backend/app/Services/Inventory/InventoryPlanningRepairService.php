@@ -17,11 +17,16 @@ class InventoryPlanningRepairService
 {
     private const KNOWN_RESOURCE_RULES = [
         'fertilizer' => ['type' => InventoryItemType::Material, 'unit' => InventoryUnit::Kilogram, 'is_consumed' => true],
+        'trąšos' => ['type' => InventoryItemType::Material, 'unit' => InventoryUnit::Kilogram, 'is_consumed' => true],
         'fungicide' => ['type' => InventoryItemType::Material, 'unit' => InventoryUnit::Liter, 'is_consumed' => true],
+        'fungicidas' => ['type' => InventoryItemType::Material, 'unit' => InventoryUnit::Liter, 'is_consumed' => true],
         'sprayer' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
+        'purkštuvas' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
         'plant support' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
+        'augalų atramos' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
         'harvest box' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
         'protective cover' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
+        'apsauginė danga' => ['type' => InventoryItemType::Tool, 'unit' => InventoryUnit::Unit, 'is_consumed' => false],
     ];
 
     public function __construct(
@@ -218,10 +223,10 @@ class InventoryPlanningRepairService
         $requiredQuantity = round((float) ($resource['required_quantity'] ?? $shortageQuantity), 2);
         $taskNames = collect($resource['task_names'] ?? [])->unique()->values()->all();
         $comment = sprintf(
-            'Short by %s %s for %s.',
-            number_format($shortageQuantity, ($resource['inventory_item_type'] ?? '') === InventoryItemType::Tool->value ? 0 : 2, '.', ''),
-            $resource['unit'],
-            $taskNames === [] ? 'planned work' : implode(', ', $taskNames),
+            'Trūksta %s %s darbams: %s.',
+            number_format($shortageQuantity, ($resource['inventory_item_type'] ?? '') === InventoryItemType::Tool->value ? 0 : 2, ',', ''),
+            InventoryUnit::tryFrom((string) $resource['unit'])?->label() ?? $resource['unit'],
+            $taskNames === [] ? 'suplanuoti darbai' : implode(', ', $taskNames),
         );
         $inventoryContext = [
             'status' => 'purchase_required',
@@ -241,12 +246,12 @@ class InventoryPlanningRepairService
         if (! $buyTask) {
             $buyTask = Task::query()->create([
                 'date' => $date,
-                'name' => "Buy {$resource['resource_name']}",
+                'name' => "Nupirkti: {$resource['resource_name']}",
                 'task_type' => TaskType::Buy->value,
                 'type' => TaskType::Buy->value,
                 'priority' => TaskPriority::High->value,
                 'reason' => sprintf(
-                    'Day-level inventory shortage blocks %d planned task(s) on %s.',
+                    'Dienos inventoriaus trūkumas blokuoja suplanuotas užduotis (%d) datai %s.',
                     count($taskNames),
                     $date,
                 ),
@@ -264,10 +269,10 @@ class InventoryPlanningRepairService
             ]);
         } else {
             $buyTask->forceFill([
-                'name' => "Buy {$resource['resource_name']}",
+                'name' => "Nupirkti: {$resource['resource_name']}",
                 'priority' => TaskPriority::High->value,
                 'reason' => sprintf(
-                    'Day-level inventory shortage blocks %d planned task(s) on %s.',
+                    'Dienos inventoriaus trūkumas blokuoja suplanuotas užduotis (%d) datai %s.',
                     count($taskNames),
                     $date,
                 ),

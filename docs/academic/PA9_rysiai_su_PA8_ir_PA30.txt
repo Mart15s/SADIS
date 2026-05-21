@@ -1,0 +1,34 @@
+PA9 ryšiai su PA8 ir PA30
+
+PA9 „Peržiūrėti planavimo istoriją“ PA8 scenarijuje įsijungia rotacijos duomenų paruošimo etape, kai reikia ankstesnių planavimo / rotacijos įrašų, ankstesnių augalų zonų ir cooldown laikotarpio patikros.
+
+Realiame codebase tai realizuota kaip vidinis PA8 žingsnis, o ne kaip atskiras /history endpoint iškvietimas. RotationPlannerService::preparePlot() užkrauna plantZones.rotationHistory, plants.rotationHistory ir plot.rotationHistory ryšius. Šie duomenys naudojami evaluateZoneCandidate(), recentRotationConflict(), plantMovementCooldown(), restIntervalConflict() ir nutrientSequenceReason() logikoje.
+
+PA8 jungčių fragmentas:
+A... Inicijuoti augalų rotacijos valdymą
+-> A... Gauti sklypo zonas, augalus ir planning_date
+-> A... Gauti planavimo / rotacijos istorijos duomenis per PA9 duomenų funkciją
+-> A... Patikrinti ankstesnes augalų zonas, paskutinę rotaciją ir cooldown laikotarpį
+-> A... Įvertinti rotacijos kandidatus
+-> A... Generuoti arba atnaujinti rotation draft planą
+
+Use case ryšio interpretacija:
+«extend» PA9 „Peržiūrėti planavimo istoriją“ / gauti planavimo istorijos duomenis
+Sąlyga: [reikia ankstesnių planavimo sprendimų rotacijos taisyklėms įvertinti]
+
+PA9 „Peržiūrėti planavimo istoriją“ PA30 scenarijuje įsijungia duomenų surinkimo etape, kai daržo rezultatų analizei reikia planavimo istorijos įrašų.
+
+Realiame codebase PA30 planavimo istoriją naudoja pasirinktinai: AnalyticsService::buildContext() gauna planning_snapshots ir rotation_history tik tada, kai selectedAnalysisTypes turi reikšmę planning. Frontend tai atitinka PlotAnalyticsPage pasirinkimą „Planning history“.
+
+PA30 jungčių fragmentas:
+A... Inicijuoti daržo rezultatų analizę
+-> A... Gauti analizės kriterijus / analysisTypes
+-> D... Ar reikalinga planavimo istorijos analizė?
+D...[taip] -> A... Gauti planavimo snapshotus ir rotation_history duomenis per PA9
+A... -> A... Suformuoti planavimo istorijos metrikas, zonų sezonų pasirinkimus ir rotacijos pažeidimus
+-> A... Grąžinti PA30 analizės rezultatą
+D...[ne] -> A... Tęsti kitų rezultatų analizę be PA9 istorijos duomenų
+
+PA30 ryšio interpretacija:
+«extend» PA9 „Peržiūrėti planavimo istoriją“ / gauti planavimo istorijos duomenis
+Sąlyga: [selectedAnalysisTypes apima planning]

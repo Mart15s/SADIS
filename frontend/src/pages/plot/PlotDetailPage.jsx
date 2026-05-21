@@ -26,7 +26,10 @@ import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
 import InspectorPanel, { InspectorSection } from '../../components/ui/InspectorPanel.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
-import { SOIL_TYPES } from '../../lib/constants.js'
+import {
+  formatSoilType,
+  SOIL_TYPES,
+} from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 import { useUnsavedChangesGuard } from '../../lib/hooks/useUnsavedChangesGuard.js'
 import {
@@ -229,7 +232,7 @@ export default function PlotDetailPage() {
   const [mapPreviewView, setMapPreviewView] = useState(null)
   const [activeUtilityPanel, setActiveUtilityPanel] = useState(null)
   const [activeInspector, setActiveInspector] = useState(null)
-  const [editorView, setEditorView] = useState(EDITOR_VIEWS.zones)
+  const [editorView, seteditorView] = useState(EDITOR_VIEWS.zones)
   const [boundaryClosed, setBoundaryClosed] = useState(true)
 
   const pageState = useAsyncData(
@@ -302,7 +305,7 @@ export default function PlotDetailPage() {
 
   useUnsavedChangesGuard({
     when: isDirty,
-    message: 'You have unsaved plot changes. Leave without saving this draft?',
+    message: 'Turite neišsaugotų sklypo pakeitimų. Išeiti neišsaugojus juodraščio?',
   })
 
   useEffect(() => {
@@ -322,7 +325,7 @@ export default function PlotDetailPage() {
     setSelectedZoneId(nextSelectedZone?.id ?? null)
     setZoneForm(zoneToForm(nextSelectedZone ?? null))
     setActiveInspector(nextSelectedZone ? INSPECTOR_TYPES.zone : null)
-    setEditorView(EDITOR_VIEWS.zones)
+    seteditorView(EDITOR_VIEWS.zones)
     setBoundaryClosed(getMapBoundaryPoints(nextWorkspace.plot.geometry).length >= 3)
     setDraftReady(true)
     setZoneError('')
@@ -409,8 +412,8 @@ export default function PlotDetailPage() {
     setActiveInspector(INSPECTOR_TYPES.zone)
   }
 
-  function changeEditorView(nextView) {
-    setEditorView(nextView)
+  function changeeditorView(nextView) {
+    seteditorView(nextView)
 
     if (nextView === EDITOR_VIEWS.boundary) {
       setSelectedZoneId(null)
@@ -495,7 +498,7 @@ export default function PlotDetailPage() {
     setDraftZones(nextZones)
 
     if (outsideZoneNames.length) {
-      setZoneError(`${outsideZoneNames.length} zone${outsideZoneNames.length === 1 ? ' is' : 's are'} outside the edited boundary. Adjust the boundary or review zones before saving.`)
+      setZoneError(`${outsideZoneNames.length} zonos yra už redaguojamos ribos. Prieš išsaugodami pakoreguokite ribą arba peržiūrėkite zonas.`)
     }
   }
 
@@ -556,7 +559,7 @@ export default function PlotDetailPage() {
     const createdZone = {
       id: clientId,
       client_id: clientId,
-      name: zoneForm.name.trim() || `Zone ${draftZones.length + 1}`,
+      name: zoneForm.name.trim() || `Zona ${draftZones.length + 1}`,
       zone_size: calculateArea(shape),
       soil_type: zoneForm.soil_type,
       rotation_stage: Number(zoneForm.rotation_stage || 0),
@@ -569,14 +572,14 @@ export default function PlotDetailPage() {
     setSelectedZoneId(createdZone.id)
     setZoneForm(zoneToForm(createdZone))
     setActiveInspector(INSPECTOR_TYPES.zone)
-    setToastMessage(`Added ${createdZone.name} to the draft.`)
+    setToastMessage(`${createdZone.name} pridėta į juodraštį.`)
 
     return createdZone
   }
 
   async function handleZoneCreateFromForm() {
     if (!designerCanvasRef.current?.createZoneFromForm) {
-      setZoneError('The plot designer is still loading. Please try again.')
+      setZoneError('Sklypo redaktorius dar įkeliamas. Bandykite dar kartą.')
       return
     }
 
@@ -608,7 +611,7 @@ export default function PlotDetailPage() {
         }
         : zone
     )))
-    setToastMessage('Zone details updated in the draft.')
+    setToastMessage('Zonos duomenys atnaujinti juodraštyje.')
   }
 
   function handleZoneDelete() {
@@ -619,7 +622,7 @@ export default function PlotDetailPage() {
     const plantsInZone = draftPlants.filter((plant) => sameId(plant.fk_plant_zone_id, selectedZoneId))
 
     if (plantsInZone.length > 0) {
-      setZoneError('Remove the plants in this zone before deleting it from the draft.')
+      setZoneError('Prieš šalindami zoną iš juodraščio pašalinkite joje esančius augalus.')
       return
     }
 
@@ -628,7 +631,7 @@ export default function PlotDetailPage() {
     setSelectedZoneId(null)
     setZoneForm(emptyZoneForm)
     setActiveInspector(null)
-    setToastMessage('Zone removed from the draft.')
+    setToastMessage('Zona pašalinta iš juodraščio.')
   }
 
   function handleZoneGeometryCommit(zoneId, shape, boundaryShape) {
@@ -677,7 +680,7 @@ export default function PlotDetailPage() {
 
     setPlantError('')
     setDraftPlants((current) => [nextPlant, ...current])
-    setToastMessage(`Added ${payload.name} to the draft.`)
+    setToastMessage(`${payload.name} pridėtas į juodraštį.`)
 
     return nextPlant
   }
@@ -685,7 +688,7 @@ export default function PlotDetailPage() {
   function handlePlantDelete(plantId) {
     setPlantError('')
     setDraftPlants((current) => current.filter((plant) => !sameId(plant.id, plantId)))
-    setToastMessage('Plant removed from the draft.')
+    setToastMessage('Augalas pašalintas iš juodraščio.')
   }
 
   function resetDraftToPersisted() {
@@ -711,14 +714,14 @@ export default function PlotDetailPage() {
       return
     }
 
-    const confirmed = window.confirm('Discard all unsaved plot changes?')
+    const confirmed = window.confirm('Atmesti visus neišsaugotus sklypo pakeitimus?')
 
     if (!confirmed) {
       return
     }
 
     resetDraftToPersisted()
-    setToastMessage('Unsaved draft changes were discarded.')
+    setToastMessage('Neišsaugoti juodraščio pakeitimai atmesti.')
   }
 
   async function handleSave() {
@@ -731,10 +734,10 @@ export default function PlotDetailPage() {
     setPlantError('')
 
     const selectedZone = draftZones.find((zone) => sameId(zone.id, selectedZoneId)) ?? null
-    const sanitizedPlotGeometry = assertSanitizedGeometryPayload('Plot geometry', draftPlot.geometry ?? null)
+    const sanitizedPlotGeometry = assertSanitizedGeometryPayload('Sklypo geometrija', draftPlot.geometry ?? null)
 
     if (mapBoundaryPoints.length > 0 && (!boundaryClosed || mapBoundaryPoints.length < 3)) {
-      setSaveError('Close the map boundary before saving plot changes.')
+      setSaveError('Prieš išsaugodami sklypo pakeitimus uždarykite ribą žemėlapyje.')
       return
     }
 
@@ -746,7 +749,7 @@ export default function PlotDetailPage() {
     const sanitizedZones = []
 
     for (const zone of draftZones) {
-      const sanitizedZoneGeometry = assertSanitizedGeometryPayload(`Zone "${zone.name}" geometry`, zone.geometry ?? null)
+      const sanitizedZoneGeometry = assertSanitizedGeometryPayload(`Zonos „${zone.name}“ geometrija`, zone.geometry ?? null)
 
       if (sanitizedZoneGeometry.error) {
         setSaveError(sanitizedZoneGeometry.error)
@@ -827,7 +830,7 @@ export default function PlotDetailPage() {
       setZoneForm(zoneToForm(nextSelectedZone))
       setActiveInspector(nextSelectedZone ? INSPECTOR_TYPES.zone : null)
       setBoundaryClosed(getMapBoundaryPoints(response.plot.geometry).length >= 3)
-      setToastMessage(response.history_entry?.label ?? 'Plot changes saved.')
+      setToastMessage(response.history_entry?.label ?? 'Sklypo pakeitimai išsaugoti.')
     } catch (requestError) {
       setSaveError(requestError.message)
     } finally {
@@ -836,7 +839,7 @@ export default function PlotDetailPage() {
   }
 
   if (pageState.loading || !draftReady) {
-    return <LoadingState title="Loading plot editor..." />
+    return <LoadingState title="Įkeliamas sklypo redaktorius..." />
   }
 
   if (pageState.error) {
@@ -844,7 +847,7 @@ export default function PlotDetailPage() {
   }
 
   if (!pageState.data.plot || !draftPlot) {
-    return <EmptyState title="Plot not found" description="The requested plot could not be loaded." />
+    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
   }
 
   const selectedZone = draftZones.find((zone) => sameId(zone.id, selectedZoneId)) ?? null
@@ -861,20 +864,20 @@ export default function PlotDetailPage() {
     sideSummary: selectedZoneMeasurements.sideSummary,
   } : null
   const editorLayers = [
-    { id: 'boundary', label: 'Plot boundary', active: Boolean(measurementState?.boundary), color: '#47633b' },
-    { id: 'zones', label: `${draftZones.length} zones`, active: draftZones.length > 0, color: '#b9683f' },
-    { id: 'plants', label: `${draftPlants.length} plants`, active: draftPlants.length > 0, color: '#237d52' },
-    { id: 'measurements', label: 'Dimensions', active: true, color: '#ef6d22' },
+    { id: 'boundary', label: 'Sklypo riba', active: Boolean(measurementState?.boundary), color: '#47633b' },
+    { id: 'zones', label: `${draftZones.length} zonos`, active: draftZones.length > 0, color: '#b9683f' },
+    { id: 'plants', label: `${draftPlants.length} augalai`, active: draftPlants.length > 0, color: '#237d52' },
+    { id: 'measurements', label: 'Matmenys', active: true, color: '#ef6d22' },
   ]
-  const boundaryEditorLayers = [
-    { id: 'boundary', label: boundaryClosed ? 'Closed boundary' : 'Boundary draft', active: mapBoundaryPoints.length > 0, color: '#47633b' },
-    { id: 'corners', label: `${mapBoundaryPoints.length} corners`, active: mapBoundaryPoints.length > 0, color: '#b9683f' },
-    { id: 'center', label: mapBoundaryCenter ? 'Calculated center' : 'Center pending', active: Boolean(mapBoundaryCenter), color: '#237d52' },
+  const boundaryeditorLayers = [
+    { id: 'boundary', label: boundaryClosed ? 'Uždaryta riba' : 'Ribų juodraštis', active: mapBoundaryPoints.length > 0, color: '#47633b' },
+    { id: 'corners', label: `${mapBoundaryPoints.length} kampai`, active: mapBoundaryPoints.length > 0, color: '#b9683f' },
+    { id: 'center', label: mapBoundaryCenter ? 'Apskaičiuotas centras' : 'Centras laukia', active: Boolean(mapBoundaryCenter), color: '#237d52' },
   ]
   const zoneTimelineItems = draftZones.slice(0, 5).map((zone) => ({
     id: zone.id,
     label: zone.name,
-    meta: `${formatSquareMeters(zone.zone_size ?? 0, 1)} - ${zone.soil_type}`,
+    meta: `${formatSquareMeters(zone.zone_size ?? 0, 1)} - ${formatSoilType(zone.soil_type)}`,
     tone: sameId(zone.id, selectedZoneId) ? 'amber' : 'leaf',
   }))
 
@@ -886,35 +889,30 @@ export default function PlotDetailPage() {
         sectionKey="editor"
         isOwner={isOwner}
         compact
-        description="Edit the plot in draft first, keep the canvas dominant, and commit one clean saved version only when the workspace is ready."
         meta={(
           <>
             <StatusBadge kind="ownership">{pageState.data.plot.city}</StatusBadge>
             <StatusBadge kind="selection" tone="neutral">{formatSquareMeters(draftPlot.plot_size, 1)}</StatusBadge>
-            <StatusBadge kind="status" tone={canEdit ? 'success' : 'warning'}>{pageState.data.accessRole ?? 'viewer'}</StatusBadge>
-            <StatusBadge kind="connection" tone={isDirty ? 'warning' : 'neutral'}>
-              {isDirty ? 'Unsaved draft' : 'Saved'}
-            </StatusBadge>
           </>
         )}
         actions={(
           <>
             <Button variant="ghost" onClick={() => api.downloadPlotPdf(plotId, pageState.data.plot?.name)}>
-              Export PDF
+              Eksportuoti PDF
             </Button>
             {canEdit ? (
               <Link to={`/plots/${plotId}/edit`}>
-                <Button variant="ghost">Edit metadata</Button>
+                <Button variant="ghost">Redaguoti metaduomenis</Button>
               </Link>
             ) : null}
             {canEdit ? (
               <Button variant="secondary" onClick={handleDiscardDraft} disabled={!isDirty || saving}>
-                Discard draft
+                Atmesti juodraštį
               </Button>
             ) : null}
             {canEdit ? (
               <Button onClick={handleSave} loading={saving} disabled={!isDirty}>
-                {saving ? 'Saving plot changes' : 'Save plot changes'}
+                {saving ? 'Saugomi sklypo pakeitimai' : 'Išsaugoti sklypo pakeitimus'}
               </Button>
             ) : null}
           </>
@@ -926,8 +924,8 @@ export default function PlotDetailPage() {
 
       {!canEdit ? (
         <EmptyState
-          title="Read-only editor access"
-          description="Select zones on the canvas to inspect the layout. Saving and draft editing are reserved for owners and editors."
+          title="Tik peržiūros prieiga"
+          description="Pasirinkite zonas plane, kad peržiūrėtumėte išdėstymą. Išsaugoti ir redaguoti juodraštį gali tik savininkai ir redaktoriai."
         />
       ) : null}
 
@@ -939,26 +937,26 @@ export default function PlotDetailPage() {
           activeInspector ? 'has-context-panel' : '',
         ].filter(Boolean).join(' ')}
       >
-        <div className="plot-editor-view-toggle" aria-label="Editor view">
+        <div className="plot-editor-view-toggle" aria-label="editor view">
           <button
             type="button"
             className={`plot-panel-toggle ${editorView === EDITOR_VIEWS.zones ? 'is-active' : ''}`.trim()}
-            onClick={() => changeEditorView(EDITOR_VIEWS.zones)}
+            onClick={() => changeeditorView(EDITOR_VIEWS.zones)}
             aria-pressed={editorView === EDITOR_VIEWS.zones}
           >
-            Zone view
+            Zonų vaizdas
           </button>
           <button
             type="button"
             className={`plot-panel-toggle ${editorView === EDITOR_VIEWS.boundary ? 'is-active' : ''}`.trim()}
-            onClick={() => changeEditorView(EDITOR_VIEWS.boundary)}
+            onClick={() => changeeditorView(EDITOR_VIEWS.boundary)}
             aria-pressed={editorView === EDITOR_VIEWS.boundary}
           >
-            Boundary view
+            Ribų vaizdas
           </button>
         </div>
 
-        <div className="plot-workspace-panel-toggles" aria-label="Workspace panels">
+        <div className="plot-workspace-panel-toggles" aria-label="Darbo srities paneliai">
           <button
             type="button"
             className={`plot-panel-toggle ${activeUtilityPanel === 'layers' ? 'is-active' : ''}`.trim()}
@@ -966,7 +964,7 @@ export default function PlotDetailPage() {
             aria-expanded={activeUtilityPanel === 'layers'}
             aria-controls="plot-layers-panel"
           >
-            Layers
+            Rodiniai
           </button>
           <button
             type="button"
@@ -981,7 +979,7 @@ export default function PlotDetailPage() {
             }}
             aria-expanded={activeInspector === INSPECTOR_TYPES.boundary}
           >
-            {editorView === EDITOR_VIEWS.boundary ? 'Boundary details' : 'Boundary'}
+            Ribų informacija
           </button>
           {editorView === EDITOR_VIEWS.zones ? (
             <button
@@ -990,27 +988,27 @@ export default function PlotDetailPage() {
               onClick={openNewZoneInspector}
               aria-expanded={activeInspector === INSPECTOR_TYPES.zone && !selectedZone}
             >
-              Zone details
+              Zonos duomenys
             </button>
           ) : null}
         </div>
 
         {activeUtilityPanel === 'layers' ? (
-        <aside id="plot-layers-panel" className="plot-layers-panel" aria-label="Plot layers and objects">
+        <aside id="plot-layers-panel" className="plot-layers-panel" aria-label="Sklypo rodiniai ir objektai">
           <div className="plot-layers-panel-header">
             <div className="page-stack stack-sm">
-              <span className="workspace-section-eyebrow">Layers</span>
-              <h2 className="section-title">Plot objects</h2>
+              <span className="workspace-section-eyebrow">Rodiniai</span>
+              <h2 className="section-title">Sklypo informacija</h2>
             </div>
             <div className="plot-floating-panel-actions">
               <StatusBadge kind="selection" tone={isDirty ? 'warning' : 'neutral'}>
-                {isDirty ? 'Draft' : 'Saved'}
+                {isDirty ? 'Juodraštis' : 'Išsaugota'}
               </StatusBadge>
               <button
                 type="button"
                 className="plot-panel-close"
                 onClick={() => setActiveUtilityPanel(null)}
-                aria-label="Close layers panel"
+                aria-label="Uždaryti rodinių panelį"
               >
                 x
               </button>
@@ -1018,23 +1016,23 @@ export default function PlotDetailPage() {
           </div>
 
           <MapLayerControl
-            title="Visible layers"
-            items={editorView === EDITOR_VIEWS.boundary ? boundaryEditorLayers : editorLayers}
+            title="Matomi rodiniai"
+            items={editorView === EDITOR_VIEWS.boundary ? boundaryeditorLayers : editorLayers}
             className="plot-editor-layer-console"
           />
 
           <div className="plot-layer-metrics">
             {editorView === EDITOR_VIEWS.boundary ? (
               <>
-                <MeasurementBadge label="Area" value={formatSquareMeters(mapBoundaryArea, 1)} tone="field" />
-                <MeasurementBadge label="Perimeter" value={formatMeters(mapBoundaryPerimeter)} tone="earth" />
-                <MeasurementBadge label="Points" value={mapBoundaryPoints.length} tone="amber" className="measurement-badge-wide" />
+                <MeasurementBadge label="Plotas" value={formatSquareMeters(mapBoundaryArea, 1)} tone="field" />
+                <MeasurementBadge label="Perimetras" value={formatMeters(mapBoundaryPerimeter)} tone="earth" />
+                <MeasurementBadge label="Taškai" value={mapBoundaryPoints.length} tone="amber" className="measurement-badge-wide" />
               </>
             ) : (
               <>
-                <MeasurementBadge label="Area" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
-                <MeasurementBadge label="Perimeter" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
-                <MeasurementBadge label="Sides" value={plotMeasurements?.sideSummary || 'No geometry'} tone="amber" className="measurement-badge-wide" />
+                <MeasurementBadge label="Plotas" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
+                <MeasurementBadge label="Perimetras" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
+                <MeasurementBadge label="Kraštinės" value={plotMeasurements?.sideSummary || 'Geometrijos nėra'} tone="amber" className="measurement-badge-wide" />
               </>
             )}
           </div>
@@ -1042,7 +1040,7 @@ export default function PlotDetailPage() {
           {editorView === EDITOR_VIEWS.boundary ? (
           <div className="plot-layer-section">
             <div className="plot-layer-section-head">
-              <strong>Boundary points</strong>
+              <strong>Ribų informacija</strong>
               <span>{mapBoundaryPoints.length}</span>
             </div>
             {mapBoundaryPoints.length > 0 ? (
@@ -1051,7 +1049,7 @@ export default function PlotDetailPage() {
                   <button
                     key={`edit-boundary-point-${index}`}
                     type="button"
-                    title={`Remove point ${index + 1}`}
+                    title={`Šalinti tašką ${index + 1}`}
                     onClick={() => handleBoundaryPointRemove(index)}
                     disabled={!canEdit || (boundaryClosed && mapBoundaryPoints.length <= 3)}
                   >
@@ -1062,8 +1060,8 @@ export default function PlotDetailPage() {
               </div>
             ) : (
               <EmptyStatePanel
-                title="No map boundary"
-                description="Click the map to add at least three boundary corners."
+                title="Riba žemėlapyje nenurodyta"
+                description="Spustelėkite žemėlapį ir pridėkite bent tris ribos kampus."
                 tone="subtle"
               />
             )}
@@ -1072,7 +1070,7 @@ export default function PlotDetailPage() {
           <>
           <div className="plot-layer-section">
             <div className="plot-layer-section-head">
-              <strong>Zones</strong>
+              <strong>Zonos</strong>
               <span>{draftZones.length}</span>
             </div>
             {draftZones.length > 0 ? (
@@ -1091,7 +1089,7 @@ export default function PlotDetailPage() {
                       <span className="plot-layer-object-index">{index + 1}</span>
                       <span className="plot-layer-object-copy">
                         <strong>{zone.name}</strong>
-                        <small>{formatSquareMeters(zone.zone_size ?? 0, 1)} - {zone.soil_type}</small>
+                        <small>{formatSquareMeters(zone.zone_size ?? 0, 1)} - {formatSoilType(zone.soil_type)}</small>
                       </span>
                       <span className="plot-layer-object-count">{plantCount}</span>
                     </button>
@@ -1100,8 +1098,8 @@ export default function PlotDetailPage() {
               </div>
             ) : (
               <EmptyStatePanel
-                title="No zones yet"
-                description="Draw the first growing zone directly on the canvas."
+                title="Zonų dar nėra"
+                description="Pirmą auginimo zoną nubrėžkite tiesiai plane."
                 tone="subtle"
               />
             )}
@@ -1109,10 +1107,10 @@ export default function PlotDetailPage() {
 
           <div className="plot-layer-section">
             <div className="plot-layer-section-head">
-              <strong>Planning sequence</strong>
+              <strong>Planavimo seka</strong>
               <span>{zoneTimelineItems.length}</span>
             </div>
-            <GardenTimeline items={zoneTimelineItems} emptyText="No zones have been drawn yet." />
+            <GardenTimeline items={zoneTimelineItems} emptyText="Zonų dar nenubrėžta." />
           </div>
           </>
           )}
@@ -1160,7 +1158,7 @@ export default function PlotDetailPage() {
             onSelectZone={handleZoneSelect}
             onSelectBoundary={handleBoundarySelect}
             onCreateZone={handleCanvasZoneCreate}
-            onZoneCreateBlocked={setZoneError}
+            onZoneCreateBlokuota={setZoneError}
             onZoneGeometryCommit={handleZoneGeometryCommit}
             onBoundaryCommit={handleBoundaryCommit}
           />
@@ -1169,20 +1167,20 @@ export default function PlotDetailPage() {
 
         {activeInspector ? (
         <InspectorPanel
-          title={activeInspector === INSPECTOR_TYPES.boundary ? 'Boundary inspector' : selectedZone ? 'Zone inspector' : 'Zone draft'}
+          title={activeInspector === INSPECTOR_TYPES.boundary ? 'Sklypo ribų informacija' : selectedZone ? 'Zonos informacija' : 'Zonos juodraštis'}
           description={activeInspector === INSPECTOR_TYPES.boundary
-            ? 'Plot boundary, saved map preview, and full-plot measurements.'
-            : 'Zone details, dimensions, plant placement, and draft changes.'}
+            ? 'Sklypo riba, išsaugota žemėlapio peržiūra ir viso sklypo matmenys.'
+            : 'Zonos duomenys, matmenys, augalų išdėstymas ir juodraščio pakeitimai.'}
           meta={(
             <div className="plot-floating-panel-actions">
               <StatusBadge kind="selection" tone={selectedZone || activeInspector === INSPECTOR_TYPES.boundary ? 'soft' : 'neutral'}>
-                {activeInspector === INSPECTOR_TYPES.boundary ? 'Boundary selected' : selectedZone ? 'Zone selected' : 'Draft'}
+                {activeInspector === INSPECTOR_TYPES.boundary ? 'Pasirinkta riba' : selectedZone ? 'Pasirinkta zona' : 'Juodraštis'}
               </StatusBadge>
               <button
                 type="button"
                 className="plot-panel-close"
                 onClick={() => handleZoneSelect(null)}
-                aria-label="Close inspector"
+                aria-label="Uždaryti inspektorių"
               >
                 x
               </button>
@@ -1195,32 +1193,32 @@ export default function PlotDetailPage() {
           {editorView === EDITOR_VIEWS.boundary ? (
             <>
           <InspectorSection
-            title="Boundary details"
-            description="Map boundary draft measurements update as corners move."
+            title="Ribų informacija"
+            description="Žemėlapio ribos juodraščio matmenys atnaujinami judinant kampus."
             meta={(
               <StatusBadge kind="selection" tone={boundaryClosed ? 'success' : 'warning'}>
-                {boundaryClosed ? 'Closed' : 'Drawing'}
+                {boundaryClosed ? 'Uždaryta' : 'Braižoma'}
               </StatusBadge>
             )}
           >
             <div className="plot-layer-metrics">
-              <MeasurementBadge label="Area" value={formatSquareMeters(mapBoundaryArea, 1)} tone="field" />
-              <MeasurementBadge label="Perimeter" value={formatMeters(mapBoundaryPerimeter)} tone="earth" />
-              <MeasurementBadge label="Points" value={mapBoundaryPoints.length} tone="amber" className="measurement-badge-wide" />
+              <MeasurementBadge label="Plotas" value={formatSquareMeters(mapBoundaryArea, 1)} tone="field" />
+              <MeasurementBadge label="Perimetras" value={formatMeters(mapBoundaryPerimeter)} tone="earth" />
+              <MeasurementBadge label="Taškai" value={mapBoundaryPoints.length} tone="amber" className="measurement-badge-wide" />
             </div>
             <div className="plot-boundary-center-readout">
-              <span className="designer-toolbar-kicker">Center</span>
+              <span className="designer-toolbar-kicker">Centras</span>
               <strong>
                 {mapBoundaryCenter
                   ? `${roundCoordinate(mapBoundaryCenter.lat)}, ${roundCoordinate(mapBoundaryCenter.lng)}`
-                  : 'Calculated after 3 points'}
+                  : 'Apskaičiuojama po 3 taškų'}
               </strong>
             </div>
           </InspectorSection>
 
           <InspectorSection
-            title="Boundary controls"
-            description="Corner edits stay in this draft until Save plot changes."
+            title="Ribų valdikliai"
+            description="Kampų pakeitimai lieka šiame juodraštyje iki sklypo pakeitimų išsaugojimo."
           >
             <div className="form-actions">
               <Button
@@ -1228,18 +1226,18 @@ export default function PlotDetailPage() {
                 onClick={handleBoundaryClose}
                 disabled={!canEdit || boundaryClosed || mapBoundaryPoints.length < 3}
               >
-                Close boundary
+                Uždaryti ribą
               </Button>
               <Button
                 variant="ghost"
                 onClick={handleBoundaryUndo}
                 disabled={!canEdit || !mapBoundaryPoints.length || (boundaryClosed && mapBoundaryPoints.length <= 3)}
               >
-                Undo
+                Atšaukti
               </Button>
             </div>
             {mapBoundaryPoints.length < 3 ? (
-              <span className="field-error">Add at least 3 boundary points before saving.</span>
+              <span className="field-error">Prieš išsaugodami pridėkite bent 3 ribos taškus.</span>
             ) : null}
           </InspectorSection>
             </>
@@ -1247,11 +1245,11 @@ export default function PlotDetailPage() {
           <>
           {mapBoundaryPoints.length >= 3 ? (
             <InspectorSection
-              title="Boundary map"
-              description="Saved plot boundary preview with map points and side measurements."
+              title="Ribų vaizdas"
+              description="Išsaugotos sklypo ribos peržiūra su žemėlapio taškais ir kraštinių matmenimis."
               meta={(
                 <StatusBadge kind="selection" tone="soft">
-                  {mapBoundaryPoints.length} points
+                  {mapBoundaryPoints.length} taškai
                 </StatusBadge>
               )}
             >
@@ -1273,13 +1271,13 @@ export default function PlotDetailPage() {
           ) : null}
 
           <InspectorSection
-            title="Plot measurements"
-            description="These geometry values update when the boundary is changed on the canvas."
+            title="Sklypo matmenys"
+            description="Šios geometrijos reikšmės atnaujinamos pakeitus ribą plane."
           >
             <div className="plot-layer-metrics">
-              <MeasurementBadge label="Area" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
-              <MeasurementBadge label="Perimeter" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
-              <MeasurementBadge label="Sides" value={plotMeasurements?.sideSummary || 'No geometry'} tone="amber" className="measurement-badge-wide" />
+              <MeasurementBadge label="Plotas" value={formatSquareMeters(calculateArea(measurementState?.boundary), 1)} tone="field" />
+              <MeasurementBadge label="Perimetras" value={formatMeters(plotMeasurements?.perimeter ?? 0)} tone="earth" />
+              <MeasurementBadge label="Kraštinės" value={plotMeasurements?.sideSummary || 'Geometrijos nėra'} tone="amber" className="measurement-badge-wide" />
             </div>
           </InspectorSection>
           </>
@@ -1288,11 +1286,11 @@ export default function PlotDetailPage() {
           ) : (
           <>
           <InspectorSection
-            title="Selected zone"
-            description="Geometry, dimensions, soil, and plant count stay together."
+            title="Pasirinkta zona"
+            description="Geometrija, matmenys, dirvožemis ir augalų kiekis pateikiami kartu."
             meta={(
               <StatusBadge kind="selection" tone={selectedZone ? 'soft' : 'neutral'}>
-                {selectedZone ? 'Active' : 'None'}
+                {selectedZone ? 'Aktyvi' : 'Nėra'}
               </StatusBadge>
             )}
           >
@@ -1300,18 +1298,18 @@ export default function PlotDetailPage() {
               zone={selectedZone}
               measurements={formattedSelectedZoneMeasurements}
               plantCount={selectedZonePlants.length}
-              emptyTitle="Select or draw a zone"
-              emptyDescription="Choose a zone on the canvas to edit its details and plant directly into it."
+              emptyTitle="Pasirinkite arba nubrėžkite zoną"
+              emptyDescription="Pasirinkite zoną plane, kad galėtumėte redaguoti jos duomenis ir sodinti tiesiai į ją."
             />
           </InspectorSection>
 
           <InspectorSection
-            title={selectedZone ? 'Zone details' : 'New zone draft'}
-            description="Apply detail changes to the draft before the main plot save."
+            title={selectedZone ? 'Zonos duomenys' : 'Naujos zonos juodraštis'}
+            description="Prieš išsaugodami visą sklypą pritaikykite zonos duomenų pakeitimus juodraščiui."
           >
             <form className="input-grid" onSubmit={handleZoneApply}>
               <div className="field field-span-2">
-                <label htmlFor="zone-name">Zone name</label>
+                <label htmlFor="zone-name">Zonos pavadinimas</label>
                 <input
                   id="zone-name"
                   value={zoneForm.name}
@@ -1320,7 +1318,7 @@ export default function PlotDetailPage() {
                 />
               </div>
               <div className="field">
-                <label htmlFor="zone-soil-type">Soil type</label>
+                <label htmlFor="zone-soil-type">Dirvožemio tipas</label>
                 <select
                   id="zone-soil-type"
                   value={zoneForm.soil_type}
@@ -1328,12 +1326,12 @@ export default function PlotDetailPage() {
                   disabled={!canEdit}
                 >
                   {SOIL_TYPES.map((soilType) => (
-                    <option key={soilType} value={soilType}>{soilType}</option>
+                    <option key={soilType} value={soilType}>{formatSoilType(soilType)}</option>
                   ))}
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="zone-rotation-stage">Rotation stage</label>
+                <label htmlFor="zone-rotation-stage">Rotacijos etapas</label>
                 <input
                   id="zone-rotation-stage"
                   type="number"
@@ -1345,9 +1343,9 @@ export default function PlotDetailPage() {
                 />
               </div>
               <details className="advanced-zone-details field-span-2" open={Boolean(zoneForm.last_planting_date)}>
-                <summary>Optional planting data</summary>
+                <summary>Papildomi sodinimo duomenys</summary>
                 <div className="field">
-                  <label htmlFor="zone-last-planting-date">Last planting date</label>
+                  <label htmlFor="zone-last-planting-date">Paskutinė sodinimo data</label>
                   <input
                     id="zone-last-planting-date"
                     type="date"
@@ -1363,14 +1361,14 @@ export default function PlotDetailPage() {
               <div className="form-actions">
                 {selectedZone ? (
                   <>
-                    <Button type="submit" variant="secondary">Apply zone details</Button>
-                    <Button variant="ghost" onClick={openNewZoneInspector}>New zone draft</Button>
-                    <Button variant="danger" onClick={handleZoneDelete}>Delete zone</Button>
+                    <Button type="submit" variant="secondary">Pritaikyti zonos duomenis</Button>
+                    <Button variant="ghost" onClick={openNewZoneInspector}>Naujos zonos juodraštis</Button>
+                    <Button variant="danger" onClick={handleZoneDelete}>Šalinti zoną</Button>
                   </>
                 ) : (
                   <>
-                    <Button onClick={handleZoneCreateFromForm} variant="secondary">Add zone to draft</Button>
-                    <Button variant="ghost" onClick={() => setZoneForm(emptyZoneForm)}>Clear form</Button>
+                    <Button onClick={handleZoneCreateFromForm} variant="secondary">Pridėti zoną į juodraštį</Button>
+                    <Button variant="ghost" onClick={() => setZoneForm(emptyZoneForm)}>Išvalyti formą</Button>
                   </>
                 )}
               </div>
@@ -1378,8 +1376,8 @@ export default function PlotDetailPage() {
           </InspectorSection>
 
           <InspectorSection
-            title="Plants in zone"
-            description="Placement stays attached to the selected zone and saves with the layout."
+            title="Augalai zonoje"
+            description="Sodinimas lieka susietas su pasirinkta zona ir išsaugomas kartu su išdėstymu."
           >
             {selectedZone ? (
               selectedZonePlants.length > 0 ? (
@@ -1391,8 +1389,8 @@ export default function PlotDetailPage() {
                         <DefinitionList
                           items={[
                             {
-                              label: 'Catalog',
-                              value: plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? plant.type ?? 'Manual plant',
+                              label: 'Katalogas',
+                              value: plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? plant.type ?? 'Rankinis augalas',
                             },
                           ]}
                         />
@@ -1401,11 +1399,11 @@ export default function PlotDetailPage() {
                       <div className="plot-zone-plant-actions">
                         {Number.isFinite(Number(plant.id)) ? (
                           <Link to={`/plots/${plotId}/plants/${plant.id}`}>
-                            <Button variant="ghost" size="sm">Open</Button>
+                            <Button variant="ghost" size="sm">Atidaryti</Button>
                           </Link>
                         ) : null}
                         {canEdit ? (
-                          <Button variant="ghost" size="sm" onClick={() => handlePlantDelete(plant.id)}>Remove</Button>
+                          <Button variant="ghost" size="sm" onClick={() => handlePlantDelete(plant.id)}>Šalinti</Button>
                         ) : null}
                       </div>
                     </div>
@@ -1413,15 +1411,15 @@ export default function PlotDetailPage() {
                 </div>
               ) : (
                 <EmptyStatePanel
-                  title="No plants placed yet"
-                  description="Use the placement flow below to add the first plant into this selected zone."
+                  title="Augalų dar nepasodinta"
+                  description="Naudokite žemiau esantį sodinimo procesą, kad pridėtumėte pirmą augalą į pasirinktą zoną."
                   tone="subtle"
                 />
               )
             ) : (
               <EmptyStatePanel
-                title="Zone required"
-                description="Select a zone before placing plants so the next step is always clear."
+                title="Reikia pasirinkti zoną"
+                description="Prieš sodindami augalus pasirinkite zoną, kad kitas žingsnis būtų aiškus."
                 tone="subtle"
               />
             )}

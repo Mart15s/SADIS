@@ -48,7 +48,7 @@ export default function PlotEditPage() {
   }, [pageState.data.plot])
 
   if (pageState.loading) {
-    return <LoadingState title="Loading plot editor..." />
+    return <LoadingState title="Įkeliamas sklypo redaktorius..." />
   }
 
   if (pageState.error) {
@@ -56,11 +56,11 @@ export default function PlotEditPage() {
   }
 
   if (!pageState.data.plot) {
-    return <EmptyState title="Plot not found" description="The requested plot could not be loaded." />
+    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
   }
 
   if (!form) {
-    return <LoadingState title="Preparing plot editor..." />
+    return <LoadingState title="Ruošiamas sklypo redaktorius..." />
   }
 
   const canEdit = ['owner', 'editor'].includes(pageState.data.accessRole)
@@ -85,7 +85,7 @@ export default function PlotEditPage() {
         plot_size: Number(form.plot_size),
         share: form.share,
       })
-      setToastMessage('Plot metadata saved.')
+      setToastMessage('Sklypo duomenys išsaugoti.')
       navigate(`/plots/${plotId}`)
     } catch (requestError) {
       setError(requestError.message)
@@ -111,15 +111,15 @@ export default function PlotEditPage() {
     return (
       <div className="page-stack">
         <PageHeader
-          title="Plot editor"
-          description="This plot is readable in your current role, but only owners and editors can update it."
+          title="Sklypo redaktorius"
+          description="Pagal dabartinę rolę šį sklypą galite peržiūrėti, bet atnaujinti gali tik savininkai ir redaktoriai."
         />
         <EmptyState
-          title="Edit access unavailable"
-          description="Return to the plot detail page for read-only access."
+          title="Redagavimo prieiga negalima"
+          description="Grįžkite į sklypo peržiūros puslapį, jei norite tik skaityti duomenis."
           action={(
             <Link to={`/plots/${plotId}`}>
-              <Button>Back to plot</Button>
+              <Button>Grįžti į sklypą</Button>
             </Link>
           )}
         />
@@ -130,13 +130,13 @@ export default function PlotEditPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Plot settings"
-        title="Edit plot metadata"
-        description={`Update ${pageState.data.plot.name} identity, location, size, and community visibility without affecting the existing layout.`}
+        eyebrow="Sklypo nustatymai"
+        title="Redaguoti sklypo duomenis"
+        description={`Atnaujinkite ${pageState.data.plot.name} tapatybę, vietą, dydį ir bendruomenės matomumą nepaveikdami esamo išdėstymo.`}
         meta={(
           <>
             <Badge tone="soft">{pageState.data.accessRole}</Badge>
-            <Badge tone={form.share ? 'success' : 'neutral'}>{form.share ? 'Shared' : 'Private'}</Badge>
+            <Badge tone={form.share ? 'success' : 'neutral'}>{form.share ? 'Bendrinamas' : 'Privatus'}</Badge>
           </>
         )}
       />
@@ -145,15 +145,15 @@ export default function PlotEditPage() {
 
       <form className="panel split-form" onSubmit={handleSave}>
         <div className="field">
-          <label htmlFor="edit-name">Name</label>
+          <label htmlFor="edit-name">Pavadinimas</label>
           <input id="edit-name" name="name" value={form.name} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="edit-city">City</label>
+          <label htmlFor="edit-city">Miestas</label>
           <input id="edit-city" name="city" value={form.city} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="edit-size">Plot size</label>
+          <label htmlFor="edit-size">Sklypo plotas</label>
           <input
             id="edit-size"
             name="plot_size"
@@ -166,7 +166,7 @@ export default function PlotEditPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="edit-date">Creation date</label>
+          <label htmlFor="edit-date">Sukūrimo data</label>
           <input
             id="edit-date"
             name="creation_date"
@@ -177,11 +177,11 @@ export default function PlotEditPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="edit-description">Description</label>
+          <label htmlFor="edit-description">Aprašymas</label>
           <textarea id="edit-description" name="description" value={form.description} onChange={handleChange} />
         </div>
         <div className="field">
-          <label htmlFor="edit-share">Community visibility</label>
+          <label htmlFor="edit-share">Bendruomenės matomumas</label>
           <select
             id="edit-share"
             value={String(form.share)}
@@ -192,8 +192,8 @@ export default function PlotEditPage() {
               }))
             }}
           >
-            <option value="false">Private</option>
-            <option value="true">Shared</option>
+            <option value="false">Privatus</option>
+            <option value="true">Bendrinamas</option>
           </select>
         </div>
 
@@ -201,23 +201,23 @@ export default function PlotEditPage() {
 
         {submitting ? (
           <ProcessingState
-            title="Saving plot settings"
-            description="Updating plot metadata and refreshing the workspace."
-            steps={['Validating fields', 'Saving metadata', 'Refreshing plot view']}
+            title="Saugomi sklypo nustatymai"
+            description="Atnaujinami sklypo duomenys ir darbo sritis."
+            steps={['Tikrinami laukai', 'Saugomi metaduomenys', 'Atnaujinamas sklypo vaizdas']}
             compact
           />
         ) : null}
 
         <div className="form-actions">
           <Button type="submit" loading={submitting}>
-            {submitting ? 'Saving changes' : 'Save changes'}
+            {submitting ? 'Saugomi pakeitimai' : 'Išsaugoti pakeitimus'}
           </Button>
           <Link to={`/plots/${plotId}`}>
-            <Button variant="secondary">Cancel</Button>
+            <Button variant="secondary">Atšaukti</Button>
           </Link>
           {isOwner ? (
             <Button variant="danger" onClick={handleDelete} disabled={submitting}>
-              Delete plot
+              Šalinti sklypą
             </Button>
           ) : null}
         </div>

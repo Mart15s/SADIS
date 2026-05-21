@@ -270,7 +270,7 @@ class CurrentVersionDemoSeeder extends Seeder
             'city' => 'Vilnius',
             'plot_size' => 186.00,
             'creation_date' => now()->subYear()->toDateString(),
-            'description' => 'A working kitchen garden with raised vegetable beds, herb strips, berries, and companion flowers.',
+            'description' => 'Veikiantis virtuvinis daržas su pakeltomis daržovių lysvėmis, prieskoninių augalų juostomis, uogomis ir augalais palydovais.',
             'share' => true,
             'geometry' => $this->rect(0.04, 0.06, 0.96, 0.92),
         ]);
@@ -280,63 +280,63 @@ class CurrentVersionDemoSeeder extends Seeder
             'city' => 'Vilnius',
             'plot_size' => 74.00,
             'creation_date' => now()->subMonths(9)->toDateString(),
-            'description' => 'A smaller perennial strip for berries, mint containment, and a young apple tree.',
+            'description' => 'Mažesnė daugiametė juosta uogoms, mėtų dėžei ir jaunai obeliai.',
             'share' => false,
             'geometry' => $this->rect(0.06, 0.10, 0.94, 0.86),
         ]);
 
         $zones = [
-            'tomatoes' => $this->createZone($primary, 'Tomato and Basil Bed', 20, SoilType::Peaty->value, 2, $this->rect(0.08, 0.10, 0.25, 0.30)),
-            'cucurbits' => $this->createZone($primary, 'Cucumber Trellis Bed', 18, SoilType::Sandy->value, 1, $this->rect(0.30, 0.10, 0.47, 0.30)),
-            'roots' => $this->createZone($primary, 'Root Vegetable Bed', 18, SoilType::Clay->value, 3, $this->rect(0.52, 0.10, 0.69, 0.30)),
-            'greens' => $this->createZone($primary, 'Leafy Greens Bed', 18, SoilType::Peaty->value, 1, $this->rect(0.74, 0.10, 0.91, 0.30)),
-            'brassicas' => $this->createZone($primary, 'Brassica Bed', 18, SoilType::Clay->value, 2, $this->rect(0.08, 0.36, 0.25, 0.56)),
-            'legumes' => $this->createZone($primary, 'Pea and Bean Bed', 18, SoilType::Sandy->value, 4, $this->rect(0.30, 0.36, 0.47, 0.56)),
-            'nightshades' => $this->createZone($primary, 'Pepper Bed', 18, SoilType::Peaty->value, 2, $this->rect(0.52, 0.36, 0.69, 0.56)),
-            'herbs' => $this->createZone($primary, 'Perennial Herb Strip', 18, SoilType::Rocky->value, 5, $this->rect(0.74, 0.36, 0.91, 0.56)),
-            'flowers' => $this->createZone($primary, 'Companion Flower Border', 18, SoilType::Sandy->value, 1, $this->rect(0.08, 0.62, 0.25, 0.82)),
-            'squash' => $this->createZone($primary, 'Squash Mound', 18, SoilType::Peaty->value, 3, $this->rect(0.30, 0.62, 0.47, 0.82)),
-            'corn' => $this->createZone($primary, 'Corn Block', 18, SoilType::Clay->value, 1, $this->rect(0.52, 0.62, 0.69, 0.82)),
-            'strawberries' => $this->createZone($primary, 'Strawberry Row', 18, SoilType::Sandy->value, 4, $this->rect(0.74, 0.62, 0.91, 0.82)),
-            'raspberry' => $this->createZone($secondary, 'Raspberry Canes', 18, SoilType::Sandy->value, 6, $this->rect(0.10, 0.16, 0.32, 0.76)),
-            'blueberry' => $this->createZone($secondary, 'Blueberry Acid Bed', 16, SoilType::Peaty->value, 5, $this->rect(0.38, 0.16, 0.58, 0.76)),
-            'apple' => $this->createZone($secondary, 'Young Apple Guild', 20, SoilType::Clay->value, 7, $this->rect(0.64, 0.16, 0.86, 0.56)),
-            'mint' => $this->createZone($secondary, 'Contained Mint Box', 8, SoilType::Peaty->value, 3, $this->rect(0.64, 0.62, 0.86, 0.78)),
+            'tomatoes' => $this->createZone($primary, 'Pomidorų ir bazilikų lysvė', 20, SoilType::Peaty->value, 2, $this->rect(0.08, 0.10, 0.25, 0.30)),
+            'cucurbits' => $this->createZone($primary, 'Agurkų atramų lysvė', 18, SoilType::Sandy->value, 1, $this->rect(0.30, 0.10, 0.47, 0.30)),
+            'roots' => $this->createZone($primary, 'Šakniavaisių lysvė', 18, SoilType::Clay->value, 3, $this->rect(0.52, 0.10, 0.69, 0.30)),
+            'greens' => $this->createZone($primary, 'Lapinių daržovių lysvė', 18, SoilType::Peaty->value, 1, $this->rect(0.74, 0.10, 0.91, 0.30)),
+            'brassicas' => $this->createZone($primary, 'Kopūstinių lysvė', 18, SoilType::Clay->value, 2, $this->rect(0.08, 0.36, 0.25, 0.56)),
+            'legumes' => $this->createZone($primary, 'Žirnių ir pupelių lysvė', 18, SoilType::Sandy->value, 4, $this->rect(0.30, 0.36, 0.47, 0.56)),
+            'nightshades' => $this->createZone($primary, 'Paprikų lysvė', 18, SoilType::Peaty->value, 2, $this->rect(0.52, 0.36, 0.69, 0.56)),
+            'herbs' => $this->createZone($primary, 'Daugiamečių prieskonių juosta', 18, SoilType::Rocky->value, 5, $this->rect(0.74, 0.36, 0.91, 0.56)),
+            'flowers' => $this->createZone($primary, 'Augalų palydovų gėlių kraštas', 18, SoilType::Sandy->value, 1, $this->rect(0.08, 0.62, 0.25, 0.82)),
+            'squash' => $this->createZone($primary, 'Moliūginių kauburys', 18, SoilType::Peaty->value, 3, $this->rect(0.30, 0.62, 0.47, 0.82)),
+            'corn' => $this->createZone($primary, 'Kukurūzų blokas', 18, SoilType::Clay->value, 1, $this->rect(0.52, 0.62, 0.69, 0.82)),
+            'strawberries' => $this->createZone($primary, 'Braškių eilė', 18, SoilType::Sandy->value, 4, $this->rect(0.74, 0.62, 0.91, 0.82)),
+            'raspberry' => $this->createZone($secondary, 'Aviečių zona', 18, SoilType::Sandy->value, 6, $this->rect(0.10, 0.16, 0.32, 0.76)),
+            'blueberry' => $this->createZone($secondary, 'Rūgščią dirvą mėgstančių šilauogių lysvė', 16, SoilType::Peaty->value, 5, $this->rect(0.38, 0.16, 0.58, 0.76)),
+            'apple' => $this->createZone($secondary, 'Jaunos obels zona', 20, SoilType::Clay->value, 7, $this->rect(0.64, 0.16, 0.86, 0.56)),
+            'mint' => $this->createZone($secondary, 'Mėtų dėžė', 8, SoilType::Peaty->value, 3, $this->rect(0.64, 0.62, 0.86, 0.78)),
         ];
 
         $plants = [
-            'tomato' => $this->createPlant($primary, $zones['tomatoes'], 'Tomato', "Tomato 'Sungold'", -42, ConditionType::Flowering->value, 3.4, false, 'Lower leaves pruned for airflow.'),
-            'basil' => $this->createPlant($primary, $zones['tomatoes'], 'Basil', 'Genovese Basil', -28, ConditionType::Growing->value, 1.1, false),
-            'cucumber' => $this->createPlant($primary, $zones['cucurbits'], 'Cucumber', "Cucumber 'Marketmore'", -31, ConditionType::Growing->value, 2.7, false),
-            'carrot' => $this->createPlant($primary, $zones['roots'], 'Carrot', "Carrot 'Nantes'", -39, ConditionType::Growing->value, 1.8, false),
-            'beetroot' => $this->createPlant($primary, $zones['roots'], 'Beetroot', "Beetroot 'Detroit Dark Red'", -36, ConditionType::Growing->value, 1.5, false),
-            'lettuce' => $this->createPlant($primary, $zones['greens'], 'Lettuce', "Lettuce 'Little Gem'", -24, ConditionType::Mature->value, 1.2, false),
-            'spinach' => $this->createPlant($primary, $zones['greens'], 'Spinach', "Spinach 'Space'", -21, ConditionType::Mature->value, 1.0, false),
-            'cabbage' => $this->createPlant($primary, $zones['brassicas'], 'Cabbage', "Cabbage 'Golden Acre'", -48, ConditionType::Growing->value, 2.1, false),
-            'broccoli' => $this->createPlant($primary, $zones['brassicas'], 'Broccoli', "Broccoli 'Calabrese'", -45, ConditionType::Growing->value, 2.2, false),
-            'pea' => $this->createPlant($primary, $zones['legumes'], 'Pea', "Pea 'Sugar Ann'", -51, ConditionType::Flowering->value, 2.0, false),
-            'bean' => $this->createPlant($primary, $zones['legumes'], 'Bean', "Bean 'Provider'", -18, ConditionType::Germinating->value, 1.0, false),
-            'pepper' => $this->createPlant($primary, $zones['nightshades'], 'Pepper', "Sweet Pepper 'California Wonder'", -40, ConditionType::Growing->value, 2.3, false),
-            'chili' => $this->createPlant($primary, $zones['nightshades'], 'Chili Pepper', "Chili Pepper 'Jalapeno'", -40, ConditionType::Growing->value, 1.9, false),
-            'thyme' => $this->createPlant($primary, $zones['herbs'], 'Thyme', 'Common Thyme', -70, ConditionType::Regenerating->value, 0.8, true),
-            'rosemary' => $this->createPlant($primary, $zones['herbs'], 'Rosemary', 'Rosemary', -80, ConditionType::Growing->value, 1.2, true),
-            'parsley' => $this->createPlant($primary, $zones['herbs'], 'Parsley', 'Flat Leaf Parsley', -35, ConditionType::Growing->value, 1.0, true),
-            'marigold' => $this->createPlant($primary, $zones['flowers'], 'Marigold', 'French Marigold Border', -32, ConditionType::Flowering->value, 1.3, false),
-            'calendula' => $this->createPlant($primary, $zones['flowers'], 'Calendula', 'Calendula Border', -33, ConditionType::Flowering->value, 1.2, false),
-            'zucchini' => $this->createPlant($primary, $zones['squash'], 'Zucchini', "Zucchini 'Black Beauty'", -27, ConditionType::Flowering->value, 3.0, false),
-            'pumpkin' => $this->createPlant($primary, $zones['squash'], 'Pumpkin', "Pumpkin 'Small Sugar'", -26, ConditionType::Growing->value, 3.5, false),
-            'corn' => $this->createPlant($primary, $zones['corn'], 'Corn', "Sweet Corn 'Golden Bantam'", -30, ConditionType::Growing->value, 2.8, false),
-            'strawberry' => $this->createPlant($primary, $zones['strawberries'], 'Strawberry', "Strawberry 'Honeoye'", -260, ConditionType::Flowering->value, 2.4, true),
-            'raspberry' => $this->createPlant($secondary, $zones['raspberry'], 'Raspberry', "Raspberry 'Glen Ample'", -300, ConditionType::Growing->value, 5.0, true),
-            'blueberry' => $this->createPlant($secondary, $zones['blueberry'], 'Blueberry', "Blueberry 'Bluecrop'", -310, ConditionType::Flowering->value, 3.2, true),
-            'apple' => $this->createPlant($secondary, $zones['apple'], 'Apple Tree', "Apple Tree 'Auksis'", -720, ConditionType::Growing->value, 9.0, true),
-            'mint' => $this->createPlant($secondary, $zones['mint'], 'Apple Mint', 'Apple Mint', -120, ConditionType::Regenerating->value, 1.6, true),
+            'tomato' => $this->createPlant($primary, $zones['tomatoes'], 'Tomato', 'Pomidoras „Sungold“', -42, ConditionType::Flowering->value, 3.4, false, 'Apatiniai lapai pašalinti geresnei oro cirkuliacijai.'),
+            'basil' => $this->createPlant($primary, $zones['tomatoes'], 'Basil', 'Bazilikas „Genovese“', -28, ConditionType::Growing->value, 1.1, false),
+            'cucumber' => $this->createPlant($primary, $zones['cucurbits'], 'Cucumber', 'Agurkas „Marketmore“', -31, ConditionType::Growing->value, 2.7, false),
+            'carrot' => $this->createPlant($primary, $zones['roots'], 'Carrot', 'Morka „Nantes“', -39, ConditionType::Growing->value, 1.8, false),
+            'beetroot' => $this->createPlant($primary, $zones['roots'], 'Beetroot', 'Burokėlis „Detroit Dark Red“', -36, ConditionType::Growing->value, 1.5, false),
+            'lettuce' => $this->createPlant($primary, $zones['greens'], 'Lettuce', 'Salota „Little Gem“', -24, ConditionType::Mature->value, 1.2, false),
+            'spinach' => $this->createPlant($primary, $zones['greens'], 'Spinach', 'Špinatas „Space“', -21, ConditionType::Mature->value, 1.0, false),
+            'cabbage' => $this->createPlant($primary, $zones['brassicas'], 'Cabbage', 'Kopūstas „Golden Acre“', -48, ConditionType::Growing->value, 2.1, false),
+            'broccoli' => $this->createPlant($primary, $zones['brassicas'], 'Broccoli', 'Brokolis „Calabrese“', -45, ConditionType::Growing->value, 2.2, false),
+            'pea' => $this->createPlant($primary, $zones['legumes'], 'Pea', 'Žirnis „Sugar Ann“', -51, ConditionType::Flowering->value, 2.0, false),
+            'bean' => $this->createPlant($primary, $zones['legumes'], 'Bean', 'Pupelė „Provider“', -18, ConditionType::Germinating->value, 1.0, false),
+            'pepper' => $this->createPlant($primary, $zones['nightshades'], 'Pepper', 'Saldžioji paprika „California Wonder“', -40, ConditionType::Growing->value, 2.3, false),
+            'chili' => $this->createPlant($primary, $zones['nightshades'], 'Chili Pepper', 'Aitrioji paprika „Jalapeno“', -40, ConditionType::Growing->value, 1.9, false),
+            'thyme' => $this->createPlant($primary, $zones['herbs'], 'Thyme', 'Paprastasis čiobrelis', -70, ConditionType::Regenerating->value, 0.8, true),
+            'rosemary' => $this->createPlant($primary, $zones['herbs'], 'Rosemary', 'Rozmarinas', -80, ConditionType::Growing->value, 1.2, true),
+            'parsley' => $this->createPlant($primary, $zones['herbs'], 'Parsley', 'Lapinės petražolės', -35, ConditionType::Growing->value, 1.0, true),
+            'marigold' => $this->createPlant($primary, $zones['flowers'], 'Marigold', 'Gvazdikinis serenčių kraštas', -32, ConditionType::Flowering->value, 1.3, false),
+            'calendula' => $this->createPlant($primary, $zones['flowers'], 'Calendula', 'Medetkų kraštas', -33, ConditionType::Flowering->value, 1.2, false),
+            'zucchini' => $this->createPlant($primary, $zones['squash'], 'Zucchini', 'Cukinija „Black Beauty“', -27, ConditionType::Flowering->value, 3.0, false),
+            'pumpkin' => $this->createPlant($primary, $zones['squash'], 'Pumpkin', 'Moliūgas „Small Sugar“', -26, ConditionType::Growing->value, 3.5, false),
+            'corn' => $this->createPlant($primary, $zones['corn'], 'Corn', 'Saldusis kukurūzas „Golden Bantam“', -30, ConditionType::Growing->value, 2.8, false),
+            'strawberry' => $this->createPlant($primary, $zones['strawberries'], 'Strawberry', 'Braškė „Honeoye“', -260, ConditionType::Flowering->value, 2.4, true),
+            'raspberry' => $this->createPlant($secondary, $zones['raspberry'], 'Raspberry', 'Avietė „Glen Ample“', -300, ConditionType::Growing->value, 5.0, true),
+            'blueberry' => $this->createPlant($secondary, $zones['blueberry'], 'Blueberry', 'Šilauogė „Bluecrop“', -310, ConditionType::Flowering->value, 3.2, true),
+            'apple' => $this->createPlant($secondary, $zones['apple'], 'Apple Tree', 'Obelis „Auksis“', -720, ConditionType::Growing->value, 9.0, true),
+            'mint' => $this->createPlant($secondary, $zones['mint'], 'Apple Mint', 'Obuolinė mėta', -120, ConditionType::Regenerating->value, 1.6, true),
         ];
 
-        $this->snapshot($primary, 'plot_created', now()->subMonths(12), 'Initial plot boundary and ownership were created.');
-        $this->snapshot($primary, 'plot_saved', now()->subMonths(2), 'Raised beds were moved into a four-column grid with wider walking paths.');
-        $this->snapshot($primary, 'plot_saved', now()->subWeeks(3), 'Spring plantings and companion flower border were committed.');
-        $this->snapshot($secondary, 'plot_created', now()->subMonths(9), 'Perennial berry and orchard strip was created.');
+        $this->snapshot($primary, 'plot_created', now()->subMonths(12), 'Sukurta pradinė sklypo riba ir savininko ryšys.');
+        $this->snapshot($primary, 'plot_saved', now()->subMonths(2), 'Pakeltos lysvės perkeltos į keturių stulpelių išdėstymą su platesniais takais.');
+        $this->snapshot($primary, 'plot_saved', now()->subWeeks(3), 'Išsauginti pavasariniai sodinimai ir augalų palydovų gėlių kraštas.');
+        $this->snapshot($secondary, 'plot_created', now()->subMonths(9), 'Sukurta daugiametė uogų ir sodo juosta.');
 
         return [
             'primary_plot' => $primary,
@@ -350,18 +350,18 @@ class CurrentVersionDemoSeeder extends Seeder
     {
         $owner = $this->actors['owner']['owner'];
         $items = [
-            ['Compost', 5.5, InventoryItemType::Material->value, InventoryUnit::Bag->value],
-            ['Tomato organic fertilizer', 1.2, InventoryItemType::Material->value, InventoryUnit::Kilogram->value],
-            ['Seaweed liquid feed', 0.4, InventoryItemType::Material->value, InventoryUnit::Liter->value],
-            ['Straw mulch', 2.0, InventoryItemType::Material->value, InventoryUnit::Bag->value],
-            ['Copper-free biofungicide', 0.1, InventoryItemType::Material->value, InventoryUnit::Liter->value],
-            ['Neem oil spray', 0.3, InventoryItemType::Material->value, InventoryUnit::Liter->value],
-            ['Carrot seed packet', 1, InventoryItemType::Material->value, InventoryUnit::Pack->value],
-            ['Drip hose', 1, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
-            ['Hand trowel', 2, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
-            ['Pruning shears', 1, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
-            ['Row cover', 1, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
-            ['Plant ties', 12, InventoryItemType::Material->value, InventoryUnit::Unit->value],
+            ['Kompostas', 5.5, InventoryItemType::Material->value, InventoryUnit::Bag->value],
+            ['Organinės pomidorų trąšos', 1.2, InventoryItemType::Material->value, InventoryUnit::Kilogram->value],
+            ['Skystos jūros dumblių trąšos', 0.4, InventoryItemType::Material->value, InventoryUnit::Liter->value],
+            ['Šiaudų mulčias', 2.0, InventoryItemType::Material->value, InventoryUnit::Bag->value],
+            ['Biofungicidas be vario', 0.1, InventoryItemType::Material->value, InventoryUnit::Liter->value],
+            ['Nimbamedžio aliejaus purškalas', 0.3, InventoryItemType::Material->value, InventoryUnit::Liter->value],
+            ['Morkų sėklų pakelis', 1, InventoryItemType::Material->value, InventoryUnit::Pack->value],
+            ['Laistymo žarna', 1, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
+            ['Rankinis sodinimo kastuvėlis', 2, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
+            ['Genėjimo žirklės', 1, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
+            ['Apsauginė danga', 1, InventoryItemType::Tool->value, InventoryUnit::Unit->value],
+            ['Augalų raiščiai', 12, InventoryItemType::Material->value, InventoryUnit::Unit->value],
         ];
 
         foreach ($items as [$name, $quantity, $type, $unit]) {
@@ -423,24 +423,24 @@ class CurrentVersionDemoSeeder extends Seeder
 
         $tasks = [];
         $definitions = [
-            ['water_tomato_done', -14, 'Water tomatoes and basil deeply', TaskType::Watering, TaskState::Completed, TaskPriority::Medium, 'Tomato', 'tomatoes', 'Compost', 0.2],
-            ['buy_compost_done', -13, 'Buy compost for spring side-dressing', TaskType::Buy, TaskState::Completed, TaskPriority::Medium, 'Tomato', 'tomatoes', 'Compost', 2.0],
-            ['feed_tomato_done', -12, 'Feed flowering tomatoes', TaskType::Fertilize, TaskState::Completed, TaskPriority::High, 'Tomato', 'tomatoes', 'Tomato organic fertilizer', 0.25],
-            ['harvest_lettuce_done', -10, 'Harvest outer lettuce leaves', TaskType::Harvest, TaskState::Completed, TaskPriority::Medium, 'Lettuce', 'greens', null, null],
-            ['pest_cabbage_done', -8, 'Inspect brassicas for caterpillars', TaskType::Spray, TaskState::Completed, TaskPriority::Medium, 'Cabbage', 'brassicas', 'Neem oil spray', 0.05],
-            ['frost_cover_canceled', -6, 'Cover peppers for frost warning', TaskType::Rest, TaskState::Canceled, TaskPriority::Low, 'Pepper', 'nightshades', 'Row cover', 1],
-            ['mulch_strawberry_overdue', -2, 'Refresh strawberry mulch after rain', TaskType::Rest, TaskState::Pending, TaskPriority::High, 'Strawberry', 'strawberries', 'Straw mulch', 1.5],
-            ['water_cucumbers_today', 0, 'Water cucumber trellis at soil level', TaskType::Watering, TaskState::Pending, TaskPriority::High, 'Cucumber', 'cucurbits', null, null],
-            ['buy_biofungicide_today', 0, 'Buy biofungicide for tomato leaf spot response', TaskType::Buy, TaskState::Pending, TaskPriority::High, 'Tomato', 'tomatoes', 'Copper-free biofungicide', 0.9],
-            ['tie_tomatoes_tomorrow', 1, 'Tie tomatoes to supports before windy evening', TaskType::Rest, TaskState::Pending, TaskPriority::High, 'Tomato', 'tomatoes', 'Plant ties', 4],
-            ['feed_peppers_soon', 3, 'Side-dress peppers with compost', TaskType::Fertilize, TaskState::Pending, TaskPriority::Medium, 'Pepper', 'nightshades', 'Compost', 1.0],
-            ['harvest_spinach_soon', 5, 'Harvest spinach before heat stress', TaskType::Harvest, TaskState::Pending, TaskPriority::Medium, 'Spinach', 'greens', null, null],
-            ['spray_apple_soon', 6, 'Check apple tree for aphids and leaf curl', TaskType::Spray, TaskState::Pending, TaskPriority::Medium, null, null, 'Neem oil spray', 0.1],
-            ['water_blueberry_soon', 8, 'Water blueberry acid bed deeply', TaskType::Watering, TaskState::Pending, TaskPriority::Medium, null, null, null, null],
-            ['plant_bean_followup', 9, 'Thin germinated beans to final spacing', TaskType::Transplant, TaskState::Pending, TaskPriority::Low, 'Bean', 'legumes', null, null],
-            ['harvest_peas_future', 13, 'Pick first sugar snap peas', TaskType::Harvest, TaskState::Pending, TaskPriority::Medium, 'Pea', 'legumes', null, null],
-            ['buy_mulch_future', 15, 'Buy straw mulch for berry beds', TaskType::Buy, TaskState::Pending, TaskPriority::Medium, 'Strawberry', 'strawberries', 'Straw mulch', 2.0],
-            ['corn_water_future', 18, 'Deep water corn block', TaskType::Watering, TaskState::Pending, TaskPriority::Medium, 'Corn', 'corn', null, null],
+            ['water_tomato_done', -14, 'Giliai palaistyti pomidorus ir bazilikus', TaskType::Watering, TaskState::Completed, TaskPriority::Medium, 'Tomato', 'tomatoes', 'Kompostas', 0.2],
+            ['buy_compost_done', -13, 'Nupirkti komposto pavasariniam papildomam tręšimui', TaskType::Buy, TaskState::Completed, TaskPriority::Medium, 'Tomato', 'tomatoes', 'Kompostas', 2.0],
+            ['feed_tomato_done', -12, 'Patręšti žydinčius pomidorus', TaskType::Fertilize, TaskState::Completed, TaskPriority::High, 'Tomato', 'tomatoes', 'Organinės pomidorų trąšos', 0.25],
+            ['harvest_lettuce_done', -10, 'Nuskinti išorinius salotų lapus', TaskType::Harvest, TaskState::Completed, TaskPriority::Medium, 'Lettuce', 'greens', null, null],
+            ['pest_cabbage_done', -8, 'Patikrinti kopūstinius dėl vikšrų', TaskType::Spray, TaskState::Completed, TaskPriority::Medium, 'Cabbage', 'brassicas', 'Nimbamedžio aliejaus purškalas', 0.05],
+            ['frost_cover_canceled', -6, 'Uždengti paprikas dėl šalnos perspėjimo', TaskType::Rest, TaskState::Canceled, TaskPriority::Low, 'Pepper', 'nightshades', 'Apsauginė danga', 1],
+            ['mulch_strawberry_overdue', -2, 'Atnaujinti braškių mulčią po lietaus', TaskType::Rest, TaskState::Pending, TaskPriority::High, 'Strawberry', 'strawberries', 'Šiaudų mulčias', 1.5],
+            ['water_cucumbers_today', 0, 'Palaistyti agurkų atramas ties dirvos paviršiumi', TaskType::Watering, TaskState::Pending, TaskPriority::High, 'Cucumber', 'cucurbits', null, null],
+            ['buy_biofungicide_today', 0, 'Nupirkti biofungicido pomidorų lapų dėmėtumo reakcijai', TaskType::Buy, TaskState::Pending, TaskPriority::High, 'Tomato', 'tomatoes', 'Biofungicidas be vario', 0.9],
+            ['tie_tomatoes_tomorrow', 1, 'Pririšti pomidorus prie atramų prieš vėjuotą vakarą', TaskType::Rest, TaskState::Pending, TaskPriority::High, 'Tomato', 'tomatoes', 'Augalų raiščiai', 4],
+            ['feed_peppers_soon', 3, 'Papildomai patręšti paprikas kompostu', TaskType::Fertilize, TaskState::Pending, TaskPriority::Medium, 'Pepper', 'nightshades', 'Kompostas', 1.0],
+            ['harvest_spinach_soon', 5, 'Nuimti špinatus prieš karščio stresą', TaskType::Harvest, TaskState::Pending, TaskPriority::Medium, 'Spinach', 'greens', null, null],
+            ['spray_apple_soon', 6, 'Patikrinti obelį dėl amarų ir lapų garbanojimosi', TaskType::Spray, TaskState::Pending, TaskPriority::Medium, null, null, 'Nimbamedžio aliejaus purškalas', 0.1],
+            ['water_blueberry_soon', 8, 'Giliai palaistyti šilauogių lysvę', TaskType::Watering, TaskState::Pending, TaskPriority::Medium, null, null, null, null],
+            ['plant_bean_followup', 9, 'Praretinti sudygusias pupeles iki galutinio atstumo', TaskType::Transplant, TaskState::Pending, TaskPriority::Low, 'Bean', 'legumes', null, null],
+            ['harvest_peas_future', 13, 'Nuskinti pirmąsias cukrinių žirnių ankštis', TaskType::Harvest, TaskState::Pending, TaskPriority::Medium, 'Pea', 'legumes', null, null],
+            ['buy_mulch_future', 15, 'Nupirkti šiaudų mulčio uogų lysvėms', TaskType::Buy, TaskState::Pending, TaskPriority::Medium, 'Strawberry', 'strawberries', 'Šiaudų mulčias', 2.0],
+            ['corn_water_future', 18, 'Giliai palaistyti kukurūzų bloką', TaskType::Watering, TaskState::Pending, TaskPriority::Medium, 'Corn', 'corn', null, null],
         ];
 
         foreach ($definitions as [$key, $offset, $name, $type, $state, $priority, $catalogName, $zoneKey, $item, $quantity]) {
@@ -617,18 +617,18 @@ class CurrentVersionDemoSeeder extends Seeder
     private function seedCommunity(array $world): void
     {
         $posts = [
-            ['neighbor', 'Rain timing for cucumber watering', 'I skip cucumber watering after more than 10 mm of rain, but I still check containers because trellis beds dry faster at the edges.', true, -16, $world['primary_plot']],
-            ['community', 'First strawberry mulch refresh', 'A thin straw layer under berries kept the fruit much cleaner this week. I am adding more before the next rainy stretch.', true, -13, $world['primary_plot']],
-            ['owner', 'Oakridge spring layout update', 'The four-column raised bed grid is working well. Paths are wide enough for a barrow and every bed is reachable from both sides.', true, -11, $world['primary_plot']],
-            ['editor', 'Tomato airflow note', 'Removing the lowest tomato leaves helped after the wet spell. The plants look brighter and the basil underneath still has room.', true, -8, $world['primary_plot']],
-            ['viewer', 'Question about blueberry moisture', 'Does anyone use pine bark mulch around blueberries during hot weeks? I want to keep moisture stable without making the soil soggy.', true, -7, null],
-            ['neighbor', 'Seed exchange: bush beans', 'I have extra bush bean seed packets from a reliable batch. Happy to swap for dill or calendula seed.', true, -6, null],
-            ['community', 'Compost inventory tip', 'I started recording compost by bags instead of kilograms. It made task planning much easier when side-dressing beds.', true, -5, null],
-            ['owner', 'Private note for shared plot helpers', 'Please prioritize cucumber watering and tomato tying before the windy evening forecast.', false, -2, $world['primary_plot']],
-            ['editor', 'Cabbage pest check result', 'Caterpillar eggs were mostly on the underside of outer leaves. A five-minute check saved the bed from getting worse.', true, -1, $world['primary_plot']],
-            ['community', 'Companion border payoff', 'Marigolds and calendula are drawing pollinators into the squash bed earlier than last year.', true, 0, $world['primary_plot']],
-            ['neighbor', 'Harvest showcase', 'Picked the first small bowl of peas today. The trick was keeping the early supports tight after rain.', true, 1, null],
-            ['owner', 'Next rotation idea', 'I am planning legumes after tomatoes next spring and moving peppers into the current pea bed to reduce nightshade pressure.', true, 2, $world['primary_plot']],
+            ['neighbor', 'Agurkų laistymo laikas po lietaus', 'Po daugiau nei 10 mm lietaus agurkų nelaistau, bet vis tiek patikrinu dėžes, nes pakeltų lysvių kraštai išdžiūsta greičiau.', true, -16, $world['primary_plot']],
+            ['community', 'Pirmasis braškių mulčio papildymas', 'Plonas šiaudų sluoksnis po uogomis šią savaitę padėjo išlaikyti vaisius švaresnius. Prieš kitą lietingą laikotarpį jo dar papildysiu.', true, -13, $world['primary_plot']],
+            ['owner', 'Pavasarinis išdėstymo atnaujinimas', 'Keturių pakeltų lysvių eilių išdėstymas pasiteisina. Takai pakankamai platūs karučiui, o kiekviena lysvė pasiekiama iš abiejų pusių.', true, -11, $world['primary_plot']],
+            ['editor', 'Pastaba apie pomidorų vėdinimą', 'Po drėgno laikotarpio padėjo pašalinti žemiausius pomidorų lapus. Augalai atrodo gyvybingesni, o po jais augantiems bazilikams dar pakanka vietos.', true, -8, $world['primary_plot']],
+            ['viewer', 'Klausimas apie šilauogių drėgmę', 'Ar per karštas savaites kas nors mulčiuoja šilauoges pušų žieve? Noriu išlaikyti drėgmę, bet nepermirkyti dirvos.', true, -7, null],
+            ['neighbor', 'Sėklų mainai: krūminės pupelės', 'Turiu papildomų patikimos partijos krūminių pupelių sėklų pakelių. Mielai išmainyčiau į krapų arba medetkų sėklas.', true, -6, null],
+            ['community', 'Komposto inventoriaus patarimas', 'Kompostą pradėjau skaičiuoti maišais, o ne kilogramais. Taip planuoti lysvių papildomą tręšimą tapo daug paprasčiau.', true, -5, null],
+            ['owner', 'Privati pastaba sklypo pagalbininkams', 'Prieš vakarinę vėjo prognozę pirmiausia pasirūpinkite agurkų laistymu ir pomidorų pririšimu.', false, -2, $world['primary_plot']],
+            ['editor', 'Kopūstų kenkėjų patikros rezultatas', 'Vikšrų kiaušinėliai daugiausia buvo apatinėje išorinių lapų pusėje. Penkių minučių patikra padėjo apsaugoti lysvę.', true, -1, $world['primary_plot']],
+            ['community', 'Augalų draugijos juostos nauda', 'Serenčiai ir medetkos apdulkintojus į moliūginių lysvę pritraukia anksčiau nei pernai.', true, 0, $world['primary_plot']],
+            ['neighbor', 'Derliaus pavyzdys', 'Šiandien nuskyniau pirmą mažą dubenėlį žirnių. Svarbiausia buvo po lietaus išlaikyti ankstyvąsias atramas tvirtai pririštas.', true, 1, null],
+            ['owner', 'Kita rotacijos idėja', 'Kitą pavasarį po pomidorų planuoju ankštinius, o paprikas perkelsiu į dabartinę žirnių lysvę, kad sumažėtų bulvinių apkrova.', true, 2, $world['primary_plot']],
         ];
 
         foreach ($posts as [$actorKey, $name, $text, $share, $offset, $plot]) {
@@ -795,7 +795,7 @@ class CurrentVersionDemoSeeder extends Seeder
                 'zones' => $plot->plantZones->toArray(),
                 'plants' => $plot->plants->toArray(),
                 'metadata' => [
-                    'label' => $action === 'plot_created' ? 'Created demo plot' : 'Saved demo plot version',
+                    'label' => $action === 'plot_created' ? 'Sukurtas demonstracinis sklypas' : 'Išsaugota demonstracinė sklypo versija',
                     'summary' => $summary,
                 ],
             ], JSON_THROW_ON_ERROR),
@@ -869,34 +869,34 @@ class CurrentVersionDemoSeeder extends Seeder
     private function weatherContext(int $offset): array
     {
         return match (true) {
-            $offset === -2 => ['rule' => 'rain_skip', 'message' => 'Recent rain means watering can be reduced.'],
-            $offset === 1 => ['rule' => 'wind_protection', 'message' => 'Windy forecast; secure tall plants.'],
-            $offset === 5 => ['rule' => 'heat_watch', 'message' => 'Warm period expected; harvest tender greens early.'],
-            default => ['rule' => 'normal', 'message' => 'Routine seasonal task.'],
+            $offset === -2 => ['rule' => 'rain_skip', 'message' => 'Po neseno lietaus laistymo galima sumažinti.'],
+            $offset === 1 => ['rule' => 'wind_protection', 'message' => 'Prognozuojamas vėjas; sutvirtinkite aukštus augalus.'],
+            $offset === 5 => ['rule' => 'heat_watch', 'message' => 'Laukiamas šiltas laikotarpis; jautrius lapinius augalus skinkite anksčiau.'],
+            default => ['rule' => 'normal', 'message' => 'Įprastas sezoninės priežiūros darbas.'],
         };
     }
 
     private function taskReason(string $type, int $offset): string
     {
         return match ($type) {
-            TaskType::Watering->value => $offset < 0 ? 'Completed from the regular watering interval.' : 'Due from plant care interval and current weather.',
-            TaskType::Fertilize->value => 'Due from fertilizing interval and active growth stage.',
-            TaskType::Harvest->value => 'Plant maturity and harvest window indicate a useful harvest check.',
-            TaskType::Spray->value => 'Pest and disease monitoring interval is due.',
-            TaskType::Buy->value => 'Inventory shortage detected for upcoming care tasks.',
-            default => 'Recommended seasonal maintenance task.',
+            TaskType::Watering->value => $offset < 0 ? 'Atlikta pagal įprastą laistymo intervalą.' : 'Rekomenduojama pagal augalo priežiūros intervalą ir dabartinius orus.',
+            TaskType::Fertilize->value => 'Rekomenduojama pagal tręšimo intervalą ir aktyvaus augimo etapą.',
+            TaskType::Harvest->value => 'Augalo branda ir derliaus langas rodo, kad verta atlikti derliaus patikrą.',
+            TaskType::Spray->value => 'Atėjo kenkėjų ir ligų stebėsenos patikros laikas.',
+            TaskType::Buy->value => 'Aptiktas inventoriaus trūkumas būsimiems priežiūros darbams.',
+            default => 'Rekomenduojamas sezoninės priežiūros darbas.',
         };
     }
 
     private function taskComment(string $type): string
     {
         return match ($type) {
-            TaskType::Watering->value => 'Water at soil level and avoid wetting leaves late in the day.',
-            TaskType::Fertilize->value => 'Apply lightly and water in after feeding.',
-            TaskType::Harvest->value => 'Record harvest quantity after completion.',
-            TaskType::Spray->value => 'Inspect both sides of leaves before applying any treatment.',
-            TaskType::Buy->value => 'Replenish stock before completing blocked tasks.',
-            default => 'Check plant condition and note any follow-up work.',
+            TaskType::Watering->value => 'Laistykite ties dirvos paviršiumi ir dienos pabaigoje nešlapinkite lapų.',
+            TaskType::Fertilize->value => 'Tręškite saikingai ir po tręšimo palaistykite.',
+            TaskType::Harvest->value => 'Užbaigę įrašykite derliaus kiekį.',
+            TaskType::Spray->value => 'Prieš taikydami priemonę patikrinkite abi lapų puses.',
+            TaskType::Buy->value => 'Papildykite atsargas prieš atlikdami blokuojamas užduotis.',
+            default => 'Patikrinkite augalo būklę ir pažymėkite tolesnius darbus.',
         };
     }
 
@@ -912,22 +912,22 @@ class CurrentVersionDemoSeeder extends Seeder
             ['Potato', PlantType::Vegetable->value, 'Solanaceae', 'Solanum tuberosum', 105, 14, 25, 90, 35, 0, 4, 21, 7, 12.0, 1.0, 29.0, 45.0, '5.0-6.5', 35, 10.0, ['Bean', 'Calendula'], 'Hill with compost-rich soil as stems grow.', 'Avoid following tomatoes or peppers.'],
             ['Onion', PlantType::Vegetable->value, 'Amaryllidaceae', 'Allium cepa', 110, 10, 0, 90, 30, 0, 5, 28, 10, 10.0, -3.0, 29.0, 45.0, '6.0-7.0', 10, 2.0, ['Carrot', 'Beetroot'], 'Light feeding early, then reduce near bulb maturity.', 'Keep weeds down around shallow roots.'],
             ['Garlic', PlantType::Vegetable->value, 'Amaryllidaceae', 'Allium sativum', 240, 14, 0, 210, 35, 0, 7, 30, 14, 12.0, -12.0, 28.0, 45.0, '6.0-7.0', 12, 5.0, ['Strawberry', 'Carrot'], 'Feed in spring when leaves resume growth.', 'Stop watering as leaves yellow before harvest.'],
-            ['Lettuce', PlantType::Vegetable->value, 'Asteraceae', 'Lactuca sativa', 45, 5, 0, 35, 21, 0, 3, 14, 7, 8.0, -2.0, 26.0, 35.0, '6.0-7.0', 25, 0.5, ['Carrot', 'Radish'], 'Light nitrogen feed supports leafy growth.', 'Harvest outer leaves before heat.'],
+            ['Lettuce', PlantType::Vegetable->value, 'Asteraceae', 'Lactuca sativa', 45, 5, 0, 35, 21, 0, 3, 14, 7, 8.0, -2.0, 26.0, 35.0, '6.0-7.0', 25, 0.5, ['Carrot', 'Radish'], 'Lengvas azoto tręšimas palaiko lapų augimą.', 'Išorinius lapus nuskinkite prieš karščius.'],
             ['Spinach', PlantType::Vegetable->value, 'Amaranthaceae', 'Spinacia oleracea', 45, 7, 0, 35, 18, 0, 3, 14, 7, 8.0, -4.0, 25.0, 35.0, '6.5-7.5', 20, 1.0, ['Pea', 'Strawberry'], 'Use compost and avoid high heat stress.', 'Best in cool weather with steady moisture.'],
-            ['Radish', PlantType::Vegetable->value, 'Brassicaceae', 'Raphanus sativus', 30, 4, 0, 25, 10, 0, 3, 14, 7, 8.0, -2.0, 27.0, 35.0, '6.0-7.0', 5, 1.0, ['Lettuce', 'Pea'], 'Usually needs compost only.', 'Harvest promptly to avoid woody roots.'],
+            ['Radish', PlantType::Vegetable->value, 'Brassicaceae', 'Raphanus sativus', 30, 4, 0, 25, 10, 0, 3, 14, 7, 8.0, -2.0, 27.0, 35.0, '6.0-7.0', 5, 1.0, ['Lettuce', 'Pea'], 'Dažniausiai pakanka komposto.', 'Nuimkite laiku, kad šaknys nesumedėtų.'],
             ['Beetroot', PlantType::Vegetable->value, 'Amaranthaceae', 'Beta vulgaris', 60, 8, 0, 50, 25, 0, 4, 21, 7, 9.0, -2.0, 28.0, 40.0, '6.0-7.5', 10, 2.0, ['Onion', 'Lettuce'], 'Compost before sowing; avoid overfeeding.', 'Thin seedlings for larger roots.'],
             ['Cabbage', PlantType::Vegetable->value, 'Brassicaceae', 'Brassica oleracea var. capitata', 95, 5, 0, 80, 30, 0, 3, 18, 5, 10.0, -4.0, 27.0, 45.0, '6.5-7.5', 45, 1.0, ['Dill', 'Calendula'], 'Feed regularly during head formation.', 'Inspect for caterpillars weekly.'],
-            ['Broccoli', PlantType::Vegetable->value, 'Brassicaceae', 'Brassica oleracea var. italica', 80, 5, 0, 65, 25, 21, 3, 18, 5, 10.0, -3.0, 27.0, 45.0, '6.5-7.5', 45, 1.0, ['Dill', 'Calendula'], 'Moderate feeding supports main head and side shoots.', 'Harvest before flower buds loosen.'],
+            ['Broccoli', PlantType::Vegetable->value, 'Brassicaceae', 'Brassica oleracea var. italica', 80, 5, 0, 65, 25, 21, 3, 18, 5, 10.0, -3.0, 27.0, 45.0, '6.5-7.5', 45, 1.0, ['Dill', 'Calendula'], 'Saikingas tręšimas palaiko pagrindinę galvutę ir šoninius ūglius.', 'Nuimkite, kol žiedpumpuriai nepradėjo skleistis.'],
             ['Pepper', PlantType::Vegetable->value, 'Solanaceae', 'Capsicum annuum', 85, 8, 30, 75, 45, 0, 3, 18, 7, 8.0, 10.0, 31.0, 40.0, '6.0-6.8', 45, 0.6, ['Basil', 'Marigold'], 'Use balanced feed after fruit set.', 'Protect from cold nights and wind.'],
             ['Chili Pepper', PlantType::Vegetable->value, 'Solanaceae', 'Capsicum annuum', 95, 8, 35, 80, 50, 0, 3, 18, 7, 8.0, 10.0, 32.0, 40.0, '6.0-6.8', 45, 0.6, ['Basil', 'Calendula'], 'Feed lightly but consistently during fruiting.', 'Do not overwater while fruit ripens.'],
-            ['Zucchini', PlantType::Vegetable->value, 'Cucurbitaceae', 'Cucurbita pepo', 55, 6, 25, 45, 45, 0, 2, 14, 5, 8.0, 8.0, 30.0, 40.0, '6.0-7.0', 90, 2.5, ['Marigold', 'Corn'], 'Compost heavily before planting.', 'Harvest small fruit often.'],
+            ['Zucchini', PlantType::Vegetable->value, 'Cucurbitaceae', 'Cucurbita pepo', 55, 6, 25, 45, 45, 0, 2, 14, 5, 8.0, 8.0, 30.0, 40.0, '6.0-7.0', 90, 2.5, ['Marigold', 'Corn'], 'Prieš sodinimą gausiai įterpkite komposto.', 'Mažus vaisius skinkite dažnai.'],
             ['Pumpkin', PlantType::Vegetable->value, 'Cucurbitaceae', 'Cucurbita pepo', 110, 6, 35, 95, 45, 0, 3, 21, 7, 10.0, 8.0, 31.0, 40.0, '6.0-7.0', 120, 3.0, ['Corn', 'Bean'], 'Feed when vines start running.', 'Give vines space and keep fruit off wet soil.'],
             ['Strawberry', PlantType::Berry->value, 'Rosaceae', 'Fragaria x ananassa', 120, 21, 25, 90, 35, 30, 3, 21, 7, 10.0, -6.0, 29.0, 40.0, '5.8-6.5', 35, 0.5, ['Garlic', 'Spinach'], 'Feed after harvest and renew mulch.', 'Keep fruit clean with straw mulch.'],
             ['Raspberry', PlantType::Berry->value, 'Rosaceae', 'Rubus idaeus', 180, 21, 35, 120, 50, 45, 5, 30, 7, 12.0, -15.0, 30.0, 45.0, '5.8-6.8', 60, 2.0, ['Calendula', 'Garlic'], 'Compost canes in spring.', 'Prune spent canes after fruiting.'],
             ['Blueberry', PlantType::Shrub->value, 'Ericaceae', 'Vaccinium corymbosum', 180, 30, 30, 120, 45, 45, 4, 30, 10, 10.0, -15.0, 30.0, 45.0, '4.5-5.5', 90, 1.0, ['Thyme', 'Strawberry'], 'Use acid-loving fertilizer only.', 'Mulch with bark and keep soil moist.'],
             ['Apple Mint', PlantType::Herb->value, 'Lamiaceae', 'Mentha suaveolens', 80, 15, 50, 60, 30, 21, 3, 21, 10, 8.0, -10.0, 30.0, 35.0, '6.0-7.0', 35, 0.5, ['Cabbage', 'Tomato'], 'Light compost in spring is enough.', 'Keep contained and cut frequently.'],
             ['Basil', PlantType::Herb->value, 'Lamiaceae', 'Ocimum basilicum', 50, 7, 35, 35, 21, 14, 3, 21, 7, 6.0, 10.0, 29.0, 30.0, '6.0-7.0', 30, 0.5, ['Tomato', 'Pepper'], 'Light feeding supports leaf growth.', 'Pinch flowers for more leaves.'],
-            ['Parsley', PlantType::Herb->value, 'Apiaceae', 'Petroselinum crispum', 90, 21, 0, 75, 40, 21, 4, 21, 7, 7.0, -4.0, 29.0, 35.0, '6.0-7.0', 25, 1.0, ['Tomato', 'Asparagus'], 'Compost-rich soil supports repeated harvest.', 'Harvest outer stems first.'],
+            ['Parsley', PlantType::Herb->value, 'Apiaceae', 'Petroselinum crispum', 90, 21, 0, 75, 40, 21, 4, 21, 7, 7.0, -4.0, 29.0, 35.0, '6.0-7.0', 25, 1.0, ['Tomato', 'Asparagus'], 'Kompostu turtinga dirva palaiko pakartotinį skynimą.', 'Pirmiausia skinkite išorinius stiebus.'],
             ['Dill', PlantType::Herb->value, 'Apiaceae', 'Anethum graveolens', 55, 10, 40, 45, 20, 0, 4, 21, 7, 7.0, 2.0, 28.0, 35.0, '5.5-7.0', 25, 0.5, ['Cucumber', 'Cabbage'], 'Avoid heavy feeding.', 'Sow succession crops because it bolts.'],
             ['Thyme', PlantType::Herb->value, 'Lamiaceae', 'Thymus vulgaris', 100, 14, 60, 70, 45, 30, 7, 45, 14, 6.0, -12.0, 32.0, 45.0, '6.0-8.0', 30, 0.3, ['Cabbage', 'Strawberry'], 'Very light feeding only.', 'Prefers dry, well-drained soil.'],
             ['Rosemary', PlantType::Shrub->value, 'Lamiaceae', 'Salvia rosmarinus', 160, 21, 90, 120, 60, 45, 7, 45, 14, 6.0, -5.0, 32.0, 45.0, '6.0-7.5', 80, 0.5, ['Cabbage', 'Carrot'], 'Avoid rich wet soil.', 'Prune lightly after active growth.'],

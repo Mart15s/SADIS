@@ -1,9 +1,9 @@
-Hello,
+Sveiki,
 
-Use the link below to reset your SAD System password:
+Slaptažodį galite atkurti naudodami šią nuorodą:
 
 {{ $resetUrl }}
 
-This password reset link will expire in {{ config('auth.passwords.users.expire') }} minutes.
+Nuoroda galios {{ config('auth.passwords.users.expire') }} min.
 
-If you did not request a password reset, you can ignore this email.
+Jei slaptažodžio atkūrimo neprašėte, šį laišką galite ignoruoti.

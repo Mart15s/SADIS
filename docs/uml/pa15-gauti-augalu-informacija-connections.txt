@@ -1,0 +1,390 @@
+PA15 Gauti augalų informaciją - sekų diagramos jungčių specifikacija
+
+1. Lifeline sąrašas
+
+- Garden owner — «actor»; source: realus naudotojo veiksmas frontend katalogo formoje
+- CatalogPlantFormPage — «boundary»; source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:104,205,228,262,271,281,298
+- CatalogPlantController — «control»; source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:20,35
+- Request — «control»; source: Illuminate\Http\Request naudojamas backend/app/Http/Controllers/Plant/CatalogPlantController.php:20,22,35
+- CatalogPlantService — «service»; source: backend/app/Services/Plant/CatalogPlantService.php:134,176,229,246,261
+- PerenualService — «service»; source: backend/app/Services/Integrations/PerenualService.php:34,166,245,267,349,369,443,473,509,648,681
+- PlantCareNormalizer — «service»; source: backend/app/Services/Plant/PlantCareNormalizer.php:32,197,223,235,327,362,902,941,973,999,1041,1071,1097,1147,1305
+- PlantCareDefaults — «service»; source: backend/app/Services/Plant/PlantCareDefaults.php:342
+- Plant — «entity»; source: backend/app/Models/Plant.php; preview Plant sukuriamas backend/app/Services/Plant/CatalogPlantService.php:139
+- Perenual API — «actor»; external system: https://www.perenual.com/docs/plant-open-api
+
+Rasti, bet specialiai nerodomi lifeline:
+- routes/api.php; source: backend/routes/api.php:78,79,80
+- api helper; source: frontend/src/lib/api.js:224,233
+- React Router / App.jsx routes; nerodoma pagal sekų diagramos taisykles
+- CatalogPlant ir PlantCare modeliai; source: backend/app/Models/CatalogPlant.php:11,39; backend/app/Models/PlantCare.php. PA15 preview srautas jų neišsaugo, todėl diagramoje nerodomi kaip DB save lifeline.
+
+2. Visų sekų sąrašas
+
+Pastaba: HTML faile apačioje tas pats sąrašas generuojamas tiesiogiai iš `messages` ir `fragments` struktūros. Čia pateiktas tas pats sekų rinkinys su source nuorodomis pagal realius codebase sluoksnius.
+
+1. Garden owner -> CatalogPlantFormPage: handlePerenualSearchSubmit(event)
+   Type: async/ui event
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:245
+
+2. CatalogPlantFormPage -> CatalogPlantFormPage: runPerenualSearch(PERENUAL_RESULT_STEP)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:205,248
+
+3. CatalogPlantFormPage -> CatalogPlantFormPage: trim(perenualQuery)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:207
+
+4. CatalogPlantFormPage -> CatalogPlantFormPage: query
+   Type: return
+   Replies to: 3
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:207
+
+5. CatalogPlantFormPage -> CatalogPlantFormPage: query.length < 2
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:212
+
+6. CatalogPlantFormPage -> CatalogPlantFormPage: query_length_validity
+   Type: return
+   Replies to: 5
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:212
+
+7. CatalogPlantFormPage -> CatalogPlantController: searchPerenual(request)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:228; frontend/src/lib/api.js:224; backend/routes/api.php:78; backend/app/Http/Controllers/Plant/CatalogPlantController.php:20
+
+8. CatalogPlantController -> Request: validate(['q','limit'])
+   Type: call
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:22
+
+9. Request -> CatalogPlantController: validated
+   Type: return
+   Replies to: 8
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:22
+
+10. CatalogPlantController -> PerenualService: searchPlants(q, limit)
+   Type: call
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:28; backend/app/Services/Integrations/PerenualService.php:34
+
+11. PerenualService -> PerenualService: resolveSearchLimit(limit)
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:37,306
+
+12. PerenualService -> PerenualService: limit
+   Type: return
+   Replies to: 11
+   Source: backend/app/Services/Integrations/PerenualService.php:306
+
+13. PerenualService -> PerenualService: rememberWithMeta(searchCacheKey, ttl, resolver)
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:47,552
+
+14. PerenualService -> PerenualService: searchSpeciesResponse(query, limit)
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:50,267
+
+15. PerenualService -> Perenual API: GET /species-list
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:281
+
+16. Perenual API -> PerenualService: species_list_payload
+   Type: return
+   Replies to: 15
+   Source: external Perenual API species-list
+
+17. PerenualService -> PerenualService: ensureSuccessfulResponse(response, 'species-list')
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:288,245
+
+18. PerenualService -> PerenualService: response_successful
+   Type: return
+   Replies to: 17
+   Source: backend/app/Services/Integrations/PerenualService.php:247
+
+19. PerenualService -> PerenualService: species_response_data
+   Type: return
+   Replies to: 14
+   Source: backend/app/Services/Integrations/PerenualService.php:295
+
+20. PerenualService -> PerenualService: cached_species_response
+   Type: return
+   Replies to: 13
+   Source: backend/app/Services/Integrations/PerenualService.php:552
+
+21. PerenualService -> PerenualService: scoreSpeciesMatch(query, item)
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:54,369
+
+22. PerenualService -> PerenualService: match_score
+   Type: return
+   Replies to: 21
+   Source: backend/app/Services/Integrations/PerenualService.php:369
+
+23. PerenualService -> PerenualService: speciesTieBreakerScore(item)
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:56,398
+
+24. PerenualService -> PerenualService: tie_breaker_score
+   Type: return
+   Replies to: 23
+   Source: backend/app/Services/Integrations/PerenualService.php:398
+
+25. PerenualService -> PerenualService: take(limit)
+   Type: call
+   Source: backend/app/Services/Integrations/PerenualService.php:81
+
+26. PerenualService -> PerenualService: limited_search_results
+   Type: return
+   Replies to: 25
+   Source: backend/app/Services/Integrations/PerenualService.php:81
+
+27. PerenualService -> CatalogPlantController: search_results_with_meta
+   Type: return
+   Replies to: 10
+   Source: backend/app/Services/Integrations/PerenualService.php:84
+
+28. CatalogPlantController -> CatalogPlantFormPage: search_results_with_meta
+   Type: return
+   Replies to: 7
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:27
+
+29. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualResults(results)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:232
+
+30. CatalogPlantFormPage -> CatalogPlantFormPage: results_state_updated
+   Type: return
+   Replies to: 29
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:232
+
+31. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualHasMore(Boolean(meta.has_more))
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:234
+
+32. CatalogPlantFormPage -> CatalogPlantFormPage: has_more_state_updated
+   Type: return
+   Replies to: 31
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:234
+
+33. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualResults([])
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:236,213
+
+34. CatalogPlantFormPage -> CatalogPlantFormPage: empty_results_state
+   Type: return
+   Replies to: 33
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:236
+
+35. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualHasMore(false)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:237
+
+36. CatalogPlantFormPage -> CatalogPlantFormPage: has_more_disabled
+   Type: return
+   Replies to: 35
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:237
+
+37. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualSearchError(requestError.message)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:238
+
+38. CatalogPlantFormPage -> CatalogPlantFormPage: search_error_state_updated
+   Type: return
+   Replies to: 37
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:238
+
+39. Request -> CatalogPlantController: validation_errors
+   Type: return
+   Replies to: 8
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:22
+
+40. CatalogPlantController -> CatalogPlantFormPage: validation_errors
+   Type: return
+   Replies to: 7
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:22; frontend/src/pages/plant/CatalogPlantFormPage.jsx:236-238
+
+41. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualSearchError(requestError.message)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:238
+
+42. CatalogPlantFormPage -> CatalogPlantFormPage: validation_error_state_updated
+   Type: return
+   Replies to: 41
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:238
+
+43. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualResults([])
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:213
+
+44. CatalogPlantFormPage -> CatalogPlantFormPage: empty_results_state
+   Type: return
+   Replies to: 43
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:213
+
+45. CatalogPlantFormPage -> CatalogPlantFormPage: setPerenualSearchError('Enter at least 2 characters before searching Perenual.')
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:216
+
+46. CatalogPlantFormPage -> CatalogPlantFormPage: frontend_validation_error_state_updated
+   Type: return
+   Replies to: 45
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:216
+
+47. CatalogPlantFormPage -> CatalogPlantFormPage: perenual_search_state
+   Type: return
+   Replies to: 2
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:205-242
+
+48. Garden owner -> CatalogPlantFormPage: handlePerenualSelect(result)
+   Type: async/ui event
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:262,460
+
+49. CatalogPlantFormPage -> CatalogPlantFormPage: setSelectedResultId(result.id)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:263
+
+50. CatalogPlantFormPage -> CatalogPlantFormPage: selected_result_state_updated
+   Type: return
+   Replies to: 49
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:263
+
+51. CatalogPlantFormPage -> CatalogPlantController: previewPerenualSpecies(result.id)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:271; frontend/src/lib/api.js:233; backend/routes/api.php:79; backend/app/Http/Controllers/Plant/CatalogPlantController.php:35
+
+52. CatalogPlantController -> CatalogPlantController: abort_if(speciesId < 1, 422, 'The selected Perenual species is invalid.')
+   Type: call
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:37
+
+53. CatalogPlantController -> CatalogPlantController: species_id_validity
+   Type: return
+   Replies to: 52
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:37
+
+54. CatalogPlantController -> CatalogPlantService: buildPerenualDraft(speciesId)
+   Type: call
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:40; backend/app/Services/Plant/CatalogPlantService.php:134
+
+55. CatalogPlantService -> PerenualService: fetchSpeciesSeed('', speciesId)
+   Type: call
+   Source: backend/app/Services/Plant/CatalogPlantService.php:136; backend/app/Services/Integrations/PerenualService.php:166
+
+56-92. PerenualService vidinis details ir care-guide srautas
+   Type: call/return sequence
+   Messages:
+   56 detailsCacheKey(speciesId), 57 reply, 58 rememberWithMeta(detailsCacheKey), 59 fetchSpeciesDetailsById(speciesId), 60 GET /species/details/{speciesId}, 61 reply, 62 ensureSuccessfulResponse(detailsResponse,'species-details'), 63 reply, 64 species_details, 65 cached_species_details, 66 fetchEnrichedCareGuidePayloads(speciesId), 67 careGuideCacheKey(speciesId,null), 68 reply, 69 rememberWithMeta(careGuideCacheKey), 70 fetchSpeciesCareGuideById(speciesId,null), 71 GET /species-care-guide-list, 72 reply, 73 ensureSuccessfulResponse(response,'species-care-guide-list'), 74 reply, 75 care_guide_payload, 76 cached_care_guide_payload, 77 normalizeCareGuidesFromPayloads(payloads), 78 appendGuideSection(guides,entry), 79 reply, 80 normalized_care_guides_preview, 81 careGuideCacheKey(speciesId,type), 82 reply, 83 fetchSpeciesCareGuideById(speciesId,type), 84 GET /species-care-guide-list?type=type, 85 reply, 86 typed_care_guide_payload, 87 care_guide_payloads, 88 normalizeCareGuidesFromPayloads(careGuidePayloads), 89 appendGuideSection(guides,entry), 90 reply, 91 care_guides, 92 species_seed.
+   Replies to: 56->57, 58->65, 59->64, 60->61, 62->63, 66->87, 67->68, 69->76, 70->75, 71->72, 73->74, 77->80, 78->79, 81->82, 83->86, 84->85, 88->91, 89->90, 55->92
+   Source: backend/app/Services/Integrations/PerenualService.php:166-224,413,443-548,648-691
+
+93. CatalogPlantService -> CatalogPlantService: resolveImportedPlantName(details, seed)
+   Type: call
+   Source: backend/app/Services/Plant/CatalogPlantService.php:138,229
+
+94. CatalogPlantService -> CatalogPlantService: resolvedName
+   Type: return
+   Replies to: 93
+   Source: backend/app/Services/Plant/CatalogPlantService.php:229
+
+95. CatalogPlantService -> Plant: __construct([name, condition])
+   Type: call
+   Source: backend/app/Services/Plant/CatalogPlantService.php:139
+
+96. Plant -> CatalogPlantService: previewPlant
+   Type: return
+   Replies to: 95
+   Source: backend/app/Services/Plant/CatalogPlantService.php:139
+
+97. CatalogPlantService -> PlantCareNormalizer: normalizeWithTrace(previewPlant, seed)
+   Type: call
+   Source: backend/app/Services/Plant/CatalogPlantService.php:143; backend/app/Services/Plant/PlantCareNormalizer.php:32
+
+98-128. PlantCareNormalizer normalizavimo srautas
+   Type: call/return sequence
+   Messages:
+   98 mergedRaw(seed), 99 reply, 100 careGuideSections(raw), 101 reply, 102 buildSignals(...), 103 reply, 104 resolvePlantTypeTrace(...), 105 reply, 106 PlantCareDefaults.forPlant(...), 107 reply, 108 resolveDescription(...), 109 reply, 110 resolveConditions(...), 111 reply, 112 resolveWateringInterval(...), 113 reply, 114 resolveQuality(...), 115 reply, 116 resolveDescription(...defaults...), 117 reply, 118 resolveConditions(...defaults...), 119 reply, 120 resolveWateringInterval(...defaults...), 121 reply, 122 resolveFertilizingInterval(...defaults...), 123 reply, 124 resolveQuality(...), 125 reply, 126 buildClassification(...), 127 reply, 128 normalized_result.
+   Replies to: 98->99, 100->101, 102->103, 104->105, 106->107, 108->109, 110->111, 112->113, 114->115, 116->117, 118->119, 120->121, 122->123, 124->125, 126->127, 97->128
+   Source: backend/app/Services/Plant/PlantCareNormalizer.php:32-191,197,327,362,902,941,1147,1305; backend/app/Services/Plant/PlantCareDefaults.php:342
+
+129-142. CatalogPlantService ruošinio sudarymas ir grąžinimas į formą
+   Type: call/return sequence
+   Messages:
+   129 stringOrNull(details['description'] ?? null), 130 reply, 131 trustedCatalogPlantType(normalizedCare, trace), 132 reply, 133 Arr::only(array_merge(normalizedCare, source_perenual_species_id), CARE_FIELDS), 134 plant_care_draft, 135 perenual_draft, 136 perenual_draft, 137 setSelectedSpeciesId(...), 138 reply, 139 setCatalogForm(...draft.catalog), 140 reply, 141 setCareForm(careToForm(draft.plant_care)), 142 reply.
+   Replies to: 129->130, 131->132, 133->134, 54->135, 51->136, 137->138, 139->140, 141->142
+   Source: backend/app/Services/Plant/CatalogPlantService.php:147-174,246,261; frontend/src/pages/plant/CatalogPlantFormPage.jsx:272-278
+
+143-159. Perenual details/care guide klaidos ir frontend fallback srautas
+   Type: call/return sequence
+   Messages:
+   143 fetchSpeciesDetailsById(speciesId), 144 GET /species/details/{speciesId}, 145 upstream_429_payload, 146 ensureSuccessfulResponse(response,'species-details'), 147 UpstreamServiceException, 148 upstream_error, 149 upstream_error, 150 upstream_error, 151 upstream_error, 152 buildFallbackDraftFromSearchResult(result), 153 fallbackDraft, 154 setSelectedSpeciesId(...), 155 reply, 156 setCatalogForm(...fallbackDraft.catalog), 157 reply, 158 setCareForm(careToForm(fallbackDraft.plant_care)), 159 reply.
+   Replies to: 144->145, 146->147, 143->148, 55->149, 54->150, 51->151, 152->153, 154->155, 156->157, 158->159
+   Source: backend/app/Services/Integrations/PerenualService.php:245,443; frontend/src/pages/plant/CatalogPlantFormPage.jsx:104-134,280-291
+
+160. CatalogPlantController -> CatalogPlantFormPage: validation_error
+   Type: return
+   Replies to: 51
+   Source: backend/app/Http/Controllers/Plant/CatalogPlantController.php:37
+
+161. CatalogPlantFormPage -> CatalogPlantFormPage: setMethodError(requestError.message)
+   Type: call
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:292
+
+162. CatalogPlantFormPage -> CatalogPlantFormPage: method_error_state_updated
+   Type: return
+   Replies to: 161
+   Source: frontend/src/pages/plant/CatalogPlantFormPage.jsx:292
+
+3. UML fragmentai
+
+- alt: Search form query validity
+  - Operand 1 `[query length >= 2]`: messages 7-42
+  - Operand 2 `[query length < 2]`: messages 43-46
+
+- alt: Backend Perenual search request validity
+  - Operand 1 `[request data is valid]`: messages 9-38
+  - Operand 2 `[request data is invalid]`: messages 39-42
+
+- loop: Search result ranking
+  - Guard: `[for each Perenual species-list item]`
+  - Messages: 21-24
+
+- alt: Perenual search result
+  - Operand 1 `[results found]`: messages 29-32
+  - Operand 2 `[results not found or search failed]`: messages 33-38
+
+- alt: Species preview request validity
+  - Operand 1 `[speciesId is valid]`: messages 54-159
+  - Operand 2 `[speciesId is invalid]`: messages 160-162
+
+- alt: Perenual detail/care guide fetch result
+  - Operand 1 `[detail and care guide fetch succeeds]`: messages 56-142
+  - Operand 2 `[detail/care fetch fails with 429]`: messages 143-159
+
+- loop: Initial care guide section parsing
+  - Guard: `[for each care guide section]`
+  - Messages: 78-79
+
+- opt: Supplemental care guide enrichment
+  - Guard: `[count(normalizeCareGuidesFromPayloads(payloads)) < 3]`
+  - Messages: 81-86
+
+- loop: Supplemental care guide types
+  - Guard: `[for each CARE_GUIDE_ENRICHMENT_TYPES item]`
+  - Messages: 81-86
+
+- loop: Final care guide section parsing
+  - Guard: `[for each care guide payload section]`
+  - Messages: 89-90
+
+- alt: Perenual detail/care guide result
+  - Operand 1 `[detail and care guide data is usable]`: messages 108-115
+  - Operand 2 `[detail or care guide data is incomplete]`: messages 116-125
+
+4. Santrauka
+
+- Synchronous calls: 77
+- Returns: 83
+- Async/UI events: 2
+- Calls without return: 0
+- Alt fragments: 6
+- Loop fragments: 4
+- Opt fragments: 1

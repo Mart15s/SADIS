@@ -1,0 +1,278 @@
+PA Valdyti rekomendacinį kalendorių realizacija projekto klasėmis - supaprastinta sekos diagramos jungciu specifikacija
+
+A. Lifeline sarasas
+
+1. Garden owner - «actor»
+2. PlotCalendarPage - «boundary»
+3. PlantDetailPage - «boundary»
+4. PlotHarvestsPage - «boundary»
+5. CalendarController - «control»
+6. TaskController - «control»
+7. AccessService - «service»
+8. TaskCalendarService - «service»
+9. CalendarGenerationService - «service»
+10. WeatherService - «service»
+11. MeteoLtClient - «service»
+12. PlantCareService - «service»
+13. InventoryService - «service»
+14. TaskWorkflowService - «service»
+15. TaskCalendar - «entity»
+16. Plant - «entity»
+17. Task - «entity»
+
+B. Numeruotas visu seku sarasas
+
+1. Garden owner -> PlotCalendarPage: openCalendarPage(plotId)
+   Type: async/ui event
+   Source: PlotCalendarPage
+
+2. PlotCalendarPage -> CalendarController: index(plotId)
+   Type: call
+   Source: CalendarController::index()
+
+3. CalendarController -> AccessService: ensureUserCanViewPlot(owner, plotId)
+   Type: call
+   Source: CalendarController::index()
+
+4. AccessService -> CalendarController: access_granted
+   Type: return
+   Replies to: 3
+
+5. CalendarController -> TaskCalendar: listCalendarsForPlot(plotId)
+   Type: call
+   Source: TaskCalendar list
+
+6. TaskCalendar -> CalendarController: calendar_collection
+   Type: return
+   Replies to: 5
+
+7. CalendarController -> PlotCalendarPage: calendar_list_response
+   Type: return
+   Replies to: 2
+
+8. Garden owner -> PlotCalendarPage: selectCalendar(calendarId)
+   Type: async/ui event
+   Source: Existing calendar selection
+
+9. PlotCalendarPage -> CalendarController: show(plotId, calendarId)
+   Type: call
+   Source: CalendarController::show()
+
+10. CalendarController -> AccessService: ensureUserCanViewPlot(owner, plotId)
+   Type: call
+   Source: CalendarController::show()
+
+11. AccessService -> CalendarController: access_granted
+   Type: return
+   Replies to: 10
+
+12. CalendarController -> TaskCalendar: loadCalendarDetails(calendarId)
+   Type: call
+   Source: Calendar details
+
+13. TaskCalendar -> CalendarController: calendar_with_tasks_and_weather
+   Type: return
+   Replies to: 12
+
+14. CalendarController -> PlotCalendarPage: calendar_details_response
+   Type: return
+   Replies to: 9
+
+15. Garden owner -> PlotCalendarPage: submitGenerateCalendar(range)
+   Type: async/ui event
+   Source: Generate calendar form
+
+16. PlotCalendarPage -> CalendarController: store(plotId, range)
+   Type: call
+   Source: CalendarController::store()
+
+17. CalendarController -> AccessService: ensureUserCanEditPlot(owner, plotId)
+   Type: call
+   Source: CalendarController::store()
+
+18. AccessService -> CalendarController: access_granted
+   Type: return
+   Replies to: 17
+
+19. CalendarController -> TaskCalendarService: generate(plot, range)
+   Type: call
+   Source: TaskCalendarService::generate()
+
+20. TaskCalendarService -> CalendarGenerationService: generateCalendar(plot, range)
+   Type: call
+   Source: CalendarGenerationService
+
+21. CalendarGenerationService -> WeatherService: getForecastRange(plot.city, range)
+   Type: call
+   Source: WeatherService
+
+22. WeatherService -> MeteoLtClient: getLongTermForecast(place)
+   Type: call
+   Source: Meteo.lt integration
+
+23. MeteoLtClient -> WeatherService: meteo_forecast
+   Type: return
+   Replies to: 22
+
+24. WeatherService -> CalendarGenerationService: weather_data
+   Type: return
+   Replies to: 21
+
+25. CalendarGenerationService -> Plant: collectActivePlants(plot)
+   Type: call
+   Source: CalendarGenerationService plant context
+
+26. Plant -> CalendarGenerationService: active_plants
+   Type: return
+   Replies to: 25
+
+27. CalendarGenerationService -> PlantCareService: resolveEffectivePlantCare(plant)
+   Type: call
+   Source: PlantCareService
+
+28. PlantCareService -> CalendarGenerationService: plant_care_profile
+   Type: return
+   Replies to: 27
+
+29. CalendarGenerationService -> CalendarGenerationService: buildActionsForDate(plant, weather)
+   Type: call
+   Source: watering/fertilizing/pest/weather rules
+
+30. CalendarGenerationService -> CalendarGenerationService: candidate_actions
+   Type: return
+   Replies to: 29
+
+31. CalendarGenerationService -> InventoryService: evaluateRequirements(candidate_actions)
+   Type: call
+   Source: Inventory planning
+
+32. InventoryService -> CalendarGenerationService: inventory_context
+   Type: return
+   Replies to: 31
+
+33. CalendarGenerationService -> TaskCalendar: saveGeneratedCalendar(actions, weather)
+   Type: call
+   Source: TaskCalendar + Task + WeatherForecast persistence
+
+34. TaskCalendar -> CalendarGenerationService: generated_calendar
+   Type: return
+   Replies to: 33
+
+35. CalendarGenerationService -> TaskCalendarService: generated_calendar
+   Type: return
+   Replies to: 20
+
+36. TaskCalendarService -> CalendarController: calendar_payload
+   Type: return
+   Replies to: 19
+
+37. CalendarController -> PlotCalendarPage: generated_calendar_response
+   Type: return
+   Replies to: 16
+
+38. Garden owner -> PlotCalendarPage: openDay(date)
+   Type: async/ui event
+   Source: Day drawer
+
+39. PlotCalendarPage -> TaskController: index(calendarId, date)
+   Type: call
+   Source: TaskController::index()
+
+40. TaskController -> AccessService: ensureUserCanViewPlot(owner, plotId)
+   Type: call
+   Source: TaskController auth
+
+41. AccessService -> TaskController: access_granted
+   Type: return
+   Replies to: 40
+
+42. TaskController -> Task: listTasksForDate(calendarId, date)
+   Type: call
+   Source: Task query
+
+43. Task -> TaskController: daily_tasks
+   Type: return
+   Replies to: 42
+
+44. TaskController -> InventoryService: attachLiveTaskInventory(daily_tasks)
+   Type: call
+   Source: InventoryService
+
+45. InventoryService -> TaskController: tasks_with_inventory
+   Type: return
+   Replies to: 44
+
+46. TaskController -> PlotCalendarPage: daily_tasks_response
+   Type: return
+   Replies to: 39
+
+47. Garden owner -> PlotCalendarPage: completeTask(taskId)
+   Type: async/ui event
+   Source: Complete task
+
+48. PlotCalendarPage -> TaskController: complete(taskId)
+   Type: call
+   Source: TaskController::complete()
+
+49. TaskController -> AccessService: ensureUserCanEditPlot(owner, plotId)
+   Type: call
+   Source: TaskController auth
+
+50. AccessService -> TaskController: access_granted
+   Type: return
+   Replies to: 49
+
+51. TaskController -> TaskWorkflowService: completeTask(task)
+   Type: call
+   Source: TaskWorkflowService::completeTask()
+
+52. TaskWorkflowService -> InventoryService: applyTaskInventoryChange(task)
+   Type: call
+   Source: Inventory consumption / buy replenish
+
+53. InventoryService -> TaskWorkflowService: inventory_updated
+   Type: return
+   Replies to: 52
+
+54. TaskWorkflowService -> Task: markCompleted(task)
+   Type: call
+   Source: Task state persistence
+
+55. Task -> TaskWorkflowService: completed_task
+   Type: return
+   Replies to: 54
+
+56. TaskWorkflowService -> TaskController: completion_payload
+   Type: return
+   Replies to: 51
+
+57. TaskController -> PlotCalendarPage: complete_task_response
+   Type: return
+   Replies to: 48
+
+58. PlotCalendarPage -> PlantDetailPage: navigateToPlantReview(plantId)
+   Type: async/ui event
+   Source: Lifecycle review task
+
+59. PlotCalendarPage -> PlotHarvestsPage: navigateToHarvests(plotId)
+   Type: async/ui event
+   Source: Harvest task
+
+C. UML fragmentai
+
+- opt: [user selects existing calendar]
+  - Messages: 7-13
+- opt: [user generates new calendar]
+  - Messages: 14-37
+- loop: [for each plant and planning date]
+  - Messages: 27-32
+- opt: [Meteo.lt forecast available]
+  - Messages: 22-23
+- opt: [user opens day tasks]
+  - Messages: 38-47
+- opt: [user completes task]
+  - Messages: 48-59
+- alt: Special task navigation
+  - Messages: 60-61
+  - Operand 1 [lifecycle review task]: messages 60-60
+  - Operand 2 [harvest task]: messages 61-61

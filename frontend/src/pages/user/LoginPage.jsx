@@ -40,18 +40,18 @@ export default function LoginPage() {
   return (
     <div className="page-stack auth-card">
       <PageHeader
-        title="Sign in"
-        description="Authentication uses the Laravel Sanctum token returned by the backend login endpoint and persists it for the SPA session."
+        title="Prisijungti"
+        description="Prisijungimui naudojamas Laravel Sanctum prieigos raktas, kuris saugomas SPA sesijai."
       />
 
       <form className="panel input-grid" onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">El. paštas</label>
           <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
         </div>
 
         <div className="field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Slaptažodis</label>
           <input
             id="password"
             name="password"
@@ -66,13 +66,13 @@ export default function LoginPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Signing in...' : 'Sign in'}
+            {submitting ? 'Jungiamasi...' : 'Prisijungti'}
           </Button>
           <Link to="/forgot-password">
-            <Button variant="secondary">Forgot password</Button>
+            <Button variant="secondary">Pamiršote slaptažodį?</Button>
           </Link>
           <Link to="/register">
-            <Button variant="ghost">Create account</Button>
+            <Button variant="ghost">Sukurti paskyrą</Button>
           </Link>
         </div>
       </form>

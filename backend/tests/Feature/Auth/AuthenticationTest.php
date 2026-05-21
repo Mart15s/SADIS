@@ -78,7 +78,7 @@ class AuthenticationTest extends TestCase
         $logoutResponse = $this->postJson('/api/logout');
 
         $logoutResponse->assertOk()
-            ->assertJsonPath('message', 'Logged out successfully.');
+            ->assertJsonPath('message', 'Sėkmingai atsijungta.');
     }
 
     public function test_authenticated_user_can_restore_session_via_me_endpoint(): void
@@ -135,7 +135,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $forgotResponse->assertOk()
-            ->assertJsonPath('message', 'If the email address exists, a password reset link has been sent.');
+            ->assertJsonPath('message', 'Jei el. pašto adresas yra registruotas, slaptažodžio atkūrimo nuoroda išsiųsta.');
 
         $resetUrl = null;
         Mail::assertSent(PasswordResetLinkMail::class, function (PasswordResetLinkMail $mail) use (&$resetUrl) {
@@ -163,7 +163,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $resetResponse->assertOk()
-            ->assertJsonPath('message', 'Password updated successfully.');
+            ->assertJsonPath('message', 'Slaptažodis sėkmingai atnaujintas.');
 
         $user->refresh();
         $this->assertNull($user->reset_code);
@@ -201,10 +201,10 @@ class AuthenticationTest extends TestCase
         ]);
 
         $knownResponse->assertOk()
-            ->assertJsonPath('message', 'If the email address exists, a password reset link has been sent.');
+            ->assertJsonPath('message', 'Jei el. pašto adresas yra registruotas, slaptažodžio atkūrimo nuoroda išsiųsta.');
 
         $unknownResponse->assertOk()
-            ->assertJsonPath('message', 'If the email address exists, a password reset link has been sent.');
+            ->assertJsonPath('message', 'Jei el. pašto adresas yra registruotas, slaptažodžio atkūrimo nuoroda išsiųsta.');
 
         Mail::assertSent(PasswordResetLinkMail::class, 1);
     }
@@ -224,7 +224,7 @@ class AuthenticationTest extends TestCase
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ])->assertUnprocessable()
-            ->assertJsonPath('message', 'The provided password reset token is invalid or expired.');
+            ->assertJsonPath('message', 'Pateiktas slaptažodžio atkūrimo kodas neteisingas arba nebegalioja.');
 
         $this->postJson('/api/forgot-password', [
             'email' => 'expired-reset@example.com',
@@ -250,7 +250,7 @@ class AuthenticationTest extends TestCase
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ])->assertUnprocessable()
-            ->assertJsonPath('message', 'The provided password reset token is invalid or expired.');
+            ->assertJsonPath('message', 'Pateiktas slaptažodžio atkūrimo kodas neteisingas arba nebegalioja.');
 
         $this->postJson('/api/login', [
             'email' => 'expired-reset@example.com',

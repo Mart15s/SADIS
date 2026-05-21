@@ -1,0 +1,505 @@
+PA27 Identifikuoti augalo bukle - sekos jungciu specifikacija
+
+1. Lifeline sarasas
+
+- Garden owner — «actor»; source: frontend/src/pages/calendar/PlotCalendarPage.jsx (handleGenerate form submit is initiated by the owner)
+- PlotCalendarPage — «boundary»; source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+- CalendarController — «control»; source: backend/app/Http/Controllers/Calendar/CalendarController.php
+- GenerateCalendarRequest — «control»; source: backend/app/Http/Requests/Calendar/GenerateCalendarRequest.php
+- AccessService — «service»; source: backend/app/Services/Plot/AccessService.php
+- TaskCalendarService — «service»; source: backend/app/Services/Calendar/TaskCalendarService.php
+- CalendarGenerationService — «service»; source: backend/app/Services/Calendar/CalendarGenerationService.php
+- PlantCareService — «service»; source: backend/app/Services/Plant/PlantCareService.php
+- PlantLifecyclePhaseService — «service»; source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+- PlantLifecycleService — «service»; source: backend/app/Services/Plant/PlantLifecycleService.php
+- Plot — «entity»; source: backend/app/Models/Plot.php
+- Plant — «entity»; source: backend/app/Models/Plant.php
+- CatalogPlant — «entity»; source: backend/app/Models/CatalogPlant.php
+- PlantCare — «entity»; source: backend/app/Models/PlantCare.php
+- TaskCalendar — «entity»; source: backend/app/Models/TaskCalendar.php
+
+Nerodomi lifeline, bet naudoti auditui: backend/routes/api.php, frontend/src/lib/api.js, React Router / frontend/src/App.jsx.
+
+2. Visu seku sarasas
+
+1. Garden owner -> PlotCalendarPage: handleGenerate(event)
+   Type: async
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+
+2. PlotCalendarPage -> CalendarController: store(request, plot)
+   Type: call
+   Source: frontend/src/lib/api.js; backend/routes/api.php; backend/app/Http/Controllers/Calendar/CalendarController.php
+
+3. CalendarController -> GenerateCalendarRequest: validated('start_date')
+   Type: call
+   Source: backend/app/Http/Controllers/Calendar/CalendarController.php; backend/app/Http/Requests/Calendar/GenerateCalendarRequest.php
+
+4. GenerateCalendarRequest -> CalendarController: start_date
+   Type: return
+   Replies to: 3
+   Source: backend/app/Http/Requests/Calendar/GenerateCalendarRequest.php
+
+5. CalendarController -> GenerateCalendarRequest: validated('end_date')
+   Type: call
+   Source: backend/app/Http/Controllers/Calendar/CalendarController.php; backend/app/Http/Requests/Calendar/GenerateCalendarRequest.php
+
+6. GenerateCalendarRequest -> CalendarController: end_date
+   Type: return
+   Replies to: 5
+   Source: backend/app/Http/Requests/Calendar/GenerateCalendarRequest.php
+
+7. CalendarController -> CalendarController: ensureUserCanEditPlot(request, plot, accessService)
+   Type: call
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php
+
+8. CalendarController -> CalendarController: resolveGardenOwner(request)
+   Type: call
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php
+
+9. CalendarController -> CalendarController: owner
+   Type: return
+   Replies to: 8
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php
+
+10. CalendarController -> AccessService: userCanEdit(owner, plot)
+   Type: call
+   Source: backend/app/Services/Plot/AccessService.php
+
+11. AccessService -> CalendarController: true
+   Type: return
+   Replies to: 10
+   Source: backend/app/Services/Plot/AccessService.php
+
+12. CalendarController -> CalendarController: edit_access_granted
+   Type: return
+   Replies to: 7
+   Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php
+
+13. CalendarController -> TaskCalendarService: generate(plot, startDate, endDate)
+   Type: call
+   Source: backend/app/Http/Controllers/Calendar/CalendarController.php
+
+14. TaskCalendarService -> CalendarGenerationService: generateCalendar(plot, startDate, endDate)
+   Type: call
+   Source: backend/app/Services/Calendar/TaskCalendarService.php
+
+15. CalendarGenerationService -> Plot: loadMissing([...])
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+16. Plot -> CalendarGenerationService: plot_relations_loaded
+   Type: return
+   Replies to: 15
+   Source: backend/app/Models/Plot.php
+
+17. CalendarGenerationService -> CalendarGenerationService: collectPlants(plot)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+18. CalendarGenerationService -> CalendarGenerationService: plants
+   Type: return
+   Replies to: 17
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+19. CalendarGenerationService -> PlantCareService: resolveEffectivePlantCare(plant)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php; backend/app/Services/Plant/PlantCareService.php
+
+20. PlantCareService -> PlantCareService: ensureLinkedCareProfile(plant, null)
+   Type: call
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+21. PlantCareService -> PlantCareService: ensureCatalogPlantLink(plant)
+   Type: call
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+22. PlantCareService -> PlantCareService: catalogPlant
+   Type: return
+   Replies to: 21
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+23. PlantCareService -> CatalogPlant: plantCare()
+   Type: call
+   Source: backend/app/Models/CatalogPlant.php
+
+24. CatalogPlant -> PlantCareService: plant_care
+   Type: return
+   Replies to: 23
+   Source: backend/app/Models/CatalogPlant.php; backend/app/Models/PlantCare.php
+
+25. PlantCareService -> PlantCareService: assignCareToPlant(plant, plantCare)
+   Type: call
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+26. PlantCareService -> PlantCareService: care_assigned
+   Type: return
+   Replies to: 25
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+27. PlantCareService -> PlantCareService: linked_plant_care
+   Type: return
+   Replies to: 20
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+28. PlantCareService -> CalendarGenerationService: plant_care
+   Type: return
+   Replies to: 19
+   Source: backend/app/Services/Plant/PlantCareService.php
+
+29. CalendarGenerationService -> TaskCalendar: create(calendar_attributes)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php; backend/app/Models/TaskCalendar.php
+
+30. TaskCalendar -> CalendarGenerationService: calendar
+   Type: return
+   Replies to: 29
+   Source: backend/app/Models/TaskCalendar.php
+
+31. CalendarGenerationService -> Plant: getAttribute('plant_date')
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php; backend/app/Models/Plant.php
+
+32. Plant -> CalendarGenerationService: plant_date
+   Type: return
+   Replies to: 31
+   Source: backend/app/Models/Plant.php
+
+33. CalendarGenerationService -> CalendarGenerationService: lt(plant_date->copy()->startOfDay())
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+34. CalendarGenerationService -> CalendarGenerationService: check_date_before_planting_boolean
+   Type: return
+   Replies to: 33
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+35. CalendarGenerationService -> CalendarGenerationService: continue
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+36. CalendarGenerationService -> CalendarGenerationService: plant_day_skipped
+   Type: return
+   Replies to: 35
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+37. CalendarGenerationService -> Plant: effectivePlantCare()
+   Type: call
+   Source: backend/app/Models/Plant.php
+
+38. Plant -> CalendarGenerationService: plant_care
+   Type: return
+   Replies to: 37
+   Source: backend/app/Models/Plant.php; backend/app/Models/PlantCare.php
+
+39. CalendarGenerationService -> PlantLifecyclePhaseService: resolveSimulatedPhase(plant, care, generationDate)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php; backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+40. PlantLifecyclePhaseService -> Plant: getAttribute('plant_date')
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php; backend/app/Models/Plant.php
+
+41. Plant -> PlantLifecyclePhaseService: plant_date
+   Type: return
+   Replies to: 40
+   Source: backend/app/Models/Plant.php
+
+42. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: copy()->startOfDay()->diffInDays(forDate->copy()->startOfDay(), false)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+43. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: elapsedDays
+   Type: return
+   Replies to: 42
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+44. PlantLifecyclePhaseService -> Plant: getAttribute('condition')
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php; backend/app/Models/Plant.php
+
+45. Plant -> PlantLifecyclePhaseService: actualCondition
+   Type: return
+   Replies to: 44
+   Source: backend/app/Models/Plant.php
+
+46. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: buildTimeline(care)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+47. PlantLifecyclePhaseService -> PlantCare: getAttribute('germinating_duration_days')
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php; backend/app/Models/PlantCare.php
+
+48. PlantCare -> PlantLifecyclePhaseService: germinating_duration_days
+   Type: return
+   Replies to: 47
+   Source: backend/app/Models/PlantCare.php
+
+49. PlantLifecyclePhaseService -> PlantCare: getAttribute('growing_duration_days')
+   Type: call
+   Source: backend/app/Models/PlantCare.php
+
+50. PlantCare -> PlantLifecyclePhaseService: growing_duration_days
+   Type: return
+   Replies to: 49
+   Source: backend/app/Models/PlantCare.php
+
+51. PlantLifecyclePhaseService -> PlantCare: getAttribute('flowering_duration_days')
+   Type: call
+   Source: backend/app/Models/PlantCare.php
+
+52. PlantCare -> PlantLifecyclePhaseService: flowering_duration_days
+   Type: return
+   Replies to: 51
+   Source: backend/app/Models/PlantCare.php
+
+53. PlantLifecyclePhaseService -> PlantCare: getAttribute('mature_duration_days')
+   Type: call
+   Source: backend/app/Models/PlantCare.php
+
+54. PlantCare -> PlantLifecyclePhaseService: mature_duration_days
+   Type: return
+   Replies to: 53
+   Source: backend/app/Models/PlantCare.php
+
+55. PlantLifecyclePhaseService -> PlantCare: getAttribute('regenerating_duration_days')
+   Type: call
+   Source: backend/app/Models/PlantCare.php
+
+56. PlantCare -> PlantLifecyclePhaseService: regenerating_duration_days
+   Type: return
+   Replies to: 55
+   Source: backend/app/Models/PlantCare.php
+
+57. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: lifecycle_timeline
+   Type: return
+   Replies to: 46
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+58. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: resolvePhaseFromTimeline(timeline, elapsedDays)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+59. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: current_phase
+   Type: return
+   Replies to: 58
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+60. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: resolvePhaseFromTimeline(timeline, elapsedDays - 1)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+61. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: previous_phase
+   Type: return
+   Replies to: 60
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+62. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: isExceptionalManualCondition(actualCondition)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+63. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: exceptional_boolean
+   Type: return
+   Replies to: 62
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+64. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: phaseLabel(current['phase'])
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+65. PlantLifecyclePhaseService -> PlantLifecyclePhaseService: phase_label
+   Type: return
+   Replies to: 64
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+66. PlantLifecyclePhaseService -> CalendarGenerationService: simulated_state
+   Type: return
+   Replies to: 39
+   Source: backend/app/Services/Plant/PlantLifecyclePhaseService.php
+
+67. CalendarGenerationService -> CalendarGenerationService: buildBaseActions(plant, care, simulatedState)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+68. CalendarGenerationService -> Plant: getAttribute('disease')
+   Type: call
+   Source: backend/app/Models/Plant.php
+
+69. Plant -> CalendarGenerationService: disease_boolean
+   Type: return
+   Replies to: 68
+   Source: backend/app/Models/Plant.php
+
+70. CalendarGenerationService -> CalendarGenerationService: plant.disease || actualCondition === ConditionType::Diseased->value
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php; backend/app/Enums/ConditionType.php
+
+71. CalendarGenerationService -> CalendarGenerationService: is_diseased
+   Type: return
+   Replies to: 70
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+72. CalendarGenerationService -> CalendarGenerationService: resourceRequirement('Fungicide', InventoryItemType::Material, 1, 'l', true)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+73. CalendarGenerationService -> CalendarGenerationService: fungicide_requirement
+   Type: return
+   Replies to: 72
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+74. CalendarGenerationService -> CalendarGenerationService: resourceRequirement('Sprayer', InventoryItemType::Tool, 1, 'unit', false)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+75. CalendarGenerationService -> CalendarGenerationService: sprayer_requirement
+   Type: return
+   Replies to: 74
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+76. CalendarGenerationService -> CalendarGenerationService: treatment_actions
+   Type: return
+   Replies to: 67
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+77. CalendarGenerationService -> CalendarGenerationService: isIntervalDue(daysSincePlanting, care->watering_interval_days, 0)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+78. CalendarGenerationService -> CalendarGenerationService: watering_due
+   Type: return
+   Replies to: 77
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+79. CalendarGenerationService -> CalendarGenerationService: isIntervalDue(daysSincePlanting, care->fertilizing_interval_days, establishmentOffset)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+80. CalendarGenerationService -> CalendarGenerationService: fertilizing_due
+   Type: return
+   Replies to: 79
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+81. CalendarGenerationService -> CalendarGenerationService: isIntervalDue(daysSincePlanting, care->pest_check_interval_days, 0)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+82. CalendarGenerationService -> CalendarGenerationService: pest_check_due
+   Type: return
+   Replies to: 81
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+83. CalendarGenerationService -> CalendarGenerationService: base_actions
+   Type: return
+   Replies to: 67
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+84. CalendarGenerationService -> PlantLifecycleService: buildActionsForDate(plant, care, simulatedState, generationDate, conditionHistory, harvestRecords)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecycleService.php
+
+85. PlantLifecycleService -> PlantLifecycleService: shouldCreateHarvestTask(plant, care, generationDate, harvestRecords)
+   Type: call
+   Source: backend/app/Services/Plant/PlantLifecycleService.php
+
+86. PlantLifecycleService -> PlantLifecycleService: harvest_task_decision
+   Type: return
+   Replies to: 85
+   Source: backend/app/Services/Plant/PlantLifecycleService.php
+
+87. PlantLifecycleService -> CalendarGenerationService: lifecycle_actions
+   Type: return
+   Replies to: 84
+   Source: backend/app/Services/Plant/PlantLifecycleService.php
+
+88. CalendarGenerationService -> CalendarGenerationService: array_merge(base_actions, lifecycle_actions)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+89. CalendarGenerationService -> CalendarGenerationService: actions
+   Type: return
+   Replies to: 88
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+90. CalendarGenerationService -> CalendarGenerationService: applyWeatherRules(actions, plant, care, simulatedState, weatherData, weatherContext)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+91. CalendarGenerationService -> CalendarGenerationService: weather_adjusted_actions
+   Type: return
+   Replies to: 90
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+92. CalendarGenerationService -> CalendarGenerationService: deduplicateActions(actions)
+   Type: call
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+93. CalendarGenerationService -> CalendarGenerationService: deduplicated_actions
+   Type: return
+   Replies to: 92
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+94. CalendarGenerationService -> TaskCalendarService: calendar
+   Type: return
+   Replies to: 14
+   Source: backend/app/Services/Calendar/CalendarGenerationService.php
+
+95. TaskCalendarService -> CalendarController: calendar
+   Type: return
+   Replies to: 13
+   Source: backend/app/Services/Calendar/TaskCalendarService.php
+
+96. CalendarController -> PlotCalendarPage: calendar_response
+   Type: return
+   Replies to: 2
+   Source: backend/app/Http/Controllers/Calendar/CalendarController.php
+
+97. PlotCalendarPage -> PlotCalendarPage: setSelectedCalendarId(created.id)
+   Type: call
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+
+98. PlotCalendarPage -> PlotCalendarPage: selected_calendar_updated
+   Type: return
+   Replies to: 97
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+
+99. PlotCalendarPage -> PlotCalendarPage: setToastMessage('Calendar generated successfully.')
+   Type: call
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+
+100. PlotCalendarPage -> PlotCalendarPage: toast_rendered
+   Type: return
+   Replies to: 99
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+
+3. UML fragmentai
+
+- loop: [for each plant being prepared]
+  - messages 19-28
+
+- loop: [for each generation date]
+  - messages 31-93
+
+- loop: [for each plant in generation date]
+  - messages 31-93
+
+- alt: Check date relative to planting date
+  - Operand 1 [check date is before planting date]: messages 35-36
+  - Operand 2 [check date is on or after planting date]: messages 37-93
+
+- loop: [for each configured lifecycle duration in PlantCare]
+  - messages 47-56
+
+- alt: Current disease condition
+  - Operand 1 [plant is diseased]: messages 72-76
+  - Operand 2 [plant is not diseased]: messages 77-83
+
+4. Santrauka
+
+- Synchronous calls: 49
+- Returns: 50
+- Async/UI events: 1
+- Calls without return: 0
+- Alt fragments: 2
+- Loop fragments: 4
+- Opt fragments: 0

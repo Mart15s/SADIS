@@ -22,6 +22,7 @@ import {
   INVENTORY_TYPES,
   MATERIAL_UNITS,
   TOOL_UNITS,
+  formatInventoryType,
   formatInventoryUnit,
   safeNumber,
 } from '../../lib/constants.js'
@@ -97,7 +98,7 @@ export default function InventoryPage() {
         taskId: searchParams.get('taskId'),
         taskName: searchParams.get('taskName'),
         returnTo: searchParams.get('returnTo'),
-        returnLabel: searchParams.get('returnLabel') || 'Back to calendar',
+        returnLabel: searchParams.get('returnLabel') || 'Grįžti į kalendorių',
         missing: Array.isArray(missing) ? missing : [],
       }
     } catch {
@@ -105,7 +106,7 @@ export default function InventoryPage() {
         taskId: searchParams.get('taskId'),
         taskName: searchParams.get('taskName'),
         returnTo: searchParams.get('returnTo'),
-        returnLabel: searchParams.get('returnLabel') || 'Back to calendar',
+        returnLabel: searchParams.get('returnLabel') || 'Grįžti į kalendorių',
         missing: [],
       }
     }
@@ -233,11 +234,11 @@ export default function InventoryPage() {
         inventoryState.setData((current) => current.map((item) => (
           item.id === updated.id ? updated : item
         )))
-        setSuccessMessage(`Updated "${updated.name}" inventory.`)
+        setSuccessMessage(`Inventorius „${updated.name}“ atnaujintas.`)
       } else {
         const created = await api.createInventoryItem(payload)
         inventoryState.setData((current) => [created, ...current])
-        setSuccessMessage(`Added "${created.name}" to inventory.`)
+        setSuccessMessage(`„${created.name}“ pridėta į inventorių.`)
       }
 
       setEditingId(null)
@@ -260,10 +261,10 @@ export default function InventoryPage() {
     return (
       <div className="resource-action-row">
         <Button variant="secondary" size="sm" onClick={() => handleEdit(item.id)}>
-          Edit
+          Redaguoti
         </Button>
         <Button variant="danger" size="sm" onClick={() => handleDelete(item.id)} disabled={submitting}>
-          Delete
+          Šalinti
         </Button>
       </div>
     )
@@ -275,21 +276,21 @@ export default function InventoryPage() {
         <ResourceCardHeader
           title={item.name}
           subtitle={formatInventoryUnit(item.unit)}
-          badge={<Badge tone={item.is_available ? 'success' : 'warning'}>{item.is_available ? 'In stock' : 'Out of stock'}</Badge>}
+          badge={<Badge tone={item.is_available ? 'success' : 'warning'}>{item.is_available ? 'Yra sandėlyje' : 'Trūksta'}</Badge>}
         />
         <ResourceCardMeta>
-          <Badge tone="neutral">{item.type}</Badge>
+          <Badge tone="neutral">{formatInventoryType(item.type)}</Badge>
           <Badge tone="soft">{safeNumber(item.quantity, item.type === 'tool' ? 0 : 2)} {formatInventoryUnit(item.unit)}</Badge>
         </ResourceCardMeta>
         <ResourceCardBody>
           <dl className="resource-detail-grid">
             <div>
-              <dt>Quantity</dt>
+              <dt>Kiekis</dt>
               <dd>{safeNumber(item.quantity, item.type === 'tool' ? 0 : 2)}</dd>
             </div>
             <div>
-              <dt>Status</dt>
-              <dd>{item.is_available ? 'In stock' : 'Out of stock'}</dd>
+              <dt>Būsena</dt>
+              <dd>{item.is_available ? 'Yra sandėlyje' : 'Trūksta'}</dd>
             </div>
           </dl>
         </ResourceCardBody>
@@ -301,11 +302,11 @@ export default function InventoryPage() {
   }
 
   const inventoryColumns = [
-    { key: 'name', label: 'Name', render: (item) => item.name },
-    { key: 'type', label: 'Type', render: (item) => item.type },
-    { key: 'unit', label: 'Unit', render: (item) => formatInventoryUnit(item.unit) },
-    { key: 'quantity', label: 'Quantity', render: (item) => safeNumber(item.quantity, item.type === 'tool' ? 0 : 2) },
-    { key: 'status', label: 'Status', render: (item) => item.is_available ? 'In stock' : 'Out of stock' },
+    { key: 'name', label: 'Pavadinimas', render: (item) => item.name },
+    { key: 'type', label: 'Tipas', render: (item) => formatInventoryType(item.type) },
+    { key: 'unit', label: 'Vienetas', render: (item) => formatInventoryUnit(item.unit) },
+    { key: 'quantity', label: 'Kiekis', render: (item) => safeNumber(item.quantity, item.type === 'tool' ? 0 : 2) },
+    { key: 'status', label: 'Būsena', render: (item) => item.is_available ? 'Yra sandėlyje' : 'Trūksta' },
     {
       key: 'actions',
       label: '',
@@ -315,7 +316,7 @@ export default function InventoryPage() {
   ]
 
   if (inventoryState.loading) {
-    return <LoadingState title="Loading inventory..." />
+    return <LoadingState title="Įkeliamas inventorius..." />
   }
 
   if (inventoryState.error) {
@@ -325,24 +326,24 @@ export default function InventoryPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Stock and supplies"
-        title="Inventory"
-        description="Track materials and tools as operational inputs for calendar tasks, shortages, and replenishment."
-        meta={<StatusBadge kind="ownership">{inventoryState.data.length} items tracked</StatusBadge>}
+        eyebrow="Atsargos ir priemonės"
+        title="Inventorius"
+        description="Valdykite medžiagas ir įrankius, kurie naudojami kalendoriaus užduotims, trūkumams ir papildymui."
+        meta={<StatusBadge kind="ownership">{inventoryState.data.length} įrašų</StatusBadge>}
       />
 
-      <section className="inventory-yard-strip" aria-label="Inventory summary">
-        <MeasurementBadge label="Materials" value={materialCount} tone="earth" />
-        <MeasurementBadge label="Tools" value={toolCount} tone="field" />
-        <MeasurementBadge label="Shortage flags" value={unavailableCount} tone={unavailableCount > 0 ? 'amber' : 'leaf'} />
+      <section className="inventory-yard-strip" aria-label="Inventoriaus suvestinė">
+        <MeasurementBadge label="Medžiagos" value={materialCount} tone="earth" />
+        <MeasurementBadge label="Įrankiai" value={toolCount} tone="field" />
+        <MeasurementBadge label="Trūkumai" value={unavailableCount} tone={unavailableCount > 0 ? 'amber' : 'leaf'} />
       </section>
 
       {inventoryRequestContext ? (
-        <SectionCard title="Missing resources for task" description="Restock directly from calendar shortages, then return to the originating task context.">
+        <SectionCard title="Užduočiai trūkstami resursai" description="Papildykite atsargas pagal kalendoriaus trūkumus ir grįžkite į užduotį.">
           <div className="inline-note">
             {inventoryRequestContext.taskName
-              ? `You came here from task "${inventoryRequestContext.taskName}". Replenish the missing inventory, then return and complete the task.`
-              : 'You came here from a task with missing inventory. Replenish the missing items, then return and complete the task.'}
+              ? `Čia atėjote iš užduoties „${inventoryRequestContext.taskName}“. Papildykite inventorių, tada grįžkite ir atlikite užduotį.`
+              : 'Čia atėjote iš užduoties, kuriai trūksta inventoriaus. Papildykite trūkstamus įrašus, tada grįžkite ir atlikite užduotį.'}
           </div>
           {inventoryRequestContext.returnTo ? (
             <ActionRow>
@@ -367,26 +368,26 @@ export default function InventoryPage() {
                       <strong>{resource.name}</strong>
                       <div className="resource-summary-row">
                         <StatRow
-                          label="Need"
+                          label="Reikia"
                           value={`${safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
                         />
                         <StatRow
-                          label="Have"
+                          label="Turima"
                           value={`${safeNumber(resource.available_quantity ?? 0, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
                         />
                         <StatRow
-                          label="Missing"
+                          label="Trūksta"
                           className={Number(resource.shortage_quantity ?? 0) > 0 ? 'stat-row-danger' : ''}
                           value={`${safeNumber(resource.shortage_quantity ?? 0, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
                         />
                       </div>
                       <div className="inline-note inline-note-compact">
-                        Item type will be assigned automatically as <strong>{resource.type}</strong> from the task resource.
+                        Tipas automatiškai priskiriamas pagal užduotį: <strong>{formatInventoryType(resource.type)}</strong>.
                       </div>
                       <div className="inline-note inline-note-compact">
                         {matchingItem
-                          ? `Existing stock found. The form is prepared to update "${matchingItem.name}" to ${formatQuantityInput(Number(matchingItem.quantity) + Number(resource.shortage_quantity ?? 0), resource.type)} ${formatInventoryUnit(resource.unit)} total.`
-                          : 'No matching inventory entry was found. The form is prepared to create this item with the missing quantity.'}
+                          ? `Rastas esamas įrašas. Forma paruošta atnaujinti „${matchingItem.name}“ iki ${formatQuantityInput(Number(matchingItem.quantity) + Number(resource.shortage_quantity ?? 0), resource.type)} ${formatInventoryUnit(resource.unit)}.`
+                          : 'Atitinkančio inventoriaus įrašo nerasta. Forma paruošta sukurti įrašą su trūkstamu kiekiu.'}
                       </div>
                       <ActionRow>
                         <Button
@@ -397,7 +398,7 @@ export default function InventoryPage() {
                             applyResourceSuggestion(resource)
                           }}
                         >
-                          {matchingItem ? 'Prepare restock form' : 'Prepare add form'}
+                          {matchingItem ? 'Paruošti papildymo formą' : 'Paruošti pridėjimo formą'}
                         </Button>
                       </ActionRow>
                     </div>
@@ -411,13 +412,13 @@ export default function InventoryPage() {
 
       <div className="detail-grid">
         <SectionCard
-          title="Tracked items"
-          description="The table shrinks to its content when the inventory is small, so the list feels intentional instead of half-empty."
+          title="Stebimi įrašai"
+          description="Inventoriaus sąraše rodomi įrankiai ir medžiagos su jų kiekiais bei vienetais."
         >
           {inventoryState.data.length === 0 ? (
             <EmptyState
-              title="Inventory is empty"
-              description="Add your first tool or material to start linking garden work with stock levels."
+              title="Inventorius tuščias"
+              description="Pridėkite pirmą įrankį arba medžiagą, kad daržo darbai būtų susieti su atsargomis."
             />
           ) : (
             <ResponsiveTable
@@ -425,8 +426,8 @@ export default function InventoryPage() {
               items={inventoryState.data}
               getKey={(item) => item.id}
               renderCard={renderInventoryCard}
-              tableLabel="Inventory items table"
-              cardListLabel="Inventory items list"
+              tableLabel="Inventoriaus įrašų lentelė"
+              cardListLabel="Inventoriaus įrašų sąrašas"
             />
           )}
         </SectionCard>
@@ -437,23 +438,23 @@ export default function InventoryPage() {
           onSubmit={handleSubmit}
         >
           <FormSection
-            title={editingId ? 'Edit inventory item' : 'Add inventory item'}
-            description="Use the compact form on the right to add or restock items without letting the editor dominate the page."
+            title={editingId ? 'Redaguoti inventoriaus įrašą' : 'Pridėti inventoriaus įrašą'}
+            description="Naudokite šią formą naujiems įrašams pridėti arba atsargoms papildyti."
           >
             {inventoryRequestContext && activeResourceKey ? (
               <div className="inline-note">
                 {editingId
-                  ? 'The form is preloaded for replenishment. Adjust the total stock after purchase, save it, then return to the task.'
-                  : 'The form is preloaded with the missing resource so you can add it without retyping details.'}
+                  ? 'Forma paruošta papildymui. Pakoreguokite bendrą kiekį, išsaugokite ir grįžkite į užduotį.'
+                  : 'Forma paruošta pagal trūkstamą resursą, todėl nereikia perrašyti duomenų.'}
               </div>
             ) : null}
             <div className="input-grid">
               <div className="field">
-                <label htmlFor="item-name">Name</label>
+                <label htmlFor="item-name">Pavadinimas</label>
                 <input id="item-name" name="name" value={form.name} onChange={handleChange} required />
               </div>
               <div className="field">
-                <label htmlFor="item-type">Type</label>
+                <label htmlFor="item-type">Tipas</label>
                 <select
                   id="item-type"
                   name="type"
@@ -463,16 +464,16 @@ export default function InventoryPage() {
                 >
                   {INVENTORY_TYPES.map((type) => (
                     <option key={type} value={type}>
-                      {type}
+                      {formatInventoryType(type)}
                     </option>
                   ))}
                 </select>
                 {typeLockedByTask ? (
-                  <span className="field-hint">Type is locked to the task resource.</span>
+                  <span className="field-hint">Tipas užrakintas pagal užduoties resursą.</span>
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="item-unit">Unit</label>
+                <label htmlFor="item-unit">Vienetas</label>
                 <select
                   id="item-unit"
                   name="unit"
@@ -487,11 +488,11 @@ export default function InventoryPage() {
                   ))}
                 </select>
                 {typeLockedByTask ? (
-                  <span className="field-hint">Unit is locked to the task resource.</span>
+                  <span className="field-hint">Vienetas užrakintas pagal užduoties resursą.</span>
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="item-quantity">Quantity</label>
+                <label htmlFor="item-quantity">Kiekis</label>
                 <input
                   id="item-quantity"
                   name="quantity"
@@ -507,8 +508,8 @@ export default function InventoryPage() {
 
             <div className="inline-note inline-note-compact">
               {form.type === 'tool'
-                ? 'Reusable tools are only checked for availability and are never deducted after task completion.'
-                : 'Consumable materials are automatically deducted from inventory when linked care tasks are completed.'}
+                ? 'Daugkartiniai įrankiai tikrinami tik pagal prieinamumą ir po užduoties nėra nurašomi.'
+                : 'Sunaudojamos medžiagos automatiškai nurašomos iš inventoriaus, kai susietos užduotys pažymimos atliktomis.'}
             </div>
 
             {successMessage ? <span className="form-success">{successMessage}</span> : null}
@@ -516,7 +517,7 @@ export default function InventoryPage() {
 
             <ActionRow>
               <Button type="submit" disabled={submitting}>
-                {submitting ? 'Saving...' : editingId ? 'Save item' : 'Add item'}
+                {submitting ? 'Saugoma...' : editingId ? 'Išsaugoti įrašą' : 'Pridėti įrašą'}
               </Button>
               {editingId ? (
                 <Button
@@ -528,7 +529,7 @@ export default function InventoryPage() {
                     setSuccessMessage('')
                   }}
                 >
-                  Cancel edit
+                  Atšaukti redagavimą
                 </Button>
               ) : null}
               {inventoryRequestContext?.returnTo ? (

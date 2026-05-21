@@ -1,2 +1,40 @@
 .run-logs/
 .tmp_*
+
+# Environment files
+.env
+.env.*
+!**/.env.example
+!**/.env.*.example
+!.env.render.example
+
+# Dependencies and generated frontend output
+**/vendor/
+**/node_modules/
+/public/build/
+/dist/
+/backend/public/build/
+/frontend/dist/
+
+# Laravel runtime output
+**/storage/*.key
+**/storage/logs/*
+!**/storage/logs/.gitignore
+**/bootstrap/cache/*.php
+!**/bootstrap/cache/.gitignore
+*.log
+
+# Local tooling and OS noise
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+*.tmp
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db

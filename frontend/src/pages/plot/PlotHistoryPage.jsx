@@ -7,13 +7,18 @@ import EmptyStatePanel from '../../components/ui/EmptyStatePanel.jsx'
 import MetricCard from '../../components/ui/MetricCard.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
-import { formatDateTime, formatSquareMetersValue } from '../../lib/constants.js'
+import {
+  formatDateTime,
+  formatPlantCondition,
+  formatSnapshotText,
+  formatSquareMetersValue,
+} from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 function plantZoneLabel(plant, zones) {
   const zoneId = plant.plant_zone_id ?? plant.fk_plant_zone_id ?? null
   const zone = zones.find((entry) => String(entry.id) === String(zoneId))
-  return zone?.name ?? 'Zone not set'
+  return zone?.name ?? 'Zona nenurodyta'
 }
 
 export default function PlotHistoryPage() {
@@ -41,7 +46,7 @@ export default function PlotHistoryPage() {
   }, [historyState.data.snapshots, selectedSnapshotId])
 
   if (historyState.loading) {
-    return <LoadingState title="Loading planning history..." />
+    return <LoadingState title="Įkeliama planavimo istorija..." />
   }
 
   if (historyState.error) {
@@ -49,7 +54,7 @@ export default function PlotHistoryPage() {
   }
 
   if (!historyState.data.plot) {
-    return <EmptyState title="Plot not found" description="The requested plot could not be loaded." />
+    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
   }
 
   const isOwner = historyState.data.accessRole === 'owner'
@@ -67,24 +72,24 @@ export default function PlotHistoryPage() {
         plotName={historyState.data.plot.name}
         sectionKey="history"
         isOwner={isOwner}
-        description="History now reflects meaningful committed saves so you can browse actual plot versions instead of transient editor movement."
+        description="Istorijoje rodomi tik reikšmingi išsaugojimo pakeitimai, todėl galima peržiūrėti realias sklypo versijas."
         meta={(
-          <StatusBadge kind="selection" tone="neutral">{historyState.data.snapshots.length} saved versions</StatusBadge>
+          <StatusBadge kind="selection" tone="neutral">{historyState.data.snapshots.length} išsaugotos versijos</StatusBadge>
         )}
       />
 
       {historyState.data.snapshots.length === 0 ? (
         <EmptyState
-          title="No saved versions yet"
-          description="History starts when the editor workspace is explicitly saved. Unsaved layout adjustments no longer create noisy history entries."
+          title="Išsaugotų versijų dar nėra"
+          description="Istorija pradedama kaupti, kai redaktoriaus darbo sritis aiškiai išsaugoma."
         />
       ) : (
         <div className="plot-history-browser">
           <section className="panel page-stack plot-history-list-panel">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Saved versions</h2>
-                <p className="section-copy">Select a version to inspect the saved layout, metadata, and plants from that moment.</p>
+                <h2 className="section-title">Išsaugotos versijos</h2>
+                <p className="section-copy">Pasirinkite versiją, kad peržiūrėtumėte tuo metu išsaugotą planą, metaduomenis ir augalus.</p>
               </div>
             </div>
 
@@ -101,14 +106,14 @@ export default function PlotHistoryPage() {
                   >
                     <div className="plot-history-row-copy">
                       <div className="plot-history-row-head">
-                        <strong>{snapshot.label ?? snapshot.action}</strong>
+                        <strong>{formatSnapshotText(snapshot.label ?? snapshot.action)}</strong>
                         <span className="plot-history-row-date">{formatDateTime(snapshot.created_at)}</span>
                       </div>
-                      <p className="plot-history-row-summary">{snapshot.summary}</p>
+                      <p className="plot-history-row-summary">{formatSnapshotText(snapshot.summary)}</p>
                     </div>
                     <div className="plot-history-row-meta">
-                      <StatusBadge kind="selection" tone="neutral">{snapshot.zone_count ?? 0} zones</StatusBadge>
-                      <StatusBadge kind="selection" tone="neutral">{snapshot.plant_count ?? 0} plants</StatusBadge>
+                      <StatusBadge kind="selection" tone="neutral">{snapshot.zone_count ?? 0} zonos</StatusBadge>
+                      <StatusBadge kind="selection" tone="neutral">{snapshot.plant_count ?? 0} augalai</StatusBadge>
                     </div>
                   </button>
                 )
@@ -121,16 +126,16 @@ export default function PlotHistoryPage() {
               <>
                 <div className="plot-page-section-head">
                   <div>
-                    <h2 className="section-title">{selectedSnapshot.label ?? selectedSnapshot.action}</h2>
-                    <p className="section-copy">{selectedSnapshot.summary}</p>
+                    <h2 className="section-title">{formatSnapshotText(selectedSnapshot.label ?? selectedSnapshot.action)}</h2>
+                    <p className="section-copy">{formatSnapshotText(selectedSnapshot.summary)}</p>
                   </div>
                   <span className="plot-history-preview-date">{formatDateTime(selectedSnapshot.created_at)}</span>
                 </div>
 
                 <div className="plot-history-preview-meta">
-                  <MetricCard label="Zones" value={versionZones.length} />
-                  <MetricCard label="Plants" value={versionPlants.length} />
-                  <MetricCard label="Plot size" value={formatSquareMetersValue(snapshotPayload.plot?.plot_size, 2, '--')} />
+                  <MetricCard label="Zonos" value={versionZones.length} />
+                  <MetricCard label="Augalai" value={versionPlants.length} />
+                  <MetricCard label="Sklypo plotas" value={formatSquareMetersValue(snapshotPayload.plot?.plot_size, 2, '--')} />
                 </div>
 
                 <PlanPreview
@@ -144,8 +149,8 @@ export default function PlotHistoryPage() {
                 <section className="page-stack">
                   <div className="plot-page-section-head">
                     <div>
-                      <h3 className="section-title">Plants in this version</h3>
-                      <p className="section-copy">Compact plant entries keep the version readable without table overflow.</p>
+                      <h3 className="section-title">Šios versijos augalai</h3>
+                      <p className="section-copy">Kompaktiški augalų įrašai leidžia patogiai peržiūrėti versiją be perteklinės lentelės.</p>
                     </div>
                   </div>
 
@@ -157,14 +162,14 @@ export default function PlotHistoryPage() {
                             <strong>{plant.name}</strong>
                             <p className="muted">{plantZoneLabel(plant, versionZones)}</p>
                           </div>
-                          <StatusBadge kind="status" tone="neutral">{plant.condition ?? 'not set'}</StatusBadge>
+                          <StatusBadge kind="status" tone="neutral">{formatPlantCondition(plant.condition ?? '')}</StatusBadge>
                         </article>
                       ))}
                     </div>
                   ) : (
                     <EmptyStatePanel
-                      title="No plants saved in this version"
-                      description="This version focused on layout or plot-level changes without plant entries."
+                      title="Šioje versijoje augalų neišsaugota"
+                      description="Ši versija apima išdėstymo arba sklypo lygio pakeitimus be augalų įrašų."
                       tone="subtle"
                     />
                   )}
@@ -172,8 +177,8 @@ export default function PlotHistoryPage() {
               </>
             ) : (
               <EmptyStatePanel
-                title="Select a version"
-                description="Choose a saved version from the left to inspect its layout preview and planted state."
+                title="Pasirinkite versiją"
+                description="Kairėje pasirinkite išsaugotą versiją, kad peržiūrėtumėte jos planą ir augalus."
                 tone="subtle"
               />
             )}

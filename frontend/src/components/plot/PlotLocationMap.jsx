@@ -265,7 +265,7 @@ function BoundaryOverlays({
           autoPan={!readOnly}
           autoPanPadding={[56, 56]}
           riseOnHover
-          title={readOnly ? 'Plot boundary corner' : index === 0 ? 'First corner - boundary closes here' : 'Drag corner to adjust boundary'}
+          title={readOnly ? 'Sklypo ribos kampas' : index === 0 ? 'Pirmas kampas - čia uždaroma riba' : 'Vilkite kampą ribai koreguoti'}
           eventHandlers={readOnly ? {
             click(event) {
               event.originalEvent?.stopPropagation()
@@ -309,10 +309,10 @@ export default function PlotLocationMap({
   const initialZoom = view?.zoom ?? DEFAULT_ZOOM
   const canInsertPoints = !readOnly && boundaryClosed && boundaryPoints.length < MAX_BOUNDARY_POINTS
   const helperText = readOnly
-    ? 'Saved corners, side lengths, and center.'
+    ? 'Išsaugoti kampai, kraštinių ilgiai ir centras.'
     : boundaryClosed
-      ? 'Drag corners. Use edge markers to add points.'
-      : 'Click the map to add corners, then close the boundary.'
+      ? 'Tempkite kampus. Naudokite kraštinių žymeklius, kad pridėtumėte taškų.'
+      : 'Spustelėkite žemėlapį ir pridėkite kampus, tada uždarykite ribą.'
   const rootClassName = [
     'plot-location-map',
     `plot-location-map--${mode}`,
@@ -323,7 +323,7 @@ export default function PlotLocationMap({
   return (
     <div className={rootClassName}>
       <div className="plot-location-map-mode-hint" aria-live="polite">
-        <strong>{readOnly ? 'Boundary preview' : boundaryClosed ? 'Edit boundary' : 'Draw boundary'}</strong>
+        <strong>{readOnly ? 'Ribų vaizdas' : boundaryClosed ? 'Redaguoti ribą' : 'Braižyti ribą'}</strong>
         <span>{helperText}</span>
       </div>
       <MapContainer

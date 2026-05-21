@@ -1,0 +1,11 @@
+PA10 "Eksportuoti planą į PDF" įsijungia PA6 scenarijuje tada, kai naudotojas valdo arba peržiūri pasirinktą sklypo planą ir pasirenka eksportuoti jį į PDF failą.
+
+Tai yra pasirenkamas PA6 išplėtimas, todėl PA10 nėra privalomas plano kūrimo, boundary redagavimo ar zonų redagavimo žingsnis.
+
+Jungčių fragmentas:
+A... Pateikti sklypo plano informaciją
+-> A... Pasirinkti veiksmą su planu
+-> D... Ar naudotojas nori eksportuoti planą į PDF?
+D...[taip] -> A... «extend» PA10 "Eksportuoti planą į PDF"
+A... -> A... Grįžti į sklypo plano valdymą
+D...[ne] -> A... Tęsti kitus plano valdymo veiksmus

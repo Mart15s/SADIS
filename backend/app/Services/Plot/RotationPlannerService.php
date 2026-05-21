@@ -16,6 +16,9 @@ use Illuminate\Support\Str;
 
 class RotationPlannerService
 {
+    public const DEFAULT_PLANT_MOVEMENT_COOLDOWN_DAYS = 365;
+    public const DEFAULT_ZONE_FAMILY_REST_DAYS = 1095;
+
     public function __construct(
         private readonly CropRotationClassifier $cropRotationClassifier,
     ) {
@@ -75,6 +78,49 @@ class RotationPlannerService
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function updateDraftItem(Plot $plot, RotationPlanDraft $draft, Plant $plant, array $payload): RotationPlanDraft
+    {
+        $planningDate = $this->normalizePlanningDate($draft->planning_date?->toDateString());
+        $preparedPlot = $this->preparePlot($plot);
+        $plant = $preparedPlot->plants->firstWhere('id', $plant->id);
+
+        abort_unless($plant, 422, 'The selected plant does not belong to the plot.');
+        abort_if($this->isPermanentPlanting($plant), 422, 'Permanent plantings are not manually reassigned in rotation drafts.');
+
+        $mode = (string) ($payload['decision'] ?? 'unresolved');
+        $targetZoneId = $payload['target_zone_id'] ?? null;
+
+        if ($mode === 'target') {
+            abort_if(blank($targetZoneId), 422, 'Select a target zone before saving this rotation decision.');
+            abort_unless(
+                $preparedPlot->plantZones->contains(fn (PlantZone $zone): bool => (int) $zone->id === (int) $targetZoneId),
+                422,
+                'The selected target zone does not belong to this plot.'
+            );
+        }
+
+        $choices = $this->draftChoicesFromPlan($draft->plan['plants'] ?? []);
+        $existingChoice = $choices[(int) $plant->id] ?? [];
+        $choices[(int) $plant->id] = [
+            'decision_mode' => $mode,
+            'target_zone_id' => $mode === 'target'
+                ? (int) $targetZoneId
+                : ($mode === 'generated' ? ($existingChoice['target_zone_id'] ?? null) : null),
+            'manual_note' => $payload['manual_note'] ?? null,
+        ];
+
+        $plan = $this->buildPlanFromChoices($preparedPlot, $planningDate, $choices);
+
+        $draft->update([
+            'plan' => $plan,
+        ]);
+
+        return $draft->fresh();
+    }
+
     public function confirmDraft(
         Plot $plot,
         RotationPlanDraft $draft,
@@ -115,6 +161,10 @@ class RotationPlannerService
 
             abort_if(! $plant || ! $zone, 422, 'The generated rotation scheme references a missing plant or zone.');
 
+            if ((bool) ($entry['selected_target_zone']['is_stay_decision'] ?? false)) {
+                continue;
+            }
+
             $freshCandidate = $this->evaluateZoneCandidate($preparedPlot, $plant, $zone, $planningDate, $assignmentMap);
 
             abort_if(! $freshCandidate['is_eligible'], 422, 'The generated rotation scheme is no longer valid for the current plot data.');
@@ -154,6 +204,10 @@ class RotationPlannerService
             foreach ($changedAssignments as $plant) {
                 $targetZoneId = (int) $assignments[$plant->id];
                 $currentZoneId = (int) ($plant->plant_zone_id ?? $plant->fk_plant_zone_id);
+                $currentZone = $preparedPlot->plantZones->firstWhere('id', $currentZoneId);
+                $targetZone = $preparedPlot->plantZones->firstWhere('id', $targetZoneId);
+                $entry = collect($plan['plants'] ?? [])
+                    ->first(fn (array $planEntry): bool => (int) ($planEntry['plant']['id'] ?? 0) === (int) $plant->id);
 
                 RotationHistory::query()
                     ->where('fk_plot_id', $preparedPlot->id)
@@ -173,6 +227,11 @@ class RotationPlannerService
                     'from_date' => $planningDate->toDateString(),
                     'to_date' => null,
                     'plant_zone_id' => $targetZoneId,
+                    'from_plant_zone_id' => $currentZoneId,
+                    'from_zone_name' => $currentZone?->name,
+                    'to_zone_name' => $targetZone?->name,
+                    'decision_status' => ($entry['decision_mode'] ?? null) === 'target' ? 'manual_override' : 'generated',
+                    'decision_note' => $entry['manual_note'] ?? null,
                     'fk_plot_id' => $preparedPlot->id,
                     'fk_plant_zone_id' => $targetZoneId,
                     'fk_plot_via_zone' => $preparedPlot->id,
@@ -197,6 +256,7 @@ class RotationPlannerService
                 'plants.plantZone',
                 'plants.catalogPlant.plantCare',
                 'rotationHistory.plantZone',
+                'rotationHistory.fromPlantZone',
                 'rotationHistory.plant',
             ]);
 
@@ -237,7 +297,9 @@ class RotationPlannerService
             'plantZones.rotationHistory.plant',
             'plants.plantZone',
             'plants.catalogPlant.plantCare',
+            'plants.rotationHistory',
             'rotationHistory.plantZone',
+            'rotationHistory.fromPlantZone',
             'rotationHistory.plant',
         ]);
 
@@ -248,39 +310,93 @@ class RotationPlannerService
     {
         $plantOrder = $this->orderPlantsForPlanning($plot, $planningDate);
         $selectedAssignments = $this->chooseDraftAssignments($plot, $plantOrder, $planningDate);
-        $visibleAssignments = [];
+        $choices = [];
+
+        foreach ($plantOrder as $plant) {
+            $targetZoneId = $selectedAssignments[$plant->id] ?? null;
+            $choices[(int) $plant->id] = [
+                'decision_mode' => $targetZoneId ? 'generated' : 'unresolved',
+                'target_zone_id' => $targetZoneId ? (int) $targetZoneId : null,
+                'manual_note' => null,
+            ];
+        }
+
+        return $this->buildPlanFromChoices($plot, $planningDate, $choices);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $choices
+     */
+    private function buildPlanFromChoices(Plot $plot, CarbonImmutable $planningDate, array $choices): array
+    {
+        $plantOrder = $this->orderPlantsForPlanning($plot, $planningDate);
+        $desiredAssignments = $this->desiredAssignmentsFromChoices($plot, $plantOrder, $choices);
         $planPlants = [];
 
         foreach ($plantOrder as $plant) {
+            $otherAssignments = $desiredAssignments;
+            unset($otherAssignments[$plant->id]);
+
+            $selectionCandidates = $plot->plantZones
+                ->map(fn (PlantZone $zone) => $this->evaluateZoneCandidate(
+                    $plot,
+                    $plant,
+                    $zone,
+                    $planningDate,
+                    $otherAssignments
+                ))
+                ->sortByDesc('score')
+                ->values();
+
             $candidates = $plot->plantZones
                 ->map(fn (PlantZone $zone) => $this->evaluateZoneCandidate(
                     $plot,
                     $plant,
                     $zone,
                     $planningDate,
-                    $visibleAssignments
+                    []
                 ))
                 ->sortByDesc('score')
+                ->map(function (array $candidate) use ($selectionCandidates): array {
+                    $contextCandidate = $selectionCandidates->firstWhere('zone_id', $candidate['zone_id']);
+
+                    if (! $contextCandidate) {
+                        return $candidate;
+                    }
+
+                    return array_merge($candidate, [
+                        'draft_assigned_occupants' => $contextCandidate['draft_assigned_occupants'] ?? [],
+                        'soft_warnings' => array_values(array_unique(array_merge(
+                            $candidate['soft_warnings'] ?? [],
+                            $contextCandidate['soft_warnings'] ?? []
+                        ))),
+                    ]);
+                })
                 ->values();
 
-            $alternatives = $candidates
+            $alternatives = $selectionCandidates
                 ->filter(fn (array $candidate) => $candidate['is_eligible'])
                 ->values();
-            $selectedZoneId = (int) ($selectedAssignments[$plant->id] ?? 0);
-            $selectedTarget = $selectedZoneId === 0
-                ? null
-                : $candidates->first(fn (array $candidate) => (int) $candidate['zone_id'] === $selectedZoneId && $candidate['is_eligible']);
-
-            if ($selectedTarget) {
-                $visibleAssignments[$plant->id] = $selectedTarget['zone_id'];
-            }
+            $choice = $choices[(int) $plant->id] ?? ['decision_mode' => 'unresolved'];
+            $generatedZoneId = $this->generatedZoneIdFromChoice($choice);
+            $generatedTarget = $generatedZoneId
+                ? $selectionCandidates->first(fn (array $candidate) => (int) $candidate['zone_id'] === (int) $generatedZoneId)
+                : null;
+            $selectedTarget = $this->selectedTargetFromChoice($plant, $selectionCandidates, $choice, $generatedTarget);
+            $resolutionStatus = $this->resolutionStatusForEntry($choice, $selectedTarget);
+            $decisionMode = (string) ($choice['decision_mode'] ?? 'unresolved');
 
             $planPlants[] = [
                 'plant' => $this->plantSummary($plant),
                 'current_zone' => $this->zoneSummary($plant->plantZone),
+                'generated_target_zone' => $generatedTarget,
                 'selected_target_zone' => $selectedTarget,
                 'candidate_zones' => $candidates->all(),
                 'alternatives' => $alternatives->take(3)->values()->all(),
+                'decision_mode' => $decisionMode,
+                'manual_override' => in_array($decisionMode, ['target', 'stay', 'unresolved'], true),
+                'manual_note' => $choice['manual_note'] ?? null,
+                'resolution_status' => $resolutionStatus,
                 'fallback_solutions' => $selectedTarget
                     ? []
                     : $this->buildFallbackSolutions($plot, $plant, $candidates, $planningDate),
@@ -296,21 +412,210 @@ class RotationPlannerService
         $planPlants = array_merge($planPlants, $permanentPlants);
 
         $annualPlants = collect($planPlants)->filter(fn (array $entry): bool => (bool) ($entry['is_rotatable'] ?? true));
-        $readyAssignments = $annualPlants->filter(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null));
-        $unresolvedPlants = $annualPlants->reject(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null));
+        $readyAssignments = $annualPlants->filter(fn (array $entry) => filled($entry['selected_target_zone']['zone_id'] ?? null) && (bool) ($entry['selected_target_zone']['is_eligible'] ?? false));
+        $unresolvedPlants = $annualPlants->filter(fn (array $entry) => ($entry['resolution_status'] ?? null) === 'unresolved');
+        $blockedPlants = $annualPlants->filter(fn (array $entry) => ($entry['resolution_status'] ?? null) === 'blocked');
+        $manualPlants = $annualPlants->filter(fn (array $entry) => (bool) ($entry['manual_override'] ?? false) && ($entry['resolution_status'] ?? null) !== 'unresolved');
+        $stayingPlants = $annualPlants->filter(fn (array $entry) => ($entry['decision_mode'] ?? null) === 'stay');
+        $cooldownBlockedPlants = $annualPlants->filter(function (array $entry): bool {
+            $haystack = collect($entry['candidate_zones'] ?? [])
+                ->flatMap(fn (array $candidate) => $candidate['hard_blocking_reasons'] ?? [])
+                ->merge($entry['selected_target_zone']['hard_blocking_reasons'] ?? []);
+
+            return $haystack->contains(fn (string $reason): bool => Str::contains($reason, 'Cooldown active until'));
+        });
 
         return [
-            'status' => $unresolvedPlants->isEmpty() ? 'ready' : 'needs_adjustment',
+            'status' => $unresolvedPlants->isEmpty() && $blockedPlants->isEmpty() ? 'ready' : 'needs_adjustment',
             'summary' => [
                 'plant_count' => count($planPlants),
                 'annual_plant_count' => $annualPlants->count(),
                 'permanent_plant_count' => count($permanentPlants),
                 'assigned_plant_count' => $readyAssignments->count(),
+                'manually_edited_count' => $manualPlants->count(),
                 'unresolved_plant_count' => $unresolvedPlants->count(),
-                'blocked_plant_count' => $unresolvedPlants->count(),
+                'blocked_plant_count' => $blockedPlants->count(),
+                'cooldown_blocked_count' => $cooldownBlockedPlants->count(),
+                'staying_plant_count' => $stayingPlants->count(),
                 'generated_at' => $planningDate->startOfDay()->toIso8601String(),
             ],
             'plants' => $planPlants,
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $entries
+     * @return array<int, array<string, mixed>>
+     */
+    private function draftChoicesFromPlan(array $entries): array
+    {
+        $choices = [];
+
+        foreach ($entries as $entry) {
+            $plantId = (int) ($entry['plant']['id'] ?? 0);
+
+            if ($plantId <= 0 || ! (bool) ($entry['is_rotatable'] ?? true)) {
+                continue;
+            }
+
+            $decisionMode = (string) ($entry['decision_mode'] ?? 'generated');
+            $targetZoneId = $decisionMode === 'target'
+                ? ($entry['selected_target_zone']['zone_id'] ?? null)
+                : ($entry['generated_target_zone']['zone_id'] ?? $entry['selected_target_zone']['zone_id'] ?? null);
+
+            if ($decisionMode === 'stay') {
+                $targetZoneId = $entry['current_zone']['id'] ?? null;
+            }
+
+            $choices[$plantId] = [
+                'decision_mode' => $decisionMode,
+                'target_zone_id' => filled($targetZoneId) ? (int) $targetZoneId : null,
+                'manual_note' => $entry['manual_note'] ?? null,
+            ];
+        }
+
+        return $choices;
+    }
+
+    /**
+     * @param  Collection<int, Plant>  $plantOrder
+     * @param  array<int, array<string, mixed>>  $choices
+     * @return array<int, int>
+     */
+    private function desiredAssignmentsFromChoices(Plot $plot, Collection $plantOrder, array $choices): array
+    {
+        $assignments = [];
+
+        foreach ($plantOrder as $plant) {
+            $choice = $choices[(int) $plant->id] ?? null;
+
+            if (! $choice) {
+                continue;
+            }
+
+            $mode = (string) ($choice['decision_mode'] ?? 'unresolved');
+
+            if ($mode === 'unresolved') {
+                continue;
+            }
+
+            if ($mode === 'stay') {
+                $currentZoneId = (int) ($plant->plant_zone_id ?? $plant->fk_plant_zone_id);
+
+                if ($currentZoneId > 0) {
+                    $assignments[(int) $plant->id] = $currentZoneId;
+                }
+
+                continue;
+            }
+
+            $targetZoneId = (int) ($choice['target_zone_id'] ?? 0);
+
+            if ($targetZoneId > 0 && $plot->plantZones->contains(fn (PlantZone $zone): bool => (int) $zone->id === $targetZoneId)) {
+                $assignments[(int) $plant->id] = $targetZoneId;
+            }
+        }
+
+        return $assignments;
+    }
+
+    /**
+     * @param  array<string, mixed>  $choice
+     */
+    private function generatedZoneIdFromChoice(array $choice): ?int
+    {
+        $targetZoneId = $choice['target_zone_id'] ?? null;
+
+        return filled($targetZoneId) ? (int) $targetZoneId : null;
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $candidates
+     * @param  array<string, mixed>  $choice
+     * @param  array<string, mixed>|null  $generatedTarget
+     * @return array<string, mixed>|null
+     */
+    private function selectedTargetFromChoice(Plant $plant, Collection $candidates, array $choice, ?array $generatedTarget): ?array
+    {
+        $mode = (string) ($choice['decision_mode'] ?? 'unresolved');
+
+        if ($mode === 'unresolved') {
+            return null;
+        }
+
+        if ($mode === 'stay') {
+            return $this->stayTarget($plant);
+        }
+
+        $targetZoneId = $mode === 'generated'
+            ? ($generatedTarget['zone_id'] ?? null)
+            : ($choice['target_zone_id'] ?? null);
+
+        if (! filled($targetZoneId)) {
+            return null;
+        }
+
+        return $candidates->first(fn (array $candidate) => (int) $candidate['zone_id'] === (int) $targetZoneId);
+    }
+
+    /**
+     * @param  array<string, mixed>  $choice
+     * @param  array<string, mixed>|null  $selectedTarget
+     */
+    private function resolutionStatusForEntry(array $choice, ?array $selectedTarget): string
+    {
+        if (($choice['decision_mode'] ?? null) === 'unresolved') {
+            return 'unresolved';
+        }
+
+        if (! $selectedTarget) {
+            return 'unresolved';
+        }
+
+        if (! (bool) ($selectedTarget['is_eligible'] ?? false) || filled($selectedTarget['hard_blocking_reasons'] ?? [])) {
+            return 'blocked';
+        }
+
+        if (($choice['decision_mode'] ?? null) === 'stay') {
+            return 'stays';
+        }
+
+        return ($choice['decision_mode'] ?? null) === 'target' ? 'manual_override' : 'assigned';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function stayTarget(Plant $plant): array
+    {
+        $currentZone = $plant->plantZone;
+        $zoneId = (int) ($plant->plant_zone_id ?? $plant->fk_plant_zone_id);
+
+        return [
+            'zone_id' => $zoneId,
+            'zone_name' => $currentZone?->name ?? 'Current zone',
+            'verdict' => $zoneId > 0 ? 'valid' : 'invalid',
+            'is_eligible' => $zoneId > 0,
+            'score' => 0,
+            'status' => 'stays',
+            'suitability' => 'stays',
+            'reason' => 'Manual decision keeps this plant in its current zone.',
+            'warning' => null,
+            'remaining_capacity' => null,
+            'is_current_zone' => true,
+            'is_stay_decision' => true,
+            'current_zone_name' => $currentZone?->name,
+            'rotation_profile' => $this->cropRotationClassifier->profileForPlant($plant),
+            'conflicting_previous_plant' => null,
+            'previous_season' => null,
+            'previous_year' => null,
+            'current_occupants' => [],
+            'draft_assigned_occupants' => [],
+            'positive_reasons' => ['Manual decision keeps this plant in its current zone.'],
+            'soft_warnings' => [],
+            'hard_blocking_reasons' => $zoneId > 0 ? [] : ['The plant does not have a current zone.'],
+            'passed_reasons' => ['Manual decision keeps this plant in its current zone.'],
+            'blocking_reasons' => $zoneId > 0 ? [] : ['The plant does not have a current zone.'],
         ];
     }
 
@@ -420,13 +725,23 @@ class RotationPlannerService
         $blockingReasons =& $hardBlockingReasons;
 
         if (! (bool) ($plantProfile['has_rotation_data'] ?? false)) {
-            $softWarnings[] = 'Rotation family or group data is missing, so family-based rotation checks are neutral for this plant.';
+            $softWarnings[] = 'Trūksta rotacijos šeimos arba grupės duomenų, todėl šiam augalui šeimos rotacijos patikros laikomos neutraliomis.';
         }
+
+        $movementCooldown = $this->plantMovementCooldown($plant, $planningDate);
 
         if ($currentZoneId !== 0 && $currentZoneId === (int) $targetZone->id) {
             $blockingReasons[] = 'Target zone is the same as the current plant zone.';
         } else {
             $passedReasons[] = 'Target zone is different from the current zone, which satisfies the basic rotation movement rule.';
+
+            if ($movementCooldown !== null) {
+                $blockingReasons[] = sprintf(
+                    'Recently rotated on %s. Cooldown active until %s.',
+                    $movementCooldown['last_rotated_on'],
+                    $movementCooldown['active_until']
+                );
+            }
         }
 
         if ($remainingCapacity < 0) {
@@ -481,7 +796,7 @@ class RotationPlannerService
         });
 
         if ($sameRotationGroupConflict) {
-            $hardBlockingReasons[] = 'Target zone currently has a same family or rotation group conflict.';
+            $hardBlockingReasons[] = 'Tikslinėje zonoje šiuo metu yra tos pačios šeimos arba rotacijos grupės konfliktas.';
         }
 
         $sameRotationGroupDraftConflict = $draftAssignedOccupants->filter(function (Plant $zonePlant) use ($plantProfile): bool {
@@ -489,14 +804,14 @@ class RotationPlannerService
         });
 
         if (! $sameRotationGroupConflict && $sameRotationGroupDraftConflict->isNotEmpty()) {
-            $hardBlockingReasons[] = 'This rotation draft already assigns '.$this->plantNames($sameRotationGroupDraftConflict).' to this otherwise available zone, creating a same family or rotation group conflict.';
+            $hardBlockingReasons[] = 'Šis rotacijos juodraštis į šią zoną jau priskiria '.$this->plantNames($sameRotationGroupDraftConflict).', todėl susidaro tos pačios šeimos arba rotacijos grupės konfliktas.';
         }
 
         $rotationConflict = $this->recentRotationConflict($targetZone, $plant, $planningDate, $plantProfile);
         if ($rotationConflict !== null) {
             $blockingReasons[] = $rotationConflict['message'];
         } else {
-            $passedReasons[] = 'Target zone has no recent same plant, family, or rotation group history conflict.';
+            $passedReasons[] = 'Tikslinėje zonoje nėra naujo to paties augalo, šeimos ar rotacijos grupės istorijos konflikto.';
         }
 
         $restConflict = $this->restIntervalConflict($targetZone, $plant, $planningDate);
@@ -546,6 +861,7 @@ class RotationPlannerService
             'conflicting_previous_plant' => $rotationConflict['conflicting_previous_plant'] ?? null,
             'previous_season' => $rotationConflict['previous_season'] ?? null,
             'previous_year' => $rotationConflict['previous_year'] ?? null,
+            'rest_period_ends_on' => $rotationConflict['rest_period_ends_on'] ?? null,
             'current_occupants' => $currentOccupants->map(fn (Plant $zonePlant) => $this->plantSummary($zonePlant))->values()->all(),
             'draft_assigned_occupants' => $draftAssignedOccupants->map(fn (Plant $zonePlant) => $this->plantSummary($zonePlant))->values()->all(),
             'positive_reasons' => $positiveReasons,
@@ -683,7 +999,7 @@ class RotationPlannerService
      */
     private function recentRotationConflict(PlantZone $targetZone, Plant $plant, CarbonImmutable $planningDate, array $plantProfile): ?array
     {
-        $restWindow = max(365 * 3, (int) ($plant->rest_time_days ?? 0));
+        $restWindow = max(self::DEFAULT_ZONE_FAMILY_REST_DAYS, (int) ($plant->rest_time_days ?? 0));
         $cutoffDate = $planningDate->subDays($restWindow);
         $plantName = $this->normalizedPlantName($plant);
 
@@ -702,7 +1018,7 @@ class RotationPlannerService
 
         if ($recentPlantRotation) {
             return $this->rotationConflictPayload(
-                'Target zone has the same plant in recent rotation history.',
+                'Target zone recently contained the same plant.',
                 $recentPlantRotation
             );
         }
@@ -723,7 +1039,7 @@ class RotationPlannerService
 
         if ($recentTypeRotation) {
             return $this->rotationConflictPayload(
-                'Target zone has recent same family or rotation group rotation history.',
+                'Tikslinėje zonoje neseniai augo tos pačios šeimos arba rotacijos grupės augalas.',
                 $recentTypeRotation
             );
         }
@@ -743,6 +1059,35 @@ class RotationPlannerService
 
         if ($daysSinceLastPlanting < $restDays) {
             return 'Target zone has not completed the required rotation rest interval.';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{last_rotated_on: string, active_until: string}|null
+     */
+    private function plantMovementCooldown(Plant $plant, CarbonImmutable $planningDate): ?array
+    {
+        $latestRotation = $plant->rotationHistory
+            ->filter(fn (RotationHistory $history): bool => $history->from_date !== null
+                && $history->from_plant_zone_id !== null
+                && (int) $history->from_plant_zone_id !== (int) $history->fk_plant_zone_id)
+            ->sortByDesc(fn (RotationHistory $history): int => $history->from_date?->timestamp ?? 0)
+            ->first();
+
+        if (! $latestRotation?->from_date) {
+            return null;
+        }
+
+        $lastRotatedOn = CarbonImmutable::instance($latestRotation->from_date);
+        $activeUntil = $lastRotatedOn->addDays(self::DEFAULT_PLANT_MOVEMENT_COOLDOWN_DAYS);
+
+        if ($planningDate->lt($activeUntil)) {
+            return [
+                'last_rotated_on' => $lastRotatedOn->toDateString(),
+                'active_until' => $activeUntil->toDateString(),
+            ];
         }
 
         return null;
@@ -934,7 +1279,7 @@ class RotationPlannerService
 
         foreach ($hardBlockingReasons as $reason) {
             if (Str::contains($reason, ['same broad plant type', 'same-type conflict'])) {
-                $softWarnings[] = 'Broad plant type matches are informational only; family or rotation group data is used for blocking rotation conflicts.';
+                $softWarnings[] = 'Bendro augalo tipo sutapimai yra tik informaciniai; blokuojantiems rotacijos konfliktams naudojami šeimos arba rotacijos grupės duomenys.';
 
                 continue;
             }
@@ -963,17 +1308,23 @@ class RotationPlannerService
     }
 
     /**
-     * @return array{message: string, conflicting_previous_plant: array<string, mixed>|null, previous_season: string|null, previous_year: int|null}
+     * @return array{message: string, conflicting_previous_plant: array<string, mixed>|null, previous_season: string|null, previous_year: int|null, rest_period_ends_on: string|null}
      */
     private function rotationConflictPayload(string $message, RotationHistory $history): array
     {
         $referenceDate = $history->to_date ?? $history->from_date;
+        $restPeriodEndsOn = $referenceDate
+            ? CarbonImmutable::instance($referenceDate)->addDays(self::DEFAULT_ZONE_FAMILY_REST_DAYS)->toDateString()
+            : null;
 
         return [
-            'message' => $message,
+            'message' => $restPeriodEndsOn
+                ? $message.' Rest period ends on '.$restPeriodEndsOn.'.'
+                : $message,
             'conflicting_previous_plant' => $history->plant ? $this->plantSummary($history->plant) : null,
             'previous_season' => $referenceDate?->format('Y'),
             'previous_year' => $referenceDate ? (int) $referenceDate->format('Y') : null,
+            'rest_period_ends_on' => $restPeriodEndsOn,
         ];
     }
 
@@ -1046,7 +1397,7 @@ class RotationPlannerService
         $plantType = $plant->type?->value ?? $plant->type;
 
         if (in_array($plantType, ['berry', 'shrub', 'tree'], true)) {
-            return 'Permanent planting — excluded from annual crop rotation.';
+            return 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.';
         }
 
         return 'Perennial plant — recommended to stay in its current zone.';

@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SADiS navigavimo diagrama</title>
+  <style>
+    :root {
+      --page: #f5f6f1;
+      --paper: #fffdf7;
+      --ink: #172033;
+      --muted: #5f6672;
+      --line: #485264;
+      --soft-line: #c8bda2;
+      --boundary: #f2e5bf;
+      --boundary-2: #fff8df;
+      --cluster: #fbf6e8;
+      --cluster-line: #d2c4a5;
+      --route: #6f572e;
+      --note: #eef4ec;
+      --note-line: #9bb08f;
+      --table-head: #efe4c7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.38;
+    }
+
+    main {
+      width: min(1820px, calc(100vw - 32px));
+      margin: 24px auto;
+      padding: 24px;
+      background: var(--paper);
+      border: 1px solid #d8ceb7;
+      box-shadow: 0 14px 34px rgba(47, 39, 24, 0.10);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 26px 0 10px;
+      font-size: 19px;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 16px;
+    }
+
+    p, li {
+      color: var(--muted);
+    }
+
+    code {
+      padding: 1px 4px;
+      background: #f1eee5;
+      border-radius: 3px;
+      color: #2d3748;
+    }
+
+    .meta {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 10px 0 16px;
+      color: #384150;
+      font-size: 13px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 13px;
+      border: 1px solid #8f7e5b;
+      display: inline-block;
+      background: linear-gradient(180deg, var(--boundary-2), var(--boundary));
+    }
+
+    .canvas {
+      overflow: auto;
+      border: 1px solid #d9cfb9;
+      background: #ffffff;
+    }
+
+    svg {
+      display: block;
+      max-width: none;
+      background: #ffffff;
+    }
+
+    .cluster {
+      fill: var(--cluster);
+      stroke: var(--cluster-line);
+      stroke-width: 1.2;
+      rx: 12;
+    }
+
+    .cluster-title {
+      font-size: 16px;
+      font-weight: 700;
+      fill: #344052;
+    }
+
+    .box {
+      fill: url(#boundaryFill);
+      stroke: #8c7a56;
+      stroke-width: 1.4;
+      rx: 4;
+    }
+
+    .box-header {
+      stroke: #8c7a56;
+      stroke-width: 1.1;
+    }
+
+    .stereo {
+      font-size: 12px;
+      fill: #5b6472;
+      font-style: italic;
+    }
+
+    .class-name {
+      font-size: 14px;
+      font-weight: 700;
+      fill: #172033;
+    }
+
+    .route {
+      font-size: 11px;
+      fill: var(--route);
+    }
+
+    .small {
+      font-size: 10.5px;
+      fill: #4a5565;
+    }
+
+    .note {
+      fill: var(--note);
+      stroke: var(--note-line);
+      stroke-width: 1.1;
+      rx: 8;
+    }
+
+    .note-text {
+      font-size: 12px;
+      fill: #314232;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 1.25;
+      marker-end: url(#arrow);
+    }
+
+    .edge-soft {
+      fill: none;
+      stroke: #6b7280;
+      stroke-width: 1.1;
+      stroke-dasharray: 6 5;
+      marker-end: url(#arrowSoft);
+    }
+
+    .edge-label {
+      font-size: 11px;
+      fill: #1f2937;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 18px;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    th, td {
+      border: 1px solid #d8ceb7;
+      padding: 7px 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--table-head);
+      text-align: left;
+      color: #263243;
+    }
+
+    .source-list {
+      columns: 2;
+      column-gap: 30px;
+    }
+
+    .source-list li {
+      break-inside: avoid;
+      margin-bottom: 3px;
+    }
+
+    @media print {
+      body { background: #fff; }
+      main {
+        width: 100%;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+      }
+      .canvas { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>SADiS navigavimo diagrama pagal realius React view/page komponentus</h1>
+  <p class="meta">Sugeneruota: 2026-05-18. Šaltiniai: <code>frontend/src/App.jsx</code>, <code>frontend/src/pages/**</code>, <code>frontend/src/components/layout/**</code>, <code>frontend/src/components/shared/**</code>, <code>frontend/src/components/plot/**</code>.</p>
+  <div class="legend">
+    <span><i class="swatch"></i> UML boundary klasė, atitinkanti realų React page/view komponentą</span>
+    <span><i class="swatch" style="background:#eef4ec"></i> Pastaba apie guard, query/state arba layout navigaciją</span>
+    <span><svg width="42" height="12" aria-hidden="true"><line x1="0" y1="6" x2="38" y2="6" stroke="#485264" stroke-width="1.4" marker-end="url(#legendArrow)"></line><defs><marker id="legendArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#485264"></path></marker></defs></svg> <code>&lt;&lt;navigate&gt;&gt;</code> navigacijos kryptis</span>
+  </div>
+
+  <div class="canvas">
+    <svg width="1760" height="1340" role="img" aria-label="SADiS navigavimo diagrama">
+      <defs>
+        <linearGradient id="boundaryFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff8df"></stop>
+          <stop offset="100%" stop-color="#f2e5bf"></stop>
+        </linearGradient>
+        <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <path d="M0,0 L10,4 L0,8 z" fill="#485264"></path>
+        </marker>
+        <marker id="arrowSoft" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <path d="M0,0 L10,4 L0,8 z" fill="#6b7280"></path>
+        </marker>
+      </defs>
+
+      <text x="24" y="34" class="cluster-title">Navigavimo diagrama: React boundary klasės</text>
+
+      <rect class="cluster" x="24" y="60" width="392" height="360"></rect>
+      <text x="42" y="88" class="cluster-title">Auth ir guest srautai</text>
+
+      <rect class="cluster" x="444" y="60" width="456" height="360"></rect>
+      <text x="462" y="88" class="cluster-title">Pagrindinė AppShell navigacija</text>
+
+      <rect class="cluster" x="24" y="454" width="880" height="650"></rect>
+      <text x="42" y="482" class="cluster-title">Sklypų darbo erdvės</text>
+
+      <rect class="cluster" x="932" y="454" width="780" height="510"></rect>
+      <text x="950" y="482" class="cluster-title">Augalai ir katalogas</text>
+
+      <rect class="cluster" x="932" y="994" width="780" height="190"></rect>
+      <text x="950" y="1022" class="cluster-title">Vidinės būsenos, kurios nėra atskiri boundary</text>
+
+      <!-- Boundary boxes -->
+      <g transform="translate(52 110)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">LoginPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/login</text>
+      </g>
+      <g transform="translate(238 110)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">RegisterPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/register</text>
+      </g>
+      <g transform="translate(52 230)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">ForgotPasswordPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/forgot-password</text>
+      </g>
+      <g transform="translate(238 230)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">ResetPasswordPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/reset-password</text>
+      </g>
+      <g transform="translate(505 116)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">DashboardPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/</text>
+      </g>
+      <g transform="translate(714 116)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">AccountPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/account</text>
+      </g>
+      <g transform="translate(505 244)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">CommunityPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/community</text>
+      </g>
+      <g transform="translate(714 244)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">InventoryPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/inventory</text>
+      </g>
+      <g transform="translate(505 340)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">NotFoundPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">*</text>
+      </g>
+      <g transform="translate(714 340)">
+        <rect class="box" width="150" height="72"></rect><line class="box-header" x1="0" y1="24" x2="150" y2="24"></line>
+        <text class="stereo" x="75" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="75" y="42" text-anchor="middle">AdminUsersPage</text>
+        <text class="route" x="75" y="59" text-anchor="middle">/admin/users</text>
+      </g>
+
+      <g transform="translate(52 520)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotsPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots</text>
+      </g>
+      <g transform="translate(270 520)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotCreatePage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/new</text>
+      </g>
+      <g transform="translate(484 520)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotDetailPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId</text>
+      </g>
+      <g transform="translate(702 520)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotEditPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/edit</text>
+      </g>
+      <g transform="translate(52 704)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotCalendarPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/calendar</text>
+      </g>
+      <g transform="translate(270 704)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotHistoryPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/history</text>
+      </g>
+      <g transform="translate(484 704)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotHarvestsPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/harvests</text>
+      </g>
+      <g transform="translate(702 704)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotAnalyticsPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/analytics</text>
+      </g>
+      <g transform="translate(270 888)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotSharingPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/sharing</text>
+      </g>
+      <g transform="translate(484 888)">
+        <rect class="box" width="154" height="72"></rect><line class="box-header" x1="0" y1="24" x2="154" y2="24"></line>
+        <text class="stereo" x="77" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="77" y="42" text-anchor="middle">PlotRotationPage</text>
+        <text class="route" x="77" y="59" text-anchor="middle">/plots/:plotId/rotation</text>
+      </g>
+
+      <g transform="translate(970 520)">
+        <rect class="box" width="168" height="72"></rect><line class="box-header" x1="0" y1="24" x2="168" y2="24"></line>
+        <text class="stereo" x="84" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="84" y="42" text-anchor="middle">PlantsPage</text>
+        <text class="route" x="84" y="59" text-anchor="middle">/plants ?view=catalog</text>
+      </g>
+      <g transform="translate(1215 520)">
+        <rect class="box" width="168" height="72"></rect><line class="box-header" x1="0" y1="24" x2="168" y2="24"></line>
+        <text class="stereo" x="84" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="84" y="42" text-anchor="middle">CatalogPlantsPage</text>
+        <text class="route" x="84" y="59" text-anchor="middle">/catalog-plants</text>
+      </g>
+      <g transform="translate(1460 520)">
+        <rect class="box" width="168" height="72"></rect><line class="box-header" x1="0" y1="24" x2="168" y2="24"></line>
+        <text class="stereo" x="84" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="84" y="42" text-anchor="middle">PlantFormPage</text>
+        <text class="route" x="84" y="59" text-anchor="middle">/plants/new, /:id/edit</text>
+      </g>
+      <g transform="translate(970 684)">
+        <rect class="box" width="168" height="72"></rect><line class="box-header" x1="0" y1="24" x2="168" y2="24"></line>
+        <text class="stereo" x="84" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="84" y="42" text-anchor="middle">PlantDetailPage</text>
+        <text class="route" x="84" y="59" text-anchor="middle">/plants/:id, /plots/:plotId/plants/:id</text>
+      </g>
+      <g transform="translate(1215 684)">
+        <rect class="box" width="168" height="72"></rect><line class="box-header" x1="0" y1="24" x2="168" y2="24"></line>
+        <text class="stereo" x="84" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="84" y="42" text-anchor="middle">CatalogPlantDetailPage</text>
+        <text class="route" x="84" y="59" text-anchor="middle">/plants/catalog/:id</text>
+      </g>
+      <g transform="translate(1460 684)">
+        <rect class="box" width="168" height="72"></rect><line class="box-header" x1="0" y1="24" x2="168" y2="24"></line>
+        <text class="stereo" x="84" y="16" text-anchor="middle">&lt;&lt;boundary&gt;&gt;</text>
+        <text class="class-name" x="84" y="42" text-anchor="middle">CatalogPlantFormPage</text>
+        <text class="route" x="84" y="59" text-anchor="middle">/plants/catalog/new, /:id/edit</text>
+      </g>
+
+      <!-- Notes -->
+      <rect class="note" x="52" y="330" width="336" height="58"></rect>
+      <text class="note-text" x="66" y="352">AuthRoute: jei vartotojas jau prisijungęs,</text>
+      <text class="note-text" x="66" y="370">auth puslapiai nukreipia į DashboardPage (/).</text>
+
+      <rect class="note" x="462" y="206" width="410" height="30"></rect>
+      <text class="note-text" x="476" y="226">Sidebar/NavLink pasiekiamas per AppShell visiems top-level puslapiams.</text>
+
+      <rect class="note" x="52" y="1000" width="810" height="66"></rect>
+      <text class="note-text" x="66" y="1023">PlotSectionNav yra naudojamas PlotDetailPage, PlotCalendarPage, PlotHistoryPage, PlotHarvestsPage,</text>
+      <text class="note-text" x="66" y="1041">PlotAnalyticsPage, PlotSharingPage ir PlotRotationPage. Sharing tab matomas tik owner role.</text>
+      <text class="note-text" x="66" y="1059">PlotDetailPage turi vidinius režimus: zones ir boundary; PlotCreatePage turi step state: boundary, zones, summary.</text>
+
+      <rect class="note" x="970" y="810" width="658" height="58"></rect>
+      <text class="note-text" x="984" y="833">PlantsPage turi du režimus tame pačiame boundary: existing ir catalog per query/state.</text>
+      <text class="note-text" x="984" y="851">CatalogPlantsPage nėra atskiras UI: jis tik redirectina į /plants?view=catalog.</text>
+
+      <!-- Edges auth -->
+      <path class="edge" d="M202 146 L238 146"></path>
+      <text class="edge-label" x="220" y="137" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /register</text>
+      <path class="edge" d="M127 182 L127 230"></path>
+      <text class="edge-label" x="88" y="208" text-anchor="middle">&lt;&lt;navigate&gt;&gt; forgot</text>
+      <path class="edge" d="M202 266 L238 266"></path>
+      <text class="edge-label" x="220" y="257" text-anchor="middle">&lt;&lt;navigate&gt;&gt; reset</text>
+      <path class="edge" d="M313 230 L313 182"></path>
+      <text class="edge-label" x="354" y="208" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /login</text>
+      <path class="edge" d="M388 146 C440 146 452 146 505 146"></path>
+      <text class="edge-label" x="448" y="136" text-anchor="middle">&lt;&lt;navigate&gt;&gt; register()</text>
+      <path class="edge" d="M202 146 C346 85 438 88 505 130"></path>
+      <text class="edge-label" x="356" y="83" text-anchor="middle">&lt;&lt;navigate&gt;&gt; login redirect</text>
+      <path class="edge-soft" d="M580 116 C520 56 254 56 127 110"></path>
+      <text class="edge-label" x="356" y="57" text-anchor="middle">&lt;&lt;navigate&gt;&gt; ProtectedRoute -> /login?redirect</text>
+
+      <!-- Main shell edges -->
+      <path class="edge" d="M655 152 L714 152"></path>
+      <text class="edge-label" x="684" y="143" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /account</text>
+      <path class="edge" d="M580 188 L580 244"></path>
+      <text class="edge-label" x="538" y="219" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /community</text>
+      <path class="edge" d="M655 174 C715 202 728 216 758 244"></path>
+      <text class="edge-label" x="727" y="206" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /inventory</text>
+      <path class="edge" d="M655 160 C728 188 776 278 789 340"></path>
+      <text class="edge-label" x="826" y="292" text-anchor="middle">&lt;&lt;navigate&gt;&gt; admin only</text>
+      <path class="edge" d="M580 188 C494 314 263 472 206 546"></path>
+      <text class="edge-label" x="362" y="382" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /plots</text>
+      <path class="edge" d="M655 188 C760 313 900 463 970 546"></path>
+      <text class="edge-label" x="818" y="382" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /plants</text>
+      <path class="edge" d="M580 340 L580 316"></path>
+      <text class="edge-label" x="538" y="332" text-anchor="middle">&lt;&lt;navigate&gt;&gt; return /</text>
+      <path class="edge-soft" d="M714 376 C646 396 602 260 655 188"></path>
+      <text class="edge-label" x="672" y="392" text-anchor="middle">&lt;&lt;navigate&gt;&gt; non-admin -> /</text>
+
+      <!-- Plot edges -->
+      <path class="edge" d="M206 556 L270 556"></path>
+      <text class="edge-label" x="238" y="547" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /plots/new</text>
+      <path class="edge" d="M206 568 C300 624 396 604 484 568"></path>
+      <text class="edge-label" x="344" y="621" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /plots/:id</text>
+      <path class="edge" d="M424 556 L484 556"></path>
+      <text class="edge-label" x="454" y="547" text-anchor="middle">&lt;&lt;navigate&gt;&gt; after create</text>
+      <path class="edge" d="M638 556 L702 556"></path>
+      <text class="edge-label" x="670" y="547" text-anchor="middle">&lt;&lt;navigate&gt;&gt; edit metadata</text>
+      <path class="edge" d="M702 572 L638 572"></path>
+      <text class="edge-label" x="670" y="592" text-anchor="middle">&lt;&lt;navigate&gt;&gt; save/cancel</text>
+      <path class="edge" d="M270 572 L206 572"></path>
+      <text class="edge-label" x="238" y="592" text-anchor="middle">&lt;&lt;navigate&gt;&gt; back</text>
+      <path class="edge" d="M779 592 C748 646 670 695 638 722"></path>
+      <text class="edge-label" x="738" y="661" text-anchor="middle">&lt;&lt;navigate&gt;&gt; delete -> /plots</text>
+
+      <path class="edge" d="M561 592 C470 640 275 653 206 704"></path>
+      <text class="edge-label" x="364" y="658" text-anchor="middle">&lt;&lt;navigate&gt;&gt; PlotSectionNav calendar</text>
+      <path class="edge" d="M561 592 C504 640 420 666 347 704"></path>
+      <text class="edge-label" x="462" y="687" text-anchor="middle">&lt;&lt;navigate&gt;&gt; history</text>
+      <path class="edge" d="M561 592 L561 704"></path>
+      <text class="edge-label" x="603" y="650" text-anchor="middle">&lt;&lt;navigate&gt;&gt; harvests</text>
+      <path class="edge" d="M638 584 C709 618 754 660 779 704"></path>
+      <text class="edge-label" x="770" y="640" text-anchor="middle">&lt;&lt;navigate&gt;&gt; analytics</text>
+      <path class="edge" d="M561 592 C428 686 367 805 347 888"></path>
+      <text class="edge-label" x="398" y="814" text-anchor="middle">&lt;&lt;navigate&gt;&gt; sharing owner</text>
+      <path class="edge" d="M561 592 C570 692 572 806 561 888"></path>
+      <text class="edge-label" x="612" y="814" text-anchor="middle">&lt;&lt;navigate&gt;&gt; rotation</text>
+      <path class="edge-soft" d="M206 740 C320 808 464 812 484 592"></path>
+      <text class="edge-label" x="298" y="809" text-anchor="middle">&lt;&lt;navigate&gt;&gt; tabs back to editor</text>
+      <path class="edge" d="M779 704 L638 704"></path>
+      <text class="edge-label" x="708" y="695" text-anchor="middle">&lt;&lt;navigate&gt;&gt; harvests</text>
+      <path class="edge" d="M702 740 L638 740"></path>
+      <text class="edge-label" x="670" y="759" text-anchor="middle">&lt;&lt;navigate&gt;&gt; history</text>
+      <path class="edge" d="M638 740 L702 740"></path>
+      <text class="edge-label" x="670" y="732" text-anchor="middle">&lt;&lt;navigate&gt;&gt; analytics</text>
+      <path class="edge" d="M206 740 C390 835 794 858 970 704"></path>
+      <text class="edge-label" x="653" y="838" text-anchor="middle">&lt;&lt;navigate&gt;&gt; plant review /plots/:plotId/plants/:plantId</text>
+      <path class="edge" d="M206 724 C398 806 632 982 714 280"></path>
+      <text class="edge-label" x="756" y="478" text-anchor="middle">&lt;&lt;navigate&gt;&gt; shortage -> /inventory?returnTo=calendar</text>
+      <path class="edge" d="M206 748 C313 861 424 828 484 740"></path>
+      <text class="edge-label" x="346" y="854" text-anchor="middle">&lt;&lt;navigate&gt;&gt; harvest task</text>
+      <path class="edge" d="M638 556 C750 575 854 632 970 684"></path>
+      <text class="edge-label" x="786" y="604" text-anchor="middle">&lt;&lt;navigate&gt;&gt; open placed plant</text>
+      <path class="edge-soft" d="M561 520 C584 478 652 477 756 520"></path>
+      <text class="edge-label" x="659" y="473" text-anchor="middle">&lt;&lt;navigate&gt;&gt; Export PDF is download action, not view</text>
+
+      <!-- Plant edges -->
+      <path class="edge" d="M1138 556 L1215 556"></path>
+      <text class="edge-label" x="1176" y="547" text-anchor="middle">&lt;&lt;navigate&gt;&gt; redirect</text>
+      <path class="edge" d="M1138 572 C1205 624 1430 606 1460 556"></path>
+      <text class="edge-label" x="1326" y="626" text-anchor="middle">&lt;&lt;navigate&gt;&gt; /plants/new</text>
+      <path class="edge" d="M1054 592 L1054 684"></path>
+      <text class="edge-label" x="1016" y="640" text-anchor="middle">&lt;&lt;navigate&gt;&gt; view plant</text>
+      <path class="edge" d="M1138 584 C1168 637 1192 657 1215 704"></path>
+      <text class="edge-label" x="1196" y="652" text-anchor="middle">&lt;&lt;navigate&gt;&gt; catalog detail</text>
+      <path class="edge" d="M1138 568 C1266 596 1432 632 1460 704"></path>
+      <text class="edge-label" x="1340" y="652" text-anchor="middle">&lt;&lt;navigate&gt;&gt; catalog form</text>
+      <path class="edge" d="M1460 556 C1386 598 1308 644 1138 704"></path>
+      <text class="edge-label" x="1328" y="596" text-anchor="middle">&lt;&lt;navigate&gt;&gt; save -> PlantDetailPage</text>
+      <path class="edge" d="M1138 720 C1254 652 1384 616 1460 572"></path>
+      <text class="edge-label" x="1332" y="681" text-anchor="middle">&lt;&lt;navigate&gt;&gt; edit plant</text>
+      <path class="edge" d="M1138 704 L1215 704"></path>
+      <text class="edge-label" x="1176" y="696" text-anchor="middle">&lt;&lt;navigate&gt;&gt; open catalog</text>
+      <path class="edge" d="M1215 740 C1182 776 1110 790 1054 756"></path>
+      <text class="edge-label" x="1138" y="800" text-anchor="middle">&lt;&lt;navigate&gt;&gt; back /plants?view=catalog</text>
+      <path class="edge" d="M1383 720 L1460 720"></path>
+      <text class="edge-label" x="1422" y="711" text-anchor="middle">&lt;&lt;navigate&gt;&gt; edit</text>
+      <path class="edge" d="M1383 704 C1418 668 1434 613 1460 572"></path>
+      <text class="edge-label" x="1454" y="640" text-anchor="middle">&lt;&lt;navigate&gt;&gt; place in zone</text>
+      <path class="edge" d="M1460 720 L1383 720"></path>
+      <text class="edge-label" x="1422" y="740" text-anchor="middle">&lt;&lt;navigate&gt;&gt; save/cancel</text>
+      <path class="edge" d="M970 720 C850 768 760 801 638 740"></path>
+      <text class="edge-label" x="822" y="779" text-anchor="middle">&lt;&lt;navigate&gt;&gt; harvest workflow</text>
+      <path class="edge" d="M970 704 C876 626 748 590 638 572"></path>
+      <text class="edge-label" x="844" y="613" text-anchor="middle">&lt;&lt;navigate&gt;&gt; open plot / back</text>
+
+      <!-- Inventory back edge -->
+      <path class="edge" d="M714 280 C516 322 285 540 206 724"></path>
+      <text class="edge-label" x="442" y="435" text-anchor="middle">&lt;&lt;navigate&gt;&gt; returnTo calendar</text>
+
+      <rect class="note" x="970" y="1052" width="658" height="86"></rect>
+      <text class="note-text" x="984" y="1075">Community create dialog, kalendoriaus dienos Drawer, Inventory edit/add forma,</text>
+      <text class="note-text" x="984" y="1093">Admin inspect panel, PlotDetailPage layer/inspector panelės ir PlantDetailPage review panel</text>
+      <text class="note-text" x="984" y="1111">yra vidinės komponentų būsenos. Jos nevaizduojamos kaip atskiros UML boundary klasės.</text>
+    </svg>
+  </div>
+
+  <h2>Rasti realūs React views / pages</h2>
+  <ul class="source-list">
+    <li><code>LoginPage</code> - <code>/login</code></li>
+    <li><code>RegisterPage</code> - <code>/register</code></li>
+    <li><code>ForgotPasswordPage</code> - <code>/forgot-password</code></li>
+    <li><code>ResetPasswordPage</code> - <code>/reset-password</code></li>
+    <li><code>DashboardPage</code> - <code>/</code></li>
+    <li><code>AccountPage</code> - <code>/account</code></li>
+    <li><code>CommunityPage</code> - <code>/community</code></li>
+    <li><code>InventoryPage</code> - <code>/inventory</code></li>
+    <li><code>AdminUsersPage</code> - <code>/admin/users</code></li>
+    <li><code>NotFoundPage</code> - <code>*</code></li>
+    <li><code>PlotsPage</code> - <code>/plots</code></li>
+    <li><code>PlotCreatePage</code> - <code>/plots/new</code></li>
+    <li><code>PlotDetailPage</code> - <code>/plots/:plotId</code></li>
+    <li><code>PlotEditPage</code> - <code>/plots/:plotId/edit</code></li>
+    <li><code>PlotCalendarPage</code> - <code>/plots/:plotId/calendar</code></li>
+    <li><code>PlotHistoryPage</code> - <code>/plots/:plotId/history</code></li>
+    <li><code>PlotHarvestsPage</code> - <code>/plots/:plotId/harvests</code></li>
+    <li><code>PlotAnalyticsPage</code> - <code>/plots/:plotId/analytics</code></li>
+    <li><code>PlotSharingPage</code> - <code>/plots/:plotId/sharing</code></li>
+    <li><code>PlotRotationPage</code> - <code>/plots/:plotId/rotation</code></li>
+    <li><code>PlantsPage</code> - <code>/plants</code></li>
+    <li><code>CatalogPlantsPage</code> - <code>/catalog-plants</code>, redirect į <code>/plants?view=catalog</code></li>
+    <li><code>PlantFormPage</code> - <code>/plants/new</code>, <code>/plants/:plantId/edit</code></li>
+    <li><code>PlantDetailPage</code> - <code>/plants/:plantId</code>, <code>/plots/:plotId/plants/:plantId</code></li>
+    <li><code>CatalogPlantFormPage</code> - <code>/plants/catalog/new</code>, <code>/plants/catalog/:catalogPlantId/edit</code>, taip pat alias per <code>/catalog-plants/*</code></li>
+    <li><code>CatalogPlantDetailPage</code> - <code>/plants/catalog/:catalogPlantId</code>, taip pat alias per <code>/catalog-plants/:catalogPlantId</code></li>
+  </ul>
+
+  <h2>Navigacijos ryšių sąrašas</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nr.</th>
+        <th>Iš boundary</th>
+        <th>Į boundary</th>
+        <th>Navigacijos veiksmas / route</th>
+        <th>Sąlyga / pastaba</th>
+        <th>Šaltinio failas</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>LoginPage</td><td>DashboardPage</td><td><code>navigate(searchParams.get('redirect') || '/')</code></td><td>Po sėkmingo prisijungimo; jei yra <code>redirect</code>, grįžta į saugomą route.</td><td><code>frontend/src/pages/user/LoginPage.jsx</code></td></tr>
+      <tr><td>2</td><td>LoginPage</td><td>ForgotPasswordPage</td><td><code>/forgot-password</code></td><td>Mygtukas „Forgot password“.</td><td><code>frontend/src/pages/user/LoginPage.jsx</code></td></tr>
+      <tr><td>3</td><td>LoginPage</td><td>RegisterPage</td><td><code>/register</code></td><td>Mygtukas „Create account“.</td><td><code>frontend/src/pages/user/LoginPage.jsx</code></td></tr>
+      <tr><td>4</td><td>RegisterPage</td><td>DashboardPage</td><td><code>navigate('/')</code></td><td>Po sėkmingos registracijos.</td><td><code>frontend/src/pages/user/RegisterPage.jsx</code></td></tr>
+      <tr><td>5</td><td>RegisterPage</td><td>LoginPage</td><td><code>/login</code></td><td>„Back to sign in“.</td><td><code>frontend/src/pages/user/RegisterPage.jsx</code></td></tr>
+      <tr><td>6</td><td>ForgotPasswordPage</td><td>ResetPasswordPage</td><td><code>/reset-password</code></td><td>„Enter reset code“.</td><td><code>frontend/src/pages/user/ForgotPasswordPage.jsx</code></td></tr>
+      <tr><td>7</td><td>ResetPasswordPage</td><td>LoginPage</td><td><code>/login</code></td><td>„Back to sign in“.</td><td><code>frontend/src/pages/user/ResetPasswordPage.jsx</code></td></tr>
+      <tr><td>8</td><td>LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage</td><td>DashboardPage</td><td><code>&lt;Navigate to="/" replace /&gt;</code></td><td><code>AuthRoute</code>: auth puslapiai neberodomi prisijungusiam vartotojui.</td><td><code>frontend/src/App.jsx</code></td></tr>
+      <tr><td>9</td><td>Saugomi boundary</td><td>LoginPage</td><td><code>/login?redirect=...</code></td><td><code>ProtectedRoute</code>: neprisijungęs vartotojas nukreipiamas į login.</td><td><code>frontend/src/components/shared/ProtectedRoute.jsx</code></td></tr>
+      <tr><td>10</td><td>AdminUsersPage</td><td>LoginPage</td><td><code>/login?redirect=/admin/users</code></td><td><code>AdminRoute</code>: jei admin route atveriamas neprisijungus.</td><td><code>frontend/src/components/shared/AdminRoute.jsx</code></td></tr>
+      <tr><td>11</td><td>AdminUsersPage</td><td>DashboardPage</td><td><code>/</code></td><td><code>AdminRoute</code>: prisijungęs ne admin vartotojas nukreipiamas į dashboard.</td><td><code>frontend/src/components/shared/AdminRoute.jsx</code></td></tr>
+      <tr><td>12</td><td>DashboardPage</td><td>LoginPage</td><td><code>/login</code></td><td>Guest dashboard veiksmas „Sign in“.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code></td></tr>
+      <tr><td>13</td><td>DashboardPage</td><td>RegisterPage</td><td><code>/register</code></td><td>Guest dashboard veiksmas „Create account“.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code></td></tr>
+      <tr><td>14</td><td>DashboardPage</td><td>ForgotPasswordPage</td><td><code>/forgot-password</code></td><td>Guest dashboard veiksmas „Reset password“.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code></td></tr>
+      <tr><td>15</td><td>DashboardPage</td><td>AccountPage</td><td><code>/account</code></td><td>Dashboard veiksmas ir Topbar user link.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code>, <code>frontend/src/components/layout/Topbar.jsx</code></td></tr>
+      <tr><td>16</td><td>DashboardPage</td><td>PlotsPage</td><td><code>/plots</code></td><td>Dashboard ir Sidebar navigacija.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code>, <code>frontend/src/components/layout/Sidebar.jsx</code></td></tr>
+      <tr><td>17</td><td>DashboardPage</td><td>InventoryPage</td><td><code>/inventory</code></td><td>Dashboard ir Sidebar navigacija.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code>, <code>frontend/src/components/layout/Sidebar.jsx</code></td></tr>
+      <tr><td>18</td><td>DashboardPage</td><td>PlotDetailPage</td><td><code>/plots/:id</code></td><td>Aktyvių sklypų kortelė „Open plan“.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code></td></tr>
+      <tr><td>19</td><td>DashboardPage</td><td>PlotCalendarPage</td><td><code>/plots/:id/calendar</code></td><td>Aktyvių sklypų kortelė ir „Today's garden work“.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code></td></tr>
+      <tr><td>20</td><td>DashboardPage</td><td>PlantDetailPage</td><td><code>/plants/:id</code></td><td>„Plant statuses“ sąrašas.</td><td><code>frontend/src/pages/user/DashboardPage.jsx</code></td></tr>
+      <tr><td>21</td><td>NotFoundPage</td><td>DashboardPage</td><td><code>/</code></td><td>„Return to dashboard“.</td><td><code>frontend/src/pages/user/NotFoundPage.jsx</code></td></tr>
+      <tr><td>22</td><td>Bet kuris AppShell boundary</td><td>DashboardPage</td><td><code>/</code></td><td>Sidebar „Dashboard“, Topbar logo, <code>/home</code> redirect.</td><td><code>frontend/src/components/layout/Sidebar.jsx</code>, <code>frontend/src/components/layout/Topbar.jsx</code>, <code>frontend/src/App.jsx</code></td></tr>
+      <tr><td>23</td><td>Bet kuris AppShell boundary</td><td>CommunityPage</td><td><code>/community</code></td><td>Sidebar; route saugomas <code>ProtectedRoute</code>.</td><td><code>frontend/src/components/layout/Sidebar.jsx</code>, <code>frontend/src/App.jsx</code></td></tr>
+      <tr><td>24</td><td>Bet kuris AppShell boundary</td><td>PlantsPage</td><td><code>/plants</code></td><td>Sidebar; route saugomas <code>ProtectedRoute</code>.</td><td><code>frontend/src/components/layout/Sidebar.jsx</code>, <code>frontend/src/App.jsx</code></td></tr>
+      <tr><td>25</td><td>Bet kuris AppShell boundary</td><td>AdminUsersPage</td><td><code>/admin/users</code></td><td>Sidebar rodo tik kai <code>isAdmin</code>.</td><td><code>frontend/src/components/layout/Sidebar.jsx</code>, <code>frontend/src/App.jsx</code></td></tr>
+      <tr><td>26</td><td>PlotsPage</td><td>PlotCreatePage</td><td><code>/plots/new</code></td><td>„Create plot“.</td><td><code>frontend/src/pages/plot/PlotsPage.jsx</code></td></tr>
+      <tr><td>27</td><td>PlotsPage</td><td>PlotDetailPage</td><td><code>/plots/:plotId</code></td><td>Sklypo kortelės „Open“.</td><td><code>frontend/src/pages/plot/PlotsPage.jsx</code></td></tr>
+      <tr><td>28</td><td>PlotsPage</td><td>PlotCalendarPage</td><td><code>/plots/:plotId/calendar</code></td><td>Sklypo kortelės „Calendar“.</td><td><code>frontend/src/pages/plot/PlotsPage.jsx</code></td></tr>
+      <tr><td>29</td><td>PlotsPage</td><td>PlotAnalyticsPage</td><td><code>/plots/:plotId/analytics</code></td><td>Sklypo kortelės „Analytics“.</td><td><code>frontend/src/pages/plot/PlotsPage.jsx</code></td></tr>
+      <tr><td>30</td><td>PlotsPage</td><td>PlotEditPage</td><td><code>/plots/:plotId/edit</code></td><td>Sklypo kortelės „Edit“.</td><td><code>frontend/src/pages/plot/PlotsPage.jsx</code></td></tr>
+      <tr><td>31</td><td>PlotCreatePage</td><td>PlotsPage</td><td><code>/plots</code></td><td>Back link kūrimo wizard'e.</td><td><code>frontend/src/pages/plot/PlotCreatePage.jsx</code></td></tr>
+      <tr><td>32</td><td>PlotCreatePage</td><td>PlotDetailPage</td><td><code>navigate(`/plots/${created.id}`)</code></td><td>Po sėkmingo sklypo sukūrimo.</td><td><code>frontend/src/pages/plot/PlotCreatePage.jsx</code></td></tr>
+      <tr><td>33</td><td>PlotDetailPage</td><td>PlotEditPage</td><td><code>/plots/:plotId/edit</code></td><td>„Edit metadata“, jei <code>owner/editor</code>.</td><td><code>frontend/src/pages/plot/PlotDetailPage.jsx</code></td></tr>
+      <tr><td>34</td><td>PlotDetailPage</td><td>PlantDetailPage</td><td><code>/plots/:plotId/plants/:plantId</code></td><td>„Open“ augalui pasirinktoje zonoje.</td><td><code>frontend/src/pages/plot/PlotDetailPage.jsx</code></td></tr>
+      <tr><td>35</td><td>PlotEditPage</td><td>PlotDetailPage</td><td><code>navigate(`/plots/${plotId}`)</code>, <code>/plots/:plotId</code></td><td>Po save arba cancel/back.</td><td><code>frontend/src/pages/plot/PlotEditPage.jsx</code></td></tr>
+      <tr><td>36</td><td>PlotEditPage</td><td>PlotsPage</td><td><code>navigate('/plots')</code></td><td>Po sklypo ištrynimo; delete rodomas tik owner.</td><td><code>frontend/src/pages/plot/PlotEditPage.jsx</code></td></tr>
+      <tr><td>37</td><td>PlotDetailPage</td><td>PlotCalendarPage</td><td><code>/plots/:plotId/calendar</code></td><td>PlotSectionNav tab.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>38</td><td>PlotDetailPage</td><td>PlotHistoryPage</td><td><code>/plots/:plotId/history</code></td><td>PlotSectionNav tab.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>39</td><td>PlotDetailPage</td><td>PlotHarvestsPage</td><td><code>/plots/:plotId/harvests</code></td><td>PlotSectionNav tab.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>40</td><td>PlotDetailPage</td><td>PlotAnalyticsPage</td><td><code>/plots/:plotId/analytics</code></td><td>PlotSectionNav tab.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>41</td><td>PlotDetailPage</td><td>PlotSharingPage</td><td><code>/plots/:plotId/sharing</code></td><td>PlotSectionNav tab, <code>ownerOnly</code>.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>42</td><td>PlotDetailPage</td><td>PlotRotationPage</td><td><code>/plots/:plotId/rotation</code></td><td>PlotSectionNav tab.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>43</td><td>PlotCalendarPage, PlotHistoryPage, PlotHarvestsPage, PlotAnalyticsPage, PlotSharingPage, PlotRotationPage</td><td>PlotDetailPage</td><td><code>/plots/:plotId</code></td><td>PlotSectionNav „Editor“ tab ir breadcrumb/back į plot workspace.</td><td><code>frontend/src/components/plot/PlotSectionNav.jsx</code></td></tr>
+      <tr><td>44</td><td>PlotCalendarPage</td><td>InventoryPage</td><td><code>/inventory?taskId=...&amp;missing=...&amp;returnTo=...</code></td><td>Rodoma tik kai kalendoriaus užduotis turi inventoriaus trūkumą.</td><td><code>frontend/src/pages/calendar/PlotCalendarPage.jsx</code></td></tr>
+      <tr><td>45</td><td>InventoryPage</td><td>PlotCalendarPage</td><td><code>returnTo</code> query</td><td>Grįžimas į kalendoriaus dieną po restock darbo.</td><td><code>frontend/src/pages/inventory/InventoryPage.jsx</code></td></tr>
+      <tr><td>46</td><td>PlotCalendarPage</td><td>PlantDetailPage</td><td><code>/plots/:plotId/plants/:plantId</code></td><td>„Open plant review“ lifecycle review užduočiai; perduodamas <code>state.backTo</code>.</td><td><code>frontend/src/pages/calendar/PlotCalendarPage.jsx</code></td></tr>
+      <tr><td>47</td><td>PlotCalendarPage</td><td>PlotHarvestsPage</td><td><code>/plots/:plotId/harvests?plantId=...&amp;taskId=...&amp;date=...</code></td><td>„Register harvest“ harvest tipo užduočiai.</td><td><code>frontend/src/pages/calendar/PlotCalendarPage.jsx</code></td></tr>
+      <tr><td>48</td><td>PlotAnalyticsPage</td><td>PlotHistoryPage</td><td><code>/plots/:plotId/history</code></td><td>Action „Planning history“.</td><td><code>frontend/src/pages/plot/PlotAnalyticsPage.jsx</code></td></tr>
+      <tr><td>49</td><td>PlotAnalyticsPage</td><td>PlotHarvestsPage</td><td><code>/plots/:plotId/harvests</code></td><td>Action „Harvests“.</td><td><code>frontend/src/pages/plot/PlotAnalyticsPage.jsx</code></td></tr>
+      <tr><td>50</td><td>PlotHarvestsPage</td><td>PlotAnalyticsPage</td><td><code>/plots/:plotId/analytics</code></td><td>Action „Analytics“.</td><td><code>frontend/src/pages/plot/PlotHarvestsPage.jsx</code></td></tr>
+      <tr><td>51</td><td>PlantsPage</td><td>PlantsPage</td><td><code>setSearchParams({ view })</code></td><td>Tas pats boundary keičia režimą <code>existing</code> / <code>catalog</code>; tai nėra atskiras view.</td><td><code>frontend/src/pages/plant/PlantsPage.jsx</code></td></tr>
+      <tr><td>52</td><td>CatalogPlantsPage</td><td>PlantsPage</td><td><code>&lt;Navigate replace to="/plants?view=catalog" /&gt;</code></td><td>Redirect-only route.</td><td><code>frontend/src/pages/plant/CatalogPlantsPage.jsx</code></td></tr>
+      <tr><td>53</td><td>PlantsPage</td><td>PlantDetailPage</td><td><code>/plants/:plantId</code></td><td>Managed plants „View“.</td><td><code>frontend/src/pages/plant/PlantsPage.jsx</code></td></tr>
+      <tr><td>54</td><td>PlantsPage</td><td>PlantFormPage</td><td><code>/plants/new</code>, <code>/plants/:plantId/edit</code></td><td>„Add New Plant“ arba „Edit“, jei galima redaguoti.</td><td><code>frontend/src/pages/plant/PlantsPage.jsx</code></td></tr>
+      <tr><td>55</td><td>PlantsPage</td><td>CatalogPlantDetailPage</td><td><code>/plants/catalog/:catalogPlantId</code></td><td>Catalog režimo „View“.</td><td><code>frontend/src/pages/plant/PlantsPage.jsx</code></td></tr>
+      <tr><td>56</td><td>PlantsPage</td><td>CatalogPlantFormPage</td><td><code>/plants/catalog/new</code>, <code>/plants/catalog/:catalogPlantId/edit</code></td><td>Catalog režimo „Add Catalog Plant“ arba „Edit“.</td><td><code>frontend/src/pages/plant/PlantsPage.jsx</code></td></tr>
+      <tr><td>57</td><td>PlantFormPage</td><td>PlantDetailPage</td><td><code>navigate(`/plants/${savedPlant.id}`)</code></td><td>Po create/update.</td><td><code>frontend/src/pages/plant/PlantFormPage.jsx</code></td></tr>
+      <tr><td>58</td><td>PlantFormPage</td><td>PlantsPage</td><td><code>/plants</code></td><td>Cancel/back naujo augalo formoje.</td><td><code>frontend/src/pages/plant/PlantFormPage.jsx</code></td></tr>
+      <tr><td>59</td><td>PlantFormPage</td><td>CatalogPlantFormPage</td><td><code>/plants/catalog/new</code>, <code>/plants/catalog/:catalogPlantId/edit</code></td><td>„New Catalog Plant“ arba „Edit Shared Care“.</td><td><code>frontend/src/pages/plant/PlantFormPage.jsx</code></td></tr>
+      <tr><td>60</td><td>PlantFormPage</td><td>CatalogPlantDetailPage</td><td><code>/plants/catalog/:catalogPlantId</code></td><td>„Open Catalog Plant“ iš shared care preview.</td><td><code>frontend/src/pages/plant/PlantFormPage.jsx</code></td></tr>
+      <tr><td>61</td><td>PlantDetailPage</td><td>PlantFormPage</td><td><code>/plants/:plantId/edit</code></td><td>„Edit“, jei <code>owner/editor</code>.</td><td><code>frontend/src/pages/plant/PlantDetailPage.jsx</code></td></tr>
+      <tr><td>62</td><td>PlantDetailPage</td><td>PlantsPage</td><td><code>/plants</code></td><td>Default back target, kai atverta iš globalių augalų.</td><td><code>frontend/src/pages/plant/PlantDetailPage.jsx</code></td></tr>
+      <tr><td>63</td><td>PlantDetailPage</td><td>PlotDetailPage</td><td><code>/plots/:resolvedPlotId</code></td><td>„Open plot“ arba back target, kai augalas atveriamas iš sklypo.</td><td><code>frontend/src/pages/plant/PlantDetailPage.jsx</code></td></tr>
+      <tr><td>64</td><td>PlantDetailPage</td><td>CatalogPlantDetailPage</td><td><code>/plants/catalog/:catalogPlantId</code></td><td>„Open catalog plant“.</td><td><code>frontend/src/pages/plant/PlantDetailPage.jsx</code></td></tr>
+      <tr><td>65</td><td>PlantDetailPage</td><td>CatalogPlantFormPage</td><td><code>/plants/catalog/:catalogPlantId/edit</code></td><td>„Edit shared care“.</td><td><code>frontend/src/pages/plant/PlantDetailPage.jsx</code></td></tr>
+      <tr><td>66</td><td>PlantDetailPage</td><td>PlotHarvestsPage</td><td><code>/plots/:resolvedPlotId/harvests?plantId=:plantId</code></td><td>„Open harvest workflow“.</td><td><code>frontend/src/pages/plant/PlantDetailPage.jsx</code></td></tr>
+      <tr><td>67</td><td>CatalogPlantDetailPage</td><td>PlantsPage</td><td><code>/plants?view=catalog</code></td><td>„Back“.</td><td><code>frontend/src/pages/plant/CatalogPlantDetailPage.jsx</code></td></tr>
+      <tr><td>68</td><td>CatalogPlantDetailPage</td><td>CatalogPlantFormPage</td><td><code>/plants/catalog/:catalogPlantId/edit</code></td><td>„Edit“.</td><td><code>frontend/src/pages/plant/CatalogPlantDetailPage.jsx</code></td></tr>
+      <tr><td>69</td><td>CatalogPlantDetailPage</td><td>PlantFormPage</td><td><code>/plants/new?catalogPlantId=:catalogPlantId</code></td><td>„Place in zone“.</td><td><code>frontend/src/pages/plant/CatalogPlantDetailPage.jsx</code></td></tr>
+      <tr><td>70</td><td>CatalogPlantFormPage</td><td>CatalogPlantDetailPage</td><td><code>navigate(`/plants/catalog/${savedCatalogPlant.id}`)</code></td><td>Po create/update; cancel edit grįžta į detail.</td><td><code>frontend/src/pages/plant/CatalogPlantFormPage.jsx</code></td></tr>
+      <tr><td>71</td><td>CatalogPlantFormPage</td><td>PlantsPage</td><td><code>/plants?view=catalog</code></td><td>Cancel/back naujos katalogo formos atveju.</td><td><code>frontend/src/pages/plant/CatalogPlantFormPage.jsx</code></td></tr>
+      <tr><td>72</td><td>PlotDetailPage</td><td>CatalogPlantFormPage</td><td><code>/plants/catalog/new</code>, <code>/plants/catalog/:catalogPlantId/edit</code></td><td>PlotPlantingDrawer leidžia kurti arba redaguoti katalogo augalą.</td><td><code>frontend/src/components/plot/PlotPlantingDrawer.jsx</code></td></tr>
+      <tr><td>73</td><td>PlotDetailPage</td><td>CatalogPlantDetailPage</td><td><code>/plants/catalog/:catalogPlantId</code></td><td>PlotPlantingDrawer „Open catalog plant“.</td><td><code>frontend/src/components/plot/PlotPlantingDrawer.jsx</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Pastabos / prielaidos</h2>
+  <ul>
+    <li>Diagrama rodo tik React page/view boundary klases ir navigaciją. Controller, service, model ir DB klasės sąmoningai nerodomos.</li>
+    <li><code>PlotCreatePage</code> vidiniai žingsniai <code>boundary</code>, <code>zones</code>, <code>summary</code> nėra atskiros boundary klasės, nes jie realizuoti state kintamuoju tame pačiame komponente.</li>
+    <li><code>PlotDetailPage</code> vidiniai režimai <code>zones</code> ir <code>boundary</code>, taip pat layer / inspector panelės, nėra atskiri puslapiai.</li>
+    <li><code>PlantsPage</code> katalogo ir pasodintų augalų režimai parodyti kaip to paties boundary pastaba, nes jie keičiami per <code>view</code> query/state, o ne per atskirą UI page.</li>
+    <li><code>CatalogPlantsPage</code> įtrauktas kaip redirect boundary, nes route ir komponentas egzistuoja, bet jis nerodo savarankiško UI.</li>
+    <li>PDF eksportas iš <code>PlotDetailPage</code> yra failo atsisiuntimo veiksmas per <code>api.downloadPlotPdf()</code>, todėl nevaizduotas kaip atskiras boundary.</li>
+    <li>Bendruomenės įrašo kūrimo dialogas, kalendoriaus dienos drawer, inventoriaus edit/add forma ir admin user detail panelė nėra atskiri page komponentai.</li>
+  </ul>
+</main>
+</body>
+</html>

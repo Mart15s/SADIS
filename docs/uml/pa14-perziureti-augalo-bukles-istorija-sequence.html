@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PA14 Peržiūrėti augalo būklės istoriją realizacija projekto klasėmis</title>
+  <style>
+    :root { --ink:#172033; --muted:#526070; --paper:#fff; --page:#f5f7fb; --actor:#e8f5e9; --boundary:#dcecff; --control:#ffe1e7; --service:#e7f7ef; --entity:#fff2bf; --fragment:#f8fafc; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
+    main { width:min(2200px, calc(100vw - 32px)); margin:24px auto; background:var(--paper); border:1px solid #d5dbe7; box-shadow:0 12px 30px rgba(15,23,42,.08); padding:24px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:0; }
+    h2 { margin:28px 0 10px; font-size:18px; }
+    .meta { color:var(--muted); font-size:13px; margin-bottom:14px; max-width:1250px; }
+    .comment { border-left:4px solid #8aa5d6; background:#f7faff; padding:10px 14px; margin:12px 0 18px; color:#334155; max-width:1250px; }
+    .legend { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0 18px; font-size:13px; }
+    .legend span { display:inline-flex; gap:6px; align-items:center; }
+    .swatch { width:16px; height:12px; border:1px solid #64748b; display:inline-block; }
+    .canvas { overflow:auto; border:1px solid #dbe3ef; background:#fff; margin-bottom:20px; }
+    svg { display:block; max-width:none; background:#fff; }
+    .uml-title { font-size:18px; font-weight:700; }
+    .participant-name { font-size:11px; font-weight:700; }
+    .stereo { font-size:10px; fill:#5b6472; font-style:italic; }
+    .message { font-size:10.5px; fill:#1f2937; paint-order:stroke; stroke:#fff; stroke-width:4px; stroke-linejoin:round; }
+    .fragment-title { font-size:12px; font-weight:700; fill:#0f172a; }
+    .fragment-cond { font-size:11px; fill:#334155; }
+    .lifeline { stroke:#94a3b8; stroke-width:1.1; stroke-dasharray:6 6; }
+    .call { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .async { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .return { stroke:#64748b; stroke-width:1.05; stroke-dasharray:6 4; marker-end:url(#openArrow); }
+    .fragment { fill:var(--fragment); stroke:#64748b; stroke-width:1.05; }
+    .divider { stroke:#94a3b8; stroke-width:1; stroke-dasharray:5 4; }
+    table { width:100%; border-collapse:collapse; margin:10px 0 18px; font-size:13px; }
+    th, td { border:1px solid #d9e1ee; padding:7px 8px; vertical-align:top; }
+    th { background:#eef3ff; text-align:left; }
+    .sequence-fragment-row td { background:#f8fafc; color:#0f172a; font-weight:700; }
+    .sequence-operand-row td { background:#fff7ed; color:#7c2d12; font-weight:700; }
+    .sequence-end-row td { background:#f1f5f9; color:#475569; font-style:italic; }
+    code { background:#eef2f7; padding:1px 4px; border-radius:3px; }
+    @media print { body { background:#fff; } main { width:100%; margin:0; border:0; box-shadow:none; } .canvas { overflow:visible; page-break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PA14 Peržiūrėti augalo būklės istoriją realizacija projekto klasėmis</h1>
+  <div class="meta">Diagrama sudaryta pagal realų Laravel ir React kodą. PA14 naudotojo kelias realizuotas per <code>PlantDetailPage</code> būklės istorijos bloką ir <code>PlantConditionController::index()</code>. Sistemos kelias išskaidytas į analizės duomenų surinkimą per <code>AnalyticsService::analyzePlot()</code>, nes codebase neturi atskiro <code>collectConditionHistoryForAnalysis()</code> metodo.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#e8f5e9"></i> «actor»</span>
+    <span><i class="swatch" style="background:#dcecff"></i> «boundary»</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> «control»</span>
+    <span><i class="swatch" style="background:#e7f7ef"></i> «service»</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> «entity»</span>
+  </div>
+  <div class="comment">Techniniai maršrutizavimo ir API pagalbiniai sluoksniai diagramoje nerodomi kaip lifeline. Jie naudoti tik auditui ir yra paminėti <code>connections.txt</code> bei <code>audit.md</code>.</div>
+
+  <h2>Naudotojo inicijuota augalo būklės istorijos peržiūra</h2>
+  <div class="canvas"><svg id="diagram-owner" role="img" aria-label="Naudotojo inicijuota augalo būklės istorijos peržiūra"></svg></div>
+
+  <h2>Sistemos inicijuotas būklės istorijos surinkimas analizei</h2>
+  <div class="canvas"><svg id="diagram-system" role="img" aria-label="Sistemos inicijuotas būklės istorijos surinkimas analizei"></svg></div>
+
+  <table>
+    <tr><th>Patikrinimas</th><th>Rezultatas</th></tr>
+    <tr><td>Route / API helper lifeline</td><td>Nerodomi diagramoje; naudoti tik šaltinių auditui.</td></tr>
+    <tr><td>PA pradžios šaltiniai</td><td>Išskaidyta į dvi diagramas: <code>[started by garden owner]</code> ir <code>[started by system]</code>.</td></tr>
+    <tr><td>Alt fragmentai</td><td>Kiekvienas <code>alt</code> turi atskirus operandus su guard: istorija yra / istorijos nėra.</td></tr>
+    <tr><td>Reply taisyklė</td><td>Kiekvienas sinchroninis kvietimas turi vėlesnį <code>reply</code>. UI ir sistemos starto įvykiai yra asinchroniniai.</td></tr>
+  </table>
+
+  <h2>Visų sekų sąrašas</h2>
+  <table id="sequence-table">
+    <thead>
+      <tr>
+        <th>Nr.</th>
+        <th>Iš</th>
+        <th>Į</th>
+        <th>Operacija</th>
+        <th>Jungties tipas</th>
+        <th>Fragmentas / pastaba</th>
+        <th>Replies to</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script>
+const colors = {
+  actor: { fill: '#e8f5e9', stroke: '#4f7f52' },
+  boundary: { fill: '#dcecff', stroke: '#4f7fb8' },
+  control: { fill: '#ffe1e7', stroke: '#bf5a6b' },
+  service: { fill: '#e7f7ef', stroke: '#4f8a67' },
+  entity: { fill: '#fff2bf', stroke: '#b08900' },
+};
+
+const participantsByDiagram = {
+  'diagram-owner': [
+    ['Garden owner', 'actor'],
+    ['PlantDetailPage', 'boundary'],
+    ['PlantConditionController', 'control'],
+    ['AccessService', 'service'],
+    ['PlantConditionHistoryService', 'service'],
+    ['PlantConditionHistoryResource', 'service'],
+    ['Plant', 'entity'],
+    ['PlantConditionHistory', 'entity'],
+  ],
+  'diagram-system': [
+    ['System / RecommendationAnalysisProcess', 'actor'],
+    ['AnalyticsController', 'control'],
+    ['AccessService', 'service'],
+    ['AnalyticsService', 'service'],
+    ['PlantConditionHistoryService', 'service'],
+    ['AnalyticsResource', 'service'],
+    ['Plot', 'entity'],
+    ['PlantConditionHistory', 'entity'],
+    ['Task', 'entity'],
+  ],
+};
+
+const messages = [
+  { nr: 1, diagram: 'diagram-owner', from: 'Garden owner', to: 'PlantDetailPage', operation: 'openPlantConditionHistory(plantId)', type: 'async', note: '[started by garden owner] PlantDetailPage renders condition history inside the plant detail page.' },
+  { nr: 2, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantConditionController', operation: 'index(plotId, plantId)', type: 'call', note: 'Frontend api.listPlantConditions() maps to PlantConditionController::index().' },
+  { nr: 3, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantConditionController', operation: 'authorizePlantView(request, plot, plant)', type: 'call', note: 'Private controller authorization method.' },
+  { nr: 4, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantConditionController', operation: 'ensureUserCanViewPlot(request, plot, accessService)', type: 'call', note: 'AuthorizesPlotAccess trait method.' },
+  { nr: 5, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'AccessService', operation: 'userHasAccess(owner, plot)', type: 'call', note: 'Real AccessService method.' },
+  { nr: 6, diagram: 'diagram-owner', from: 'AccessService', to: 'PlantConditionController', operation: 'true', type: 'return', replyTo: 5, note: 'access_granted' },
+  { nr: 7, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantConditionController', operation: 'plot_access_granted', type: 'return', replyTo: 4, note: 'ensureUserCanViewPlot() completed.' },
+  { nr: 8, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantConditionController', operation: 'plant_belongs_to_plot', type: 'return', replyTo: 3, note: 'abort_unless($plant->fk_plot_id === $plot->id, 404).' },
+  { nr: 9, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantConditionHistoryService', operation: 'listForPlant(plant)', type: 'call', note: 'PlantConditionHistoryService::listForPlant().' },
+  { nr: 10, diagram: 'diagram-owner', from: 'PlantConditionHistoryService', to: 'Plant', operation: 'conditionHistory()', type: 'call', note: 'Plant::conditionHistory().' },
+  { nr: 11, diagram: 'diagram-owner', from: 'Plant', to: 'PlantConditionHistoryService', operation: 'condition_history_relation', type: 'return', replyTo: 10, note: 'HasMany relation.' },
+  { nr: 12, diagram: 'diagram-owner', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: "latest('measured_at')", type: 'call', note: 'Sort newest measurements first.' },
+  { nr: 13, diagram: 'diagram-owner', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'measured_at_ordered_query', type: 'return', replyTo: 12, note: '' },
+  { nr: 14, diagram: 'diagram-owner', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: "latest('id')", type: 'call', note: 'Stable newest-first tie break.' },
+  { nr: 15, diagram: 'diagram-owner', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'id_ordered_query', type: 'return', replyTo: 14, note: '' },
+  { nr: 16, diagram: 'diagram-owner', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: 'get()', type: 'call', note: 'Fetch condition history records.' },
+  { nr: 17, diagram: 'diagram-owner', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'condition_history_records', type: 'return', replyTo: 16, note: '' },
+  { nr: 18, diagram: 'diagram-owner', from: 'PlantConditionHistoryService', to: 'PlantConditionController', operation: 'condition_history_records', type: 'return', replyTo: 9, note: '' },
+  { nr: 19, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantConditionHistoryResource', operation: 'collection(condition_history_records)', type: 'call', note: 'PlantConditionHistoryResource::collection(...)->resolve().' },
+  { nr: 20, diagram: 'diagram-owner', from: 'PlantConditionHistoryResource', to: 'PlantConditionController', operation: 'condition_history_resource', type: 'return', replyTo: 19, note: 'Serialized records or empty array.' },
+  { nr: 21, diagram: 'diagram-owner', from: 'PlantConditionController', to: 'PlantDetailPage', operation: 'condition_history_response', type: 'return', replyTo: 2, note: 'HTTP JSON response, API helper lifeline hidden.' },
+  { nr: 22, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantDetailPage', operation: 'conditions.length === 0', type: 'call', note: 'Real JSX condition in PlantDetailPage.' },
+  { nr: 23, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantDetailPage', operation: 'condition_history_availability', type: 'return', replyTo: 22, note: 'Boolean UI branch.' },
+  { nr: 24, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantDetailPage', operation: 'renderConditionHistory()', type: 'call', note: '[condition history exists] table rows rendered with conditions.map().' },
+  { nr: 25, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantDetailPage', operation: 'history_rendered', type: 'return', replyTo: 24, note: '' },
+  { nr: 26, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantDetailPage', operation: 'renderNoConditionHistoryMessage()', type: 'call', note: '[condition history does not exist] EmptyState title is "No condition history".' },
+  { nr: 27, diagram: 'diagram-owner', from: 'PlantDetailPage', to: 'PlantDetailPage', operation: 'no_history_message_rendered', type: 'return', replyTo: 26, note: '' },
+  { nr: 28, diagram: 'diagram-owner', from: 'Garden owner', to: 'PlantDetailPage', operation: 'navigateBack(backTarget)', type: 'async', note: '[user closes condition history view] Back button uses backTarget.' },
+
+  { nr: 29, diagram: 'diagram-system', from: 'System / RecommendationAnalysisProcess', to: 'AnalyticsController', operation: 'store(plotId, analysisTypes)', type: 'async', note: '[started by system] Same controller entry point used by analytics generation.' },
+  { nr: 30, diagram: 'diagram-system', from: 'AnalyticsController', to: 'AccessService', operation: 'userHasAccess(owner, plot)', type: 'call', note: 'Access check reached through ensureUserCanViewPlot().' },
+  { nr: 31, diagram: 'diagram-system', from: 'AccessService', to: 'AnalyticsController', operation: 'true', type: 'return', replyTo: 30, note: 'access_granted' },
+  { nr: 32, diagram: 'diagram-system', from: 'AnalyticsController', to: 'AnalyticsService', operation: 'analyzePlot(plot, owner, analysisTypes)', type: 'call', note: 'AnalyticsService::analyzePlot().' },
+  { nr: 33, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'normalizeAnalysisTypes(analysisTypes)', type: 'call', note: 'Normalizes selected analysis branches.' },
+  { nr: 34, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'selected_analysis_types', type: 'return', replyTo: 33, note: '' },
+  { nr: 35, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'preparePlot(plot)', type: 'call', note: 'Loads plot, plant zones and plants for analysis context.' },
+  { nr: 36, diagram: 'diagram-system', from: 'AnalyticsService', to: 'Plot', operation: "loadMissing(['plantZones','plants','plants.plantZone'])", type: 'call', note: 'Plot relation loading in preparePlot().' },
+  { nr: 37, diagram: 'diagram-system', from: 'Plot', to: 'AnalyticsService', operation: 'prepared_plot_relations', type: 'return', replyTo: 36, note: '' },
+  { nr: 38, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'prepared_plot', type: 'return', replyTo: 35, note: '' },
+  { nr: 39, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'buildContext(plot, selectedTypes)', type: 'call', note: 'Collects context only for requested analysis types.' },
+  { nr: 40, diagram: 'diagram-system', from: 'AnalyticsService', to: 'PlantConditionHistoryService', operation: 'listForPlot(plot)', type: 'call', note: 'Real condition-history collection for plot analysis.' },
+  { nr: 41, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: 'query()', type: 'call', note: 'PlantConditionHistory::query().' },
+  { nr: 42, diagram: 'diagram-system', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'condition_history_query', type: 'return', replyTo: 41, note: '' },
+  { nr: 43, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: "with(['plant','plant.plantZone'])", type: 'call', note: 'Eager-load plant and zone context.' },
+  { nr: 44, diagram: 'diagram-system', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'eager_loaded_query', type: 'return', replyTo: 43, note: '' },
+  { nr: 45, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'Plot', operation: 'plants()', type: 'call', note: 'Used for whereIn plant ids.' },
+  { nr: 46, diagram: 'diagram-system', from: 'Plot', to: 'PlantConditionHistoryService', operation: 'plant_ids_query', type: 'return', replyTo: 45, note: '' },
+  { nr: 47, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: "whereIn('plant_id', plant_ids_query)", type: 'call', note: 'Restricts records to the selected plot.' },
+  { nr: 48, diagram: 'diagram-system', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'filtered_query', type: 'return', replyTo: 47, note: '' },
+  { nr: 49, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: "orderBy('measured_at')", type: 'call', note: 'Chronological analysis order.' },
+  { nr: 50, diagram: 'diagram-system', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'measured_at_ordered_query', type: 'return', replyTo: 49, note: '' },
+  { nr: 51, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: "orderBy('id')", type: 'call', note: 'Stable chronological tie break.' },
+  { nr: 52, diagram: 'diagram-system', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'stable_ordered_query', type: 'return', replyTo: 51, note: '' },
+  { nr: 53, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'PlantConditionHistory', operation: 'get()', type: 'call', note: 'Fetch all condition history records for the plot.' },
+  { nr: 54, diagram: 'diagram-system', from: 'PlantConditionHistory', to: 'PlantConditionHistoryService', operation: 'condition_history_records', type: 'return', replyTo: 53, note: '' },
+  { nr: 55, diagram: 'diagram-system', from: 'PlantConditionHistoryService', to: 'AnalyticsService', operation: 'condition_history', type: 'return', replyTo: 40, note: '' },
+  { nr: 56, diagram: 'diagram-system', from: 'AnalyticsService', to: 'Task', operation: 'plotTasksQuery(plot)', type: 'call', note: 'Care tasks are used for care-response trends.' },
+  { nr: 57, diagram: 'diagram-system', from: 'Task', to: 'AnalyticsService', operation: 'care_tasks_query', type: 'return', replyTo: 56, note: '' },
+  { nr: 58, diagram: 'diagram-system', from: 'AnalyticsService', to: 'Task', operation: 'get()', type: 'call', note: 'Fetch non-buy, non-harvest care tasks.' },
+  { nr: 59, diagram: 'diagram-system', from: 'Task', to: 'AnalyticsService', operation: 'care_tasks', type: 'return', replyTo: 58, note: '' },
+  { nr: 60, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'analysis_context', type: 'return', replyTo: 39, note: 'Context contains condition_history and care_tasks.' },
+  { nr: 61, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'buildPlantConditionSection(plot, condition_history, care_tasks)', type: 'call', note: 'Builds the plant_condition section.' },
+  { nr: 62, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'isEmpty()', type: 'call', note: '$historyEntries->isEmpty().' },
+  { nr: 63, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'condition_history_availability', type: 'return', replyTo: 62, note: 'Boolean branch for analysis result.' },
+  { nr: 64, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: "groupBy('plant_id')", type: 'call', note: '[condition history exists] Group records by plant.' },
+  { nr: 65, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'grouped_history_entries', type: 'return', replyTo: 64, note: '' },
+  { nr: 66, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'sortBy(measured_at_and_id)', type: 'call', note: '[for each plant with condition history] Sort plant records.' },
+  { nr: 67, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'ordered_entries', type: 'return', replyTo: 66, note: '' },
+  { nr: 68, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'conditionValue(firstEntry)', type: 'call', note: 'Resolve initial condition.' },
+  { nr: 69, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'initial_condition', type: 'return', replyTo: 68, note: '' },
+  { nr: 70, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'conditionValue(lastEntry)', type: 'call', note: 'Resolve latest condition.' },
+  { nr: 71, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'latest_condition', type: 'return', replyTo: 70, note: '' },
+  { nr: 72, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'serializeConditionEntry(entry)', type: 'call', note: 'Creates condition_timeline entry.' },
+  { nr: 73, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'condition_timeline_entry', type: 'return', replyTo: 72, note: '' },
+  { nr: 74, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'normalizeConditionCounts(historyCounts)', type: 'call', note: 'Prepare counts for ready section.' },
+  { nr: 75, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'condition_counts', type: 'return', replyTo: 74, note: '' },
+  { nr: 76, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'ready_condition_section', type: 'return', replyTo: 61, note: 'Ready section returned from buildPlantConditionSection().' },
+  { nr: 77, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'normalizeConditionCounts([])', type: 'call', note: '[condition history does not exist] Empty count set.' },
+  { nr: 78, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'empty_condition_counts', type: 'return', replyTo: 77, note: '' },
+  { nr: 79, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'no_data_condition_section', type: 'return', replyTo: 61, note: 'No-data section returned from buildPlantConditionSection().' },
+  { nr: 80, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'buildSummary(plot, sections, selectedTypes)', type: 'call', note: 'Summarizes generated sections.' },
+  { nr: 81, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsService', operation: 'analytics_summary', type: 'return', replyTo: 80, note: '' },
+  { nr: 82, diagram: 'diagram-system', from: 'AnalyticsService', to: 'AnalyticsController', operation: 'analytics_payload', type: 'return', replyTo: 32, note: 'analyzePlot() completed.' },
+  { nr: 83, diagram: 'diagram-system', from: 'AnalyticsController', to: 'AnalyticsResource', operation: 'make(analytics_payload)', type: 'call', note: 'AnalyticsResource::make().' },
+  { nr: 84, diagram: 'diagram-system', from: 'AnalyticsResource', to: 'AnalyticsController', operation: 'analytics_resource', type: 'return', replyTo: 83, note: 'Serialized response object.' },
+];
+
+const diagrams = [
+  { id: 'diagram-owner', title: 'Naudotojo inicijuota augalo būklės istorijos peržiūra', from: 1, to: 28 },
+  { id: 'diagram-system', title: 'Sistemos inicijuotas būklės istorijos surinkimas analizei', from: 29, to: 84 },
+];
+
+const fragments = [
+  {
+    diagram: 'diagram-owner',
+    kind: 'alt',
+    title: 'Plant condition history availability',
+    start: 24,
+    end: 27,
+    operands: [
+      { guard: '[condition history exists]', start: 24, end: 25 },
+      { guard: '[condition history does not exist]', start: 26, end: 27 },
+    ],
+  },
+  {
+    diagram: 'diagram-owner',
+    kind: 'opt',
+    guard: '[user closes condition history view]',
+    start: 28,
+    end: 28,
+  },
+  {
+    diagram: 'diagram-system',
+    kind: 'alt',
+    title: 'Plant condition history availability for analysis',
+    start: 64,
+    end: 79,
+    operands: [
+      { guard: '[condition history exists]', start: 64, end: 76 },
+      { guard: '[condition history does not exist]', start: 77, end: 79 },
+    ],
+  },
+  {
+    diagram: 'diagram-system',
+    kind: 'loop',
+    guard: '[for each plant with condition history]',
+    start: 66,
+    end: 73,
+  },
+];
+
+function el(name, attrs = {}, text = null) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  if (text !== null) node.textContent = text;
+  return node;
+}
+
+function addText(svg, text, x, y, attrs = {}) {
+  svg.appendChild(el('text', { x, y, ...attrs }, text));
+}
+
+function shortLabel(text, max = 26) {
+  return text.length > max ? text.slice(0, max - 1) + '...' : text;
+}
+
+function typeLabel(type) {
+  if (type === 'call') return 'sinchroninis';
+  if (type === 'return') return 'reply';
+  return 'asinchroninis';
+}
+
+function renderDiagram(config) {
+  const svg = document.getElementById(config.id);
+  const participants = participantsByDiagram[config.id];
+  const rowH = 36;
+  const top = 118;
+  const left = 70;
+  const gap = 170;
+  const boxW = 140;
+  const visibleMessages = messages.filter((m) => m.nr >= config.from && m.nr <= config.to);
+  const height = top + visibleMessages.length * rowH + 92;
+  const width = left * 2 + gap * (participants.length - 1) + boxW;
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  const defs = el('defs');
+  defs.innerHTML = '<marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#334155"/></marker><marker id="openArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8" fill="none" stroke="#64748b" stroke-width="1.2"/></marker>';
+  svg.appendChild(defs);
+  addText(svg, config.title, 24, 28, { class: 'uml-title' });
+  const xMap = new Map();
+  participants.forEach(([name, type], index) => {
+    const x = left + index * gap;
+    xMap.set(name, x + boxW / 2);
+    svg.appendChild(el('rect', { x, y: 48, width: boxW, height: 44, rx: 3, fill: colors[type].fill, stroke: colors[type].stroke }));
+    addText(svg, '«' + type + '»', x + boxW / 2, 63, { class: 'stereo', 'text-anchor': 'middle' });
+    addText(svg, shortLabel(name, 22), x + boxW / 2, 80, { class: 'participant-name', 'text-anchor': 'middle' });
+    svg.appendChild(el('line', { x1: x + boxW / 2, y1: 92, x2: x + boxW / 2, y2: height - 28, class: 'lifeline' }));
+  });
+
+  const yOf = (nr) => top + (visibleMessages.findIndex((m) => m.nr === nr)) * rowH;
+  fragments.filter((f) => f.diagram === config.id).forEach((f) => {
+    const y = yOf(f.start) - 18;
+    const h = yOf(f.end) - y + 24;
+    svg.appendChild(el('rect', { x: 18, y, width: width - 36, height: h, class: 'fragment' }));
+    addText(svg, f.kind, 24, y + 15, { class: 'fragment-title' });
+    if (f.operands) {
+      f.operands.forEach((op, idx) => {
+        if (idx > 0) svg.appendChild(el('line', { x1: 18, y1: yOf(op.start) - 18, x2: width - 18, y2: yOf(op.start) - 18, class: 'divider' }));
+        addText(svg, op.guard, 66, yOf(op.start) - 5, { class: 'fragment-cond' });
+      });
+    } else {
+      addText(svg, f.guard, 66, y + 15, { class: 'fragment-cond' });
+    }
+  });
+
+  visibleMessages.forEach((m) => {
+    const y = yOf(m.nr);
+    const x1 = xMap.get(m.from);
+    const x2 = xMap.get(m.to);
+    const label = m.nr + ': ' + m.operation;
+    if (x1 === x2) {
+      svg.appendChild(el('path', { d: 'M ' + x1 + ' ' + y + ' h 48 v 16 h -48', fill: 'none', class: m.type === 'return' ? 'return' : (m.type === 'async' ? 'async' : 'call') }));
+      addText(svg, label, x1 + 8, y - 5, { class: 'message' });
+    } else {
+      svg.appendChild(el('line', { x1, y1: y, x2, y2: y, class: m.type === 'return' ? 'return' : (m.type === 'async' ? 'async' : 'call') }));
+      addText(svg, label, (x1 + x2) / 2, y - 5, { class: 'message', 'text-anchor': 'middle' });
+    }
+  });
+}
+
+diagrams.forEach(renderDiagram);
+
+const tbody = document.querySelector('#sequence-table tbody');
+
+function appendMarker(label, className) {
+  const tr = document.createElement('tr');
+  tr.className = className;
+  const td = document.createElement('td');
+  td.colSpan = 7;
+  td.textContent = label;
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+}
+
+function activeFragmentsFor(nr) {
+  return fragments
+    .filter((fragment) => fragment.start <= nr && nr <= fragment.end)
+    .map((fragment) => fragment.kind + ': ' + (fragment.title || fragment.guard || ''))
+    .join('; ');
+}
+
+function appendMessage(m) {
+  const tr = document.createElement('tr');
+  const cells = [
+    m.nr,
+    m.from,
+    m.to,
+    m.operation,
+    typeLabel(m.type),
+    [activeFragmentsFor(m.nr), m.note].filter(Boolean).join(' | '),
+    m.replyTo ? String(m.replyTo) : '',
+  ];
+  cells.forEach((value) => {
+    const td = document.createElement('td');
+    td.textContent = value;
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+}
+
+function labelOf(fragment) {
+  return fragment.guard || fragment.title || '';
+}
+
+function startsAt(nr) {
+  return fragments.filter((fragment) => fragment.start === nr).sort((a, b) => (b.end - b.start) - (a.end - a.start));
+}
+
+function endsAt(nr) {
+  return fragments.filter((fragment) => fragment.end === nr).sort((a, b) => (a.end - a.start) - (b.end - b.start));
+}
+
+function operandsStartingAt(nr) {
+  return fragments
+    .filter((fragment) => fragment.kind === 'alt' && fragment.operands)
+    .flatMap((fragment) => fragment.operands
+      .filter((operand) => operand.start === nr)
+      .map((operand) => ({ operand, index: fragment.operands.indexOf(operand) + 1 })));
+}
+
+function operandsEndingAt(nr) {
+  return fragments
+    .filter((fragment) => fragment.kind === 'alt' && fragment.operands)
+    .flatMap((fragment) => fragment.operands
+      .filter((operand) => operand.end === nr)
+      .map((operand) => ({ operand, index: fragment.operands.indexOf(operand) + 1 })));
+}
+
+messages.forEach((m) => {
+  startsAt(m.nr).forEach((fragment) => appendMarker(fragment.kind + ' pradžia ' + labelOf(fragment), 'sequence-fragment-row'));
+  operandsStartingAt(m.nr).forEach(({ operand, index }) => appendMarker('[' + index + ' if: ' + operand.guard.replace(/^\[|\]$/g, '') + ']', 'sequence-operand-row'));
+  appendMessage(m);
+  operandsEndingAt(m.nr).forEach(({ operand, index }) => appendMarker('[' + index + ' if pabaiga] ' + operand.guard, 'sequence-end-row'));
+  endsAt(m.nr).forEach((fragment) => appendMarker(fragment.kind + ' pabaiga ' + labelOf(fragment), 'sequence-end-row'));
+});
+</script>
+</body>
+</html>

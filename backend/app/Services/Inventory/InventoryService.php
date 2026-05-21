@@ -463,7 +463,7 @@ class InventoryService
             'unit' => $normalized['unit']->value,
             'type' => $normalized['inventory_item_type']->value,
             'consumed' => false,
-            'action_label' => 'Restocked',
+            'action_label' => 'Papildyta',
         ]];
     }
 
@@ -898,8 +898,8 @@ class InventoryService
                 return sprintf(
                     '%s: truksta %s %s.',
                     $requirement['resource_name'],
-                    number_format((float) $requirement['shortage_quantity'], 2, '.', ''),
-                    $requirement['unit'],
+                    number_format((float) $requirement['shortage_quantity'], 2, ',', ''),
+                    InventoryUnit::tryFrom((string) $requirement['unit'])?->label() ?? $requirement['unit'],
                 );
             })
             ->values()

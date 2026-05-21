@@ -26,7 +26,7 @@ class RotationController extends Controller
 
         return response()->json(
             $plot->rotationHistory()
-                ->with(['plantZone', 'plant'])
+                ->with(['fromPlantZone', 'plantZone', 'plant'])
                 ->latest('from_date')
                 ->get()
                 ->map(fn (RotationHistory $history) => $this->serializeRotationHistory($history))
@@ -119,6 +119,10 @@ class RotationController extends Controller
             'from_date' => $validated['from_date'],
             'to_date' => $validated['to_date'] ?? null,
             'plant_zone_id' => $plantZone->id,
+            'from_plant_zone_id' => $plant->plant_zone_id ?? $plant->fk_plant_zone_id,
+            'from_zone_name' => $plant->plantZone?->name,
+            'to_zone_name' => $plantZone->name,
+            'decision_status' => 'recorded',
             'fk_plot_id' => $plot->id,
             'fk_plant_zone_id' => $plantZone->id,
             'fk_plot_via_zone' => $plot->id,
@@ -167,6 +171,36 @@ class RotationController extends Controller
         return response()->json([
             'draft' => $this->serializeRotationDraft($draft),
         ], 201);
+    }
+
+    public function updateDraftItem(
+        Request $request,
+        Plot $plot,
+        RotationPlanDraft $rotationPlanDraft,
+        Plant $plant,
+        AccessService $accessService,
+        RotationPlannerService $rotationPlannerService
+    ): JsonResponse {
+        $this->ensureUserCanEditPlot($request, $plot, $accessService);
+        abort_unless((int) $rotationPlanDraft->plot_id === (int) $plot->id, 404);
+        abort_unless((int) $plant->fk_plot_id === (int) $plot->id, 404);
+
+        $validated = $request->validate([
+            'decision' => ['required', 'string', 'in:generated,target,stay,unresolved'],
+            'target_zone_id' => ['nullable', 'integer', 'exists:plant_zones,id'],
+            'manual_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $draft = $rotationPlannerService->updateDraftItem(
+            $plot,
+            $rotationPlanDraft,
+            $plant,
+            $validated
+        );
+
+        return response()->json([
+            'draft' => $this->serializeRotationDraft($draft),
+        ]);
     }
 
     public function confirm(
@@ -236,17 +270,62 @@ class RotationController extends Controller
             'from_date' => $history->from_date?->toDateString(),
             'to_date' => $history->to_date?->toDateString(),
             'fk_plot_id' => $history->fk_plot_id,
+            'from_plant_zone_id' => $history->from_plant_zone_id,
             'fk_plant_zone_id' => $history->fk_plant_zone_id,
             'fk_plant_id' => $history->fk_plant_id,
-            'plant_zone' => $history->plantZone ? [
-                'id' => $history->plantZone->id,
-                'name' => $history->plantZone->name,
-            ] : null,
+            'from_zone' => $this->serializeZoneSnapshot(
+                $history->fromPlantZone,
+                $history->from_plant_zone_id,
+                $history->from_zone_name
+            ),
+            'to_zone' => $this->serializeZoneSnapshot(
+                $history->plantZone,
+                $history->fk_plant_zone_id,
+                $history->to_zone_name
+            ),
+            'plant_zone' => $this->serializeZoneSnapshot(
+                $history->plantZone,
+                $history->fk_plant_zone_id,
+                $history->to_zone_name
+            ),
             'plant' => $history->plant ? [
                 'id' => $history->plant->id,
                 'name' => $history->plant->name,
                 'type' => $history->plant->type?->value ?? $history->plant->type,
             ] : null,
+            'decision_status' => $history->decision_status,
+            'decision_note' => $history->decision_note,
+        ];
+    }
+
+    private function serializeZoneSnapshot(?PlantZone $zone, ?int $zoneId, ?string $snapshotName): array
+    {
+        if ($zone) {
+            return [
+                'id' => $zone->id,
+                'name' => $zone->name,
+            ];
+        }
+
+        if ($snapshotName) {
+            return [
+                'id' => $zoneId,
+                'name' => $snapshotName,
+                'deleted' => $zoneId !== null,
+            ];
+        }
+
+        if ($zoneId) {
+            return [
+                'id' => $zoneId,
+                'name' => 'Deleted zone #'.$zoneId,
+                'deleted' => true,
+            ];
+        }
+
+        return [
+            'id' => null,
+            'name' => 'Unknown zone',
         ];
     }
 }

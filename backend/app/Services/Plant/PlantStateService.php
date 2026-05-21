@@ -145,7 +145,7 @@ class PlantStateService
             'early' => 'Early establishment',
             'growth' => $condition === ConditionType::Regenerating->value ? 'Regenerating growth' : 'Growth phase',
             'mature' => 'Mature maintenance',
-            'harvest_ready' => 'Harvest ready',
+            'harvest_ready' => 'Derlius paruoštas',
             'inactive' => 'Lifecycle finished',
             default => 'Planned state',
         };

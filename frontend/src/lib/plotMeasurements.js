@@ -1,4 +1,5 @@
 import { getShapePoints, roundTo } from './plotDesigner.js'
+import { formatArea, formatLength } from './constants.js'
 
 const DIMENSION_LABEL_MIN_SCREEN_LENGTH = 54
 const DIMENSION_LABEL_HEIGHT = 24
@@ -32,19 +33,12 @@ function readableAngle(angle) {
   return angle
 }
 
-function formatNumber(value, digits = 1) {
-  return roundTo(value, digits).toLocaleString('en-US', {
-    minimumFractionDigits: value < 10 ? 1 : 0,
-    maximumFractionDigits: digits,
-  })
-}
-
 export function formatMeters(value, digits = 1) {
-  return `${formatNumber(value, digits)} m`
+  return formatLength(value, digits)
 }
 
 export function formatSquareMeters(value, digits = 1) {
-  return `${formatNumber(value, digits)} sq m`
+  return formatArea(value, digits)
 }
 
 export function getShapeEdges(shape) {
@@ -81,7 +75,7 @@ export function buildShapeMetrics(shape) {
   return {
     edges,
     perimeter: roundTo(perimeter, 2),
-    sideSummary: edges.map((edge) => `E${edge.index + 1}: ${formatMeters(edge.length)}`).join(', '),
+    sideSummary: edges.map((edge) => `K${edge.index + 1}: ${formatMeters(edge.length)}`).join(', '),
   }
 }
 
@@ -142,7 +136,7 @@ export function createDimensionLabels({
     labels.push({
       id: `${idPrefix}-${edge.index}`,
       text,
-      title: `Edge ${edge.index + 1}: ${text}`,
+      title: `Kraštinė ${edge.index + 1}: ${text}`,
       x: roundTo(selectedPlacement.x, 2),
       y: roundTo(selectedPlacement.y, 2),
       width,

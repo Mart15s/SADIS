@@ -26,7 +26,7 @@ describe('Toast', () => {
 
     render(<Toast type="error" message="Save failed." onDismiss={onDismiss} />)
 
-    expect(screen.getByLabelText('Dismiss notification')).toBeInTheDocument()
+    expect(screen.getByLabelText('Uždaryti pranešimą')).toBeInTheDocument()
     vi.advanceTimersByTime(9000)
     expect(onDismiss).toHaveBeenCalledTimes(1)
 

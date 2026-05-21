@@ -39,7 +39,7 @@ export default function AccountPage() {
 
     try {
       await updateAccount(form)
-      setSuccess('Account data updated successfully.')
+      setSuccess('Paskyros duomenys atnaujinti.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -50,29 +50,29 @@ export default function AccountPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Profile"
-        title="Account"
-        description="Review and update the profile data tied to your authenticated account."
+        eyebrow="Profilis"
+        title="Paskyra"
+        description="Peržiūrėkite ir atnaujinkite su jūsų paskyra susietus profilio duomenis."
         meta={<StatusBadge kind="connection">{user?.email}</StatusBadge>}
       />
 
       <div className="form-shell">
         <form onSubmit={handleSubmit}>
           <FormSection
-            title="Edit account data"
-            description="Keep your core identity details readable and easy to update without stretching the form across the full page."
+            title="Redaguoti paskyros duomenis"
+            description="Pagrindinius tapatybės duomenis galite patogiai peržiūrėti ir atnaujinti."
           >
             <div className="input-grid">
               <div className="field">
-                <label htmlFor="account-email">Email</label>
+                <label htmlFor="account-email">El. paštas</label>
                 <input id="account-email" name="email" type="email" value={form.email} onChange={handleChange} required />
               </div>
               <div className="field">
-                <label htmlFor="account-name">Name</label>
+                <label htmlFor="account-name">Vardas</label>
                 <input id="account-name" name="name" value={form.name} onChange={handleChange} required />
               </div>
               <div className="field">
-                <label htmlFor="account-surname">Surname</label>
+                <label htmlFor="account-surname">Pavardė</label>
                 <input id="account-surname" name="surname" value={form.surname} onChange={handleChange} required />
               </div>
             </div>
@@ -82,7 +82,7 @@ export default function AccountPage() {
 
             <div className="action-row">
               <Button type="submit" disabled={submitting}>
-                {submitting ? 'Saving...' : 'Save account data'}
+                {submitting ? 'Saugoma...' : 'Išsaugoti paskyros duomenis'}
               </Button>
             </div>
           </FormSection>

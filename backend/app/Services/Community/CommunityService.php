@@ -101,7 +101,7 @@ class CommunityService
             ]);
         });
 
-        return $post->load(['profile', 'plot']);
+        return $this->loadPreviewRelations($post);
     }
 
     public function updatePost(GardenOwner $owner, CommunityPost $post, array $data): CommunityPost
@@ -122,7 +122,7 @@ class CommunityService
         $post->fill($data);
         $post->save();
 
-        return $post->fresh(['profile', 'plot']);
+        return $this->loadPreviewRelations($post->fresh());
     }
 
     public function deletePost(GardenOwner $owner, CommunityPost $post): void
@@ -142,6 +142,15 @@ class CommunityService
             ])
             ->orderByDesc('created_at')
             ->orderByDesc('id');
+    }
+
+    private function loadPreviewRelations(CommunityPost $post): CommunityPost
+    {
+        return $post->load([
+            'profile',
+            'plot:id,name,plot_size,geometry',
+            'plot.plantZones:id,name,plot_id,fk_plot_id,geometry',
+        ]);
     }
 
     private function ensureOwnerCanAccessPlot(GardenOwner $owner, Plot $plot, string $message): void

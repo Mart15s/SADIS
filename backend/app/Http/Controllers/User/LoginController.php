@@ -16,10 +16,17 @@ class LoginController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $validated = $request->validate(
+            [
+                'email' => ['required', 'email'],
+                'password' => ['required', 'string'],
+            ],
+            [
+                'email.required' => 'Įveskite el. pašto adresą.',
+                'email.email' => 'Įveskite tinkamą el. pašto adresą.',
+                'password.required' => 'Įveskite slaptažodį.',
+            ],
+        );
 
         $throttleKey = $this->throttleKey($request, $validated['email']);
 
@@ -27,7 +34,7 @@ class LoginController extends Controller
             $retryAfter = RateLimiter::availableIn($throttleKey);
 
             return response()->json([
-                'message' => "Too many login attempts. Try again in {$retryAfter} seconds.",
+                'message' => "Per daug prisijungimo bandymų. Bandykite dar kartą po {$retryAfter} sek.",
                 'retry_after' => $retryAfter,
             ], 429);
         }
@@ -41,7 +48,7 @@ class LoginController extends Controller
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
 
             return response()->json([
-                'message' => 'The provided credentials are incorrect.',
+                'message' => 'Pateikti prisijungimo duomenys neteisingi.',
             ], 422);
         }
 

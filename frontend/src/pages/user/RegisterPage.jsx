@@ -44,25 +44,25 @@ export default function RegisterPage() {
   return (
     <div className="page-stack auth-card">
       <PageHeader
-        title="Create account"
-        description="Registration mirrors the backend sign-up flow and creates the user, profile, garden owner, and API token in one request."
+        title="Sukurti paskyrą"
+        description="Registracija sukuria naudotoją, profilį, daržo savininko įrašą ir API prieigos raktą vienoje užklausoje."
       />
 
       <form className="panel split-form" onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="name">Name</label>
+          <label htmlFor="name">Vardas</label>
           <input id="name" name="name" value={form.name} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="surname">Surname</label>
+          <label htmlFor="surname">Pavardė</label>
           <input id="surname" name="surname" value={form.surname} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">El. paštas</label>
           <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Slaptažodis</label>
           <input
             id="password"
             name="password"
@@ -73,7 +73,7 @@ export default function RegisterPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="password_confirmation">Confirm password</label>
+          <label htmlFor="password_confirmation">Pakartokite slaptažodį</label>
           <input
             id="password_confirmation"
             name="password_confirmation"
@@ -85,9 +85,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="field">
-          <label>Ready to continue?</label>
+          <label>Pasiruošę tęsti?</label>
           <div className="inline-note">
-            Your new account lands straight into the SPA without a full page reload.
+            Nauja paskyra atidaroma iš karto, neperkraunant viso puslapio.
           </div>
         </div>
 
@@ -95,10 +95,10 @@ export default function RegisterPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating account...' : 'Create account'}
+            {submitting ? 'Kuriama paskyra...' : 'Sukurti paskyrą'}
           </Button>
           <Link to="/login">
-            <Button variant="secondary">Back to sign in</Button>
+            <Button variant="secondary">Grįžti į prisijungimą</Button>
           </Link>
         </div>
       </form>

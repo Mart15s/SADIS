@@ -1,0 +1,123 @@
+@startuml
+title Augalo būklės istorijos ir gyvavimo ciklo klasių modelis
+left to right direction
+skinparam packageStyle rectangle
+
+package "Sąsajos / Views" {
+  class PlantDetailPage <<boundary>> {
+    +handleConditionSubmit(event)
+    +handleReviewSubmit(event)
+  }
+}
+
+package "Valdikliai / Controllers" {
+  class PlantConditionController <<control>> {
+    +store(request, plot, plant, accessService, plantConditionHistoryService)
+    +index(request, plot, plant, accessService, plantConditionHistoryService)
+  }
+  class ConditionHistoryController <<control>>
+  class TaskController <<control>> {
+    +complete(request, task, service, accessService)
+  }
+}
+
+package "Ištekliai / Resources" {
+  class PlantConditionHistoryResource <<resource>> {
+    +toArray(request)
+  }
+  class PlantResource <<resource>> {
+    +toArray(request)
+  }
+}
+
+package "Paslaugos / Services" {
+  class AccessService <<service>>
+  class PlantConditionHistoryService <<service>> {
+    +listForPlant(plant)
+    +listForPlot(plot)
+    +record(plant, condition, measuredAt, notes, photoUrl, disease)
+  }
+  class PlantLifecycleService <<service>> {
+    +buildSummary(plant, care, conditionHistory, harvestRecords)
+    +buildActionsForDate(plant, care, phaseResult, generationDate, conditionHistory, harvestRecords)
+    +completeReviewTask(task, payload)
+    +resolvePostHarvestCondition(plant, care)
+    +recordPostHarvestCondition(plant, care, measuredAt, notes)
+  }
+  class PlantLifecyclePhaseService <<service>> {
+    +resolveSimulatedPhase(plant, care, forDate)
+    +buildTimeline(care)
+    +resolvePhaseFromTimeline(timeline, elapsedDays)
+    +isExceptionalManualCondition(condition)
+    +phaseLabel(phase)
+  }
+  class PlantStateService <<service>> {
+    +simulatePlantState(plant, care, simulatedDate)
+  }
+  class TaskWorkflowService <<service>> {
+    +complete(task, materialsUsed, conditionReview, harvest)
+    +reject(task, reason)
+  }
+}
+
+package "Esybės / Models" {
+  class Plant <<entity>> {
+    +name
+    +plant_date
+    +disease
+    +condition
+    +reusable
+    +conditionHistory()
+    +catalogPlant()
+    +harvestRecords()
+  }
+  class PlantCare <<entity>> {
+    +germinating_duration_days
+    +growing_duration_days
+    +flowering_duration_days
+    +mature_duration_days
+    +regenerating_duration_days
+    +reusable
+  }
+  class PlantConditionHistory <<entity>> {
+    +plant_id
+    +measured_at
+    +notes
+    +photo_url
+    +condition
+    +condition_type
+    +plant()
+  }
+  class HarvestRecord <<entity>> {
+    +plant_id
+    +quantity
+    +harvested_on
+    +notes
+    +plant()
+  }
+  class Task <<entity>> {
+    +workflow_context
+    +state
+    +status
+    +plant()
+  }
+}
+
+PlantDetailPage ..> PlantConditionController : create/list conditions
+PlantDetailPage ..> TaskController : complete lifecycle review
+PlantConditionController ..> AccessService : authorizes plant plot
+PlantConditionController ..> PlantConditionHistoryService : records/lists
+PlantConditionController ..> PlantConditionHistoryResource : returns
+ConditionHistoryController --|> PlantConditionController : extends
+TaskController ..> TaskWorkflowService : completes review
+TaskWorkflowService ..> PlantLifecycleService : completeReviewTask()
+PlantLifecycleService ..> PlantConditionHistoryService : records condition
+PlantLifecycleService ..> PlantLifecyclePhaseService : timeline
+PlantStateService ..> PlantCare : reads durations
+
+Plant "1" -- "0..*" PlantConditionHistory : history
+Plant "1" -- "0..*" HarvestRecord : harvests
+Plant "0..*" -- "0..1" PlantCare : effective care via catalog
+Task "0..*" -- "0..1" Plant : reviews
+
+@enduml

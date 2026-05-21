@@ -43,7 +43,7 @@ function AuthShell() {
         </span>
         <span className="brand-copy">
           <span className="brand-title">SAD<em>iS</em></span>
-          <span className="brand-subtitle">Plot GIS and care planner</span>
+          <span className="brand-subtitle">Asmeninio sodo ar daržo informacinė sistema</span>
         </span>
       </div>
       <div className="auth-shell-container">

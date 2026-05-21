@@ -108,7 +108,7 @@ export function AuthProvider({ children }) {
       ...authState,
       isAuthenticated: Boolean(authState.token),
       isAdmin: authState.user?.role === 'admin',
-      displayName: displayName || authState.user?.email || 'Guest',
+      displayName: displayName || authState.user?.email || 'Svečias',
       login,
       register,
       updateAccount,
@@ -123,7 +123,7 @@ export function useAuth() {
   const value = useContext(AuthContext)
 
   if (!value) {
-    throw new Error('useAuth must be used within AuthProvider.')
+    throw new Error('useAuth turi būti naudojamas AuthProvider viduje.')
   }
 
   return value

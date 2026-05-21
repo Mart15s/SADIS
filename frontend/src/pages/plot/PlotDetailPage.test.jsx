@@ -73,9 +73,9 @@ vi.mock('../../components/plot/PlotPlantingDrawer.jsx', () => ({
 }))
 
 vi.mock('../../components/plot/PlotSectionNav.jsx', () => ({
-  default: ({ plotName, sectionLabel = 'Editor', description, meta, actions }) => (
+  default: ({ plotName, sectionLabel = 'editor', description, meta, actions }) => (
     <div data-testid="plot-section-nav">
-      <span>Plots</span>
+      <span>Sklypai</span>
       <span>{sectionLabel}</span>
       <h1>{plotName}</h1>
       <p>{description}</p>
@@ -179,13 +179,13 @@ describe('PlotDetailPage explicit save workspace', () => {
     const { container } = renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('North Plot')).toBeInTheDocument()
+      expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
     })
 
     expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
     expect(screen.getByTestId('plot-section-nav')).toBeInTheDocument()
     expect(container.querySelector('.workspace-page--editor')).not.toBeNull()
-    expect(screen.getByRole('button', { name: 'Save plot changes' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Išsaugoti sklypo pakeitimus' })).toBeDisabled()
   })
 
   it('keeps edits in draft until the explicit save action commits them', async () => {
@@ -201,12 +201,12 @@ describe('PlotDetailPage explicit save workspace', () => {
       expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText('Zone name'), {
+    fireEvent.change(screen.getByLabelText('Zonos pavadinimas'), {
       target: { value: 'Zone A Prime' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply zone details' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pritaikyti zonos duomenis' }))
 
-    const saveButton = screen.getByRole('button', { name: 'Save plot changes' })
+    const saveButton = screen.getByRole('button', { name: 'Išsaugoti sklypo pakeitimus' })
     expect(saveButton).toBeEnabled()
 
     fireEvent.click(saveButton)
@@ -262,15 +262,15 @@ describe('PlotDetailPage explicit save workspace', () => {
       expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText('Zone name'), {
+    fireEvent.change(screen.getByLabelText('Zonos pavadinimas'), {
       target: { value: 'Zone A Prime' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply zone details' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pritaikyti zonos duomenis' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Redaguoti metaduomenis' }))
 
-    expect(globalThis.confirm).toHaveBeenCalledWith('You have unsaved plot changes. Leave without saving this draft?')
+    expect(globalThis.confirm).toHaveBeenCalledWith('Turite neišsaugotų sklypo pakeitimų. Išeiti neišsaugojus juodraščio?')
     expect(screen.queryByText('metadata page')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save plot changes' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Išsaugoti sklypo pakeitimus' })).toBeEnabled()
   })
 
   it('allows route navigation after the user confirms the unsaved-changes warning', async () => {
@@ -288,11 +288,11 @@ describe('PlotDetailPage explicit save workspace', () => {
       expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText('Zone name'), {
+    fireEvent.change(screen.getByLabelText('Zonos pavadinimas'), {
       target: { value: 'Zone A Prime' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply zone details' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pritaikyti zonos duomenis' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Redaguoti metaduomenis' }))
 
     await waitFor(() => {
       expect(screen.getByText('metadata page')).toBeInTheDocument()
@@ -340,7 +340,7 @@ describe('PlotDetailPage explicit save workspace', () => {
     expect(screen.getByTestId('plot-location-map')).toHaveAttribute('data-readonly', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Commit boundary' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Save plot changes' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Išsaugoti sklypo pakeitimus' }))
 
     await waitFor(() => {
       expect(api.commitPlotWorkspace).toHaveBeenCalledTimes(1)
@@ -391,9 +391,9 @@ describe('PlotDetailPage explicit save workspace', () => {
       expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
     })
 
-    expect(screen.getByRole('button', { name: 'Zone view' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Zonų vaizdas' })).toHaveAttribute('aria-pressed', 'true')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Boundary view' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ribų vaizdas' }))
 
     await waitFor(() => {
       expect(screen.getByTestId('plot-location-map')).toHaveTextContent('4 boundary points')
@@ -404,7 +404,7 @@ describe('PlotDetailPage explicit save workspace', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Move boundary point' }))
 
-    const saveButton = screen.getByRole('button', { name: 'Save plot changes' })
+    const saveButton = screen.getByRole('button', { name: 'Išsaugoti sklypo pakeitimus' })
     expect(saveButton).toBeEnabled()
 
     fireEvent.click(saveButton)

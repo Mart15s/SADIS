@@ -1,4 +1,5 @@
 import Badge from '../ui/Badge.jsx'
+import { formatPlantCondition, formatPriority, formatSoilType } from '../../lib/constants.js'
 
 export function MeasurementBadge({ label, value, unit, tone = 'earth', className = '' }) {
   return (
@@ -12,7 +13,7 @@ export function MeasurementBadge({ label, value, unit, tone = 'earth', className
   )
 }
 
-export function MapLayerControl({ title = 'Map layers', items = [], className = '' }) {
+export function MapLayerControl({ title = 'Žemėlapio sluoksniai', items = [], className = '' }) {
   return (
     <div className={`map-layer-control ${className}`.trim()}>
       <span className="map-layer-title">{title}</span>
@@ -33,7 +34,7 @@ export function MapLayerControl({ title = 'Map layers', items = [], className = 
 
 export function PlotScaleControl({ zoom, snapEnabled, dimensionsVisible }) {
   return (
-    <div className="plot-scale-control" aria-label="Plot scale controls">
+    <div className="plot-scale-control" aria-label="Sklypo mastelio valdikliai">
       <div className="plot-scale-ruler" aria-hidden="true">
         <span />
         <span />
@@ -42,7 +43,7 @@ export function PlotScaleControl({ zoom, snapEnabled, dimensionsVisible }) {
       <div className="plot-scale-copy">
         <strong>{zoom}</strong>
         <span>
-          {snapEnabled ? 'Grid snap on' : 'Free placement'} - {dimensionsVisible ? 'measurements visible' : 'measurements hidden'}
+          {snapEnabled ? 'Lygiavimas prie tinklelio įjungtas' : 'Laisvas išdėstymas'} - {dimensionsVisible ? 'matmenys rodomi' : 'matmenys paslėpti'}
         </span>
       </div>
     </div>
@@ -53,13 +54,13 @@ export function ZoneInspector({
   zone,
   measurements,
   plantCount = 0,
-  emptyTitle = 'No zone selected',
-  emptyDescription = 'Select a zone on the plot plan to inspect soil, plants, and dimensions.',
+  emptyTitle = 'Zona nepasirinkta',
+  emptyDescription = 'Pasirinkite zoną sklypo plane, kad matytumėte dirvožemį, augalus ir matmenis.',
 }) {
   if (!zone) {
     return (
       <div className="zone-inspector zone-inspector-empty">
-        <span className="zone-inspector-kicker">Zone inspector</span>
+        <span className="zone-inspector-kicker">Zonos informacija</span>
         <strong>{emptyTitle}</strong>
         <p>{emptyDescription}</p>
       </div>
@@ -69,25 +70,25 @@ export function ZoneInspector({
   return (
     <div className="zone-inspector">
       <div className="zone-inspector-head">
-        <span className="zone-inspector-kicker">Zone inspector</span>
-        <Badge tone="soft">{zone.soil_type}</Badge>
+        <span className="zone-inspector-kicker">Zonos informacija</span>
+        <Badge tone="soft">{formatSoilType(zone.soil_type)}</Badge>
       </div>
       <strong className="zone-inspector-title">{zone.name}</strong>
       <div className="zone-inspector-grid">
-        <MeasurementBadge label="Area" value={measurements?.area ?? '0'} tone="field" />
-        <MeasurementBadge label="Perimeter" value={measurements?.perimeter ?? '0'} tone="earth" />
-        <MeasurementBadge label="Plants" value={plantCount} tone="leaf" />
-        <MeasurementBadge label="Rotation" value={zone.rotation_stage ?? 0} tone="amber" />
+        <MeasurementBadge label="Plotas" value={measurements?.area ?? '0'} tone="field" />
+        <MeasurementBadge label="Perimetras" value={measurements?.perimeter ?? '0'} tone="earth" />
+        <MeasurementBadge label="Augalai" value={plantCount} tone="leaf" />
+        <MeasurementBadge label="Rotacija" value={zone.rotation_stage ?? 0} tone="amber" />
       </div>
       <div className="zone-inspector-note">
-        <span>Side lengths</span>
-        <strong>{measurements?.sideSummary || 'No geometry'}</strong>
+        <span>Kraštinių ilgiai</span>
+        <strong>{measurements?.sideSummary || 'Geometrijos nėra'}</strong>
       </div>
     </div>
   )
 }
 
-export function GardenTimeline({ items = [], emptyText = 'No planning events yet.' }) {
+export function GardenTimeline({ items = [], emptyText = 'Planavimo įvykių dar nėra.' }) {
   return (
     <div className="garden-timeline">
       {items.length > 0 ? items.map((item) => (
@@ -117,7 +118,7 @@ export function PlantStatusBadge({ status, careLinked, className = '' }) {
 
   return (
     <Badge tone={tone} className={`plant-status-badge ${className}`.trim()}>
-      {status || (careLinked === false ? 'Care missing' : 'Planned')}
+      {status ? formatPlantCondition(status) : (careLinked === false ? 'Priežiūros profilis nesusietas' : 'Suplanuota')}
     </Badge>
   )
 }
@@ -132,7 +133,7 @@ export function TaskPriorityBadge({ priority, className = '' }) {
 
   return (
     <Badge tone={tone} className={`task-priority-badge task-priority-${normalized} ${className}`.trim()}>
-      {normalized}
+      {formatPriority(normalized)}
     </Badge>
   )
 }

@@ -100,28 +100,28 @@ class PlotSnapshotService
     {
         if ($action === 'plot_saved') {
             return [
-                'label' => (string) ($metadata['label'] ?? 'Saved plot version'),
-                'summary' => (string) ($metadata['summary'] ?? 'Committed plot workspace changes.'),
+                'label' => (string) ($metadata['label'] ?? 'Išsaugota sklypo versija'),
+                'summary' => (string) ($metadata['summary'] ?? 'Išsaugoti sklypo darbo srities pakeitimai.'),
             ];
         }
 
         if ($action === 'rotation_recorded') {
             return [
-                'label' => 'Saved rotation plan',
-                'summary' => 'Rotation planning changes were confirmed and recorded.',
+                'label' => 'Išsaugotas rotacijos planas',
+                'summary' => 'Rotacijos planavimo pakeitimai patvirtinti ir įrašyti.',
             ];
         }
 
         if ($action === 'plot_updated') {
             return [
-                'label' => 'Saved plot details',
-                'summary' => 'Plot metadata was updated and saved.',
+                'label' => 'Išsaugoti sklypo duomenys',
+                'summary' => 'Sklypo metaduomenys atnaujinti ir išsaugoti.',
             ];
         }
 
         return [
-            'label' => 'Created plot version',
-            'summary' => 'Initial plot version was created.',
+            'label' => 'Sukurta sklypo versija',
+            'summary' => 'Sukurta pradinė sklypo versija.',
         ];
     }
 }

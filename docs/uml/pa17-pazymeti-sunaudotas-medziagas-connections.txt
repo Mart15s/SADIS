@@ -1,0 +1,490 @@
+PA17 Pažymėti sunaudotas medžiagas - sekų diagramos jungčių specifikacija
+
+1. Lifeline sąrašas
+
+- Garden owner — «actor»
+- PlotCalendarPage — «boundary»; source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+- TaskController — «control»; source: backend/app/Http/Controllers/Calendar/TaskController.php
+- CompleteTaskRequest — «control»; source: backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+- AccessService — «service»; source: backend/app/Services/Plot/AccessService.php
+- InventoryService — «service»; source: backend/app/Services/Inventory/InventoryService.php
+- TaskWorkflowService — «service»; source: backend/app/Services/Calendar/TaskWorkflowService.php
+- TaskInventoryCoverageService — «service»; source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+- TaskCalendar — «entity»; source: backend/app/Models/TaskCalendar.php
+- Task — «entity»; source: backend/app/Models/Task.php
+- TaskResourceRequirement — «entity»; source: backend/app/Models/TaskResourceRequirement.php
+- InventoryItem — «entity»; source: backend/app/Models/InventoryItem.php
+- InventoryUsageLog — «entity»; source: backend/app/Models/InventoryUsageLog.php
+
+Routes and API helpers used for audit only, not shown as lifelines:
+- backend/routes/api.php: GET /calendars/{calendar}/tasks; PATCH /tasks/{task}/complete; inventory routes are present but PA17 consumption does not use InventoryController as the main flow.
+- frontend/src/lib/api.js: listCalendarTasks(calendarId, params); completeTask(taskId, payload); apiClient is intentionally hidden.
+- frontend/src/App.jsx: calendar and inventory routes are not shown as lifelines.
+
+2. Visų sekų sąrašas
+
+1. Garden owner -> PlotCalendarPage: handleDayClick(day)
+   Type: async/ui event
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+2. PlotCalendarPage -> PlotCalendarPage: setSelectedDate(day)
+   Type: call
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+3. PlotCalendarPage -> PlotCalendarPage: selected_date_state
+   Type: return
+   Replies to: 2
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+4. PlotCalendarPage -> PlotCalendarPage: setDayModalOpen(true)
+   Type: call
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+5. PlotCalendarPage -> PlotCalendarPage: day_modal_open
+   Type: return
+   Replies to: 4
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+6. PlotCalendarPage -> TaskController: index(calendarId, params)
+   Type: call
+   Source: frontend/src/pages/calendar/PlotCalendarPage.jsx; frontend/src/lib/api.js; backend/app/Http/Controllers/Calendar/TaskController.php
+7. TaskController -> TaskController: authorizeCalendarView(request, calendar, accessService)
+   Type: call
+   Source: backend/app/Http/Controllers/Calendar/TaskController.php
+8. TaskController -> TaskCalendar: loadMissing('plot')
+   Type: call
+   Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Models/TaskCalendar.php
+9. TaskCalendar -> TaskController: calendar_plot
+   Type: return
+   Replies to: 8
+   Source: backend/app/Models/TaskCalendar.php
+10. TaskController -> AccessService: userHasAccess(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php; backend/app/Services/Plot/AccessService.php
+11. AccessService -> TaskController: true
+    Type: return
+    Replies to: 10
+    Source: backend/app/Services/Plot/AccessService.php
+12. TaskController -> TaskController: calendar_view_authorized
+    Type: return
+    Replies to: 7
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php
+13. TaskController -> TaskCalendar: tasks()
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Models/TaskCalendar.php
+14. TaskCalendar -> TaskController: task_query_builder
+    Type: return
+    Replies to: 13
+    Source: backend/app/Models/TaskCalendar.php
+15. TaskController -> Task: with(['plant.plantZone','plantZone','requiredResources'])->get()
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Models/Task.php
+16. Task -> TaskController: tasks
+    Type: return
+    Replies to: 15
+    Source: backend/app/Models/Task.php
+17. TaskController -> InventoryService: attachLiveTaskInventory(owner, tasks)
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Services/Inventory/InventoryService.php
+18. InventoryService -> TaskInventoryCoverageService: summarizeTasksByDate(owner, tasks, false)
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Services/Calendar/TaskInventoryCoverageService.php
+19. TaskInventoryCoverageService -> Task: loadMissing('requiredResources')
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/Task.php
+20. Task -> TaskInventoryCoverageService: tasks_with_requiredResources
+    Type: return
+    Replies to: 19
+    Source: backend/app/Models/Task.php
+21. TaskInventoryCoverageService -> TaskResourceRequirement: required_quantity
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/TaskResourceRequirement.php
+22. TaskResourceRequirement -> TaskInventoryCoverageService: required_quantity
+    Type: return
+    Replies to: 21
+    Source: backend/app/Models/TaskResourceRequirement.php
+23. TaskInventoryCoverageService -> TaskInventoryCoverageService: matchingItems(owner, normalizedName, type, unit, false)
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+24. TaskInventoryCoverageService -> InventoryItem: where(...)->orderBy('id')->get()
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/InventoryItem.php
+25. InventoryItem -> TaskInventoryCoverageService: matching_inventory_items
+    Type: return
+    Replies to: 24
+    Source: backend/app/Models/InventoryItem.php
+26. TaskInventoryCoverageService -> TaskInventoryCoverageService: matching_items
+    Type: return
+    Replies to: 23
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+27. TaskInventoryCoverageService -> InventoryItem: sum('quantity')
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/InventoryItem.php
+28. InventoryItem -> TaskInventoryCoverageService: availableQuantity
+    Type: return
+    Replies to: 27
+    Source: backend/app/Models/InventoryItem.php
+29. TaskInventoryCoverageService -> TaskInventoryCoverageService: max(0, required_quantity - available_quantity)
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+30. TaskInventoryCoverageService -> TaskInventoryCoverageService: shortageQuantity
+    Type: return
+    Replies to: 29
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+31. TaskInventoryCoverageService -> InventoryService: summaries_by_date
+    Type: return
+    Replies to: 18
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+32. InventoryService -> TaskResourceRequirement: setAttribute('available_quantity', detail['available_quantity'])
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/TaskResourceRequirement.php
+33. TaskResourceRequirement -> InventoryService: available_quantity_set
+    Type: return
+    Replies to: 32
+    Source: backend/app/Models/TaskResourceRequirement.php
+34. InventoryService -> TaskResourceRequirement: setAttribute('live_shortage_quantity', detail['shortage_quantity'])
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/TaskResourceRequirement.php
+35. TaskResourceRequirement -> InventoryService: live_shortage_quantity_set
+    Type: return
+    Replies to: 34
+    Source: backend/app/Models/TaskResourceRequirement.php
+36. InventoryService -> TaskController: day_resource_summary
+    Type: return
+    Replies to: 17
+    Source: backend/app/Services/Inventory/InventoryService.php
+37. TaskController -> PlotCalendarPage: TaskResource::collection(tasks)->response()
+    Type: return
+    Replies to: 6
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Http/Resources/Calendar/TaskResource.php
+38. PlotCalendarPage -> PlotCalendarPage: resourceRequirements.map(...)
+    Type: call
+    Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+39. PlotCalendarPage -> PlotCalendarPage: required_resource_quantities_rendered
+    Type: return
+    Replies to: 38
+    Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+40. PlotCalendarPage -> PlotCalendarPage: missingResources.filter(...)
+    Type: call
+    Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+41. PlotCalendarPage -> PlotCalendarPage: task_action_state_rendered
+    Type: return
+    Replies to: 40
+    Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+42. Garden owner -> PlotCalendarPage: handleTaskAction(taskId, 'complete')
+    Type: async/ui event
+    Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+43. PlotCalendarPage -> TaskController: complete(taskId)
+    Type: call
+    Source: frontend/src/pages/calendar/PlotCalendarPage.jsx; frontend/src/lib/api.js; backend/app/Http/Controllers/Calendar/TaskController.php
+44. TaskController -> CompleteTaskRequest: validated('materials_used')
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+45. CompleteTaskRequest -> TaskController: materials_used
+    Type: return
+    Replies to: 44
+    Source: backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+46. TaskController -> CompleteTaskRequest: validated('condition_review')
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+47. CompleteTaskRequest -> TaskController: condition_review
+    Type: return
+    Replies to: 46
+    Source: backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+48. TaskController -> CompleteTaskRequest: validated('harvest')
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+49. CompleteTaskRequest -> TaskController: harvest
+    Type: return
+    Replies to: 48
+    Source: backend/app/Http/Requests/Calendar/CompleteTaskRequest.php
+50. TaskController -> TaskController: authorizeTaskEdit(request, task, accessService)
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php
+51. TaskController -> Task: loadMissing('taskCalendar.plot')
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Models/Task.php
+52. Task -> TaskController: task_calendar_plot
+    Type: return
+    Replies to: 51
+    Source: backend/app/Models/Task.php
+53. TaskController -> AccessService: userCanEdit(owner, plot)
+    Type: call
+    Source: backend/app/Http/Controllers/Concerns/AuthorizesPlotAccess.php; backend/app/Services/Plot/AccessService.php
+54. AccessService -> TaskController: true
+    Type: return
+    Replies to: 53
+    Source: backend/app/Services/Plot/AccessService.php
+55. TaskController -> TaskController: task_edit_authorized
+    Type: return
+    Replies to: 50
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php
+56. TaskController -> TaskWorkflowService: complete(task, materialsUsed, conditionReview, harvest)
+    Type: call
+    Source: backend/app/Http/Controllers/Calendar/TaskController.php; backend/app/Services/Calendar/TaskWorkflowService.php
+57. TaskWorkflowService -> Task: whereKey(task.id)->lockForUpdate()->with([...])->firstOrFail()
+    Type: call
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php; backend/app/Models/Task.php
+58. Task -> TaskWorkflowService: locked_task_with_requiredResources
+    Type: return
+    Replies to: 57
+    Source: backend/app/Models/Task.php
+59. TaskWorkflowService -> TaskWorkflowService: ensureTaskPending(task, 'ivykdyti')
+    Type: call
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php
+60. TaskWorkflowService -> TaskWorkflowService: pending_state_confirmed
+    Type: return
+    Replies to: 59
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php
+61. TaskWorkflowService -> Task: requiredResources->isNotEmpty()
+    Type: call
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php; backend/app/Models/Task.php
+62. Task -> TaskWorkflowService: true
+    Type: return
+    Replies to: 61
+    Source: backend/app/Models/Task.php
+63. TaskWorkflowService -> Task: where(...)->with('requiredResources')->lockForUpdate()->get()
+    Type: call
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php; backend/app/Models/Task.php
+64. Task -> TaskWorkflowService: dayTasks
+    Type: return
+    Replies to: 63
+    Source: backend/app/Models/Task.php
+65. TaskWorkflowService -> InventoryService: assertTaskCanBeCompletedForDay(owner, task, dayTasks)
+    Type: call
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php; backend/app/Services/Inventory/InventoryService.php
+66. InventoryService -> TaskInventoryCoverageService: summarizeTasksByDate(owner, taskCollection, true)
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Services/Calendar/TaskInventoryCoverageService.php
+67. TaskInventoryCoverageService -> Task: loadMissing('requiredResources')
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/Task.php
+68. Task -> TaskInventoryCoverageService: tasks_with_requiredResources
+    Type: return
+    Replies to: 67
+    Source: backend/app/Models/Task.php
+69. TaskInventoryCoverageService -> TaskResourceRequirement: required_quantity
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/TaskResourceRequirement.php
+70. TaskResourceRequirement -> TaskInventoryCoverageService: required_quantity
+    Type: return
+    Replies to: 69
+    Source: backend/app/Models/TaskResourceRequirement.php
+71. TaskInventoryCoverageService -> TaskResourceRequirement: is_consumed
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/TaskResourceRequirement.php
+72. TaskResourceRequirement -> TaskInventoryCoverageService: is_consumed
+    Type: return
+    Replies to: 71
+    Source: backend/app/Models/TaskResourceRequirement.php
+73. TaskInventoryCoverageService -> TaskInventoryCoverageService: matchingItems(owner, normalizedName, type, unit, true)
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+74. TaskInventoryCoverageService -> InventoryItem: where(...)->lockForUpdate()->get()
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/InventoryItem.php
+75. InventoryItem -> TaskInventoryCoverageService: locked_matching_inventory_items
+    Type: return
+    Replies to: 74
+    Source: backend/app/Models/InventoryItem.php
+76. TaskInventoryCoverageService -> TaskInventoryCoverageService: matching_items
+    Type: return
+    Replies to: 73
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+77. TaskInventoryCoverageService -> InventoryItem: sum('quantity')
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php; backend/app/Models/InventoryItem.php
+78. InventoryItem -> TaskInventoryCoverageService: available_quantity
+    Type: return
+    Replies to: 77
+    Source: backend/app/Models/InventoryItem.php
+79. TaskInventoryCoverageService -> TaskInventoryCoverageService: max(0, required_quantity - available_quantity)
+    Type: call
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+80. TaskInventoryCoverageService -> TaskInventoryCoverageService: shortage_quantity
+    Type: return
+    Replies to: 79
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+81. TaskInventoryCoverageService -> InventoryService: inventory_context
+    Type: return
+    Replies to: 66
+    Source: backend/app/Services/Calendar/TaskInventoryCoverageService.php
+82. InventoryService -> TaskWorkflowService: inventory_context
+    Type: return
+    Replies to: 65
+    Source: backend/app/Services/Inventory/InventoryService.php
+83. TaskWorkflowService -> InventoryService: consumeTaskRequirements(owner, task)
+    Type: call
+    Source: backend/app/Services/Calendar/TaskWorkflowService.php; backend/app/Services/Inventory/InventoryService.php
+84. InventoryService -> Task: loadMissing('requiredResources')
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/Task.php
+85. Task -> InventoryService: requiredResources_loaded
+    Type: return
+    Replies to: 84
+    Source: backend/app/Models/Task.php
+86. InventoryService -> InventoryService: prepareTaskRequirementSnapshots(owner, task, true)
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php
+87. InventoryService -> TaskResourceRequirement: required_quantity
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/TaskResourceRequirement.php
+88. TaskResourceRequirement -> InventoryService: required_quantity
+    Type: return
+    Replies to: 87
+    Source: backend/app/Models/TaskResourceRequirement.php
+89. InventoryService -> InventoryItem: matchingItemsQuery(...)->lockForUpdate()->get()
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/InventoryItem.php
+90. InventoryItem -> InventoryService: items
+    Type: return
+    Replies to: 89
+    Source: backend/app/Models/InventoryItem.php
+91. InventoryService -> InventoryService: task_requirement_snapshots
+    Type: return
+    Replies to: 86
+    Source: backend/app/Services/Inventory/InventoryService.php
+92. InventoryService -> InventoryService: buildTaskInventoryContext(snapshots)
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php
+93. InventoryService -> InventoryService: context_available
+    Type: return
+    Replies to: 92
+    Source: backend/app/Services/Inventory/InventoryService.php
+94. InventoryService -> TaskResourceRequirement: is_consumed
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/TaskResourceRequirement.php
+95. TaskResourceRequirement -> InventoryService: is_consumed
+    Type: return
+    Replies to: 94
+    Source: backend/app/Models/TaskResourceRequirement.php
+96. InventoryService -> InventoryItem: quantity
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/InventoryItem.php
+97. InventoryItem -> InventoryService: availableOnItem
+    Type: return
+    Replies to: 96
+    Source: backend/app/Models/InventoryItem.php
+98. InventoryService -> InventoryService: min(availableOnItem, remainingToConsume)
+    Type: call
+    Source: backend/app/Services/Inventory/InventoryService.php
+99. InventoryService -> InventoryService: deductedQuantity
+    Type: return
+    Replies to: 98
+    Source: backend/app/Services/Inventory/InventoryService.php
+100. InventoryService -> InventoryItem: update(['quantity' => quantityAfter])
+     Type: call
+     Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/InventoryItem.php
+101. InventoryItem -> InventoryService: updated_inventory_item
+     Type: return
+     Replies to: 100
+     Source: backend/app/Models/InventoryItem.php
+102. InventoryService -> InventoryUsageLog: create([...])
+     Type: call
+     Source: backend/app/Services/Inventory/InventoryService.php; backend/app/Models/InventoryUsageLog.php
+103. InventoryUsageLog -> InventoryService: usage_log
+     Type: return
+     Replies to: 102
+     Source: backend/app/Models/InventoryUsageLog.php
+104. InventoryService -> InventoryService: remainingToConsume = round(...)
+     Type: call
+     Source: backend/app/Services/Inventory/InventoryService.php
+105. InventoryService -> InventoryService: remaining_to_consume
+     Type: return
+     Replies to: 104
+     Source: backend/app/Services/Inventory/InventoryService.php
+106. InventoryService -> InventoryService: summary[] = ['consumed' => false]
+     Type: call
+     Source: backend/app/Services/Inventory/InventoryService.php
+107. InventoryService -> InventoryService: unchanged_inventory_item
+     Type: return
+     Replies to: 106
+     Source: backend/app/Services/Inventory/InventoryService.php
+108. InventoryService -> TaskWorkflowService: summary
+     Type: return
+     Replies to: 83
+     Source: backend/app/Services/Inventory/InventoryService.php
+109. TaskWorkflowService -> Task: update(['state' => TaskState::Completed, ...])
+     Type: call
+     Source: backend/app/Services/Calendar/TaskWorkflowService.php; backend/app/Models/Task.php
+110. Task -> TaskWorkflowService: completed_task
+     Type: return
+     Replies to: 109
+     Source: backend/app/Models/Task.php
+111. TaskWorkflowService -> TaskController: completion_payload
+     Type: return
+     Replies to: 56
+     Source: backend/app/Services/Calendar/TaskWorkflowService.php
+112. TaskController -> PlotCalendarPage: response()->json([...])
+     Type: return
+     Replies to: 43
+     Source: backend/app/Http/Controllers/Calendar/TaskController.php
+113. PlotCalendarPage -> PlotCalendarPage: setToastMessage('Task completed.')
+     Type: call
+     Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+114. PlotCalendarPage -> PlotCalendarPage: toast_message_rendered
+     Type: return
+     Replies to: 113
+     Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+115. PlotCalendarPage -> PlotCalendarPage: Promise.all([tasksState.reload(), detailState.reload()])
+     Type: call
+     Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+116. PlotCalendarPage -> PlotCalendarPage: reloaded_calendar_state
+     Type: return
+     Replies to: 115
+     Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+117. InventoryService -> InventoryService: throwInsufficientTaskInventory(context)
+     Type: call
+     Source: backend/app/Services/Inventory/InventoryService.php
+118. InventoryService -> InventoryService: ValidationException
+     Type: return
+     Replies to: 117
+     Source: backend/app/Services/Inventory/InventoryService.php
+119. InventoryService -> TaskWorkflowService: ValidationException
+     Type: return
+     Replies to: 65
+     Source: backend/app/Services/Inventory/InventoryService.php
+120. TaskWorkflowService -> TaskController: ValidationException
+     Type: return
+     Replies to: 56
+     Source: backend/app/Services/Calendar/TaskWorkflowService.php
+121. TaskController -> PlotCalendarPage: validation_error_response
+     Type: return
+     Replies to: 43
+     Source: backend/app/Http/Controllers/Calendar/TaskController.php
+122. PlotCalendarPage -> PlotCalendarPage: setError(requestError.message)
+     Type: call
+     Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+123. PlotCalendarPage -> PlotCalendarPage: error_message_rendered
+     Type: return
+     Replies to: 122
+     Source: frontend/src/pages/calendar/PlotCalendarPage.jsx
+
+3. UML fragmentai
+
+- loop: Required resources visibility
+  - Guard: [for each required resource]
+  - Messages: 21-30
+
+- loop: Availability scan
+  - Guard: [for each required resource]
+  - Messages: 69-80
+
+- alt: Resource availability
+  - Operand 1 [available quantity is sufficient]: messages 82-116
+  - Operand 2 [available quantity is insufficient]: messages 117-123
+  - Error operand does not contain InventoryItem update() or InventoryUsageLog create().
+
+- loop: Task resource consumption
+  - Guard: [for each task requirement snapshot]
+  - Messages: 94-107
+
+- alt: Resource consumption requirement
+  - Operand 1 [resource is consumable / is_consumed is true]: messages 96-105
+  - Operand 2 [resource is reusable / is_consumed is false]: messages 106-107
+  - Reusable operand skips quantity decrement and usage log creation.
+
+4. Santrauka
+
+- Synchronous calls: 59
+- Returns: 62
+- Async/UI events: 2
+- Calls without return: 0
+- Alt fragments: 2
+- Loop fragments: 3
+- Opt fragments: 0

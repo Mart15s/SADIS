@@ -49,21 +49,21 @@ export default function ResetPasswordPage() {
   return (
     <div className="page-stack auth-card">
       <PageHeader
-        title="Reset password"
-        description="Use the password reset link sent by email and choose a new password."
+        title="Atkurti slaptažodį"
+        description="Naudokite el. paštu gautą slaptažodžio atkūrimo nuorodą ir pasirinkite naują slaptažodį."
       />
 
       <form className="panel split-form" onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="reset-email">Email</label>
+          <label htmlFor="reset-email">El. paštas</label>
           <input id="reset-email" name="email" type="email" value={form.email} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="reset_code">Reset token</label>
+          <label htmlFor="reset_code">Atkūrimo kodas</label>
           <input id="reset_code" name="reset_code" value={form.reset_code} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="new-password">New password</label>
+          <label htmlFor="new-password">Naujas slaptažodis</label>
           <input
             id="new-password"
             name="password"
@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="new-password-confirmation">Confirm new password</label>
+          <label htmlFor="new-password-confirmation">Pakartokite naują slaptažodį</label>
           <input
             id="new-password-confirmation"
             name="password_confirmation"
@@ -90,10 +90,10 @@ export default function ResetPasswordPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Updating...' : 'Update password'}
+            {submitting ? 'Atnaujinama...' : 'Atnaujinti slaptažodį'}
           </Button>
           <Link to="/login">
-            <Button variant="secondary">Back to sign in</Button>
+            <Button variant="secondary">Grįžti į prisijungimą</Button>
           </Link>
         </div>
       </form>

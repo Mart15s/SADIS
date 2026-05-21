@@ -19,7 +19,7 @@ class TaskResourceRequirementResource extends JsonResource
             'type' => $itemType,
             'unit' => $unit,
             'resource_mode' => $resourceMode,
-            'resource_type_label' => $resourceMode === 'consumable' ? 'Consumable' : 'Reusable',
+            'resource_type_label' => $resourceMode === 'consumable' ? 'Sunaudojama' : 'Daugkartinė',
             'required_quantity' => $this->required_quantity === null ? null : (float) $this->required_quantity,
             'available_quantity' => $this->available_quantity === null ? null : (float) $this->available_quantity,
             'shortage_quantity' => $this->live_shortage_quantity === null

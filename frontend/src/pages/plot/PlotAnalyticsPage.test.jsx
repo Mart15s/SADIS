@@ -66,11 +66,11 @@ describe('PlotAnalyticsPage', () => {
       expect(screen.getByRole('heading', { name: /North Plot/i })).toBeInTheDocument()
     })
 
-    const generateButton = screen.getByRole('button', { name: /Generate analysis/i })
+    const generateButton = screen.getByRole('button', { name: /Generuoti analitiką/i })
 
     expect(generateButton).toBeDisabled()
 
-    await user.click(screen.getByLabelText(/Planning decisions/i))
+    await user.click(screen.getByLabelText(/Planavimo sprendimai/i))
 
     expect(generateButton).toBeEnabled()
 
@@ -82,8 +82,31 @@ describe('PlotAnalyticsPage', () => {
       })
     })
 
-    expect(screen.getByRole('heading', { name: /Planning decisions analysis/i })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /Harvest analysis/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Planavimo sprendimų analizė/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Derliaus analizė/i })).not.toBeInTheDocument()
+  })
+
+  it('limits analytics header badges to the access role and active plot name', async () => {
+    render(
+      <MemoryRouter initialEntries={['/plots/5/analytics']}>
+        <Routes>
+          <Route path="/plots/:plotId/analytics" element={<PlotAnalyticsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /North Plot/i })).toBeInTheDocument()
+    })
+
+    const headerMeta = screen.getByLabelText(/Sklypo metaduomenys/i)
+    const badges = headerMeta.querySelectorAll('.status-badge')
+
+    expect(badges).toHaveLength(2)
+    expect(badges[0]).toHaveTextContent('Savininkas')
+    expect(badges[1]).toHaveTextContent('North Plot')
+    expect(headerMeta).not.toHaveTextContent('Vilnius')
+    expect(headerMeta).not.toHaveTextContent('Pasirinkite analitikos rinkinius')
   })
 
   it('renders warnings and no-data sections without crashing', async () => {
@@ -112,7 +135,7 @@ describe('PlotAnalyticsPage', () => {
         sections_without_data_count: 1,
         has_actionable_data: true,
       },
-      warnings: ['No harvest history is available for the selected plot.'],
+      warnings: ['Derliaus istorijos nėra pasirinktam sklypui.'],
     })
 
     const user = userEvent.setup()
@@ -129,16 +152,16 @@ describe('PlotAnalyticsPage', () => {
       expect(screen.getByRole('heading', { name: /North Plot/i })).toBeInTheDocument()
     })
 
-    await user.click(screen.getByLabelText(/Planning decisions/i))
-    await user.click(screen.getByLabelText(/Harvest/i))
-    await user.click(screen.getByRole('button', { name: /Generate analysis/i }))
+    await user.click(screen.getByLabelText(/Planavimo sprendimai/i))
+    await user.click(screen.getByLabelText(/Derlius/i))
+    await user.click(screen.getByRole('button', { name: /Generuoti analitiką/i }))
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Warnings/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Įspėjimai/i })).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/No harvest history is available for the selected plot/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Harvest analysis/i })).toBeInTheDocument()
-    expect(screen.getByText(/No harvest history is available for this plot yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/Derliaus istorijos nėra pasirinktam sklypui/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Derliaus analizė/i })).toBeInTheDocument()
+    expect(screen.getByText(/Šiam sklypui derliaus istorijos dar nėra/i)).toBeInTheDocument()
   })
 })

@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PA27 Identifikuoti augalo būklę realizacija projekto klasėmis</title>
+  <style>
+    :root { --ink:#172033; --muted:#526070; --paper:#fff; --page:#f5f7fb; --actor:#e8f5e9; --boundary:#dcecff; --control:#ffe1e7; --service:#e7f7ef; --entity:#fff2bf; --fragment:#f8fafc; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
+    main { width:min(2400px, calc(100vw - 32px)); margin:24px auto; background:var(--paper); border:1px solid #d5dbe7; box-shadow:0 12px 30px rgba(15,23,42,.08); padding:24px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:0; }
+    h2 { margin:28px 0 10px; font-size:18px; }
+    .meta { color:var(--muted); font-size:13px; margin-bottom:14px; max-width:1320px; }
+    .comment { border-left:4px solid #8aa5d6; background:#f7faff; padding:10px 14px; margin:12px 0 18px; color:#334155; max-width:1320px; }
+    .legend { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0 18px; font-size:13px; }
+    .legend span { display:inline-flex; gap:6px; align-items:center; }
+    .swatch { width:16px; height:12px; border:1px solid #64748b; display:inline-block; }
+    .canvas { overflow:auto; border:1px solid #dbe3ef; background:#fff; margin-bottom:20px; }
+    svg { display:block; max-width:none; background:#fff; }
+    .uml-title { font-size:18px; font-weight:700; }
+    .participant-name { font-size:11px; font-weight:700; }
+    .stereo { font-size:10px; fill:#5b6472; font-style:italic; }
+    .message { font-size:10.5px; fill:#1f2937; paint-order:stroke; stroke:#fff; stroke-width:4px; stroke-linejoin:round; }
+    .fragment-title { font-size:12px; font-weight:700; fill:#0f172a; }
+    .fragment-cond { font-size:11px; fill:#334155; }
+    .lifeline { stroke:#94a3b8; stroke-width:1.1; stroke-dasharray:6 6; }
+    .call { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .async { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .return { stroke:#64748b; stroke-width:1.05; stroke-dasharray:6 4; marker-end:url(#openArrow); }
+    .fragment { fill:var(--fragment); stroke:#64748b; stroke-width:1.05; }
+    .divider { stroke:#94a3b8; stroke-width:1; stroke-dasharray:5 4; }
+    table { width:100%; border-collapse:collapse; margin:10px 0 18px; font-size:13px; }
+    th, td { border:1px solid #d9e1ee; padding:7px 8px; vertical-align:top; }
+    th { background:#eef3ff; text-align:left; }
+    .sequence-fragment-row td { background:#f8fafc; color:#0f172a; font-weight:700; }
+    .sequence-operand-row td { background:#fff7ed; color:#7c2d12; font-weight:700; }
+    .sequence-end-row td { background:#f1f5f9; color:#475569; font-style:italic; }
+    code { background:#eef2f7; padding:1px 4px; border-radius:3px; }
+    @media print { body { background:#fff; } main { width:100%; margin:0; border:0; box-shadow:none; } .canvas { overflow:visible; page-break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PA27 Identifikuoti augalo būklę realizacija projekto klasėmis</h1>
+  <div class="meta">Diagrama sudaryta pagal realu Laravel ir React koda. PA27 nera atskiras puslapis: aktyvus inicijavimo taskas yra rekomendacinio kalendoriaus generavimas per <code>PlotCalendarPage</code>, <code>CalendarController::store()</code>, <code>TaskCalendarService::generate()</code> ir <code>CalendarGenerationService::generateCalendar()</code>. Pats lifecycle busenos skaiciavimas vyksta per <code>PlantLifecyclePhaseService::resolveSimulatedPhase(plant, care, generationDate)</code>.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#e8f5e9"></i> «actor»</span>
+    <span><i class="swatch" style="background:#dcecff"></i> «boundary»</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> «control»</span>
+    <span><i class="swatch" style="background:#e7f7ef"></i> «service»</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> «entity»</span>
+  </div>
+  <div class="comment">Diagramoje nerodomi <code>routes/api.php</code>, <code>apiClient</code> ir React Router. <code>continue</code> zymejimas yra realus <code>CalendarGenerationService::generateCalendar()</code> valdymo sakinio rezultatas, nes codebase neturi atskiro <code>buildNotPlantedResult()</code> metodo.</div>
+
+  <h2>Augalo bukles identifikavimas rekomendacinio kalendoriaus generavimo metu</h2>
+  <div class="canvas"><svg id="diagram-pa27" role="img" aria-label="Augalo bukles identifikavimas rekomendacinio kalendoriaus generavimo metu"></svg></div>
+
+  <table>
+    <tr><th>Patikrinimas</th><th>Rezultatas</th></tr>
+    <tr><td>PA27 tipas</td><td>Vidinis backend service procesas, pasiekiamas per kalendoriaus generavimo UI.</td></tr>
+    <tr><td>Tikrinama data</td><td><code>generationDate</code> perduodama cikle ir kaip <code>resolveSimulatedPhase(..., generationDate)</code> parametras.</td></tr>
+    <tr><td>Pasodinimo data</td><td>Skaitoma is <code>Plant::plant_date</code>; service viduje naudojama <code>diffInDays(..., false)</code>.</td></tr>
+    <tr><td>Ligos busena</td><td>Aktyviame kalendoriaus kelyje tikrinama <code>Plant::disease</code> ir <code>actualCondition === ConditionType::Diseased->value</code> metode <code>buildBaseActions()</code>.</td></tr>
+    <tr><td>Reply taisykle</td><td>Kiekvienas sinchroninis <code>call</code> turi velesni <code>reply</code>. UI startas yra <code>async</code>.</td></tr>
+  </table>
+
+  <h2>Visų sekų sąrašas</h2>
+  <table id="sequence-table">
+    <thead>
+      <tr>
+        <th>Nr.</th>
+        <th>Iš</th>
+        <th>Į</th>
+        <th>Operacija</th>
+        <th>Jungties tipas</th>
+        <th>Fragmentas / pastaba</th>
+        <th>Replies to</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+<script>
+const colors = {
+  actor: { fill: '#e8f5e9', stroke: '#4f7f52' },
+  boundary: { fill: '#dcecff', stroke: '#4f7fb8' },
+  control: { fill: '#ffe1e7', stroke: '#bf5a6b' },
+  service: { fill: '#e7f7ef', stroke: '#4f8a67' },
+  entity: { fill: '#fff2bf', stroke: '#b08900' },
+};
+
+const participantsByDiagram = {
+  'diagram-pa27': [
+    ['Garden owner', 'actor'],
+    ['PlotCalendarPage', 'boundary'],
+    ['CalendarController', 'control'],
+    ['GenerateCalendarRequest', 'control'],
+    ['AccessService', 'service'],
+    ['TaskCalendarService', 'service'],
+    ['CalendarGenerationService', 'service'],
+    ['PlantCareService', 'service'],
+    ['PlantLifecyclePhaseService', 'service'],
+    ['PlantLifecycleService', 'service'],
+    ['Plot', 'entity'],
+    ['Plant', 'entity'],
+    ['CatalogPlant', 'entity'],
+    ['PlantCare', 'entity'],
+    ['TaskCalendar', 'entity'],
+  ],
+};
+
+const messages = [
+  { nr:1, diagram:'diagram-pa27', from:'Garden owner', to:'PlotCalendarPage', operation:'handleGenerate(event)', type:'async', note:'UI form submit in PlotCalendarPage.' },
+  { nr:2, diagram:'diagram-pa27', from:'PlotCalendarPage', to:'CalendarController', operation:'store(request, plot)', type:'call', note:'api.generateCalendar(plotId, generateForm) -> CalendarController::store().' },
+  { nr:3, diagram:'diagram-pa27', from:'CalendarController', to:'GenerateCalendarRequest', operation:"validated('start_date')", type:'call', note:'GenerateCalendarRequest validated value.' },
+  { nr:4, diagram:'diagram-pa27', from:'GenerateCalendarRequest', to:'CalendarController', operation:'start_date', type:'return', replyTo:3, note:'' },
+  { nr:5, diagram:'diagram-pa27', from:'CalendarController', to:'GenerateCalendarRequest', operation:"validated('end_date')", type:'call', note:'GenerateCalendarRequest validated value.' },
+  { nr:6, diagram:'diagram-pa27', from:'GenerateCalendarRequest', to:'CalendarController', operation:'end_date', type:'return', replyTo:5, note:'' },
+  { nr:7, diagram:'diagram-pa27', from:'CalendarController', to:'CalendarController', operation:'ensureUserCanEditPlot(request, plot, accessService)', type:'call', note:'AuthorizesPlotAccess trait.' },
+  { nr:8, diagram:'diagram-pa27', from:'CalendarController', to:'CalendarController', operation:'resolveGardenOwner(request)', type:'call', note:'AuthorizesPlotAccess trait.' },
+  { nr:9, diagram:'diagram-pa27', from:'CalendarController', to:'CalendarController', operation:'owner', type:'return', replyTo:8, note:'' },
+  { nr:10, diagram:'diagram-pa27', from:'CalendarController', to:'AccessService', operation:'userCanEdit(owner, plot)', type:'call', note:'AccessService::userCanEdit() called by ensureUserCanEditPlot().' },
+  { nr:11, diagram:'diagram-pa27', from:'AccessService', to:'CalendarController', operation:'true', type:'return', replyTo:10, note:'edit access granted.' },
+  { nr:12, diagram:'diagram-pa27', from:'CalendarController', to:'CalendarController', operation:'edit_access_granted', type:'return', replyTo:7, note:'' },
+  { nr:13, diagram:'diagram-pa27', from:'CalendarController', to:'TaskCalendarService', operation:'generate(plot, startDate, endDate)', type:'call', note:'CalendarController::store().' },
+  { nr:14, diagram:'diagram-pa27', from:'TaskCalendarService', to:'CalendarGenerationService', operation:'generateCalendar(plot, startDate, endDate)', type:'call', note:'TaskCalendarService::generate().' },
+  { nr:15, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'Plot', operation:"loadMissing(['gardenOwner','plantZones.rotationHistory','plantZones.plants.catalogPlant.plantCare','plantZones.plants.conditionHistory','plantZones.plants.harvestRecords'])", type:'call', note:'CalendarGenerationService::generateCalendar().' },
+  { nr:16, diagram:'diagram-pa27', from:'Plot', to:'CalendarGenerationService', operation:'plot_relations_loaded', type:'return', replyTo:15, note:'' },
+  { nr:17, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'collectPlants(plot)', type:'call', note:'Private method in CalendarGenerationService.' },
+  { nr:18, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'plants', type:'return', replyTo:17, note:'' },
+
+  { nr:19, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'PlantCareService', operation:'resolveEffectivePlantCare(plant)', type:'call', note:'[for each plant being prepared] Ensures reusable care profile exists.' },
+  { nr:20, diagram:'diagram-pa27', from:'PlantCareService', to:'PlantCareService', operation:'ensureLinkedCareProfile(plant, null)', type:'call', note:'PlantCareService::resolveEffectivePlantCare().' },
+  { nr:21, diagram:'diagram-pa27', from:'PlantCareService', to:'PlantCareService', operation:'ensureCatalogPlantLink(plant)', type:'call', note:'Private method in PlantCareService.' },
+  { nr:22, diagram:'diagram-pa27', from:'PlantCareService', to:'PlantCareService', operation:'catalogPlant', type:'return', replyTo:21, note:'' },
+  { nr:23, diagram:'diagram-pa27', from:'PlantCareService', to:'CatalogPlant', operation:'plantCare()', type:'call', note:'CatalogPlant::plantCare() relation.' },
+  { nr:24, diagram:'diagram-pa27', from:'CatalogPlant', to:'PlantCareService', operation:'plant_care', type:'return', replyTo:23, note:'' },
+  { nr:25, diagram:'diagram-pa27', from:'PlantCareService', to:'PlantCareService', operation:'assignCareToPlant(plant, plantCare)', type:'call', note:'Private method may synchronize reusable flag.' },
+  { nr:26, diagram:'diagram-pa27', from:'PlantCareService', to:'PlantCareService', operation:'care_assigned', type:'return', replyTo:25, note:'' },
+  { nr:27, diagram:'diagram-pa27', from:'PlantCareService', to:'PlantCareService', operation:'linked_plant_care', type:'return', replyTo:20, note:'' },
+  { nr:28, diagram:'diagram-pa27', from:'PlantCareService', to:'CalendarGenerationService', operation:'plant_care', type:'return', replyTo:19, note:'' },
+
+  { nr:29, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'TaskCalendar', operation:'create(calendar_attributes)', type:'call', note:'TaskCalendar::query()->create([...]).' },
+  { nr:30, diagram:'diagram-pa27', from:'TaskCalendar', to:'CalendarGenerationService', operation:'calendar', type:'return', replyTo:29, note:'' },
+  { nr:31, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'Plant', operation:"getAttribute('plant_date')", type:'call', note:'[for each generation date][for each plant] Planting date check.' },
+  { nr:32, diagram:'diagram-pa27', from:'Plant', to:'CalendarGenerationService', operation:'plant_date', type:'return', replyTo:31, note:'' },
+  { nr:33, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'lt(plant_date->copy()->startOfDay())', type:'call', note:'Checks whether generationDate is before planting date.' },
+  { nr:34, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'check_date_before_planting_boolean', type:'return', replyTo:33, note:'' },
+
+  { nr:35, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'continue', type:'call', note:'[check date is before planting date] Real PHP control statement; no PA27 service call is made.' },
+  { nr:36, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'plant_day_skipped', type:'return', replyTo:35, note:'No disease check and no lifecycle timeline in this branch.' },
+
+  { nr:37, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'Plant', operation:'effectivePlantCare()', type:'call', note:'[check date is on or after planting date] Plant::effectivePlantCare().' },
+  { nr:38, diagram:'diagram-pa27', from:'Plant', to:'CalendarGenerationService', operation:'plant_care', type:'return', replyTo:37, note:'' },
+  { nr:39, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'PlantLifecyclePhaseService', operation:'resolveSimulatedPhase(plant, care, generationDate)', type:'call', note:'PA27 lifecycle phase identification call.' },
+  { nr:40, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'Plant', operation:"getAttribute('plant_date')", type:'call', note:'Plant date is read again inside resolveSimulatedPhase().' },
+  { nr:41, diagram:'diagram-pa27', from:'Plant', to:'PlantLifecyclePhaseService', operation:'plant_date', type:'return', replyTo:40, note:'' },
+  { nr:42, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'copy()->startOfDay()->diffInDays(forDate->copy()->startOfDay(), false)', type:'call', note:'Calculates elapsed days from planting.' },
+  { nr:43, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'elapsedDays', type:'return', replyTo:42, note:'' },
+  { nr:44, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'Plant', operation:"getAttribute('condition')", type:'call', note:'Reads actual manual condition.' },
+  { nr:45, diagram:'diagram-pa27', from:'Plant', to:'PlantLifecyclePhaseService', operation:'actualCondition', type:'return', replyTo:44, note:'' },
+  { nr:46, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'buildTimeline(care)', type:'call', note:'Timeline is built from PlantCare durations.' },
+  { nr:47, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantCare', operation:"getAttribute('germinating_duration_days')", type:'call', note:'PlantCare duration field.' },
+  { nr:48, diagram:'diagram-pa27', from:'PlantCare', to:'PlantLifecyclePhaseService', operation:'germinating_duration_days', type:'return', replyTo:47, note:'' },
+  { nr:49, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantCare', operation:"getAttribute('growing_duration_days')", type:'call', note:'PlantCare duration field.' },
+  { nr:50, diagram:'diagram-pa27', from:'PlantCare', to:'PlantLifecyclePhaseService', operation:'growing_duration_days', type:'return', replyTo:49, note:'' },
+  { nr:51, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantCare', operation:"getAttribute('flowering_duration_days')", type:'call', note:'PlantCare duration field.' },
+  { nr:52, diagram:'diagram-pa27', from:'PlantCare', to:'PlantLifecyclePhaseService', operation:'flowering_duration_days', type:'return', replyTo:51, note:'' },
+  { nr:53, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantCare', operation:"getAttribute('mature_duration_days')", type:'call', note:'PlantCare duration field.' },
+  { nr:54, diagram:'diagram-pa27', from:'PlantCare', to:'PlantLifecyclePhaseService', operation:'mature_duration_days', type:'return', replyTo:53, note:'' },
+  { nr:55, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantCare', operation:"getAttribute('regenerating_duration_days')", type:'call', note:'PlantCare duration field.' },
+  { nr:56, diagram:'diagram-pa27', from:'PlantCare', to:'PlantLifecyclePhaseService', operation:'regenerating_duration_days', type:'return', replyTo:55, note:'' },
+  { nr:57, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'lifecycle_timeline', type:'return', replyTo:46, note:'' },
+  { nr:58, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'resolvePhaseFromTimeline(timeline, elapsedDays)', type:'call', note:'PlantLifecyclePhaseService::resolvePhaseFromTimeline().' },
+  { nr:59, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'current_phase', type:'return', replyTo:58, note:'' },
+  { nr:60, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'resolvePhaseFromTimeline(timeline, elapsedDays - 1)', type:'call', note:'Used to detect transition day.' },
+  { nr:61, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'previous_phase', type:'return', replyTo:60, note:'' },
+  { nr:62, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'isExceptionalManualCondition(actualCondition)', type:'call', note:'Marks diseased/dried manual condition as exceptional.' },
+  { nr:63, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'exceptional_boolean', type:'return', replyTo:62, note:'' },
+  { nr:64, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:"phaseLabel(current['phase'])", type:'call', note:'PlantLifecyclePhaseService::phaseLabel().' },
+  { nr:65, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'PlantLifecyclePhaseService', operation:'phase_label', type:'return', replyTo:64, note:'' },
+  { nr:66, diagram:'diagram-pa27', from:'PlantLifecyclePhaseService', to:'CalendarGenerationService', operation:'simulated_state', type:'return', replyTo:39, note:'Contains elapsed_days_from_planted, simulated_phase, transition and actual_condition.' },
+
+  { nr:67, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'buildBaseActions(plant, care, simulatedState)', type:'call', note:'Uses simulated state and disease flags to decide base actions.' },
+  { nr:68, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'Plant', operation:"getAttribute('disease')", type:'call', note:'Plant disease boolean.' },
+  { nr:69, diagram:'diagram-pa27', from:'Plant', to:'CalendarGenerationService', operation:'disease_boolean', type:'return', replyTo:68, note:'' },
+  { nr:70, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:"plant.disease || actualCondition === ConditionType::Diseased->value", type:'call', note:'Real condition in buildBaseActions().' },
+  { nr:71, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'is_diseased', type:'return', replyTo:70, note:'' },
+
+  { nr:72, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:"resourceRequirement('Fungicide', InventoryItemType::Material, 1, 'l', true)", type:'call', note:'[plant is diseased] Treatment material requirement.' },
+  { nr:73, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'fungicide_requirement', type:'return', replyTo:72, note:'' },
+  { nr:74, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:"resourceRequirement('Sprayer', InventoryItemType::Tool, 1, 'unit', false)", type:'call', note:'[plant is diseased] Treatment tool requirement.' },
+  { nr:75, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'sprayer_requirement', type:'return', replyTo:74, note:'' },
+  { nr:76, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'treatment_actions', type:'return', replyTo:67, note:'Disease branch returns spray action; normal lifecycle action building is skipped.' },
+
+  { nr:77, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'isIntervalDue(daysSincePlanting, care->watering_interval_days, 0)', type:'call', note:'[plant is not diseased] Watering interval check.' },
+  { nr:78, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'watering_due', type:'return', replyTo:77, note:'' },
+  { nr:79, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'isIntervalDue(daysSincePlanting, care->fertilizing_interval_days, establishmentOffset)', type:'call', note:'[plant is not diseased] Fertilizing interval check.' },
+  { nr:80, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'fertilizing_due', type:'return', replyTo:79, note:'' },
+  { nr:81, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'isIntervalDue(daysSincePlanting, care->pest_check_interval_days, 0)', type:'call', note:'[plant is not diseased] Pest inspection interval check.' },
+  { nr:82, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'pest_check_due', type:'return', replyTo:81, note:'' },
+  { nr:83, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'base_actions', type:'return', replyTo:67, note:'Normal branch returns lifecycle interval actions.' },
+
+  { nr:84, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'PlantLifecycleService', operation:'buildActionsForDate(plant, care, simulatedState, generationDate, conditionHistory, harvestRecords)', type:'call', note:'Lifecycle review and harvest action generation.' },
+  { nr:85, diagram:'diagram-pa27', from:'PlantLifecycleService', to:'PlantLifecycleService', operation:'shouldCreateHarvestTask(plant, care, generationDate, harvestRecords)', type:'call', note:'Private method in PlantLifecycleService.' },
+  { nr:86, diagram:'diagram-pa27', from:'PlantLifecycleService', to:'PlantLifecycleService', operation:'harvest_task_decision', type:'return', replyTo:85, note:'' },
+  { nr:87, diagram:'diagram-pa27', from:'PlantLifecycleService', to:'CalendarGenerationService', operation:'lifecycle_actions', type:'return', replyTo:84, note:'' },
+  { nr:88, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'array_merge(base_actions, lifecycle_actions)', type:'call', note:'Combines PA27-derived action context.' },
+  { nr:89, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'actions', type:'return', replyTo:88, note:'' },
+  { nr:90, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'applyWeatherRules(actions, plant, care, simulatedState, weatherData, weatherContext)', type:'call', note:'Weather rules consume simulated_state after PA27.' },
+  { nr:91, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'weather_adjusted_actions', type:'return', replyTo:90, note:'' },
+  { nr:92, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'deduplicateActions(actions)', type:'call', note:'Final per-day action normalization.' },
+  { nr:93, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'CalendarGenerationService', operation:'deduplicated_actions', type:'return', replyTo:92, note:'' },
+  { nr:94, diagram:'diagram-pa27', from:'CalendarGenerationService', to:'TaskCalendarService', operation:'calendar', type:'return', replyTo:14, note:'Generated calendar with tasks and simulated_state context.' },
+  { nr:95, diagram:'diagram-pa27', from:'TaskCalendarService', to:'CalendarController', operation:'calendar', type:'return', replyTo:13, note:'' },
+  { nr:96, diagram:'diagram-pa27', from:'CalendarController', to:'PlotCalendarPage', operation:'calendar_response', type:'return', replyTo:2, note:'HTTP JSON response; API helper lifeline hidden.' },
+  { nr:97, diagram:'diagram-pa27', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'setSelectedCalendarId(created.id)', type:'call', note:'UI selects generated calendar.' },
+  { nr:98, diagram:'diagram-pa27', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'selected_calendar_updated', type:'return', replyTo:97, note:'' },
+  { nr:99, diagram:'diagram-pa27', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:"setToastMessage('Calendar generated successfully.')", type:'call', note:'UI feedback after generation.' },
+  { nr:100, diagram:'diagram-pa27', from:'PlotCalendarPage', to:'PlotCalendarPage', operation:'toast_rendered', type:'return', replyTo:99, note:'' },
+];
+
+const fragments = [
+  { diagram:'diagram-pa27', kind:'loop', guard:'[for each plant being prepared]', start:19, end:28 },
+  { diagram:'diagram-pa27', kind:'loop', guard:'[for each generation date]', start:31, end:93 },
+  { diagram:'diagram-pa27', kind:'loop', guard:'[for each plant in generation date]', start:31, end:93 },
+  {
+    diagram:'diagram-pa27',
+    kind:'alt',
+    title:'Check date relative to planting date',
+    start:35,
+    end:93,
+    operands:[
+      { guard:'[check date is before planting date]', start:35, end:36 },
+      { guard:'[check date is on or after planting date]', start:37, end:93 },
+    ],
+  },
+  {
+    diagram:'diagram-pa27',
+    kind:'loop',
+    guard:'[for each configured lifecycle duration in PlantCare]',
+    start:47,
+    end:56,
+  },
+  {
+    diagram:'diagram-pa27',
+    kind:'alt',
+    title:'Current disease condition',
+    start:72,
+    end:83,
+    operands:[
+      { guard:'[plant is diseased]', start:72, end:76 },
+      { guard:'[plant is not diseased]', start:77, end:83 },
+    ],
+  },
+];
+
+const diagrams = [
+  { id:'diagram-pa27', title:'Augalo bukles identifikavimas rekomendacinio kalendoriaus generavimo metu', from:1, to:100 },
+];
+
+function el(name, attrs = {}, text = null) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  if (text !== null) node.textContent = text;
+  return node;
+}
+
+function addText(svg, text, x, y, attrs = {}) {
+  svg.appendChild(el('text', { x, y, ...attrs }, text));
+}
+
+function line(svg, x1, y1, x2, y2, cls) {
+  svg.appendChild(el('line', { x1, y1, x2, y2, class: cls }));
+}
+
+function wrapText(svg, text, x, y, maxChars, attrs = {}) {
+  const words = String(text).split(' ');
+  const lines = [];
+  let current = '';
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  });
+  if (current) lines.push(current);
+  lines.forEach((lineText, index) => addText(svg, lineText, x, y + index * 12, attrs));
+}
+
+function renderDiagram(diagram) {
+  const svg = document.getElementById(diagram.id);
+  const participants = participantsByDiagram[diagram.id];
+  const diagramMessages = messages.filter((message) => message.diagram === diagram.id && message.nr >= diagram.from && message.nr <= diagram.to);
+  const left = 90;
+  const top = 82;
+  const gap = 165;
+  const boxW = 132;
+  const boxH = 48;
+  const rowH = 34;
+  const bottomPad = 80;
+  const width = left * 2 + gap * (participants.length - 1) + boxW;
+  const height = top + boxH + diagramMessages.length * rowH + bottomPad;
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  svg.innerHTML = '';
+
+  const defs = el('defs');
+  const arrow = el('marker', { id:'arrow', markerWidth:10, markerHeight:10, refX:9, refY:3, orient:'auto', markerUnits:'strokeWidth' });
+  arrow.appendChild(el('path', { d:'M0,0 L0,6 L9,3 z', fill:'#334155' }));
+  const openArrow = el('marker', { id:'openArrow', markerWidth:10, markerHeight:10, refX:9, refY:3, orient:'auto', markerUnits:'strokeWidth' });
+  openArrow.appendChild(el('path', { d:'M0,0 L9,3 L0,6', fill:'none', stroke:'#64748b', 'stroke-width':1.2 }));
+  defs.appendChild(arrow);
+  defs.appendChild(openArrow);
+  svg.appendChild(defs);
+
+  addText(svg, diagram.title, left, 30, { class:'uml-title' });
+  const xByName = new Map();
+  participants.forEach(([name, kind], index) => {
+    const x = left + index * gap;
+    const style = colors[kind];
+    xByName.set(name, x + boxW / 2);
+    svg.appendChild(el('rect', { x, y:top, width:boxW, height:boxH, rx:8, fill:style.fill, stroke:style.stroke, 'stroke-width':1.2 }));
+    addText(svg, `«${kind}»`, x + boxW / 2, top + 17, { class:'stereo', 'text-anchor':'middle' });
+    wrapText(svg, name, x + boxW / 2, top + 33, 18, { class:'participant-name', 'text-anchor':'middle' });
+    line(svg, x + boxW / 2, top + boxH, x + boxW / 2, height - 28, 'lifeline');
+  });
+
+  const yFor = (nr) => top + boxH + 24 + (diagramMessages.findIndex((message) => message.nr === nr) * rowH);
+
+  fragments.filter((fragment) => fragment.diagram === diagram.id).forEach((fragment) => {
+    const startY = yFor(fragment.start) - 20;
+    const endY = yFor(fragment.end) + 18;
+    svg.appendChild(el('rect', { x:44, y:startY, width:width - 88, height:endY - startY, class:'fragment' }));
+    addText(svg, fragment.kind, 56, startY + 15, { class:'fragment-title' });
+    if (fragment.kind === 'alt') {
+      addText(svg, fragment.title, 90, startY + 15, { class:'fragment-cond' });
+      fragment.operands.forEach((operand, index) => {
+        const operandY = yFor(operand.start) - 8;
+        addText(svg, operand.guard, 68, operandY, { class:'fragment-cond' });
+        if (index > 0) line(svg, 44, operandY - 14, width - 44, operandY - 14, 'divider');
+      });
+    } else {
+      addText(svg, fragment.guard, 90, startY + 15, { class:'fragment-cond' });
+    }
+  });
+
+  diagramMessages.forEach((message) => {
+    const y = yFor(message.nr);
+    const x1 = xByName.get(message.from);
+    const x2 = xByName.get(message.to);
+    const cls = message.type === 'return' ? 'return' : message.type === 'async' ? 'async' : 'call';
+    line(svg, x1, y, x2, y, cls);
+    const labelX = x1 === x2 ? x1 + 12 : Math.min(x1, x2) + Math.abs(x2 - x1) / 2;
+    const anchor = x1 === x2 ? 'start' : 'middle';
+    wrapText(svg, `${message.nr}. ${message.operation}`, labelX, y - 6, x1 === x2 ? 34 : 44, { class:'message', 'text-anchor':anchor });
+  });
+}
+
+function fragmentRowsFor(messageNr) {
+  const rows = [];
+  fragments.forEach((fragment) => {
+    if (fragment.start === messageNr) {
+      if (fragment.kind === 'alt') {
+        rows.push({ type:'fragment-start', text:`alt pradžia: ${fragment.title}` });
+      } else {
+        rows.push({ type:'fragment-start', text:`${fragment.kind} pradžia ${fragment.guard}` });
+      }
+    }
+    if (fragment.kind === 'alt') {
+      fragment.operands.forEach((operand, index) => {
+        if (operand.start === messageNr) rows.push({ type:'operand-start', text:`[${index + 1} if: ${operand.guard.replace(/^\[|\]$/g, '')}]` });
+      });
+    }
+  });
+  return rows;
+}
+
+function fragmentEndRowsFor(messageNr) {
+  const rows = [];
+  fragments.forEach((fragment) => {
+    if (fragment.kind === 'alt') {
+      fragment.operands.forEach((operand, index) => {
+        if (operand.end === messageNr) rows.push({ type:'operand-end', text:`[${index + 1} if pabaiga]` });
+      });
+    }
+    if (fragment.end === messageNr) {
+      rows.push({ type:'fragment-end', text:fragment.kind === 'alt' ? 'alt pabaiga' : `${fragment.kind} pabaiga` });
+    }
+  });
+  return rows;
+}
+
+function appendMarkerRow(tbody, row) {
+  const tr = document.createElement('tr');
+  tr.className = row.type === 'operand-start' ? 'sequence-operand-row' : 'sequence-end-row';
+  if (row.type === 'fragment-start') tr.className = 'sequence-fragment-row';
+  const td = document.createElement('td');
+  td.colSpan = 7;
+  td.textContent = row.text;
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+}
+
+function renderSequenceTable() {
+  const tbody = document.querySelector('#sequence-table tbody');
+  messages.forEach((message) => {
+    fragmentRowsFor(message.nr).forEach((row) => appendMarkerRow(tbody, row));
+    const tr = document.createElement('tr');
+    [message.nr, message.from, message.to, message.operation, message.type === 'call' ? 'sinchroninis' : message.type === 'return' ? 'reply' : 'asinchroninis', message.note ?? '', message.replyTo ?? ''].forEach((value) => {
+      const td = document.createElement('td');
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+    fragmentEndRowsFor(message.nr).forEach((row) => appendMarkerRow(tbody, row));
+  });
+}
+
+diagrams.forEach(renderDiagram);
+renderSequenceTable();
+</script>
+</main>
+</body>
+</html>

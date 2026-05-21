@@ -19,11 +19,15 @@ services:
         value: true
       - key: RUN_DEMO_SEEDER
         value: false
+      - key: RUN_DEMO1_RICH_SEEDER
+        value: false
       - key: DEMO_SEEDER_CLASS
         value: CurrentVersionDemoSeeder
       - key: APP_KEY
         sync: false
       - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
         sync: false
       - key: DATABASE_URL
         sync: false

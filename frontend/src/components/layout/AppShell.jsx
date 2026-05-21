@@ -16,7 +16,7 @@ export default function AppShell() {
     /^\/plots\/new$/.test(location.pathname)
     || /^\/plots\/[^/]+(?:\/(?:calendar|history|harvests|analytics|sharing|rotation))?$/.test(location.pathname)
   )
-  const isPlotEditorRoute = /^\/plots\/new$/.test(location.pathname) || /^\/plots\/[^/]+$/.test(location.pathname)
+  const isPloteditorRoute = /^\/plots\/new$/.test(location.pathname) || /^\/plots\/[^/]+$/.test(location.pathname)
   const [pageHeader, setPageHeader] = useState(null)
   const pageChromeContext = useMemo(() => ({
     registerPageHeader(id, header) {
@@ -43,13 +43,13 @@ export default function AppShell() {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
         />
-        <main className={`shell-main ${isPlotEditorRoute ? 'shell-main--plot-editor' : ''}`.trim()}>
+        <main className={`shell-main ${isPloteditorRoute ? 'shell-main--plot-editor' : ''}`.trim()}>
           {isWorkspaceRoute ? null : <Topbar isWide={isWorkspaceRoute} pageHeader={activePageHeader} />}
           <div
             className={[
               'page-container',
               isWorkspaceRoute ? 'page-container-wide page-container-workspace' : '',
-              isPlotEditorRoute ? 'page-container-plot-editor' : '',
+              isPloteditorRoute ? 'page-container-plot-editor' : '',
             ].filter(Boolean).join(' ')}
           >
             <Outlet />

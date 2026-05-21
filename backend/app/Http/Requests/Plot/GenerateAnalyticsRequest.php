@@ -48,12 +48,12 @@ class GenerateAnalyticsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'analysisTypes.required' => 'Select at least one analysis type.',
-            'analysisTypes.array' => 'Analysis types must be provided as an array.',
-            'analysisTypes.min' => 'Select at least one analysis type.',
-            'analysisTypes.*.required' => 'Analysis type values cannot be empty.',
-            'analysisTypes.*.in' => 'The selected analysis type is not supported.',
-            'analysisType.in' => 'The selected analysis type is not supported.',
+            'analysisTypes.required' => 'Pasirinkite bent vieną analizės tipą.',
+            'analysisTypes.array' => 'Analizės tipai turi būti pateikti kaip sąrašas.',
+            'analysisTypes.min' => 'Pasirinkite bent vieną analizės tipą.',
+            'analysisTypes.*.required' => 'Analizės tipo reikšmė negali būti tuščia.',
+            'analysisTypes.*.in' => 'Pasirinktas analizės tipas nepalaikomas.',
+            'analysisType.in' => 'Pasirinktas analizės tipas nepalaikomas.',
         ];
     }
 
@@ -68,7 +68,7 @@ class GenerateAnalyticsRequest extends FormRequest
                 }
 
                 if (count($analysisTypes) !== count(array_unique($analysisTypes))) {
-                    $validator->errors()->add('analysisTypes', 'Duplicate analysis types are not allowed.');
+                    $validator->errors()->add('analysisTypes', 'Pasikartojantys analizės tipai neleidžiami.');
                 }
             },
         ];

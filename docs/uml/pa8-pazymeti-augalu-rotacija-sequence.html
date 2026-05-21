@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PA8 Pažymėti augalų rotaciją realizacija projekto klasėmis</title>
+  <style>
+    :root { --ink:#172033; --muted:#526070; --paper:#fff; --page:#f5f7fb; --actor:#e8f5e9; --boundary:#dcecff; --control:#ffe1e7; --service:#e7f7ef; --entity:#fff2bf; --fragment:#f8fafc; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
+    main { width:min(2200px, calc(100vw - 32px)); margin:24px auto; background:var(--paper); border:1px solid #d5dbe7; box-shadow:0 12px 30px rgba(15,23,42,.08); padding:24px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:0; }
+    h2 { margin:28px 0 10px; font-size:18px; }
+    .meta { color:var(--muted); font-size:13px; margin-bottom:14px; max-width:1250px; }
+    .comment { border-left:4px solid #8aa5d6; background:#f7faff; padding:10px 14px; margin:12px 0 18px; color:#334155; max-width:1250px; }
+    .legend { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0 18px; font-size:13px; }
+    .legend span { display:inline-flex; gap:6px; align-items:center; }
+    .swatch { width:16px; height:12px; border:1px solid #64748b; display:inline-block; }
+    .canvas { overflow:auto; border:1px solid #dbe3ef; background:#fff; margin-bottom:20px; }
+    svg { display:block; max-width:none; background:#fff; }
+    .uml-title { font-size:18px; font-weight:700; }
+    .participant-name { font-size:11px; font-weight:700; }
+    .stereo { font-size:10px; fill:#5b6472; font-style:italic; }
+    .message { font-size:10.5px; fill:#1f2937; paint-order:stroke; stroke:#fff; stroke-width:4px; stroke-linejoin:round; }
+    .fragment-title { font-size:12px; font-weight:700; fill:#0f172a; }
+    .fragment-cond { font-size:11px; fill:#334155; }
+    .lifeline { stroke:#94a3b8; stroke-width:1.1; stroke-dasharray:6 6; }
+    .call { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .async { stroke:#334155; stroke-width:1.2; marker-end:url(#arrow); }
+    .return { stroke:#64748b; stroke-width:1.05; stroke-dasharray:6 4; marker-end:url(#openArrow); }
+    .fragment { fill:var(--fragment); stroke:#64748b; stroke-width:1.05; }
+    .divider { stroke:#94a3b8; stroke-width:1; stroke-dasharray:5 4; }
+    table { width:100%; border-collapse:collapse; margin:10px 0 18px; font-size:13px; }
+    th, td { border:1px solid #d9e1ee; padding:7px 8px; vertical-align:top; }
+    th { background:#eef3ff; text-align:left; }
+    .sequence-fragment-row td { background:#f8fafc; color:#0f172a; font-weight:700; }
+    .sequence-operand-row td { background:#fff7ed; color:#7c2d12; font-weight:700; }
+    .sequence-end-row td { background:#f1f5f9; color:#475569; font-style:italic; }
+    code { background:#eef2f7; padding:1px 4px; border-radius:3px; }
+    @media print { body { background:#fff; } main { width:100%; margin:0; border:0; box-shadow:none; } .canvas { overflow:visible; page-break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PA8 Pažymėti augalų rotaciją realizacija projekto klasėmis</h1>
+  <div class="meta">PA8 rodoma projekto lygio realizacija pagal atnaujint? veiklos diagram?: rotacijos istorijos patikra, planavimo istorijos per?i?ros kontekstas, laikino rotacijos plano generavimas, rankinis koregavimas, patvirtinimas arba atmetimas.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#e8f5e9"></i> «actor»</span>
+    <span><i class="swatch" style="background:#dcecff"></i> «boundary»</span>
+    <span><i class="swatch" style="background:#ffe1e7"></i> «control»</span>
+    <span><i class="swatch" style="background:#e7f7ef"></i> «service»</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> «entity»</span>
+  </div>
+  <div class="comment">Diagrama supaprastinta iki projekto realizacijos lygio: paslėpti framework, ORM, query-builder, kolekcijų ir React state valdymo vidiniai kvietimai. Galutinėje diagramoje yra 78 žinutės.</div>
+  <h2>Rotacijos planavimo prad?ia ir istorijos kontekstas</h2><div class="canvas"><svg id="diagram-pa8-open" role="img" aria-label="Rotacijos planavimo prad?ia ir istorijos kontekstas"></svg></div>
+  <h2>Laikino rotacijos plano generavimas</h2><div class="canvas"><svg id="diagram-pa8-draft" role="img" aria-label="Laikino rotacijos plano generavimas"></svg></div>
+  <h2>Veiksmo pasirinkimas: redaguoti, patvirtinti arba atmesti</h2><div class="canvas"><svg id="diagram-pa8-action" role="img" aria-label="Veiksmo pasirinkimas: redaguoti, patvirtinti arba atmesti"></svg></div>
+  <table>
+    <tr><th>Patikrinimas</th><th>Rezultatas</th></tr>
+    <tr><td>Route / API helper lifeline</td><td>Nerodomi diagramoje; naudoti tik šaltinių auditui.</td></tr>
+    <tr><td>Access check detalumas</td><td>Rodomas kaip aukšto lygio <code>ensureUserCanViewPlot()</code>, <code>ensureUserCanEditPlot()</code> arba <code>getAccessiblePlots()</code>.</td></tr>
+    <tr><td>ORM / query-builder detalumas</td><td>Nerodomi <code>where()</code>, <code>exists()</code>, <code>map()</code>, <code>count()</code>, <code>load()</code>, relation kvietimai ir panašūs techniniai metodai.</td></tr>
+  </table>
+  <h2>Visų sekų sąrašas</h2>
+  <table id="sequence-table">
+    <thead><tr><th>Nr.</th><th>Iš</th><th>Į</th><th>Operacija</th><th>Jungties tipas</th><th>Atsako į / Replies to</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</main>
+<script>
+const colors = {"actor":{"fill":"#e8f5e9","stroke":"#4f7f52"},"boundary":{"fill":"#dcecff","stroke":"#4f7fb8"},"control":{"fill":"#ffe1e7","stroke":"#bf5a6b"},"service":{"fill":"#e7f7ef","stroke":"#4f8a67"},"entity":{"fill":"#fff2bf","stroke":"#b08900"}};
+const participants = [
+  [
+    "Garden owner",
+    "actor"
+  ],
+  [
+    "PlotSectionNav",
+    "boundary"
+  ],
+  [
+    "PlotRotationPage",
+    "boundary"
+  ],
+  [
+    "PlotHistoryPage",
+    "boundary"
+  ],
+  [
+    "PlotController",
+    "control"
+  ],
+  [
+    "RotationController",
+    "control"
+  ],
+  [
+    "AccessService",
+    "service"
+  ],
+  [
+    "RotationPlannerService",
+    "service"
+  ],
+  [
+    "CropRotationClassifier",
+    "service"
+  ],
+  [
+    "PlotSnapshotService",
+    "service"
+  ],
+  [
+    "Plot",
+    "entity"
+  ],
+  [
+    "PlantZone",
+    "entity"
+  ],
+  [
+    "Plant",
+    "entity"
+  ],
+  [
+    "RotationHistory",
+    "entity"
+  ],
+  [
+    "RotationPlanDraft",
+    "entity"
+  ],
+  [
+    "PlotSnapshot",
+    "entity"
+  ]
+];
+const messages = [
+  {
+    "nr": 1,
+    "from": "Garden owner",
+    "to": "PlotSectionNav",
+    "operation": "clickRotationTab(plotId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "PlotSectionNav"
+  },
+  {
+    "nr": 2,
+    "from": "PlotSectionNav",
+    "to": "PlotRotationPage",
+    "operation": "render(plotId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "PlotRotationPage"
+  },
+  {
+    "nr": 3,
+    "from": "PlotRotationPage",
+    "to": "PlotController",
+    "operation": "show(plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Initial plot context"
+  },
+  {
+    "nr": 4,
+    "from": "PlotController",
+    "to": "AccessService",
+    "operation": "ensureUserCanViewPlot(owner, plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "PlotController::show()"
+  },
+  {
+    "nr": 5,
+    "from": "AccessService",
+    "to": "PlotController",
+    "operation": "access_granted",
+    "type": "return",
+    "replyTo": 4,
+    "source": ""
+  },
+  {
+    "nr": 6,
+    "from": "PlotController",
+    "to": "Plot",
+    "operation": "loadPlotWithRelations(plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "PlotController::show()"
+  },
+  {
+    "nr": 7,
+    "from": "Plot",
+    "to": "PlotController",
+    "operation": "plot_with_zones_and_plants",
+    "type": "return",
+    "replyTo": 6,
+    "source": ""
+  },
+  {
+    "nr": 8,
+    "from": "PlotController",
+    "to": "PlotRotationPage",
+    "operation": "plot_data",
+    "type": "return",
+    "replyTo": 3,
+    "source": ""
+  },
+  {
+    "nr": 9,
+    "from": "PlotRotationPage",
+    "to": "RotationController",
+    "operation": "index(plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::index()"
+  },
+  {
+    "nr": 10,
+    "from": "RotationController",
+    "to": "AccessService",
+    "operation": "ensureUserCanViewPlot(owner, plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::index()"
+  },
+  {
+    "nr": 11,
+    "from": "AccessService",
+    "to": "RotationController",
+    "operation": "access_granted",
+    "type": "return",
+    "replyTo": 10,
+    "source": ""
+  },
+  {
+    "nr": 12,
+    "from": "RotationController",
+    "to": "RotationHistory",
+    "operation": "listForPlot(plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Rotation history list"
+  },
+  {
+    "nr": 13,
+    "from": "RotationHistory",
+    "to": "RotationController",
+    "operation": "rotation_history",
+    "type": "return",
+    "replyTo": 12,
+    "source": ""
+  },
+  {
+    "nr": 14,
+    "from": "RotationController",
+    "to": "PlotRotationPage",
+    "operation": "rotation_history_response",
+    "type": "return",
+    "replyTo": 9,
+    "source": ""
+  },
+  {
+    "nr": 15,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showRotationHistory()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Visible state when rotation history exists"
+  },
+  {
+    "nr": 16,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showNoRotationHistoryMessage()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Visible state when no rotation history exists"
+  },
+  {
+    "nr": 17,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showRotationManagementPage()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Rotation page ready"
+  },
+  {
+    "nr": 18,
+    "from": "Garden owner",
+    "to": "PlotRotationPage",
+    "operation": "openPlanningHistory(plotId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "User reviews planning history before generation"
+  },
+  {
+    "nr": 19,
+    "from": "PlotRotationPage",
+    "to": "PlotHistoryPage",
+    "operation": "render(plotId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "PA9 planning history page / included context"
+  },
+  {
+    "nr": 20,
+    "from": "Garden owner",
+    "to": "PlotRotationPage",
+    "operation": "generateTemporaryRotationPlan(planningDate)",
+    "type": "async",
+    "replyTo": null,
+    "source": "Generate draft action"
+  },
+  {
+    "nr": 21,
+    "from": "PlotRotationPage",
+    "to": "RotationController",
+    "operation": "plan(plotId, planningDate)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::plan()"
+  },
+  {
+    "nr": 22,
+    "from": "RotationController",
+    "to": "AccessService",
+    "operation": "ensureUserCanEditPlot(owner, plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::plan()"
+  },
+  {
+    "nr": 23,
+    "from": "AccessService",
+    "to": "RotationController",
+    "operation": "access_granted",
+    "type": "return",
+    "replyTo": 22,
+    "source": ""
+  },
+  {
+    "nr": 24,
+    "from": "RotationController",
+    "to": "RotationPlannerService",
+    "operation": "createDraft(plot, planningDate)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationPlannerService::createDraft()"
+  },
+  {
+    "nr": 25,
+    "from": "RotationPlannerService",
+    "to": "Plant",
+    "operation": "getRotatablePlantOrder(plot)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Prepare rotatable plant sequence"
+  },
+  {
+    "nr": 26,
+    "from": "Plant",
+    "to": "RotationPlannerService",
+    "operation": "ordered_plants",
+    "type": "return",
+    "replyTo": 25,
+    "source": ""
+  },
+  {
+    "nr": 27,
+    "from": "RotationPlannerService",
+    "to": "CropRotationClassifier",
+    "operation": "profileForPlant(plant)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Check if plant is annual / rotatable"
+  },
+  {
+    "nr": 28,
+    "from": "CropRotationClassifier",
+    "to": "RotationPlannerService",
+    "operation": "plant_rotation_profile",
+    "type": "return",
+    "replyTo": 27,
+    "source": ""
+  },
+  {
+    "nr": 29,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "plant_marked_not_applicable",
+    "type": "return",
+    "replyTo": null,
+    "source": "Permanent plant branch"
+  },
+  {
+    "nr": 30,
+    "from": "RotationPlannerService",
+    "to": "PlantZone",
+    "operation": "getCandidateZones(plot)",
+    "type": "call",
+    "replyTo": null,
+    "source": "All possible target zones"
+  },
+  {
+    "nr": 31,
+    "from": "PlantZone",
+    "to": "RotationPlannerService",
+    "operation": "candidate_zones",
+    "type": "return",
+    "replyTo": 30,
+    "source": ""
+  },
+  {
+    "nr": 32,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "checkZoneOccupancy(plant, zone)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Zone occupancy check"
+  },
+  {
+    "nr": 33,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "occupancy_result",
+    "type": "return",
+    "replyTo": 32,
+    "source": ""
+  },
+  {
+    "nr": 34,
+    "from": "RotationPlannerService",
+    "to": "RotationHistory",
+    "operation": "checkSameTypeConflict(plant, zone)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Recent same-type history"
+  },
+  {
+    "nr": 35,
+    "from": "RotationHistory",
+    "to": "RotationPlannerService",
+    "operation": "same_type_conflict_result",
+    "type": "return",
+    "replyTo": 34,
+    "source": ""
+  },
+  {
+    "nr": 36,
+    "from": "RotationPlannerService",
+    "to": "RotationHistory",
+    "operation": "checkRestInterval(plant, zone)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Rest interval history"
+  },
+  {
+    "nr": 37,
+    "from": "RotationHistory",
+    "to": "RotationPlannerService",
+    "operation": "rest_interval_result",
+    "type": "return",
+    "replyTo": 36,
+    "source": ""
+  },
+  {
+    "nr": 38,
+    "from": "RotationPlannerService",
+    "to": "PlantZone",
+    "operation": "checkSoilCompatibility(plant, zone)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Soil compatibility"
+  },
+  {
+    "nr": 39,
+    "from": "PlantZone",
+    "to": "RotationPlannerService",
+    "operation": "soil_result",
+    "type": "return",
+    "replyTo": 38,
+    "source": ""
+  },
+  {
+    "nr": 40,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "calculateZoneScore(plant, zone)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Candidate scoring"
+  },
+  {
+    "nr": 41,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "zone_score",
+    "type": "return",
+    "replyTo": 40,
+    "source": ""
+  },
+  {
+    "nr": 42,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "best_zone_assigned",
+    "type": "return",
+    "replyTo": null,
+    "source": "Best target zone found"
+  },
+  {
+    "nr": 43,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "no_suitable_zone_message",
+    "type": "return",
+    "replyTo": null,
+    "source": "No suitable target zone branch"
+  },
+  {
+    "nr": 44,
+    "from": "RotationPlannerService",
+    "to": "RotationPlanDraft",
+    "operation": "saveDraft(plot, assignments)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Save temporary rotation plan"
+  },
+  {
+    "nr": 45,
+    "from": "RotationPlanDraft",
+    "to": "RotationPlannerService",
+    "operation": "draft",
+    "type": "return",
+    "replyTo": 44,
+    "source": ""
+  },
+  {
+    "nr": 46,
+    "from": "RotationPlannerService",
+    "to": "RotationController",
+    "operation": "draft",
+    "type": "return",
+    "replyTo": 24,
+    "source": ""
+  },
+  {
+    "nr": 47,
+    "from": "RotationController",
+    "to": "PlotRotationPage",
+    "operation": "draft_response",
+    "type": "return",
+    "replyTo": 21,
+    "source": ""
+  },
+  {
+    "nr": 48,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showDraftSummaryAndRecommendations()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Temporary plan summary"
+  },
+  {
+    "nr": 49,
+    "from": "Garden owner",
+    "to": "PlotRotationPage",
+    "operation": "selectAction()",
+    "type": "async",
+    "replyTo": null,
+    "source": "Choose confirm, manual edit, or reject"
+  },
+  {
+    "nr": 50,
+    "from": "Garden owner",
+    "to": "PlotRotationPage",
+    "operation": "editDraftItem(plantId, targetZoneId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "Manual edit action"
+  },
+  {
+    "nr": 51,
+    "from": "PlotRotationPage",
+    "to": "RotationController",
+    "operation": "updateDraftItem(plotId, draftId, plantId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::updateDraftItem()"
+  },
+  {
+    "nr": 52,
+    "from": "RotationController",
+    "to": "AccessService",
+    "operation": "ensureUserCanEditPlot(owner, plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::updateDraftItem()"
+  },
+  {
+    "nr": 53,
+    "from": "AccessService",
+    "to": "RotationController",
+    "operation": "access_granted",
+    "type": "return",
+    "replyTo": 52,
+    "source": ""
+  },
+  {
+    "nr": 54,
+    "from": "RotationController",
+    "to": "RotationPlannerService",
+    "operation": "updateDraftItem(draft, plant, decision)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationPlannerService::updateDraftItem()"
+  },
+  {
+    "nr": 55,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "evaluatePlacement(plant, targetZone)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Validate manual decision"
+  },
+  {
+    "nr": 56,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "placement_result",
+    "type": "return",
+    "replyTo": 55,
+    "source": ""
+  },
+  {
+    "nr": 57,
+    "from": "RotationPlannerService",
+    "to": "RotationPlanDraft",
+    "operation": "saveDraftItem(plant, decision)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Update temporary plan"
+  },
+  {
+    "nr": 58,
+    "from": "RotationPlanDraft",
+    "to": "RotationPlannerService",
+    "operation": "updated_draft",
+    "type": "return",
+    "replyTo": 57,
+    "source": ""
+  },
+  {
+    "nr": 59,
+    "from": "RotationPlannerService",
+    "to": "RotationController",
+    "operation": "updated_draft",
+    "type": "return",
+    "replyTo": 54,
+    "source": ""
+  },
+  {
+    "nr": 60,
+    "from": "RotationController",
+    "to": "PlotRotationPage",
+    "operation": "updated_draft_response",
+    "type": "return",
+    "replyTo": 51,
+    "source": ""
+  },
+  {
+    "nr": 61,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showManualEditError()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Invalid manual edit branch"
+  },
+  {
+    "nr": 62,
+    "from": "Garden owner",
+    "to": "PlotRotationPage",
+    "operation": "confirmRotationPlan(draftId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "Confirm action"
+  },
+  {
+    "nr": 63,
+    "from": "PlotRotationPage",
+    "to": "RotationController",
+    "operation": "confirm(plotId, draftId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::confirm()"
+  },
+  {
+    "nr": 64,
+    "from": "RotationController",
+    "to": "AccessService",
+    "operation": "ensureUserCanEditPlot(owner, plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::confirm()"
+  },
+  {
+    "nr": 65,
+    "from": "AccessService",
+    "to": "RotationController",
+    "operation": "access_granted",
+    "type": "return",
+    "replyTo": 64,
+    "source": ""
+  },
+  {
+    "nr": 66,
+    "from": "RotationController",
+    "to": "RotationPlannerService",
+    "operation": "confirmDraft(plot, draft, plotSnapshotService)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationPlannerService::confirmDraft()"
+  },
+  {
+    "nr": 67,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "revalidateDraftExecution(draft)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Check if plan can be executed"
+  },
+  {
+    "nr": 68,
+    "from": "RotationPlannerService",
+    "to": "RotationPlannerService",
+    "operation": "execution_valid",
+    "type": "return",
+    "replyTo": 67,
+    "source": ""
+  },
+  {
+    "nr": 69,
+    "from": "RotationPlannerService",
+    "to": "Plant",
+    "operation": "movePlantsToTargetZones(assignments)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Move plants"
+  },
+  {
+    "nr": 70,
+    "from": "Plant",
+    "to": "RotationPlannerService",
+    "operation": "plants_updated",
+    "type": "return",
+    "replyTo": 69,
+    "source": ""
+  },
+  {
+    "nr": 71,
+    "from": "RotationPlannerService",
+    "to": "PlantZone",
+    "operation": "advanceRotationStages(touchedZones)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Update zones"
+  },
+  {
+    "nr": 72,
+    "from": "PlantZone",
+    "to": "RotationPlannerService",
+    "operation": "zones_updated",
+    "type": "return",
+    "replyTo": 71,
+    "source": ""
+  },
+  {
+    "nr": 73,
+    "from": "RotationPlannerService",
+    "to": "RotationHistory",
+    "operation": "recordRotationHistory(assignments)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Save history entries"
+  },
+  {
+    "nr": 74,
+    "from": "RotationHistory",
+    "to": "RotationPlannerService",
+    "operation": "rotation_history_entries",
+    "type": "return",
+    "replyTo": 73,
+    "source": ""
+  },
+  {
+    "nr": 75,
+    "from": "RotationPlannerService",
+    "to": "PlotSnapshotService",
+    "operation": "capture(plot, rotation_recorded)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Record planning snapshot"
+  },
+  {
+    "nr": 76,
+    "from": "PlotSnapshotService",
+    "to": "PlotSnapshot",
+    "operation": "saveSnapshot(plot, metadata)",
+    "type": "call",
+    "replyTo": null,
+    "source": "plot_snapshots"
+  },
+  {
+    "nr": 77,
+    "from": "PlotSnapshot",
+    "to": "PlotSnapshotService",
+    "operation": "snapshot_saved",
+    "type": "return",
+    "replyTo": 76,
+    "source": ""
+  },
+  {
+    "nr": 78,
+    "from": "PlotSnapshotService",
+    "to": "RotationPlannerService",
+    "operation": "snapshot_recorded",
+    "type": "return",
+    "replyTo": 75,
+    "source": ""
+  },
+  {
+    "nr": 79,
+    "from": "RotationPlannerService",
+    "to": "RotationPlanDraft",
+    "operation": "deleteDraft(draft)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Remove temporary rotation plan"
+  },
+  {
+    "nr": 80,
+    "from": "RotationPlanDraft",
+    "to": "RotationPlannerService",
+    "operation": "draft_deleted",
+    "type": "return",
+    "replyTo": 79,
+    "source": ""
+  },
+  {
+    "nr": 81,
+    "from": "RotationPlannerService",
+    "to": "RotationController",
+    "operation": "confirmation_result",
+    "type": "return",
+    "replyTo": 66,
+    "source": ""
+  },
+  {
+    "nr": 82,
+    "from": "RotationController",
+    "to": "PlotRotationPage",
+    "operation": "confirm_response",
+    "type": "return",
+    "replyTo": 63,
+    "source": ""
+  },
+  {
+    "nr": 83,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showUpdatedPlantsZonesAndHistory()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Confirmed rotation result"
+  },
+  {
+    "nr": 84,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showExecutionError()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Plan cannot be executed branch"
+  },
+  {
+    "nr": 85,
+    "from": "Garden owner",
+    "to": "PlotRotationPage",
+    "operation": "rejectRotationPlan(draftId)",
+    "type": "async",
+    "replyTo": null,
+    "source": "Reject action"
+  },
+  {
+    "nr": 86,
+    "from": "PlotRotationPage",
+    "to": "RotationController",
+    "operation": "reject(plotId, draftId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::reject()"
+  },
+  {
+    "nr": 87,
+    "from": "RotationController",
+    "to": "AccessService",
+    "operation": "ensureUserCanEditPlot(owner, plotId)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationController::reject()"
+  },
+  {
+    "nr": 88,
+    "from": "AccessService",
+    "to": "RotationController",
+    "operation": "access_granted",
+    "type": "return",
+    "replyTo": 87,
+    "source": ""
+  },
+  {
+    "nr": 89,
+    "from": "RotationController",
+    "to": "RotationPlannerService",
+    "operation": "rejectDraft(draft)",
+    "type": "call",
+    "replyTo": null,
+    "source": "RotationPlannerService::rejectDraft()"
+  },
+  {
+    "nr": 90,
+    "from": "RotationPlannerService",
+    "to": "RotationPlanDraft",
+    "operation": "deleteDraft(draft)",
+    "type": "call",
+    "replyTo": null,
+    "source": "Remove temporary plan without history changes"
+  },
+  {
+    "nr": 91,
+    "from": "RotationPlanDraft",
+    "to": "RotationPlannerService",
+    "operation": "draft_deleted",
+    "type": "return",
+    "replyTo": 90,
+    "source": ""
+  },
+  {
+    "nr": 92,
+    "from": "RotationPlannerService",
+    "to": "RotationController",
+    "operation": "reject_result",
+    "type": "return",
+    "replyTo": 89,
+    "source": ""
+  },
+  {
+    "nr": 93,
+    "from": "RotationController",
+    "to": "PlotRotationPage",
+    "operation": "reject_response",
+    "type": "return",
+    "replyTo": 86,
+    "source": ""
+  },
+  {
+    "nr": 94,
+    "from": "PlotRotationPage",
+    "to": "Garden owner",
+    "operation": "showDraftRejectedMessage()",
+    "type": "return",
+    "replyTo": null,
+    "source": "Temporary rotation plan rejected"
+  }
+];
+const diagrams = [
+  {
+    "id": "diagram-pa8-open",
+    "title": "Rotacijos planavimo prad?ia ir istorijos kontekstas",
+    "from": 1,
+    "to": 19
+  },
+  {
+    "id": "diagram-pa8-draft",
+    "title": "Laikino rotacijos plano generavimas",
+    "from": 20,
+    "to": 48
+  },
+  {
+    "id": "diagram-pa8-action",
+    "title": "Veiksmo pasirinkimas: redaguoti, patvirtinti arba atmesti",
+    "from": 49,
+    "to": 94
+  }
+];
+const fragments = [
+  {
+    "diagram": "diagram-pa8-open",
+    "kind": "alt",
+    "title": "Rotation history availability",
+    "start": 15,
+    "end": 16,
+    "operands": [
+      {
+        "guard": "[rotation history exists]",
+        "start": 15,
+        "end": 15
+      },
+      {
+        "guard": "[rotation history does not exist]",
+        "start": 16,
+        "end": 16
+      }
+    ]
+  },
+  {
+    "diagram": "diagram-pa8-open",
+    "kind": "opt",
+    "guard": "[user reviews planning history]",
+    "start": 18,
+    "end": 19
+  },
+  {
+    "diagram": "diagram-pa8-draft",
+    "kind": "loop",
+    "guard": "[for each plant in rotatable order]",
+    "start": 27,
+    "end": 43
+  },
+  {
+    "diagram": "diagram-pa8-draft",
+    "kind": "alt",
+    "title": "Plant rotation applicability",
+    "start": 29,
+    "end": 43,
+    "operands": [
+      {
+        "guard": "[plant is permanent / rotation not applicable]",
+        "start": 29,
+        "end": 29
+      },
+      {
+        "guard": "[plant is annual / rotatable]",
+        "start": 30,
+        "end": 43
+      }
+    ]
+  },
+  {
+    "diagram": "diagram-pa8-draft",
+    "kind": "loop",
+    "guard": "[for each candidate zone]",
+    "start": 32,
+    "end": 41
+  },
+  {
+    "diagram": "diagram-pa8-draft",
+    "kind": "alt",
+    "title": "Target zone selection",
+    "start": 42,
+    "end": 43,
+    "operands": [
+      {
+        "guard": "[best zone found]",
+        "start": 42,
+        "end": 42
+      },
+      {
+        "guard": "[no suitable zone found]",
+        "start": 43,
+        "end": 43
+      }
+    ]
+  },
+  {
+    "diagram": "diagram-pa8-action",
+    "kind": "alt",
+    "title": "Chosen action",
+    "start": 50,
+    "end": 94,
+    "operands": [
+      {
+        "guard": "[edit manually]",
+        "start": 50,
+        "end": 61
+      },
+      {
+        "guard": "[confirm]",
+        "start": 62,
+        "end": 84
+      },
+      {
+        "guard": "[reject]",
+        "start": 85,
+        "end": 94
+      }
+    ]
+  },
+  {
+    "diagram": "diagram-pa8-action",
+    "kind": "alt",
+    "title": "Manual edit validation",
+    "start": 57,
+    "end": 61,
+    "operands": [
+      {
+        "guard": "[manual decision valid]",
+        "start": 57,
+        "end": 60
+      },
+      {
+        "guard": "[manual decision invalid]",
+        "start": 61,
+        "end": 61
+      }
+    ]
+  },
+  {
+    "diagram": "diagram-pa8-action",
+    "kind": "alt",
+    "title": "Confirmation execution result",
+    "start": 69,
+    "end": 84,
+    "operands": [
+      {
+        "guard": "[plan can be executed]",
+        "start": 69,
+        "end": 83
+      },
+      {
+        "guard": "[plan cannot be executed]",
+        "start": 84,
+        "end": 84
+      }
+    ]
+  },
+  {
+    "diagram": "diagram-pa8-action",
+    "kind": "loop",
+    "guard": "[for each changed assignment]",
+    "start": 69,
+    "end": 80
+  }
+];
+function el(name, attrs = {}, text = null) { const node = document.createElementNS('http://www.w3.org/2000/svg', name); Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value)); if (text !== null) node.textContent = text; return node; }
+function addText(svg, text, x, y, attrs = {}) { svg.appendChild(el('text', { x, y, ...attrs }, text)); }
+function shortLabel(text, max = 25) { return text.length > max ? text.slice(0, max - 1) + '…' : text; }
+function typeLabel(type) { return type === 'call' ? 'sinchroninis' : type === 'return' ? 'reply' : 'asinchroninis'; }
+function renderDiagram(config) {
+  const svg = document.getElementById(config.id);
+  const rowH = 36, top = 118, left = 70, gap = 150, boxW = 124;
+  const visibleMessages = messages.filter((m) => m.nr >= config.from && m.nr <= config.to);
+  const height = top + visibleMessages.length * rowH + 92;
+  const width = left * 2 + gap * (participants.length - 1) + boxW;
+  svg.setAttribute('width', width); svg.setAttribute('height', height);
+  const defs = el('defs');
+  defs.innerHTML = '<marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#334155"/></marker><marker id="openArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8" fill="none" stroke="#64748b" stroke-width="1.2"/></marker>';
+  svg.appendChild(defs);
+  addText(svg, config.title, 24, 28, { class: 'uml-title' });
+  const xMap = new Map();
+  participants.forEach(([name, type], index) => {
+    const x = left + index * gap;
+    xMap.set(name, x + boxW / 2);
+    svg.appendChild(el('rect', { x, y: 48, width: boxW, height: 44, rx: 3, fill: colors[type].fill, stroke: colors[type].stroke }));
+    addText(svg, '«' + type + '»', x + boxW / 2, 63, { class: 'stereo', 'text-anchor': 'middle' });
+    addText(svg, shortLabel(name, 20), x + boxW / 2, 80, { class: 'participant-name', 'text-anchor': 'middle' });
+    svg.appendChild(el('line', { x1: x + boxW / 2, y1: 92, x2: x + boxW / 2, y2: height - 28, class: 'lifeline' }));
+  });
+  const yOf = (nr) => top + (nr - config.from) * rowH;
+  fragments.filter((f) => f.diagram === config.id).forEach((f) => {
+    const y = yOf(f.start) - 18, h = yOf(f.end) - y + 22;
+    svg.appendChild(el('rect', { x: 18, y, width: width - 36, height: h, class: 'fragment' }));
+    addText(svg, f.kind, 24, y + 15, { class: 'fragment-title' });
+    if (f.operands) {
+      f.operands.forEach((op, idx) => {
+        if (idx > 0) svg.appendChild(el('line', { x1: 18, y1: yOf(op.start) - 18, x2: width - 18, y2: yOf(op.start) - 18, class: 'divider' }));
+        addText(svg, op.guard, 66, yOf(op.start) - 5, { class: 'fragment-cond' });
+      });
+    } else {
+      addText(svg, f.guard, 66, y + 15, { class: 'fragment-cond' });
+    }
+  });
+  visibleMessages.forEach((m) => {
+    const y = yOf(m.nr), x1 = xMap.get(m.from), x2 = xMap.get(m.to), label = m.nr + ': ' + m.operation;
+    if (x1 === x2) {
+      svg.appendChild(el('path', { d: 'M ' + x1 + ' ' + y + ' h 44 v 16 h -44', fill: 'none', class: m.type === 'return' ? 'return' : 'call' }));
+      addText(svg, label, x1 + 8, y - 5, { class: 'message' });
+    } else {
+      svg.appendChild(el('line', { x1, y1: y, x2, y2: y, class: m.type === 'return' ? 'return' : (m.type === 'async' ? 'async' : 'call') }));
+      addText(svg, label, (x1 + x2) / 2, y - 5, { class: 'message', 'text-anchor': 'middle' });
+    }
+  });
+}
+diagrams.forEach(renderDiagram);
+const tbody = document.querySelector('#sequence-table tbody');
+function appendMarker(label, className) { const tr = document.createElement('tr'); tr.className = className; const td = document.createElement('td'); td.colSpan = 6; td.textContent = label; tr.appendChild(td); tbody.appendChild(tr); }
+function appendMessage(m) { const tr = document.createElement('tr'); [m.nr, m.from, m.to, m.operation, typeLabel(m.type), m.replyTo ? String(m.replyTo) : ''].forEach((value) => { const td = document.createElement('td'); td.textContent = value; tr.appendChild(td); }); tbody.appendChild(tr); }
+function labelOf(fragment) { return fragment.guard || fragment.title || ''; }
+function startsAt(nr) { return fragments.filter((f) => f.start === nr).sort((a,b) => (b.end-b.start)-(a.end-a.start)); }
+function endsAt(nr) { return fragments.filter((f) => f.end === nr).sort((a,b) => (a.end-a.start)-(b.end-b.start)); }
+function operandsStartingAt(nr) { return fragments.filter((f) => f.kind === 'alt' && f.operands).flatMap((f) => f.operands.filter((op) => op.start === nr).map((op) => ({ op, index: f.operands.indexOf(op) + 1 }))); }
+function operandsEndingAt(nr) { return fragments.filter((f) => f.kind === 'alt' && f.operands).flatMap((f) => f.operands.filter((op) => op.end === nr).map((op) => ({ op, index: f.operands.indexOf(op) + 1 }))); }
+messages.forEach((m) => {
+  startsAt(m.nr).forEach((fragment) => appendMarker(fragment.kind + ' pradžia ' + labelOf(fragment), 'sequence-fragment-row'));
+  operandsStartingAt(m.nr).forEach(({ op, index }) => appendMarker('[' + index + ' if] ' + op.guard, 'sequence-operand-row'));
+  appendMessage(m);
+  operandsEndingAt(m.nr).forEach(({ op, index }) => appendMarker('[' + index + ' if pabaiga] ' + op.guard, 'sequence-end-row'));
+  endsAt(m.nr).forEach((fragment) => appendMarker(fragment.kind + ' pabaiga ' + labelOf(fragment), 'sequence-end-row'));
+});
+</script>
+</body>
+</html>

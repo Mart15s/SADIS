@@ -29,13 +29,13 @@ export default function ForgotPasswordPage() {
   return (
     <div className="page-stack auth-card">
       <PageHeader
-        title="Forgot password"
-        description="Enter the account email and the backend will send a password reset link."
+        title="Pamiršote slaptažodį?"
+        description="Įveskite paskyros el. paštą ir sistema atsiųs slaptažodžio atkūrimo nuorodą."
       />
 
       <form className="panel input-grid" onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="forgot-email">Email</label>
+          <label htmlFor="forgot-email">El. paštas</label>
           <input
             id="forgot-email"
             name="email"
@@ -51,10 +51,10 @@ export default function ForgotPasswordPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Sending...' : 'Send reset link'}
+            {submitting ? 'Siunčiama...' : 'Siųsti atkūrimo nuorodą'}
           </Button>
           <Link to="/reset-password">
-            <Button variant="secondary">Enter reset code</Button>
+            <Button variant="secondary">Įvesti atkūrimo kodą</Button>
           </Link>
         </div>
       </form>

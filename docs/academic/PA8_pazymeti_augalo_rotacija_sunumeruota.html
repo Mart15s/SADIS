@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PA8 Pažymėti augalų rotaciją</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #526070;
+      --line: #334155;
+      --paper: #ffffff;
+      --page: #e5e7eb;
+      --lane: #d7d9dd;
+      --lane-soft: #eceef1;
+      --activity: #fff2bf;
+      --activity-border: #8a6d1d;
+      --call: #fff8da;
+      --call-border: #6b46c1;
+      --decision: #fff8da;
+      --decision-border: #6b7280;
+      --note: #f7faff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.35;
+    }
+    main {
+      width: min(1700px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 26px 0 10px; font-size: 18px; }
+    h3 { margin: 18px 0 8px; font-size: 15px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .comment {
+      border-left: 4px solid #8aa5d6;
+      background: var(--note);
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      color: #334155;
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    .legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 18px; height: 13px; border: 1px solid #64748b; display: inline-block; }
+    .canvas {
+      overflow: auto;
+      border: 1px solid #cbd5e1;
+      background: #d1d5db;
+      padding: 12px;
+    }
+    svg {
+      display: block;
+      max-width: none;
+      background: #d1d5db;
+    }
+    .uml-title { font-size: 18px; font-weight: 700; }
+    .lane-title { font-size: 15px; font-weight: 700; fill: #1f2937; }
+    .node-text { font-size: 12px; fill: #172033; font-weight: 600; }
+    .node-subtext { font-size: 11px; fill: #172033; }
+    .edge-label {
+      font-size: 11px;
+      fill: #1f2937;
+      paint-order: stroke;
+      stroke: #d1d5db;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+    .call-activity {
+      fill: var(--call);
+      stroke: var(--call-border);
+      stroke-width: 1.8;
+      stroke-dasharray: 7 4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      font-size: 13px;
+    }
+    th, td { border: 1px solid #d9e1ee; padding: 7px 8px; vertical-align: top; }
+    th { background: #eef3ff; text-align: left; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+    .flow-list {
+      columns: 2;
+      column-gap: 34px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .flow-list div { break-inside: avoid; margin-bottom: 3px; }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; border: 0; box-shadow: none; }
+      .canvas { overflow: visible; padding: 0; }
+      .flow-list { columns: 1; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PA8 "Pažymėti augalų rotaciją" veiklos diagrama</h1>
+  <div class="meta">Sudaryta pagal faktinę Laravel + React realizaciją: <code>RotationController</code>, <code>RotationPlannerService</code>, <code>RotationPlanDraft</code>, <code>RotationHistory</code>, <code>PlotRotationPage.jsx</code> ir rotacijos testus.</div>
+  <div class="legend">
+    <span><i class="swatch" style="background:#d7d9dd"></i> Swimlane</span>
+    <span><i class="swatch" style="background:#fff2bf"></i> Activity</span>
+    <span><i class="swatch" style="background:#fff8da"></i> Sprendimo taškas</span>
+    <span><i class="swatch" style="background:#fff8da;border:2px dashed #6b46c1"></i> Iškviečiamas / extend PA</span>
+    <span><i class="swatch" style="background:#172033"></i> UML start/end</span>
+  </div>
+  <div class="comment">
+    PA8 nėra supainiotas su PA9: naudotojo pasirinktas <code>History</code> skirtukas rodomas kaip <code>«extend» PA9</code>, o draft generavimo metu rotacijos istorija gaunama vidiniu <code>RotationPlannerService::preparePlot()</code> žingsniu per <code>rotationHistory</code> ryšius. Patvirtinimas blokuojamas, kai plano statusas nėra <code>ready</code> arba pakartotinė kandidatų validacija randa nebesaugų priskyrimą.
+  </div>
+
+  <div class="canvas">
+    <svg id="diagram" width="1640" height="5840" role="img" aria-label="PA8 veiklos diagrama"></svg>
+  </div>
+
+  <h2>1. Veiklų sąrašas</h2>
+  <table id="activity-table">
+    <thead><tr><th>Kodas</th><th>Veikla</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>2. Sprendimo taškų sąrašas</h2>
+  <table id="decision-table">
+    <thead><tr><th>Kodas</th><th>Sprendimo taškas</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>3. Srautų jungčių sąrašas</h2>
+  <div id="flow-list" class="flow-list"></div>
+
+  <h3>Merge / join vietos</h3>
+  <table>
+    <thead><tr><th>Vieta</th><th>Paaiškinimas</th></tr></thead>
+    <tbody>
+      <tr><td>M1</td><td>Po PA9 istorijos peržiūros grįžtama į PA8 rotacijos valdymo sąsają.</td></tr>
+      <tr><td>M2</td><td>Draft generavimo šakoje sujungiami keliai, kai yra rotuojamų vienmečių augalų ir kai yra tik permanent / reusable augalai.</td></tr>
+      <tr><td>M3</td><td>Po rankinio draft pakeitimo, pakeitimo klaidos arba patvirtinimo klaidos grįžtama į draft plano peržiūrą.</td></tr>
+      <tr><td>M4</td><td>Po sėkmingo patvirtinimo arba draft atmetimo grįžtama į rotacijos peržiūrą be aktyvaus draft.</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<script>
+const lanes = {
+  actor: { x: 40, y: 50, width: 270, height: 5700, title: '«Actor» Daržo savininkas' },
+  plot: { x: 330, y: 50, width: 360, height: 5700, title: 'Sklypo valdymo posistemis' },
+  rotation: { x: 720, y: 50, width: 500, height: 5700, title: 'Rotacijos planavimo posistemis' },
+  history: { x: 1250, y: 50, width: 330, height: 5700, title: 'Planavimo istorijos posistemis' }
+};
+
+const activities = [
+  ['A1', 'Atverti pasirinkto sklypo rotacijos puslapį'],
+  ['A2', 'Užkrauti sklypą, augalus, zonas ir išsaugotą rotacijos istoriją'],
+  ['A3', 'Patikrinti naudotojo prieigą prie sklypo'],
+  ['A4', 'Pateikti prieigos arba sklypo užkrovimo klaidą'],
+  ['A5', 'Pateikti rotacijos valdymo sąsają'],
+  ['A6', 'Pasirinkti rotacijos valdymo veiksmą'],
+  ['A7', '«extend» PA9 "Peržiūrėti planavimo istoriją"'],
+  ['A8', 'Grįžti į PA8 rotacijos valdymą'],
+  ['A9', 'Pasirinkti planavimo datą ir generuoti draft planą'],
+  ['A10', 'Siųsti POST /api/plots/{plot}/rotations/plans užklausą'],
+  ['A11', 'Validuoti redagavimo teisę ir planning_date reikšmę'],
+  ['A12', 'Pateikti datos arba prieigos klaidos pranešimą'],
+  ['A13', 'Pašalinti ankstesnius to sklypo rotation_plan_drafts įrašus'],
+  ['A14', 'Užkrauti sklypą su zonomis, augalais, katalogu ir plant_care duomenimis'],
+  ['A15', 'Gauti rotacijos / planavimo istorijos duomenis per rotationHistory ryšius'],
+  ['A16', 'Normalizuoti planavimo datą ir sudaryti rotuojamų augalų eiliškumą'],
+  ['A17', 'Suformuoti planą tik su permanent / reusable augalų kontekstu'],
+  ['A18', 'Atskirti permanent / reusable augalus nuo rotuojamų vienmečių'],
+  ['A19', 'Parinkti kitą rotuojamą augalą'],
+  ['A20', 'Gauti visas galimas tikslines zonas'],
+  ['A21', 'Patikrinti zonos užimtumą, draft priskyrimus ir likusią talpą'],
+  ['A22', 'Patikrinti dabartinės zonos, to paties augalo, tipo, šeimos ir rotation group konfliktus'],
+  ['A23', 'Patikrinti ankstesnes zonas, cooldown ir rotation rest intervalą'],
+  ['A24', 'Patikrinti plant_care dirvožemio signalus ir nutrient sequence kontekstą'],
+  ['A25', 'Apskaičiuoti zonos score, positive reasons, soft warnings ir hard blocking reasons'],
+  ['A26', 'Priskirti geriausią eligible zoną ir iki 3 alternatyvų'],
+  ['A27', 'Palikti augalą unresolved / blocked ir paruošti fallback suggestions'],
+  ['A28', 'Pridėti permanent / reusable augalus kaip excluded / permanent planting kontekstą'],
+  ['A29', 'Suskaičiuoti summary ir nustatyti statusą ready arba needs_adjustment'],
+  ['A30', 'Išsaugoti RotationPlanDraft su sugeneruotu planu'],
+  ['A31', 'Pateikti draft santrauką, rekomendacijas, priežastis ir blocked candidates'],
+  ['A32', 'Pasirinkti draft įrašo sprendimą: generated, stay, unresolved arba target zona'],
+  ['A33', 'Siųsti PATCH /rotations/plans/{draft}/items/{plant} užklausą'],
+  ['A34', 'Validuoti draft, augalą, sprendimą, target zoną ir permanent apribojimus'],
+  ['A35', 'Pateikti rankinio pakeitimo klaidą'],
+  ['A36', 'Pergeneruoti draft planą pagal rankinius choices'],
+  ['A37', 'Pasirinkti patvirtinti rotacijos planą'],
+  ['A38', 'Siųsti POST /rotations/plans/{draft}/confirm užklausą'],
+  ['A39', 'Patikrinti redagavimo teisę, draft priklausymą ir plano statusą'],
+  ['A40', 'Pateikti pranešimą, kad plano patvirtinti negalima'],
+  ['A41', 'Pakartotinai validuoti kiekvieną pasirinktą tikslinę zoną pagal dabartinius DB duomenis'],
+  ['A42', 'Vykdyti DB transakciją: snapshot before, uždaryti seną istoriją, perkelti augalus, atnaujinti zonas'],
+  ['A43', 'Sukurti rotation_history įrašus, snapshot after ir pašalinti draft'],
+  ['A44', 'Grąžinti atnaujintus augalus, zonas ir rotacijos istoriją'],
+  ['A45', 'Pateikti sėkmės pranešimą ir rotacijos peržiūrą'],
+  ['A46', 'Pasirinkti atmesti draft planą'],
+  ['A47', 'Siųsti DELETE /rotations/plans/{draft} užklausą'],
+  ['A48', 'Pašalinti draft be augalų ir rotacijos istorijos pakeitimų'],
+  ['A49', 'Pateikti pranešimą, kad draft atmestas'],
+  ['A50', 'Baigti rotacijos valdymą arba tęsti peržiūrą']
+];
+
+const decisions = [
+  ['D1', 'Ar naudotojas turi peržiūros prieigą?'],
+  ['D2', 'Ar naudotojas pasirenka PA9 planavimo istoriją?'],
+  ['D3', 'Ar naudotojas generuoja naują rotacijos draft planą?'],
+  ['D4', 'Ar data ir redagavimo teisė teisingos?'],
+  ['D5', 'Ar yra rotuojamų vienmečių augalų?'],
+  ['D6', 'Ar rasta eligible tikslinė zona?'],
+  ['D7', 'Ar apdoroti visi rotuojami augalai?'],
+  ['D8', 'Ar naudotojas rankiniu būdu redaguoja draft?'],
+  ['D9', 'Ar rankinis pakeitimas galimas?'],
+  ['D10', 'Ar naudotojas patvirtina planą?'],
+  ['D11', 'Ar planas turi statusą ready?'],
+  ['D12', 'Ar visos priskirtys vis dar validžios?'],
+  ['D13', 'Ar naudotojas atmeta draft?']
+];
+
+const nodes = {
+  start: { type: 'start', x: 175, y: 110 },
+  A1: { type: 'activity', lane: 'actor', x: 75, y: 160, w: 200, h: 58 },
+  A2: { type: 'activity', lane: 'plot', x: 375, y: 160, w: 270, h: 70 },
+  A3: { type: 'activity', lane: 'plot', x: 390, y: 280, w: 240, h: 58 },
+  D1: { type: 'decision', lane: 'plot', x: 510, y: 420, w: 150, h: 92 },
+  A4: { type: 'activity', lane: 'actor', x: 75, y: 395, w: 200, h: 66 },
+  endFail: { type: 'end', x: 175, y: 520 },
+  A5: { type: 'activity', lane: 'plot', x: 390, y: 540, w: 240, h: 58 },
+  A6: { type: 'activity', lane: 'actor', x: 75, y: 655, w: 200, h: 58 },
+  D2: { type: 'decision', lane: 'actor', x: 175, y: 805, w: 150, h: 92 },
+  A7: { type: 'call', lane: 'history', x: 1295, y: 775, w: 240, h: 68 },
+  A8: { type: 'activity', lane: 'actor', x: 75, y: 915, w: 200, h: 54 },
+  D3: { type: 'decision', lane: 'actor', x: 175, y: 1035, w: 150, h: 92 },
+  A9: { type: 'activity', lane: 'actor', x: 75, y: 1160, w: 200, h: 66 },
+  A10: { type: 'activity', lane: 'plot', x: 375, y: 1160, w: 270, h: 66 },
+  A11: { type: 'activity', lane: 'plot', x: 390, y: 1280, w: 240, h: 66 },
+  D4: { type: 'decision', lane: 'plot', x: 510, y: 1420, w: 150, h: 92 },
+  A12: { type: 'activity', lane: 'actor', x: 75, y: 1400, w: 200, h: 66 },
+  A13: { type: 'activity', lane: 'plot', x: 375, y: 1535, w: 270, h: 66 },
+  A14: { type: 'activity', lane: 'rotation', x: 780, y: 1655, w: 380, h: 66 },
+  A15: { type: 'activity', lane: 'history', x: 1285, y: 1775, w: 260, h: 66 },
+  A16: { type: 'activity', lane: 'rotation', x: 780, y: 1895, w: 380, h: 66 },
+  D5: { type: 'decision', lane: 'rotation', x: 970, y: 2040, w: 160, h: 96 },
+  A17: { type: 'activity', lane: 'rotation', x: 760, y: 2165, w: 200, h: 78 },
+  A18: { type: 'activity', lane: 'rotation', x: 995, y: 2165, w: 205, h: 78 },
+  A19: { type: 'activity', lane: 'rotation', x: 805, y: 2305, w: 330, h: 58 },
+  A20: { type: 'activity', lane: 'rotation', x: 805, y: 2420, w: 330, h: 58 },
+  A21: { type: 'activity', lane: 'rotation', x: 805, y: 2535, w: 330, h: 70 },
+  A22: { type: 'activity', lane: 'rotation', x: 805, y: 2670, w: 330, h: 78 },
+  A23: { type: 'activity', lane: 'rotation', x: 805, y: 2815, w: 330, h: 66 },
+  A24: { type: 'activity', lane: 'rotation', x: 805, y: 2940, w: 330, h: 66 },
+  A25: { type: 'activity', lane: 'rotation', x: 805, y: 3065, w: 330, h: 66 },
+  D6: { type: 'decision', lane: 'rotation', x: 970, y: 3210, w: 160, h: 96 },
+  A26: { type: 'activity', lane: 'rotation', x: 750, y: 3340, w: 220, h: 78 },
+  A27: { type: 'activity', lane: 'rotation', x: 1005, y: 3340, w: 190, h: 78 },
+  D7: { type: 'decision', lane: 'rotation', x: 970, y: 3485, w: 160, h: 96 },
+  A28: { type: 'activity', lane: 'rotation', x: 805, y: 3615, w: 330, h: 66 },
+  A29: { type: 'activity', lane: 'rotation', x: 805, y: 3735, w: 330, h: 66 },
+  A30: { type: 'activity', lane: 'rotation', x: 805, y: 3855, w: 330, h: 58 },
+  A31: { type: 'activity', lane: 'plot', x: 360, y: 3975, w: 300, h: 78 },
+  D8: { type: 'decision', lane: 'actor', x: 175, y: 4145, w: 150, h: 92 },
+  A32: { type: 'activity', lane: 'actor', x: 65, y: 4270, w: 220, h: 78 },
+  A33: { type: 'activity', lane: 'plot', x: 375, y: 4270, w: 270, h: 66 },
+  A34: { type: 'activity', lane: 'rotation', x: 805, y: 4270, w: 330, h: 78 },
+  D9: { type: 'decision', lane: 'rotation', x: 970, y: 4430, w: 160, h: 96 },
+  A35: { type: 'activity', lane: 'plot', x: 390, y: 4415, w: 240, h: 66 },
+  A36: { type: 'activity', lane: 'rotation', x: 805, y: 4560, w: 330, h: 66 },
+  D10: { type: 'decision', lane: 'actor', x: 175, y: 4565, w: 150, h: 92 },
+  A37: { type: 'activity', lane: 'actor', x: 75, y: 4695, w: 200, h: 58 },
+  A38: { type: 'activity', lane: 'plot', x: 375, y: 4695, w: 270, h: 58 },
+  A39: { type: 'activity', lane: 'rotation', x: 805, y: 4695, w: 330, h: 70 },
+  D11: { type: 'decision', lane: 'rotation', x: 970, y: 4845, w: 160, h: 96 },
+  A40: { type: 'activity', lane: 'plot', x: 390, y: 4825, w: 240, h: 66 },
+  A41: { type: 'activity', lane: 'rotation', x: 805, y: 4980, w: 330, h: 78 },
+  D12: { type: 'decision', lane: 'rotation', x: 970, y: 5135, w: 160, h: 96 },
+  A42: { type: 'activity', lane: 'rotation', x: 805, y: 5275, w: 330, h: 82 },
+  A43: { type: 'activity', lane: 'history', x: 1285, y: 5275, w: 260, h: 82 },
+  A44: { type: 'activity', lane: 'plot', x: 375, y: 5420, w: 270, h: 66 },
+  A45: { type: 'activity', lane: 'actor', x: 75, y: 5420, w: 200, h: 66 },
+  D13: { type: 'decision', lane: 'actor', x: 175, y: 4865, w: 150, h: 92 },
+  A46: { type: 'activity', lane: 'actor', x: 75, y: 4995, w: 200, h: 58 },
+  A47: { type: 'activity', lane: 'plot', x: 375, y: 4995, w: 270, h: 58 },
+  A48: { type: 'activity', lane: 'rotation', x: 805, y: 4990, w: 330, h: 66 },
+  A49: { type: 'activity', lane: 'actor', x: 75, y: 5130, w: 200, h: 58 },
+  A50: { type: 'activity', lane: 'actor', x: 75, y: 5565, w: 200, h: 58 },
+  end: { type: 'end', x: 175, y: 5685 }
+};
+
+const flows = [
+  ['start', 'A1', ''],
+  ['A1', 'A2', ''],
+  ['A2', 'A3', ''],
+  ['A3', 'D1', ''],
+  ['D1', 'A4', 'ne'],
+  ['A4', 'endFail', ''],
+  ['D1', 'A5', 'taip'],
+  ['A5', 'A6', ''],
+  ['A6', 'D2', ''],
+  ['D2', 'A7', 'taip'],
+  ['A7', 'A8', ''],
+  ['A8', 'A6', 'M1'],
+  ['D2', 'D3', 'ne'],
+  ['D3', 'A9', 'taip'],
+  ['D3', 'D8', 'ne'],
+  ['A9', 'A10', ''],
+  ['A10', 'A11', ''],
+  ['A11', 'D4', ''],
+  ['D4', 'A12', 'ne'],
+  ['A12', 'A5', ''],
+  ['D4', 'A13', 'taip'],
+  ['A13', 'A14', ''],
+  ['A14', 'A15', ''],
+  ['A15', 'A16', ''],
+  ['A16', 'D5', ''],
+  ['D5', 'A17', 'ne'],
+  ['D5', 'A18', 'taip'],
+  ['A18', 'A19', ''],
+  ['A19', 'A20', ''],
+  ['A20', 'A21', ''],
+  ['A21', 'A22', ''],
+  ['A22', 'A23', ''],
+  ['A23', 'A24', ''],
+  ['A24', 'A25', ''],
+  ['A25', 'D6', ''],
+  ['D6', 'A26', 'taip'],
+  ['D6', 'A27', 'ne'],
+  ['A26', 'D7', ''],
+  ['A27', 'D7', ''],
+  ['D7', 'A19', 'ne'],
+  ['D7', 'A28', 'taip'],
+  ['A17', 'A28', 'M2'],
+  ['A28', 'A29', ''],
+  ['A29', 'A30', ''],
+  ['A30', 'A31', ''],
+  ['A31', 'D8', ''],
+  ['D8', 'A32', 'taip'],
+  ['A32', 'A33', ''],
+  ['A33', 'A34', ''],
+  ['A34', 'D9', ''],
+  ['D9', 'A35', 'ne'],
+  ['A35', 'A31', 'M3'],
+  ['D9', 'A36', 'taip'],
+  ['A36', 'A31', 'M3'],
+  ['D8', 'D10', 'ne'],
+  ['D10', 'A37', 'taip'],
+  ['A37', 'A38', ''],
+  ['A38', 'A39', ''],
+  ['A39', 'D11', ''],
+  ['D11', 'A40', 'ne'],
+  ['A40', 'A31', 'M3'],
+  ['D11', 'A41', 'taip'],
+  ['A41', 'D12', ''],
+  ['D12', 'A40', 'ne'],
+  ['D12', 'A42', 'taip'],
+  ['A42', 'A43', ''],
+  ['A43', 'A44', ''],
+  ['A44', 'A45', ''],
+  ['A45', 'A50', 'M4'],
+  ['D10', 'D13', 'ne'],
+  ['D13', 'A46', 'taip'],
+  ['A46', 'A47', ''],
+  ['A47', 'A48', ''],
+  ['A48', 'A49', ''],
+  ['A49', 'A50', 'M4'],
+  ['D13', 'A50', 'ne'],
+  ['A50', 'end', '']
+];
+
+const edgeRoutes = {
+  'D2->D3': { from: 'right', to: 'right', points: [[305, 805], [305, 1035]] },
+  'D3->D8': { from: 'left', to: 'left', points: [[35, 1035], [35, 4145]] },
+  'A8->A6': { from: 'top', to: 'left', points: [[50, 942], [50, 684]] },
+  'A12->A5': { from: 'top', to: 'left', points: [[35, 1433], [35, 569]] },
+  'A17->A28': { from: 'left', to: 'left', points: [[730, 2204], [730, 3648]] },
+  'D7->A19': { from: 'left', to: 'left', points: [[740, 3533], [740, 2334]] },
+  'D8->D10': { from: 'left', to: 'left', points: [[35, 4145], [35, 4565]] },
+  'A35->A31': { from: 'top', to: 'right', points: [[675, 4448], [675, 4014]] },
+  'A36->A31': { from: 'left', to: 'right', points: [[700, 4593], [700, 4014]] },
+  'A40->A31': { from: 'top', to: 'right', points: [[700, 4858], [700, 4014]] },
+  'D12->A40': { from: 'left', to: 'right', points: [[700, 5183], [700, 4858]] },
+  'D10->D13': { from: 'left', to: 'left', points: [[35, 4565], [35, 4865]] },
+  'D13->A50': { from: 'left', to: 'left', points: [[35, 4865], [35, 5594]] },
+  'A45->A50': { from: 'bottom', to: 'top', points: [[175, 5520]] },
+  'A49->A50': { from: 'bottom', to: 'top', points: [[175, 5480]] }
+};
+
+const svg = document.getElementById('diagram');
+const ns = 'http://www.w3.org/2000/svg';
+
+function el(name, attrs = {}, parent = svg) {
+  const node = document.createElementNS(ns, name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  parent.appendChild(node);
+  return node;
+}
+
+function textLines(text, maxChars) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  words.forEach((word) => {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length > maxChars && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function labelFor(id) {
+  if (id.startsWith('A')) return `${id} ${activities.find((entry) => entry[0] === id)?.[1] ?? ''}`;
+  if (id.startsWith('D')) return `${id} ${decisions.find((entry) => entry[0] === id)?.[1] ?? ''}`;
+  return id;
+}
+
+function drawWrappedText(x, y, width, text, className = 'node-text') {
+  const t = el('text', { x, y, 'text-anchor': 'middle', class: className });
+  const lines = textLines(text, Math.max(18, Math.floor(width / 7.1)));
+  const start = y - ((lines.length - 1) * 6);
+  lines.forEach((line, index) => {
+    const span = el('tspan', { x, dy: index === 0 ? 0 : 14 }, t);
+    span.textContent = line;
+    if (index === 0) t.setAttribute('y', start);
+  });
+}
+
+function drawNode(id, node) {
+  if (node.type === 'start') {
+    el('circle', { cx: node.x, cy: node.y, r: 12, fill: '#172033' });
+    return;
+  }
+  if (node.type === 'end') {
+    el('circle', { cx: node.x, cy: node.y, r: 15, fill: '#fff', stroke: '#172033', 'stroke-width': 2 });
+    el('circle', { cx: node.x, cy: node.y, r: 9, fill: '#172033' });
+    return;
+  }
+  const label = labelFor(id);
+  if (node.type === 'decision') {
+    const hw = node.w / 2;
+    const hh = node.h / 2;
+    el('polygon', {
+      points: `${node.x},${node.y - hh} ${node.x + hw},${node.y} ${node.x},${node.y + hh} ${node.x - hw},${node.y}`,
+      fill: 'var(--decision)',
+      stroke: 'var(--decision-border)',
+      'stroke-width': 1.6
+    });
+    drawWrappedText(node.x, node.y + 4, node.w * 0.92, label, 'node-subtext');
+    return;
+  }
+  const className = node.type === 'call' ? 'call-activity' : '';
+  el('rect', {
+    x: node.x,
+    y: node.y,
+    width: node.w,
+    height: node.h,
+    rx: 8,
+    ry: 8,
+    fill: node.type === 'call' ? 'var(--call)' : 'var(--activity)',
+    stroke: node.type === 'call' ? 'var(--call-border)' : 'var(--activity-border)',
+    'stroke-width': 1.6,
+    class: className
+  });
+  drawWrappedText(node.x + node.w / 2, node.y + node.h / 2 + 4, node.w - 18, label);
+}
+
+function anchor(node, side) {
+  if (node.type === 'start' || node.type === 'end') {
+    return { x: node.x, y: node.y };
+  }
+  if (node.type === 'decision') {
+    const hw = node.w / 2;
+    const hh = node.h / 2;
+    if (side === 'left') return { x: node.x - hw, y: node.y };
+    if (side === 'right') return { x: node.x + hw, y: node.y };
+    if (side === 'top') return { x: node.x, y: node.y - hh };
+    return { x: node.x, y: node.y + hh };
+  }
+  if (side === 'left') return { x: node.x, y: node.y + node.h / 2 };
+  if (side === 'right') return { x: node.x + node.w, y: node.y + node.h / 2 };
+  if (side === 'top') return { x: node.x + node.w / 2, y: node.y };
+  return { x: node.x + node.w / 2, y: node.y + node.h };
+}
+
+function defaultSide(from, to) {
+  const a = nodes[from];
+  const b = nodes[to];
+  if (!a || !b) return ['bottom', 'top'];
+  const ax = a.type === 'decision' || a.type === 'start' || a.type === 'end' ? a.x : a.x + a.w / 2;
+  const bx = b.type === 'decision' || b.type === 'start' || b.type === 'end' ? b.x : b.x + b.w / 2;
+  const ay = a.type === 'decision' || a.type === 'start' || a.type === 'end' ? a.y : a.y + a.h / 2;
+  const by = b.type === 'decision' || b.type === 'start' || b.type === 'end' ? b.y : b.y + b.h / 2;
+  if (Math.abs(ax - bx) > Math.abs(ay - by)) {
+    return ax < bx ? ['right', 'left'] : ['left', 'right'];
+  }
+  return ay < by ? ['bottom', 'top'] : ['top', 'bottom'];
+}
+
+function drawEdge(from, to, label) {
+  const route = edgeRoutes[`${from}->${to}`] ?? {};
+  const sides = defaultSide(from, to);
+  const start = anchor(nodes[from], route.from ?? sides[0]);
+  const end = anchor(nodes[to], route.to ?? sides[1]);
+  const points = [start, ...(route.points ?? []).map(([x, y]) => ({ x, y })), end];
+  el('polyline', {
+    points: points.map((p) => `${p.x},${p.y}`).join(' '),
+    fill: 'none',
+    stroke: 'var(--line)',
+    'stroke-width': 1.45,
+    'marker-end': 'url(#arrow)'
+  });
+  if (label) {
+    const mid = points[Math.floor(points.length / 2)];
+    const next = points[Math.min(points.length - 1, Math.floor(points.length / 2) + 1)];
+    el('text', { x: (mid.x + next.x) / 2 + 6, y: (mid.y + next.y) / 2 - 6, class: 'edge-label' }).textContent = label;
+  }
+}
+
+function renderTables() {
+  const activityBody = document.querySelector('#activity-table tbody');
+  activities.forEach(([code, text]) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><code>${code}</code></td><td>${text}</td>`;
+    activityBody.appendChild(row);
+  });
+  const decisionBody = document.querySelector('#decision-table tbody');
+  decisions.forEach(([code, text]) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><code>${code}</code></td><td>${text}</td>`;
+    decisionBody.appendChild(row);
+  });
+  const flowList = document.getElementById('flow-list');
+  flows.forEach(([from, to, label]) => {
+    const line = document.createElement('div');
+    line.textContent = `${from}${label ? `[${label}]` : ''} -> ${to}`;
+    flowList.appendChild(line);
+  });
+}
+
+function render() {
+  const defs = el('defs');
+  const marker = el('marker', {
+    id: 'arrow',
+    viewBox: '0 0 10 10',
+    refX: 9,
+    refY: 5,
+    markerWidth: 7,
+    markerHeight: 7,
+    orient: 'auto-start-reverse'
+  }, defs);
+  el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: 'var(--line)' }, marker);
+
+  Object.values(lanes).forEach((lane, index) => {
+    el('rect', {
+      x: lane.x,
+      y: lane.y,
+      width: lane.width,
+      height: lane.height,
+      fill: index % 2 === 0 ? 'var(--lane)' : 'var(--lane-soft)',
+      stroke: '#9ca3af',
+      'stroke-width': 1
+    });
+    el('text', { x: lane.x + lane.width / 2, y: lane.y + 28, 'text-anchor': 'middle', class: 'lane-title' }).textContent = lane.title;
+  });
+
+  el('text', { x: 820, y: 32, 'text-anchor': 'middle', class: 'uml-title' }).textContent = 'PA8 "Pažymėti augalų rotaciją"';
+  flows.forEach(([from, to, label]) => drawEdge(from, to, label));
+  Object.entries(nodes).forEach(([id, node]) => drawNode(id, node));
+  renderTables();
+}
+
+render();
+</script>
+</body>
+</html>

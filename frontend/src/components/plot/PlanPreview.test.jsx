@@ -7,7 +7,7 @@ describe('PlanPreview', () => {
   it('rebuilds zone geometry from the same canonical boundary reference used by the editor', () => {
     const { container } = render(
       <PlanPreview
-        plotName="Shared plot"
+        plotName="Bendrinamas plot"
         plotGeometry={{
           points: [
             { x: 0.04, y: 0.08 },
@@ -39,7 +39,7 @@ describe('PlanPreview', () => {
     expect(clipPath).not.toBeNull()
     expect(zonePolygon).not.toBeNull()
     expect(zonePolygon?.getAttribute('points')).not.toBe('10.00,12.00 67.00,22.00 67.00,72.00 20.00,72.00')
-    expect(screen.getByLabelText(/Shared plot visual preview/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Bendrinamas plot vizualinė peržiūra/i)).toBeInTheDocument()
   })
 
   it('renders labels consistently for multiple visible zones and keeps a numbered legend fallback', () => {

@@ -70,6 +70,11 @@ class Plot extends Model
         return $this->hasMany(HarvestRecord::class, 'plot_id');
     }
 
+    public function snapshots(): HasMany
+    {
+        return $this->hasMany(PlotSnapshot::class, 'plot_id');
+    }
+
     public function accessRights(): HasMany
     {
         return $this->hasMany(AccessRight::class, 'plot_id');

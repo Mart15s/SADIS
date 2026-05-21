@@ -322,6 +322,7 @@ class AccessRightsTest extends TestCase
             'creation_date' => '2026-03-20',
             'description' => 'Bandymu sklypas',
             'share' => true,
+            'garden_owner_id' => $owner->id,
         ], $overrides));
 
         HasPlot::query()->create([

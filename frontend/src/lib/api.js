@@ -3,7 +3,7 @@ import { getAuthToken } from './auth.js'
 
 let unauthorizedHandler = null
 
-const GENERIC_SERVER_ERROR = 'The request could not be completed. Please check the data and try again.'
+const GENERIC_SERVER_ERROR = 'Užklausos nepavyko įvykdyti. Patikrinkite duomenis ir bandykite dar kartą.'
 
 function normalizeMessage(payload, status = null) {
   if (status >= 500) {
@@ -22,12 +22,12 @@ function normalizeMessage(payload, status = null) {
     return validationMessages[0]
   }
 
-  return 'Request failed. Please try again.'
+  return 'Užklausos nepavyko įvykdyti. Bandykite dar kartą.'
 }
 
 function toApiError(error) {
   if (!error.response) {
-    return Object.assign(new Error('Unable to reach the API.'), {
+    return Object.assign(new Error('Nepavyko pasiekti serverio.'), {
       status: 0,
       details: null,
       original: error,
@@ -286,6 +286,10 @@ export const api = {
   },
   async confirmRotationPlan(plotId, draftId) {
     const { data } = await apiClient.post(`/plots/${plotId}/rotations/plans/${draftId}/confirm`)
+    return data
+  },
+  async updateRotationDraftItem(plotId, draftId, plantId, payload) {
+    const { data } = await apiClient.patch(`/plots/${plotId}/rotations/plans/${draftId}/items/${plantId}`, payload)
     return data
   },
   async rejectRotationPlan(plotId, draftId) {

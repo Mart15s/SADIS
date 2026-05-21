@@ -132,12 +132,12 @@ class PlantLifecycleService
         if ($this->shouldCreateHarvestTask($plant, $care, $generationDate, $harvestRecords)) {
             $actions[] = [
                 'type' => TaskType::Harvest->value,
-                'name' => "Harvest {$plant->name}",
+                'name' => "Nuimti derlių: {$plant->name}",
                 'priority' => TaskPriority::High->value,
                 'reason' => 'The simulated lifecycle has reached the harvest checkpoint for this planting.',
                 'comment' => 'Record the harvest quantity and confirm the post-harvest condition.',
                 'required_resources' => [[
-                    'resource_name' => 'Harvest box',
+                    'resource_name' => 'Derliaus dėžė',
                     'normalized_name' => 'harvest box',
                     'inventory_item_type' => 'tool',
                     'unit' => 'unit',

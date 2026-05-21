@@ -435,8 +435,8 @@ class TaskInventoryCoverageService
     {
         if ($status === 'fully_covered') {
             return $shortageSummary === []
-                ? 'Inventory is fully covered for planned work on this day.'
-                : 'Inventory is fully covered.';
+                ? 'Inventoriaus pakanka visiems šios dienos suplanuotiems darbams.'
+                : 'Inventoriaus pakanka.';
         }
 
         $resourceList = collect($shortageSummary)
@@ -446,10 +446,9 @@ class TaskInventoryCoverageService
             ->all();
 
         return sprintf(
-            '%d planned task%s blocked by %s.',
+            '%d suplanuotų užduočių blokuojama dėl inventoriaus: %s.',
             $blockedTaskCount,
-            $blockedTaskCount === 1 ? ' is' : 's are',
-            $resourceList === [] ? 'inventory shortages' : implode(', ', $resourceList)
+            $resourceList === [] ? 'trūksta atsargų' : implode(', ', $resourceList)
         );
     }
 

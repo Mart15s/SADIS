@@ -5,7 +5,7 @@ export default function ModeToggleGroup({
   value,
   onChange,
   className = '',
-  ariaLabel = 'Mode selection',
+  ariaLabel = 'Režimo pasirinkimas',
 }) {
   return (
     <div className={`mode-toggle-group ${className}`.trim()} role="group" aria-label={ariaLabel}>

@@ -266,7 +266,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   onSelectZone,
   onSelectBoundary,
   onCreateZone,
-  onZoneCreateBlocked,
+  onZoneCreateBlokuota,
   onZoneGeometryCommit,
   onBoundaryCommit,
   showLayerConsole = true,
@@ -296,7 +296,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   }))
   const [interactionMode, setInteractionMode] = useState(INTERACTION_MODES.idle)
   const [snapEnabled, setSnapEnabled] = useState(false)
-  const [showDimensions, setShowDimensions] = useState(loadDimensionPreference)
+  const [showDimensions, setRodytiDimensions] = useState(loadDimensionPreference)
   const [selectedTarget, setSelectedTarget] = useState({ type: 'none', id: null })
   const [draftZone, setDraftZone] = useState(null)
   const [hoveredZoneId, setHoveredZoneId] = useState(null)
@@ -472,9 +472,9 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     ))
   }
 
-  function reportZoneCreateBlocked(message = 'No available non-overlapping space was found for a new zone.') {
-    if (onZoneCreateBlocked) {
-      onZoneCreateBlocked(message)
+  function reportZoneCreateBlokuota(message = 'Nerasta laisvos nepersidengiančios vietos naujai zonai.') {
+    if (onZoneCreateBlokuota) {
+      onZoneCreateBlokuota(message)
     }
   }
 
@@ -633,7 +633,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     const nextShape = resolveNewZoneShape(shape, boundaryShape)
 
     if (!nextShape || calculateArea(nextShape) < MIN_ZONE_EDGE * MIN_ZONE_EDGE * 0.6) {
-      reportZoneCreateBlocked()
+      reportZoneCreateBlokuota()
       return null
     }
 
@@ -818,7 +818,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
       const nextWidth = Math.max(Math.round(entry.contentRect.width), 320)
-      const nextHeight = Math.max(Math.round(entry.contentRect.height), 520)
+      const nextHeight = Math.max(Math.round(entry.contentRect.height), 1)
 
       setCanvasSize((current) => (
         current.width === nextWidth && current.height === nextHeight
@@ -962,7 +962,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     const worldPoint = toWorldPoint(pointer)
 
     if (!pointInPolygon(worldPoint, renderedBoundary)) {
-      reportZoneCreateBlocked('Draw zones by starting inside the plot boundary.')
+      reportZoneCreateBlokuota('Zonas braižykite pradėdami sklypo ribos viduje.')
       return false
     }
 
@@ -1119,14 +1119,14 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   const zoomLabel = viewport.scale >= 10 ? `${safeNumber(viewport.scale, 1)}x` : `${safeNumber(viewport.scale, 2)}x`
   const viewportBounds = { width: canvasSize.width, height: canvasSize.height }
   const saveStatus = isLayoutSaving
-    ? { className: 'badge badge-warning', text: 'Saving layout...' }
+    ? { className: 'badge badge-warning', text: 'Saugomas išdėstymas...' }
     : layoutSaveFeedback?.type === 'error'
       ? { className: 'badge badge-danger', text: layoutSaveFeedback.message }
       : layoutSaveFeedback?.type === 'success'
         ? { className: 'badge badge-success', text: layoutSaveFeedback.message }
         : null
   const plotBoundaryLabel = getBoundaryLabelLayout({
-    plotName: plotName?.trim() || 'Plot boundary',
+    plotName: plotName?.trim() || 'Sklypo riba',
     areaText: formatSquareMeters(calculateArea(renderedBoundary), 1),
     screenPoints: projectShape(renderedBoundary, viewport),
     viewportBounds,
@@ -1200,24 +1200,24 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     ]
     : []
   const layerItems = [
-    { id: 'boundary', label: 'Plot boundary', active: true, color: '#47633b' },
-    { id: 'zones', label: `${zones.length} zones`, active: zones.length > 0, color: '#b9683f' },
-    { id: 'grid', label: 'Grid', active: true, color: '#8c7c66' },
-    { id: 'dimensions', label: 'Dimensions', active: showDimensions, color: '#ef6d22' },
+    { id: 'boundary', label: 'Sklypo riba', active: true, color: '#47633b' },
+    { id: 'zones', label: `${zones.length} zonos`, active: zones.length > 0, color: '#b9683f' },
+    { id: 'grid', label: 'Tinklelis', active: true, color: '#8c7c66' },
+    { id: 'dimensions', label: 'Matmenys', active: showDimensions, color: '#ef6d22' },
   ]
 
   return (
     <div className="designer-panel">
-      <div className="designer-toolbar" role="toolbar" aria-label="Plot editor tools">
+      <div className="designer-toolbar" role="toolbar" aria-label="Sklypo redaktoriaus įrankiai">
         <DesignerIconButton
-          label="Select or edit"
+          label="Pasirinkti arba redaguoti"
           icon="cursor"
           active={!isDrawingZoneMode}
           onClick={() => setInteractionMode(INTERACTION_MODES.idle)}
         />
         {canEdit ? (
           <DesignerIconButton
-            label="Draw zone"
+            label="Braižyti zoną"
             icon="draw"
             active={isDrawingZoneMode}
             onClick={() => {
@@ -1230,42 +1230,42 @@ export default memo(forwardRef(function PlotDesignerCanvas({
           />
         ) : null}
         <span className="designer-toolbar-divider" aria-hidden="true" />
-        <DesignerIconButton label="Fit to view" icon="fit" onClick={handleFitView} />
-        {canEdit ? <DesignerIconButton label="Reset layout" icon="reset" onClick={resetDesignerLayout} /> : null}
+        <DesignerIconButton label="Talpinti vaizde" icon="fit" onClick={handleFitView} />
+        {canEdit ? <DesignerIconButton label="Atkurti išdėstymą" icon="reset" onClick={resetDesignerLayout} /> : null}
         <span className="designer-toolbar-divider" aria-hidden="true" />
         <DesignerIconButton
-          label="Snap to grid"
+          label="Lygiuoti prie tinklelio"
           icon="grid"
           active={snapEnabled}
           disabled={!canEdit}
           onClick={() => setSnapEnabled((current) => !current)}
         />
         <DesignerIconButton
-          label="Show dimensions"
+          label="Rodyti matmenis"
           icon="ruler"
           active={showDimensions}
-          onClick={() => setShowDimensions((current) => !current)}
+          onClick={() => setRodytiDimensions((current) => !current)}
         />
         {canEdit && showSaveAction ? (
           <Button className="designer-toolbar-save" onClick={onSaveLayout} disabled={isLayoutSaveDisabled || isLayoutSaving}>
-            {isLayoutSaving ? 'Saving layout...' : 'Save layout'}
+            {isLayoutSaving ? 'Saugomas išdėstymas...' : 'Išsaugoti išdėstymą'}
           </Button>
         ) : null}
         {saveStatus ? <span className={saveStatus.className}>{saveStatus.text}</span> : null}
       </div>
 
       <div className="designer-map-console">
-        {showLayerConsole ? <MapLayerControl title="Visible layers" items={layerItems} /> : null}
+        {showLayerConsole ? <MapLayerControl title="Matomi rodiniai" items={layerItems} /> : null}
         {!mapFirstHud ? <PlotScaleControl zoom={zoomLabel} snapEnabled={snapEnabled} dimensionsVisible={showDimensions} /> : null}
       </div>
 
       <div className="designer-meta-grid">
-        <MeasurementBadge label="Plot area" value={formatSquareMeters(calculateArea(renderedBoundary), 1)} tone="field" className="designer-measurement" />
-        <MeasurementBadge label="Plot perimeter" value={formatMeters(plotMetrics.perimeter)} tone="earth" className="designer-measurement" />
-        <MeasurementBadge label="Side lengths" value={plotMetrics.sideSummary || 'No geometry'} tone="amber" className="designer-measurement designer-measurement-wide" />
+        <MeasurementBadge label="Sklypo plotas" value={formatSquareMeters(calculateArea(renderedBoundary), 1)} tone="field" className="designer-measurement" />
+        <MeasurementBadge label="Sklypo perimetras" value={formatMeters(plotMetrics.perimeter)} tone="earth" className="designer-measurement" />
+        <MeasurementBadge label="Kraštinių ilgiai" value={plotMetrics.sideSummary || 'Geometrijos nėra'} tone="amber" className="designer-measurement designer-measurement-wide" />
         <MeasurementBadge
-          label={selectedZone ? 'Selected zone' : 'Mapped zones'}
-          value={selectedZone && selectedMetrics ? `${formatMeters(selectedMetrics.perimeter)} perimeter` : `${zones.length} total`}
+          label={selectedZone ? 'Pasirinkta zona' : 'Sužymėtos zonos'}
+          value={selectedZone && selectedMetrics ? `${formatMeters(selectedMetrics.perimeter)} perimetras` : `${zones.length} iš viso`}
           tone="leaf"
           className="designer-measurement"
         />
@@ -1682,7 +1682,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       </div>
 
       {!mapFirstHud && zones.length > 0 ? (
-        <div className="designer-legend" aria-label="Zone legend">
+        <div className="designer-legend" aria-label="Zonų legenda">
           {zones.map((zone, index) => {
             const zoneId = String(zone.id)
             const colors = getZoneColor(index)
@@ -1704,7 +1704,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                 />
                 <span className="designer-legend-text">{zone.name}</span>
                 {label?.mode === 'marker' || !label ? (
-                  <span className="designer-legend-note">compact</span>
+                  <span className="designer-legend-note">glausta</span>
                 ) : null}
               </span>
             )
@@ -1714,7 +1714,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
       {mapFirstHud ? (
         <div className="designer-bottom-hud" aria-label="Canvas status">
-          <div className="designer-legend" aria-label="Zone legend">
+          <div className="designer-legend" aria-label="Zonų legenda">
             {zones.length > 0 ? zones.map((zone, index) => {
               const zoneId = String(zone.id)
               const colors = getZoneColor(index)

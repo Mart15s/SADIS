@@ -377,7 +377,7 @@ class CalendarGenerationTest extends TestCase
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
             'plant_id' => null,
-            'item' => 'Fertilizer',
+            'item' => 'Trąšos',
         ]);
     }
 
@@ -385,7 +385,7 @@ class CalendarGenerationTest extends TestCase
     {
         [, $owner, $plot, $zone] = $this->createOwnedPlotContext();
         $this->createInventoryItemForOwner($owner, [
-            'name' => 'Fertilizer',
+            'name' => 'Trąšos',
             'quantity' => 3,
             'type' => InventoryItemType::Material,
             'unit' => InventoryUnit::Kilogram,
@@ -418,7 +418,7 @@ class CalendarGenerationTest extends TestCase
         $this->assertDatabaseMissing('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Fertilizer',
+            'item' => 'Trąšos',
         ]);
     }
 
@@ -426,7 +426,7 @@ class CalendarGenerationTest extends TestCase
     {
         [, $owner, $plot, $zone] = $this->createOwnedPlotContext();
         $this->createInventoryItemForOwner($owner, [
-            'name' => 'Plant support',
+            'name' => 'Augalų atramos',
             'quantity' => 1,
             'type' => InventoryItemType::Tool,
             'unit' => InventoryUnit::Unit,
@@ -452,13 +452,13 @@ class CalendarGenerationTest extends TestCase
         $this->assertDatabaseHas('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'rest',
-            'item' => 'Plant support',
+            'item' => 'Augalų atramos',
         ]);
 
         $this->assertDatabaseMissing('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Plant support',
+            'item' => 'Augalų atramos',
         ]);
     }
 
@@ -485,7 +485,7 @@ class CalendarGenerationTest extends TestCase
         $this->assertDatabaseHas('tasks', [
             'fk_task_calendar_id' => $calendar->id,
             'type' => 'buy',
-            'item' => 'Plant support',
+            'item' => 'Augalų atramos',
         ]);
     }
 
