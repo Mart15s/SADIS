@@ -144,6 +144,18 @@ export default function Sidebar({
             </svg>
           </button>
         ) : null}
+        {variant === 'drawer' ? (
+          <button
+            type="button"
+            className="drawer-close-button"
+            onClick={onNavigate}
+            aria-label="Uždaryti navigaciją"
+          >
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <path d="M5 5l10 10M15 5 5 15" />
+            </svg>
+          </button>
+        ) : null}
       </div>
 
       <nav className="sidebar-nav" aria-label="Pagrindinė navigacija">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { PageChromeContext } from './PageChromeContext.jsx'
@@ -17,6 +17,7 @@ export default function AppShell() {
     || /^\/plots\/[^/]+(?:\/(?:calendar|history|harvests|analytics|sharing|rotation))?$/.test(location.pathname)
   )
   const isPloteditorRoute = /^\/plots\/new$/.test(location.pathname) || /^\/plots\/[^/]+$/.test(location.pathname)
+  const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const [pageHeader, setPageHeader] = useState(null)
   const pageChromeContext = useMemo(() => ({
     registerPageHeader(id, header) {
@@ -34,6 +35,10 @@ export default function AppShell() {
   }), [])
   const activePageHeader = pageHeader?.pathname === location.pathname ? pageHeader : null
 
+  useEffect(() => {
+    setIsMobileNavigationOpen(false)
+  }, [location.pathname])
+
   return (
     <PageChromeContext.Provider value={pageChromeContext}>
       <div className={`app-shell ${isSidebarCollapsed ? 'is-sidebar-collapsed' : ''}`}>
@@ -44,6 +49,21 @@ export default function AppShell() {
           onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
         />
         <main className={`shell-main ${isPloteditorRoute ? 'shell-main--plot-editor' : ''}`.trim()}>
+          <div className="mobile-shell-bar" aria-label="Mobilioji navigacija">
+            <button
+              type="button"
+              className="mobile-shell-menu-button"
+              aria-controls="app-navigation-drawer"
+              aria-expanded={isMobileNavigationOpen}
+              aria-label="Atidaryti navigaciją"
+              onClick={() => setIsMobileNavigationOpen(true)}
+            >
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 5.5h12M4 10h12M4 14.5h12" />
+              </svg>
+            </button>
+            <span className="mobile-shell-title">SADiS</span>
+          </div>
           {isWorkspaceRoute ? null : <Topbar isWide={isWorkspaceRoute} pageHeader={activePageHeader} />}
           <div
             className={[
@@ -55,6 +75,20 @@ export default function AppShell() {
             <Outlet />
           </div>
         </main>
+        <div className={`drawer-layer ${isMobileNavigationOpen ? 'is-open' : ''}`.trim()}>
+          <button
+            type="button"
+            className="drawer-backdrop"
+            aria-label="Uždaryti navigaciją"
+            onClick={() => setIsMobileNavigationOpen(false)}
+          />
+          <Sidebar
+            isAuthenticated={isAuthenticated}
+            isAdmin={isAdmin}
+            variant="drawer"
+            onNavigate={() => setIsMobileNavigationOpen(false)}
+          />
+        </div>
       </div>
     </PageChromeContext.Provider>
   )

@@ -39,10 +39,7 @@ export default function LoginPage() {
 
   return (
     <div className="page-stack auth-card">
-      <PageHeader
-        title="Prisijungti"
-        description="Prisijungimui naudojamas Laravel Sanctum prieigos raktas, kuris saugomas SPA sesijai."
-      />
+      <PageHeader title="Prisijungti" />
 
       <form className="panel input-grid" onSubmit={handleSubmit}>
         <div className="field">
