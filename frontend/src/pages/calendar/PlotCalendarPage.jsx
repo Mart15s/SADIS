@@ -911,7 +911,7 @@ export default function PlotCalendarPage() {
                       {linkedReplenishmentTask ? (
                         <div className="day-task-card-dependency">
                           <span className="day-task-card-dependency-label">Priklauso nuo</span>
-                          <strong>{linkedReplenishmentTask.name}</strong>
+                          <strong>{translateVisibleText(linkedReplenishmentTask.name)}</strong>
                         </div>
                       ) : null}
 
