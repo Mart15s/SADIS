@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   color-scheme: light;
@@ -12017,5 +12017,989 @@ textarea {
   .dashboard-task-row strong {
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+}
+
+/* Final mobile plot workspace overrides */
+
+.plot-compact-actions-menu,
+.plot-mobile-floating-action {
+  display: none;
+}
+
+.plot-location-map-mode-hint-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.plot-location-map-hint-toggle {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 1px solid rgba(83, 61, 39, 0.1);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+@media (max-width: 768px) {
+  .plot-compact-actions,
+  .plot-section-switcher-shell .plot-compact-actions,
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell .plot-compact-actions {
+    display: none !important;
+  }
+
+  .plot-compact-actions-menu {
+    position: relative !important;
+    display: block !important;
+    min-width: 0 !important;
+    z-index: 80 !important;
+  }
+
+  .plot-compact-actions-menu summary {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--workspace-line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--text-strong);
+    font-weight: 900;
+    list-style: none;
+  }
+
+  .plot-compact-actions-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .plot-compact-actions-menu-list {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    right: 0;
+    z-index: 90;
+    display: grid;
+    gap: var(--space-2);
+    width: min(320px, calc(100vw - 2rem));
+    padding: var(--space-2);
+    border: 1px solid var(--workspace-line);
+    border-radius: var(--radius-card);
+    background: rgba(255, 253, 248, 0.98);
+    box-shadow: var(--workspace-float-shadow);
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions-menu {
+    order: 3;
+    width: 100%;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions-menu-list {
+    right: auto;
+    left: 0;
+    width: 100%;
+  }
+
+  .plot-compact-actions-menu-list .button,
+  .plot-compact-actions-menu-list a,
+  .plot-compact-actions-menu-list a .button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    white-space: nowrap !important;
+  }
+
+  .plot-create-compact-nav {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: var(--space-2) !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-main {
+    grid-column: 1 / -1;
+    min-width: 0 !important;
+  }
+
+  .plot-create-step-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 1 / 2;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .plot-create-step-tabs .plot-create-step-tab:nth-child(3) {
+    display: none;
+  }
+
+  .plot-create-compact-nav > .plot-compact-actions-menu {
+    grid-column: 2 / 3;
+  }
+
+  .workspace-page--editor .plot-editor-layout,
+  .plot-create-workspace {
+    position: relative !important;
+    display: block !important;
+    height: calc(100dvh - 188px) !important;
+    min-height: 560px !important;
+    max-height: calc(100dvh - 128px) !important;
+    overflow: hidden !important;
+  }
+
+  .workspace-page--editor .plot-editor-main,
+  .plot-editor-main--map,
+  .workspace-page--editor .plot-editor-main .designer-panel,
+  .workspace-page--editor .plot-editor-main .designer-stage,
+  .plot-create-workspace > .designer-panel,
+  .plot-create-workspace > .designer-panel .designer-stage,
+  .plot-location-map--workspace,
+  .plot-location-map--workspace .plot-location-map-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle,
+  .workspace-page--editor .plot-workspace-panel-toggles,
+  .workspace-page--editor .plot-editor-layout--boundary .plot-workspace-panel-toggles,
+  .plot-create-panel-toggles {
+    position: absolute !important;
+    z-index: 26 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.25rem !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0.25rem !important;
+    border: 1px solid var(--workspace-line);
+    border-radius: var(--radius-pill);
+    background: rgba(255, 253, 248, 0.92);
+    box-shadow: var(--workspace-float-shadow);
+    overflow-x: auto !important;
+    scrollbar-width: none;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle {
+    top: var(--space-2) !important;
+    right: var(--space-2) !important;
+    left: var(--space-2) !important;
+  }
+
+  .workspace-page--editor .plot-workspace-panel-toggles,
+  .workspace-page--editor .plot-editor-layout--boundary .plot-workspace-panel-toggles,
+  .plot-create-panel-toggles {
+    top: auto !important;
+    right: var(--space-2) !important;
+    bottom: var(--space-2) !important;
+    left: var(--space-2) !important;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle .plot-panel-toggle,
+  .workspace-page--editor .plot-workspace-panel-toggles .plot-panel-toggle,
+  .plot-create-panel-toggles .plot-panel-toggle {
+    flex: 1 0 auto !important;
+    min-height: 36px;
+    min-width: 0;
+    justify-content: center;
+    white-space: nowrap !important;
+  }
+
+  .workspace-page--editor .designer-toolbar,
+  .plot-create-workspace--zones .designer-toolbar,
+  .plot-create-workspace--summary .designer-toolbar {
+    top: calc(var(--space-2) + 48px) !important;
+    right: var(--space-2) !important;
+    left: var(--space-2) !important;
+    z-index: 24 !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-radius: var(--radius-pill);
+  }
+
+  .plot-create-workspace--zones .designer-toolbar,
+  .plot-create-workspace--summary .designer-toolbar {
+    top: var(--space-2) !important;
+  }
+
+  .workspace-page--editor .designer-toolbar-divider,
+  .plot-create-workspace .designer-toolbar-divider,
+  .designer-toolbar-group--status,
+  .designer-map-console,
+  .designer-meta-grid {
+    display: none !important;
+  }
+
+  .designer-stage,
+  .designer-stage .konvajs-content,
+  .designer-stage canvas {
+    touch-action: none;
+  }
+
+  .plot-layers-panel,
+  .plot-context-rail,
+  .plot-floating-panel,
+  .plot-create-side-panel,
+  .plot-create-zone-panel,
+  .plot-create-summary-panel {
+    position: absolute !important;
+    top: auto !important;
+    right: var(--space-2) !important;
+    bottom: calc(var(--space-2) + 52px) !important;
+    left: var(--space-2) !important;
+    z-index: 28 !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: min(52dvh, 430px) !important;
+    min-width: 0 !important;
+    padding: var(--space-3) !important;
+    overflow: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .plot-mobile-floating-action {
+    position: absolute;
+    z-index: 31;
+    bottom: calc(var(--space-3) + 58px);
+    display: inline-flex !important;
+    width: auto;
+    max-width: calc(100% - 2rem);
+    min-height: 42px;
+    padding-inline: 1rem;
+    border-radius: var(--radius-pill);
+    box-shadow: var(--workspace-float-shadow);
+    white-space: nowrap !important;
+  }
+
+  .plot-mobile-floating-action--boundary {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .plot-mobile-floating-action--zone {
+    right: var(--space-3);
+  }
+
+  .plot-location-map-mode-hint {
+    top: var(--space-2) !important;
+    left: var(--space-2) !important;
+    right: auto !important;
+    max-width: min(270px, calc(100% - 5rem)) !important;
+    padding: 0.52rem 0.6rem !important;
+    transform: none !important;
+  }
+
+  .plot-location-map-mode-hint strong,
+  .designer-plot-label-text,
+  .designer-zone-label-text,
+  .designer-dimension-label {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  .plot-location-map-mode-hint.is-collapsed span {
+    display: none;
+  }
+
+  .plot-location-map .leaflet-top.leaflet-left {
+    top: 4.4rem;
+  }
+
+  .day-modal-weather {
+    grid-template-columns: repeat(2, minmax(148px, 1fr)) !important;
+  }
+
+  .day-modal-weather .stat-row {
+    grid-template-columns: 1fr !important;
+    align-items: start;
+  }
+
+  .day-modal-weather .stat-row-value {
+    text-align: left;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .workspace-page--editor .plot-editor-layout,
+  .plot-create-workspace {
+    height: calc(100dvh - 172px) !important;
+    min-height: 540px !important;
+  }
+
+  .day-modal-weather {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile plot editor shell and label density */
+@media (max-width: 768px) {
+  .shell-main--plot-editor {
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .workspace-page--editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    height: calc(100dvh - 88px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .workspace-page--editor .field-error {
+    position: static;
+    z-index: auto;
+    margin: 0;
+  }
+
+  .plot-compact-nav.plot-page-header.plot-section-switcher-shell {
+    position: relative !important;
+    top: auto !important;
+    z-index: 42 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "mobile-title mobile-actions" !important;
+    gap: 0.45rem !important;
+    align-items: center !important;
+    min-height: 58px !important;
+    padding: 0.45rem !important;
+    overflow: visible !important;
+    border-radius: var(--radius-card) !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-left {
+    grid-area: mobile-title !important;
+    display: flex !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    gap: 0.5rem !important;
+    overflow: hidden !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-back {
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    border-radius: var(--radius-card) !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-identity {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-title-block {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-title {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 1rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-kicker,
+  .workspace-page--editor .plot-section-switcher {
+    display: none !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-meta {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: min(34vw, 132px) !important;
+    max-height: 22px !important;
+    min-width: 0 !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-meta > :nth-child(n+3) {
+    display: none !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-meta > *,
+  .plot-section-switcher-shell .plot-compact-meta :is(.badge, .status-badge, [class*="badge"], [class*="Badge"]) {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions-menu {
+    grid-area: mobile-actions !important;
+    order: initial !important;
+    width: auto !important;
+    justify-self: end !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions-menu summary {
+    width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    border-radius: var(--radius-pill) !important;
+    font-size: 0 !important;
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions-menu summary::before {
+    content: "...";
+    color: var(--text-strong);
+    font-size: 1.05rem;
+    font-weight: 900;
+    line-height: 1;
+    transform: translateY(-2px);
+  }
+
+  .plot-section-switcher-shell .plot-compact-actions-menu-list {
+    right: 0 !important;
+    left: auto !important;
+    width: min(320px, calc(100vw - 1.5rem)) !important;
+  }
+
+  .workspace-page--editor .plot-editor-layout {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    gap: 0.45rem !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 5 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    order: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.25rem !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-pill) !important;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle .plot-panel-toggle {
+    min-width: 0 !important;
+    min-height: 40px !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+  }
+
+  .workspace-page--editor .plot-editor-main,
+  .workspace-page--editor .plot-editor-main--map {
+    position: relative !important;
+    inset: auto !important;
+    order: 2 !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: calc(100dvh - 214px) !important;
+    min-height: 360px !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-card) !important;
+  }
+
+  .workspace-page--editor .plot-editor-main .designer-panel,
+  .workspace-page--editor .plot-editor-main .designer-stage,
+  .plot-editor-main--map .plot-location-map--workspace,
+  .plot-editor-main--map .plot-location-map-canvas {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-card) !important;
+  }
+
+  .plot-editor-main--map .plot-location-map--workspace {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .plot-location-map--workspace .plot-location-map-mode-hint {
+    display: none !important;
+  }
+
+  .plot-location-map .leaflet-top.leaflet-left {
+    top: var(--space-2) !important;
+    left: var(--space-2) !important;
+  }
+
+  .workspace-page--editor .designer-toolbar {
+    position: absolute !important;
+    top: var(--space-2) !important;
+    right: var(--space-2) !important;
+    left: var(--space-2) !important;
+    z-index: 18 !important;
+    display: flex !important;
+    width: auto !important;
+    max-width: calc(100% - var(--space-4)) !important;
+    min-width: 0 !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    border-radius: var(--radius-pill) !important;
+    transform: none !important;
+  }
+
+  .workspace-page--editor .designer-toolbar::-webkit-scrollbar,
+  .workspace-page--editor .plot-workspace-panel-toggles::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .workspace-page--editor .designer-toolbar-divider,
+  .workspace-page--editor .designer-toolbar-save {
+    display: none !important;
+  }
+
+  .workspace-page--editor .plot-workspace-panel-toggles,
+  .workspace-page--editor .plot-editor-layout--boundary .plot-workspace-panel-toggles {
+    position: absolute !important;
+    top: auto !important;
+    right: var(--space-2) !important;
+    bottom: max(var(--space-2), env(safe-area-inset-bottom)) !important;
+    left: var(--space-2) !important;
+    z-index: 24 !important;
+    display: flex !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0.5rem 0.25rem 0.25rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-radius: var(--radius-card) !important;
+  }
+
+  .workspace-page--editor .plot-workspace-panel-toggles::before {
+    content: "";
+    position: absolute;
+    top: 0.22rem;
+    left: 50%;
+    width: 2.25rem;
+    height: 0.18rem;
+    border-radius: var(--radius-pill);
+    background: rgba(83, 61, 39, 0.28);
+    transform: translateX(-50%);
+  }
+
+  .workspace-page--editor .plot-workspace-panel-toggles .plot-panel-toggle {
+    flex: 1 0 auto !important;
+    min-width: max-content !important;
+    max-width: 12rem !important;
+    min-height: 34px !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+  }
+
+  .workspace-page--editor .plot-layers-panel,
+  .workspace-page--editor .plot-context-rail {
+    position: absolute !important;
+    top: auto !important;
+    right: var(--space-2) !important;
+    bottom: calc(max(var(--space-2), env(safe-area-inset-bottom)) + 52px) !important;
+    left: var(--space-2) !important;
+    z-index: 25 !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: min(56dvh, 430px) !important;
+    min-width: 0 !important;
+    padding: var(--space-3) !important;
+    overflow: auto !important;
+    overscroll-behavior: contain !important;
+    border-radius: var(--radius-section) var(--radius-section) var(--radius-card) var(--radius-card) !important;
+    background: rgba(255, 253, 248, 0.96) !important;
+  }
+
+  .workspace-page--editor .designer-bottom-hud {
+    right: var(--space-2) !important;
+    bottom: calc(max(var(--space-2), env(safe-area-inset-bottom)) + 54px) !important;
+    left: var(--space-2) !important;
+    z-index: 13 !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    gap: var(--space-2) !important;
+    min-width: 0 !important;
+  }
+
+  .workspace-page--editor .designer-bottom-hud .designer-legend {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+
+  .workspace-page--editor .designer-bottom-hud .plot-scale-control {
+    display: none !important;
+  }
+
+  .designer-legend-text,
+  .designer-zone-label-text,
+  .designer-plot-label-text,
+  .designer-dimension-label,
+  .plot-layer-object-copy strong,
+  .plot-layer-object-copy small {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  .designer-zone-label:not(.is-active) {
+    display: none !important;
+  }
+
+  .designer-dimension-label--zone {
+    opacity: 0.94;
+  }
+
+  .plot-mobile-floating-action {
+    bottom: calc(max(var(--space-2), env(safe-area-inset-bottom)) + 58px) !important;
+    max-width: min(72vw, 260px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .workspace-page--editor {
+    height: calc(100dvh - 82px);
+  }
+
+  .workspace-page--editor .plot-editor-main,
+  .workspace-page--editor .plot-editor-main--map {
+    height: calc(100dvh - 204px) !important;
+    min-height: 350px !important;
+  }
+}
+
+/* Fixed desktop navigation and current mobile editor/weather refinements */
+@media (min-width: 769px) {
+  .app-shell,
+  .app-shell.is-sidebar-collapsed {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+    grid-template-columns: var(--sidebar-width, 248px) minmax(0, 1fr);
+  }
+
+  .shell-sidebar--desktop {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    display: flex;
+    width: var(--sidebar-width, 248px);
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .shell-main {
+    height: 100dvh;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+.calendar-weather-refresh-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 253, 248, 0.72);
+}
+
+@media (max-width: 768px) {
+  .calendar-weather-refresh-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-weather-refresh-row .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .shell-main--plot-editor {
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .shell-main--plot-editor .page-container-plot-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .workspace-page--editor {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .plot-create-workspace {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .plot-create-workspace--zones .designer-toolbar {
+    top: var(--space-2) !important;
+    right: var(--space-2) !important;
+    left: var(--space-2) !important;
+    max-height: 44px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .plot-create-workspace--zones .designer-stage {
+    padding-bottom: 112px;
+  }
+
+  .plot-create-workspace--zones .plot-create-panel-toggles {
+    right: max(var(--space-2), env(safe-area-inset-right)) !important;
+    bottom: max(var(--space-2), env(safe-area-inset-bottom)) !important;
+    left: max(var(--space-2), env(safe-area-inset-left)) !important;
+    z-index: 32 !important;
+    display: flex !important;
+    max-width: none !important;
+    padding: 0.35rem !important;
+    overflow-x: auto !important;
+    border-radius: var(--radius-card) !important;
+  }
+
+  .plot-create-workspace--zones .plot-panel-toggle {
+    flex: 1 0 max-content !important;
+    min-height: 38px !important;
+    max-width: none !important;
+    padding-inline: 0.72rem !important;
+  }
+
+  .plot-panel-toggle--primary-action {
+    border-color: rgba(73, 104, 63, 0.42) !important;
+    background: rgba(73, 104, 63, 0.12) !important;
+    color: var(--workspace-green-dark) !important;
+  }
+
+  .plot-create-workspace--zones .plot-mobile-floating-action--zone {
+    display: none !important;
+  }
+
+  .plot-create-workspace--zones .plot-floating-panel {
+    right: max(var(--space-2), env(safe-area-inset-right)) !important;
+    bottom: calc(max(var(--space-2), env(safe-area-inset-bottom)) + 58px) !important;
+    left: max(var(--space-2), env(safe-area-inset-left)) !important;
+    max-height: min(46dvh, 320px) !important;
+    border-radius: var(--radius-section) var(--radius-section) var(--radius-card) var(--radius-card) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .plot-create-workspace {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .plot-create-workspace--zones .plot-floating-panel {
+    max-height: min(44dvh, 286px) !important;
+  }
+}
+
+/* Mobile polish pass for dense plot header and calendar resource rows */
+@media (max-width: 768px) {
+  .plot-create-compact-nav {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "create-main create-actions"
+      "create-tabs create-tabs" !important;
+    align-items: start !important;
+    gap: 0.45rem !important;
+    min-height: auto !important;
+    max-height: none !important;
+    padding: 0.45rem !important;
+    overflow: visible !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-main {
+    grid-area: create-main !important;
+    grid-column: auto !important;
+    display: grid !important;
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "create-back create-title"
+      "create-back create-meta" !important;
+    align-items: center !important;
+    gap: 0.15rem 0.55rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-back {
+    grid-area: create-back !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-title-block {
+    grid-area: create-title !important;
+    min-width: 0 !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-kicker {
+    display: block !important;
+    max-height: 14px !important;
+    overflow: hidden !important;
+    font-size: 0.62rem !important;
+    line-height: 1 !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-title {
+    max-width: 100% !important;
+    font-size: 1.05rem !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-meta {
+    grid-area: create-meta !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 24px !important;
+    overflow: hidden !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-meta > :first-child {
+    display: none !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-meta > * {
+    flex: 0 1 auto !important;
+    max-width: 100% !important;
+  }
+
+  .plot-create-compact-nav .plot-create-step-tabs {
+    grid-area: create-tabs !important;
+    grid-column: auto !important;
+    width: 100% !important;
+  }
+
+  .plot-create-compact-nav > .plot-compact-actions-menu {
+    grid-area: create-actions !important;
+    grid-column: auto !important;
+    justify-self: end !important;
+    width: auto !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-actions-menu summary {
+    width: auto !important;
+    min-width: 104px !important;
+    padding-inline: 0.85rem !important;
+    font-size: 0.92rem !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-actions-menu summary::before {
+    content: none !important;
+  }
+
+  .day-modal-panel .resource-summary-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: var(--space-2) !important;
+  }
+
+  .day-modal-panel .resource-summary-row .stat-row,
+  .day-modal-panel .task-card-resource-row {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .day-modal-panel .stat-row-label,
+  .day-modal-panel .stat-row-value {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    text-align: left !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    hyphens: none !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .plot-create-compact-nav .plot-compact-actions-menu summary {
+    min-width: 96px !important;
+    padding-inline: 0.7rem !important;
+  }
+
+  .plot-create-compact-nav .plot-compact-title {
+    font-size: 1rem !important;
   }
 }

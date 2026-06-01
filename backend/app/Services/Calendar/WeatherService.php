@@ -3,12 +3,12 @@
 namespace App\Services\Calendar;
 
 use App\Models\WeatherForecast;
+use App\Models\TaskCalendar;
 use App\Services\Integrations\MeteoLtClient;
 use App\ValueObjects\WeatherData;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
@@ -64,125 +64,90 @@ class WeatherService
         return $result;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function debugForecast(string $city): array
+    public function refreshCalendarForecasts(TaskCalendar $calendar, bool $force = false): array
     {
-        $city = trim($city);
+        $calendar->loadMissing('plot', 'weatherForecasts');
+
+        if (! $force && ! $this->calendarForecastIsStale($calendar)) {
+            return [
+                'refreshed' => false,
+                'updated_count' => 0,
+                'fetched_at' => $this->latestFetchedAt($calendar)?->toIso8601String(),
+                'message' => 'Orų prognozė dar galioja.',
+            ];
+        }
+
+        $city = trim((string) $calendar->plot?->city);
 
         if ($city === '') {
-            throw new RuntimeException('City name is required.');
+            throw new RuntimeException('Calendar plot city is required to refresh weather forecasts.');
         }
 
-        $placeMeta = null;
-        $forecastMeta = null;
+        $dailyForecasts = $this->fetchDailyForecasts($city);
+        $fetchedAt = now();
+        $updatedCount = 0;
 
-        try {
-            $placeMeta = $this->rememberWithMeta(
-                'dev-meteo-place:'.md5(mb_strtolower($city)),
-                now()->addHours(6),
-                fn (): array => $this->meteoLtClient->findPlaceByCity($city)
-            );
+        foreach (CarbonPeriod::create($calendar->start_date->copy()->startOfDay(), $calendar->end_date->copy()->startOfDay()) as $date) {
+            $dateKey = $date->toDateString();
+            $weatherData = $dailyForecasts[$dateKey] ?? null;
 
-            $place = $placeMeta['value'];
-            $placeCode = (string) ($place['code'] ?? '');
-
-            if ($placeCode === '') {
-                throw new RuntimeException('Meteo.lt did not return a usable place code.');
+            if (! $weatherData) {
+                continue;
             }
 
-            $forecastMeta = $this->rememberWithMeta(
-                "dev-meteo-forecast:{$placeCode}",
-                now()->addMinutes(20),
-                fn (): array => $this->meteoLtClient->getLongTermForecast($placeCode)
+            WeatherForecast::query()->updateOrCreate(
+                [
+                    'task_calendar_id' => $calendar->id,
+                    'date' => $dateKey,
+                ],
+                [
+                    'fk_task_calendar_id' => $calendar->id,
+                    'temperature' => $weatherData->averageTemperature(),
+                    'temp_min' => $weatherData->tempMin,
+                    'temp_max' => $weatherData->tempMax,
+                    'precipitation' => $weatherData->precipitationMm,
+                    'humidity' => $weatherData->humidity,
+                    'wind_kmh' => $weatherData->windKmh,
+                    'condition_code' => $weatherData->conditionCode,
+                    'is_seasonal_fallback' => $weatherData->isSeasonalFallback,
+                    'source' => $weatherData->source,
+                    'source_date' => $weatherData->sourceDate,
+                    'source_city' => $weatherData->sourceCity,
+                    'city' => $city,
+                    'fetched_at' => $fetchedAt,
+                ]
             );
 
-            $forecast = $forecastMeta['value'];
-            $entries = collect($forecast['forecastTimestamps'] ?? [])
-                ->filter(fn (mixed $entry) => is_array($entry))
-                ->values();
-
-            $normalized = $this->normalizeDebugEntries($entries);
-            $firstDay = $normalized['daily'][0] ?? null;
-
-            return [
-                'source' => 'live_meteo_lt',
-                'request' => [
-                    'place' => [
-                        'source' => $placeMeta['hit'] ? 'cache' : 'live_api',
-                        'cache_key' => $placeMeta['key'],
-                    ],
-                    'forecast' => [
-                        'source' => $forecastMeta['hit'] ? 'cache' : 'live_api',
-                        'cache_key' => $forecastMeta['key'],
-                    ],
-                ],
-                'resolved_place' => $place,
-                'raw_place_lookup' => $place,
-                'raw_forecast' => $forecast,
-                'normalized' => [
-                    'current' => $firstDay,
-                    'daily' => $normalized['daily'],
-                    'timestamps' => $normalized['timestamps'],
-                ],
-            ];
-        } catch (Throwable $exception) {
-            Log::warning('Failed to fetch Meteo.lt forecast for debug endpoint.', [
-                'city' => $city,
-                'error' => $exception->getMessage(),
-            ]);
-
-            $fallbackRows = WeatherForecast::query()
-                ->where('city', $city)
-                ->orderBy('date')
-                ->orderByDesc('id')
-                ->limit(7)
-                ->get()
-                ->values();
-
-            if ($fallbackRows->isEmpty()) {
-                throw $exception;
-            }
-
-            $normalizedRows = $fallbackRows->map(function (WeatherForecast $forecast): array {
-                return [
-                    'date' => optional($forecast->date)->toDateString() ?? (string) $forecast->date,
-                    'forecast_time_utc' => optional($forecast->date)->toDateString() ?? (string) $forecast->date,
-                    'temperature' => round((float) $forecast->temperature, 2),
-                    'temp_min' => round((float) ($forecast->temp_min ?? $forecast->temperature), 2),
-                    'temp_max' => round((float) ($forecast->temp_max ?? $forecast->temperature), 2),
-                    'precipitation_mm' => round((float) $forecast->precipitation, 2),
-                    'humidity' => round((float) $forecast->humidity, 2),
-                    'wind_kmh' => round((float) ($forecast->wind_kmh ?? 0), 2),
-                    'source' => (string) ($forecast->source ?? 'stored_weather_forecasts'),
-                    'source_date' => optional($forecast->source_date)->toDateString(),
-                    'source_city' => $forecast->source_city,
-                ];
-            })->values()->all();
-
-            return [
-                'source' => 'stored_weather_forecasts',
-                'request' => [
-                    'place' => [
-                        'source' => $placeMeta && $placeMeta['hit'] ? 'cache' : 'not_available',
-                        'cache_key' => $placeMeta['key'] ?? null,
-                    ],
-                    'forecast' => [
-                        'source' => $forecastMeta && $forecastMeta['hit'] ? 'cache' : 'fallback',
-                        'cache_key' => $forecastMeta['key'] ?? null,
-                    ],
-                ],
-                'resolved_place' => $placeMeta['value'] ?? null,
-                'raw_place_lookup' => $placeMeta['value'] ?? null,
-                'raw_forecast' => null,
-                'normalized' => [
-                    'current' => $normalizedRows[0] ?? null,
-                    'daily' => $normalizedRows,
-                    'timestamps' => [],
-                ],
-            ];
+            $updatedCount++;
         }
+
+        $calendar->unsetRelation('weatherForecasts');
+
+        return [
+            'refreshed' => $updatedCount > 0,
+            'updated_count' => $updatedCount,
+            'fetched_at' => $fetchedAt->toIso8601String(),
+            'message' => $updatedCount > 0
+                ? 'Orų prognozė atnaujinta iš Meteo.lt.'
+                : 'Meteo.lt nepateikė šio kalendoriaus datų prognozės.',
+        ];
+    }
+
+    public function calendarForecastIsStale(TaskCalendar $calendar): bool
+    {
+        $calendar->loadMissing('weatherForecasts');
+
+        if ($calendar->weatherForecasts->isEmpty()) {
+            return true;
+        }
+
+        $latestFetchedAt = $this->latestFetchedAt($calendar);
+
+        if (! $latestFetchedAt) {
+            return true;
+        }
+
+        return $latestFetchedAt->lte(now()->subMinutes($this->forecastTtlMinutes()));
     }
 
     private function fetchDailyForecasts(string $city): array
@@ -223,6 +188,19 @@ class WeatherService
         }
 
         return $dailyForecasts;
+    }
+
+    private function latestFetchedAt(TaskCalendar $calendar): ?Carbon
+    {
+        return $calendar->weatherForecasts
+            ->pluck('fetched_at')
+            ->filter()
+            ->max();
+    }
+
+    private function forecastTtlMinutes(): int
+    {
+        return max(1, (int) config('services.meteo_lt.forecast_ttl_minutes', 60));
     }
 
     private function aggregateDay(Collection $entries): WeatherData
@@ -270,56 +248,6 @@ class WeatherService
             isSeasonalFallback: false,
             source: self::SOURCE_API,
         );
-    }
-
-    /**
-     * @param  Collection<int, array<string, mixed>>  $entries
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    private function normalizeDebugEntries(Collection $entries): array
-    {
-        $timestampRows = $entries
-            ->map(function (array $entry): array {
-                $temp = (float) data_get($entry, 'airTemperature', 0);
-
-                return [
-                    'forecast_time_utc' => (string) data_get($entry, 'forecastTimeUtc', ''),
-                    'temperature' => round($temp, 2),
-                    'temp_min' => round($temp, 2),
-                    'temp_max' => round($temp, 2),
-                    'precipitation_mm' => round((float) data_get($entry, 'totalPrecipitation', 0), 2),
-                    'humidity' => round((float) data_get($entry, 'relativeHumidity', 0), 2),
-                    'wind_kmh' => round((float) data_get($entry, 'windSpeed', 0) * 3.6, 2),
-                    'condition_code' => data_get($entry, 'conditionCode'),
-                    'source' => 'live_meteo_lt',
-                ];
-            })
-            ->take(8)
-            ->values()
-            ->all();
-
-        $dailyRows = $entries
-            ->groupBy(function (array $entry): string {
-                return Carbon::parse((string) $entry['forecastTimeUtc'], 'UTC')->toDateString();
-            })
-            ->map(function (Collection $dayEntries, string $dateKey): array {
-                $aggregated = $this->aggregateDay($dayEntries);
-                $firstTimestamp = (string) data_get($dayEntries->first(), 'forecastTimeUtc', $dateKey);
-
-                return array_merge($aggregated->toArray(), [
-                    'date' => $dateKey,
-                    'forecast_time_utc' => $firstTimestamp,
-                    'temperature' => $aggregated->averageTemperature(),
-                    'source' => 'live_meteo_lt',
-                ]);
-            })
-            ->values()
-            ->all();
-
-        return [
-            'timestamps' => $timestampRows,
-            'daily' => $dailyRows,
-        ];
     }
 
     private function storedFallbackForDate(string $city, Carbon $date): WeatherData
@@ -432,21 +360,4 @@ class WeatherService
         };
     }
 
-    /**
-     * @template TValue
-     *
-     * @param  \Closure():TValue  $resolver
-     * @return array{key:string,hit:bool,value:TValue}
-     */
-    private function rememberWithMeta(string $key, mixed $ttl, \Closure $resolver): array
-    {
-        $hit = Cache::has($key);
-        $value = Cache::remember($key, $ttl, $resolver);
-
-        return [
-            'key' => $key,
-            'hit' => $hit,
-            'value' => $value,
-        ];
-    }
 }

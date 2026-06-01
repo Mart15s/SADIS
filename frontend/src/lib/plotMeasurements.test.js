@@ -34,6 +34,24 @@ describe('plotMeasurements', () => {
     expect(labels.map((label) => label.id)).toEqual(['tiny-0', 'tiny-1', 'tiny-2', 'tiny-3'])
   })
 
+  it('can hide short edge labels for dense mobile layouts', () => {
+    const labels = createDimensionLabels({
+      shape: createRectShape({
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 8,
+      }),
+      viewport: { x: 20, y: 20, scale: 20 },
+      viewportBounds: { width: 300, height: 240 },
+      idPrefix: 'mobile',
+      minScreenLength: 48,
+      hideShortEdges: true,
+    })
+
+    expect(labels.map((label) => label.id)).toEqual(['mobile-1', 'mobile-3'])
+  })
+
   it('places visible labels at edge midpoints and rotates them along the edge', () => {
     const labels = createDimensionLabels({
       shape: createRectShape({

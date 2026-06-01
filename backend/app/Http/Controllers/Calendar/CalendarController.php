@@ -13,9 +13,12 @@ use App\Models\TaskCalendar;
 use App\Services\Plot\AccessService;
 use App\Services\Inventory\InventoryService;
 use App\Services\Calendar\TaskCalendarService;
+use App\Services\Calendar\WeatherService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CalendarController extends Controller
 {
@@ -68,11 +71,14 @@ class CalendarController extends Controller
         Plot $plot,
         TaskCalendar $calendar,
         AccessService $accessService,
-        InventoryService $inventoryService
+        InventoryService $inventoryService,
+        WeatherService $weatherService
     ): JsonResponse
     {
         $this->ensureUserCanViewPlot($request, $plot, $accessService);
         abort_unless($calendar->fk_plot_id === $plot->id, 404);
+
+        $this->refreshStaleWeatherForecasts($calendar, $weatherService);
 
         $calendar->load([
             'tasks.plant.plantZone',
@@ -83,6 +89,70 @@ class CalendarController extends Controller
         $this->hydrateCalendarInventory($calendar, $inventoryService);
 
         return response()->json(TaskCalendarResource::make($calendar));
+    }
+
+    public function refreshWeather(
+        Request $request,
+        Plot $plot,
+        TaskCalendar $calendar,
+        AccessService $accessService,
+        InventoryService $inventoryService,
+        WeatherService $weatherService
+    ): JsonResponse
+    {
+        $this->ensureUserCanEditPlot($request, $plot, $accessService);
+        abort_unless($calendar->fk_plot_id === $plot->id, 404);
+
+        try {
+            $refresh = $weatherService->refreshCalendarForecasts($calendar, true);
+        } catch (Throwable $exception) {
+            Log::warning('Manual calendar weather refresh failed.', [
+                'calendar_id' => $calendar->id,
+                'plot_id' => $plot->id,
+                'city' => $plot->city,
+                'error' => $exception->getMessage(),
+                'exception_class' => $exception::class,
+            ]);
+
+            return response()->json([
+                'message' => 'Orų prognozės atnaujinti nepavyko. Rodomi paskutiniai išsaugoti duomenys.',
+            ], 503);
+        }
+
+        $calendar->load([
+            'tasks.plant.plantZone',
+            'tasks.plantZone',
+            'tasks.requiredResources',
+            'weatherForecasts',
+        ]);
+        $this->hydrateCalendarInventory($calendar, $inventoryService);
+
+        return response()->json([
+            'message' => $refresh['message'],
+            'refresh' => $refresh,
+            'calendar' => TaskCalendarResource::make($calendar),
+        ]);
+    }
+
+    private function refreshStaleWeatherForecasts(TaskCalendar $calendar, WeatherService $weatherService): void
+    {
+        $calendar->loadMissing('plot', 'weatherForecasts');
+
+        if (! $weatherService->calendarForecastIsStale($calendar)) {
+            return;
+        }
+
+        try {
+            $weatherService->refreshCalendarForecasts($calendar);
+        } catch (Throwable $exception) {
+            Log::warning('Automatic stale calendar weather refresh failed.', [
+                'calendar_id' => $calendar->id,
+                'plot_id' => $calendar->plot_id,
+                'city' => $calendar->plot?->city,
+                'error' => $exception->getMessage(),
+                'exception_class' => $exception::class,
+            ]);
+        }
     }
 
     private function hydrateCalendarInventory(TaskCalendar $calendar, InventoryService $inventoryService): void

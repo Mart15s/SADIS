@@ -6,12 +6,12 @@ let unauthorizedHandler = null
 const GENERIC_SERVER_ERROR = 'Užklausos nepavyko įvykdyti. Patikrinkite duomenis ir bandykite dar kartą.'
 
 function normalizeMessage(payload, status = null) {
-  if (status >= 500) {
-    return GENERIC_SERVER_ERROR
-  }
-
   if (typeof payload?.message === 'string' && payload.message.trim()) {
     return payload.message
+  }
+
+  if (status >= 500) {
+    return GENERIC_SERVER_ERROR
   }
 
   const validationMessages = payload?.errors
@@ -306,6 +306,10 @@ export const api = {
   },
   async getCalendar(plotId, calendarId) {
     const { data } = await apiClient.get(`/plots/${plotId}/calendars/${calendarId}`)
+    return data
+  },
+  async refreshCalendarWeather(plotId, calendarId) {
+    const { data } = await apiClient.post(`/plots/${plotId}/calendars/${calendarId}/weather-refresh`)
     return data
   },
   async listCalendarTasks(calendarId, params = {}) {

@@ -19,7 +19,10 @@ function getFocusableElements(container) {
 
 function useModalBehavior(open, panelRef, onClose) {
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     if (!open) return undefined

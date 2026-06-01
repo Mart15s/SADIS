@@ -1119,6 +1119,7 @@ export default function PlotDetailPage() {
 
         <section className={`plot-editor-main ${editorView === EDITOR_VIEWS.boundary ? 'plot-editor-main--map' : ''}`.trim()}>
           {editorView === EDITOR_VIEWS.boundary ? (
+            <>
             <PlotLocationMap
               mode="boundary"
               boundaryClosed={boundaryClosed}
@@ -1136,7 +1137,19 @@ export default function PlotDetailPage() {
               onBoundaryPointRemove={handleBoundaryPointRemove}
               onViewChange={setMapPreviewView}
             />
+            {!boundaryClosed && mapBoundaryPoints.length >= 3 ? (
+              <Button
+                className="plot-mobile-floating-action plot-mobile-floating-action--boundary"
+                aria-label="Greitai uždaryti ribą"
+                onClick={handleBoundaryClose}
+                disabled={!canEdit}
+              >
+                Uždaryti ribą
+              </Button>
+            ) : null}
+            </>
           ) : (
+          <>
           <PlotDesignerCanvas
             ref={designerCanvasRef}
             plotId={plotId}
@@ -1162,6 +1175,16 @@ export default function PlotDetailPage() {
             onZoneGeometryCommit={handleZoneGeometryCommit}
             onBoundaryCommit={handleBoundaryCommit}
           />
+          {canEdit ? (
+            <Button
+              className="plot-mobile-floating-action plot-mobile-floating-action--zone"
+              aria-label="Greitai pridėti zoną"
+              onClick={handleZoneCreateFromForm}
+            >
+              Pridėti zoną
+            </Button>
+          ) : null}
+          </>
           )}
         </section>
 

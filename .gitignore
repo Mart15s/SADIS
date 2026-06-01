@@ -4,23 +4,35 @@
 # Environment files
 .env
 .env.*
+!.env.example
 !**/.env.example
 !**/.env.*.example
 !.env.render.example
 
 # Dependencies and generated frontend output
+node_modules/
+vendor/
 **/vendor/
 **/node_modules/
 /public/build/
 /dist/
+dist/
+build/
 /backend/public/build/
 /frontend/dist/
+**/coverage/
+.phpunit.cache/
 
 # Laravel runtime output
 **/storage/*.key
 **/storage/logs/*
+storage/logs/*.log
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
 !**/storage/logs/.gitignore
 **/bootstrap/cache/*.php
+bootstrap/cache/*.php
 !**/bootstrap/cache/.gitignore
 *.log
 

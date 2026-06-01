@@ -1,15 +1,47 @@
 # SADiS
 
-Asmeninio sodo ar daržo informacinė sistema:
+Asmeninio sodo ar daržo informacinė sistema, skirta sklypų, zonų, augalų, darbų kalendoriaus, inventoriaus, derliaus ir bendruomenės funkcijoms valdyti. Sistema įgyvendinta kaip React vieno puslapio aplikacija ir Laravel REST API.
 
-- Laravel REST API su Sanctum autentifikacija kataloge `backend/`
-- React SPA kataloge `frontend/`
-- PostgreSQL duomenų bazė
-- Docker/Render production paleidimas iš repo šaknies
+## Technologijos
 
-## Lokalūs veiksmai
+- Backend: Laravel, Eloquent ORM, Laravel Sanctum
+- Frontend: React, Vite
+- Duomenų bazė: PostgreSQL
+- Integracijos: Meteo.lt orų prognozė, Perenual augalų priežiūros duomenys, el. pašto serveris slaptažodžio atkūrimui
+- PDF generavimas: Dompdf
+- Diegimas: Docker / Render konfigūracija repo šaknyje
 
-Backend paruošimas:
+## Pagrindinės funkcijos
+
+- Naudotojų registracija, prisijungimas, atsijungimas ir slaptažodžio atkūrimas
+- Sklypų, augalų zonų ir augalų valdymas
+- Vizualus sklypo plano redagavimas ir PDF eksportas
+- Augalų būklės, derliaus, rotacijos ir planavimo istorijos sekimas
+- Rekomendacinis darbų kalendorius su Meteo.lt orų duomenimis
+- Inventoriaus ir sunaudotų medžiagų valdymas
+- Sklypų bendrinimas su peržiūros arba redagavimo teisėmis
+- Bendruomenės įrašai ir administratoriaus naudotojų valdymas
+
+## Aplinkos kintamieji
+
+Backend pavyzdys pateiktas faile `backend/.env.example`. Lokaliai sukurkite `backend/.env` ir užpildykite PostgreSQL, el. pašto ir išorinių API reikšmes.
+
+Svarbiausi laukai:
+
+- `APP_KEY`
+- `APP_URL`
+- `DB_CONNECTION=pgsql`
+- `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+- `SANCTUM_STATEFUL_DOMAINS`
+- `MAIL_*`
+- `PERENUAL_API_KEY`
+- `METEO_LT_BASE_URL`
+
+Produkcijai skirtų Render kintamųjų pavyzdžiai pateikti `.env.render.example`. Realūs raktai, slaptažodžiai ir duomenų bazės prisijungimai į repozitoriją neturi būti keliami.
+
+## Paleidimas lokaliai
+
+Backend:
 
 ```powershell
 cd backend
@@ -20,9 +52,7 @@ php artisan migrate
 php artisan serve
 ```
 
-Prieš migracijas `.env` faile nurodykite PostgreSQL prisijungimą. Production ir bendrinami example failai neturi realių raktų ar slaptažodžių.
-
-Frontend paruošimas atskirame terminale:
+Frontend atskirame terminale:
 
 ```powershell
 cd frontend
@@ -30,41 +60,38 @@ npm install
 npm run dev
 ```
 
-Frontend build:
+## Migracijos ir demo duomenys
+
+Įprastas migracijų paleidimas:
 
 ```powershell
-cd frontend
-npm run build
+cd backend
+php artisan migrate
 ```
 
-## Demo duomenys
-
-Numatytasis `php artisan db:seed` be env flagų demo duomenų nekuria. Aktualų demonstracinį rinkinį paleiskite aiškiai:
+Demo duomenys nėra kuriami automatiškai be aiškaus pasirinkimo. Gynimui skirtą demonstracinį rinkinį galima paleisti taip:
 
 ```powershell
 cd backend
 php artisan db:seed --class=CurrentVersionDemoSeeder
 ```
 
-Jei demo rinkinį norite paleisti per bendrą `DatabaseSeeder`:
+Papildoma informacija apie demonstracinius duomenis pateikta `DEMO_DATA.md` ir `DEMO_ACCOUNT.md`.
 
-```powershell
-$env:RUN_DEMO_SEEDER='true'
-php artisan db:seed
-```
+## Patikros komandos
 
-`Demo1RichDataSeeder` paleidžiamas tik su `RUN_DEMO1_RICH_SEEDER=true` arba tiesioginiu `--class` kvietimu ir tik tada, kai jau yra jo tikslinis `demo1@gmail.com` demo pasaulis.
-
-## Patikros
+Backend:
 
 ```powershell
 cd backend
 php artisan config:clear
-php artisan route:clear
 php artisan cache:clear
+php artisan route:clear
+php artisan migrate
 php artisan test
-php artisan route:list
 ```
+
+Frontend:
 
 ```powershell
 cd frontend
@@ -72,23 +99,3 @@ npm run lint
 npm test
 npm run build
 ```
-
-## Render
-
-Render diegimas aprašytas [DEPLOY_RENDER.md](DEPLOY_RENDER.md). Svarbiausi env kintamieji:
-
-- `APP_KEY`
-- `APP_URL`
-- `DATABASE_URL`
-- `SANCTUM_STATEFUL_DOMAINS`
-- `SESSION_SECURE_COOKIE`
-- `PERENUAL_API_KEY`
-- `RUN_MIGRATIONS`
-- `RUN_DEMO_SEEDER`
-- `RUN_DEMO1_RICH_SEEDER`
-
-Saugūs pavyzdžiai pateikti `.env.render.example` ir `backend/.env.example`.
-
-## Dokumentacija
-
-Specifikacijos šaltinis yra `garden_system_spec.docx`. Architektūriniai, audito ir sugeneruoti akademiniai artefaktai laikomi `docs/`, kad repo šaknyje liktų tik vykdymui ir diegimui reikalingi failai.

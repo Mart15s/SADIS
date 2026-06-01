@@ -15,6 +15,7 @@ export default defineConfig({
     },
     maxWorkers: 1,
     minWorkers: 1,
+    testTimeout: 15000,
   },
   server: {
     proxy: {

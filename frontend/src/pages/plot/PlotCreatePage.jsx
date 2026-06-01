@@ -669,6 +669,18 @@ export default function PlotCreatePage() {
             {step === 'boundary' ? 'Kurti zonas' : 'Peržiūrėti'}
           </Button>
         </div>
+        <details className="plot-compact-actions-menu">
+          <summary>Veiksmai</summary>
+          <div className="plot-compact-actions-menu-list">
+            <Button variant="secondary" onClick={resetDraft}>Išvalyti juodraštį</Button>
+            <Button
+              onClick={() => setStep(step === 'boundary' ? 'zones' : 'summary')}
+              disabled={step === 'summary' || !isBoundaryReady}
+            >
+              {step === 'boundary' ? 'Kurti zonas' : 'Peržiūrėti'}
+            </Button>
+          </div>
+        </details>
       </section>
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
@@ -688,6 +700,16 @@ export default function PlotCreatePage() {
             onBoundaryPointRemove={handleBoundaryPointRemove}
             onViewChange={setMapView}
           />
+
+          {!boundaryClosed && boundaryPoints.length >= 3 ? (
+            <Button
+              className="plot-mobile-floating-action plot-mobile-floating-action--boundary"
+              aria-label="Greitai uždaryti ribą"
+              onClick={handleBoundaryClose}
+            >
+              Uždaryti ribą
+            </Button>
+          ) : null}
 
           <div className="plot-workspace-panel-toggles plot-create-panel-toggles" aria-label="Sklypo kūrimo paneliai">
             <button
@@ -839,6 +861,15 @@ export default function PlotCreatePage() {
             onBoundaryCommit={handleBoundaryCommit}
           />
 
+          <Button
+            className="plot-mobile-floating-action plot-mobile-floating-action--zone"
+            aria-label="Greitai pridėti zoną"
+            onClick={handleZoneCreateFromForm}
+            disabled={!isBoundaryReady}
+          >
+            Pridėti zoną
+          </Button>
+
           <div className="plot-workspace-panel-toggles plot-create-panel-toggles" aria-label="Sklypo kūrimo paneliai">
             <button
               type="button"
@@ -847,6 +878,14 @@ export default function PlotCreatePage() {
               aria-expanded={activeUtilityPanel === 'layers'}
             >
               Rodiniai
+            </button>
+            <button
+              type="button"
+              className="plot-panel-toggle plot-panel-toggle--primary-action"
+              onClick={handleZoneCreateFromForm}
+              disabled={!isBoundaryReady}
+            >
+              Pridėti zoną
             </button>
             <button
               type="button"

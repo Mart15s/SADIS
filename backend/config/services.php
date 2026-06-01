@@ -42,6 +42,7 @@ return [
 
     'meteo_lt' => [
         'base_url' => env('METEO_LT_BASE_URL', 'https://api.meteo.lt/v1'),
+        'forecast_ttl_minutes' => (int) env('METEO_LT_FORECAST_TTL_MINUTES', 60),
     ],
 
     'nominatim' => [

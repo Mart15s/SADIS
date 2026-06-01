@@ -86,6 +86,8 @@ export function createDimensionLabels({
   idPrefix,
   occupiedBoxes = [],
   minScreenLength = DIMENSION_LABEL_MIN_SCREEN_LENGTH,
+  hideShortEdges = false,
+  skipCollisions = false,
 }) {
   const labels = []
   const usedBoxes = occupiedBoxes
@@ -99,6 +101,11 @@ export function createDimensionLabels({
     const dx = end.x - start.x
     const dy = end.y - start.y
     const screenLength = Math.hypot(dx, dy)
+
+    if (hideShortEdges && screenLength < minScreenLength) {
+      continue
+    }
+
     const normal = screenLength > 0
       ? { x: -dy / screenLength, y: dx / screenLength }
       : { x: 0, y: -1 }
@@ -106,6 +113,7 @@ export function createDimensionLabels({
 
     const offsetSteps = [baseOffset, baseOffset + 12, -(baseOffset + 12), baseOffset + 24, -(baseOffset + 24), baseOffset + 36]
     let selectedPlacement = null
+    let fallbackPlacement = null
 
     for (const offset of offsetSteps) {
       const x = clamp(
@@ -125,11 +133,24 @@ export function createDimensionLabels({
         bottom: y + (DIMENSION_LABEL_HEIGHT / 2),
       }
 
-      selectedPlacement = { x, y, box }
+      fallbackPlacement = { x, y, box }
 
       if (!usedBoxes.some((usedBox) => boxesOverlap(box, usedBox))) {
+        selectedPlacement = fallbackPlacement
         break
       }
+    }
+
+    if (!selectedPlacement) {
+      if (skipCollisions) {
+        continue
+      }
+
+      selectedPlacement = fallbackPlacement
+    }
+
+    if (!selectedPlacement) {
+      continue
     }
 
     usedBoxes.push(selectedPlacement.box)

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
 import { CircleMarker, MapContainer, Marker, Polygon, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { formatMeters } from '../../lib/plotMeasurements.js'
@@ -305,6 +305,7 @@ export default function PlotLocationMap({
   onBoundaryPointRemove,
   onViewChange,
 }) {
+  const [hintCollapsed, setHintCollapsed] = useState(false)
   const initialCenter = view?.center ?? selectedLocation ?? center
   const initialZoom = view?.zoom ?? DEFAULT_ZOOM
   const canInsertPoints = !readOnly && boundaryClosed && boundaryPoints.length < MAX_BOUNDARY_POINTS
@@ -322,8 +323,19 @@ export default function PlotLocationMap({
 
   return (
     <div className={rootClassName}>
-      <div className="plot-location-map-mode-hint" aria-live="polite">
-        <strong>{readOnly ? 'Ribų vaizdas' : boundaryClosed ? 'Redaguoti ribą' : 'Braižyti ribą'}</strong>
+      <div className={`plot-location-map-mode-hint ${hintCollapsed ? 'is-collapsed' : ''}`.trim()} aria-live="polite">
+        <div className="plot-location-map-mode-hint-head">
+          <strong>{readOnly ? 'Ribų vaizdas' : boundaryClosed ? 'Redaguoti ribą' : 'Braižyti ribą'}</strong>
+          <button
+            type="button"
+            className="plot-location-map-hint-toggle"
+            aria-label={hintCollapsed ? 'Rodyti instrukciją' : 'Slėpti instrukciją'}
+            aria-expanded={!hintCollapsed}
+            onClick={() => setHintCollapsed((current) => !current)}
+          >
+            {hintCollapsed ? '+' : 'x'}
+          </button>
+        </div>
         <span>{helperText}</span>
       </div>
       <MapContainer

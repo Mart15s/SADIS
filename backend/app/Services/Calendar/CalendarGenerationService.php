@@ -96,6 +96,7 @@ class CalendarGenerationService
                     'source_date' => $weatherData->sourceDate,
                     'source_city' => $weatherData->sourceCity,
                     'city' => $plot->city,
+                    'fetched_at' => now(),
                     'task_calendar_id' => $calendar->id,
                     'fk_task_calendar_id' => $calendar->id,
                 ]);

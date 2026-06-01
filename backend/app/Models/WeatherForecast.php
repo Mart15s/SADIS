@@ -27,6 +27,7 @@ class WeatherForecast extends Model
         'source_date',
         'source_city',
         'city',
+        'fetched_at',
         'fk_task_calendar_id',
     ];
 
@@ -45,6 +46,7 @@ class WeatherForecast extends Model
             'source' => 'string',
             'source_date' => 'date',
             'source_city' => 'string',
+            'fetched_at' => 'datetime',
         ];
     }
 

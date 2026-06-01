@@ -122,6 +122,14 @@ export default function PlotSectionNav({
       </div>
 
       {actions ? <div className="plot-compact-actions">{actions}</div> : null}
+      {actions ? (
+        <details className="plot-compact-actions-menu">
+          <summary>Veiksmai</summary>
+          <div className="plot-compact-actions-menu-list">
+            {actions}
+          </div>
+        </details>
+      ) : null}
     </section>
   )
 }

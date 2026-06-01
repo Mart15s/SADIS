@@ -53,6 +53,7 @@ const HANDLE_HIT_PIXELS = 22
 const SHAPE_HIT_PIXELS = 26
 const POINTER_SLOP_PIXELS = 6
 const DIMENSIONS_STORAGE_KEY = 'sad-plot-designer-show-dimensions'
+const MOBILE_LABEL_QUERY = '(max-width: 768px)'
 const INTERACTION_MODES = {
   idle: 'idle',
   drawingBoundary: 'drawingBoundary',
@@ -154,6 +155,28 @@ function DesignerIconButton({ label, icon, active = false, disabled = false, onC
       <DesignerIcon name={icon} />
     </button>
   )
+}
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => (
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false
+  ))
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const mediaQuery = window.matchMedia(query)
+    const handleChange = () => setMatches(mediaQuery.matches)
+
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [query])
+
+  return matches
 }
 
 function nodeHasAnyName(node, names) {
@@ -297,6 +320,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   const [interactionMode, setInteractionMode] = useState(INTERACTION_MODES.idle)
   const [snapEnabled, setSnapEnabled] = useState(false)
   const [showDimensions, setRodytiDimensions] = useState(loadDimensionPreference)
+  const isMobileLabelDensity = useMediaQuery(MOBILE_LABEL_QUERY)
   const [selectedTarget, setSelectedTarget] = useState({ type: 'none', id: null })
   const [draftZone, setDraftZone] = useState(null)
   const [hoveredZoneId, setHoveredZoneId] = useState(null)
@@ -1125,7 +1149,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       : layoutSaveFeedback?.type === 'success'
         ? { className: 'badge badge-success', text: layoutSaveFeedback.message }
         : null
-  const plotBoundaryLabel = getBoundaryLabelLayout({
+  const plotBoundaryLabelCandidate = getBoundaryLabelLayout({
     plotName: plotName?.trim() || 'Sklypo riba',
     areaText: formatSquareMeters(calculateArea(renderedBoundary), 1),
     screenPoints: projectShape(renderedBoundary, viewport),
@@ -1133,6 +1157,9 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     isSelected: selectedTarget.type === 'boundary',
     context: 'editor',
   })
+  const plotBoundaryLabel = isMobileLabelDensity && selectedTarget.type !== 'boundary'
+    ? null
+    : plotBoundaryLabelCandidate
   const screenLabels = zones.map((zone, index) => {
     const zoneId = String(zone.id)
     const shape = renderedLayouts[zoneId]
@@ -1143,6 +1170,11 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
     const colors = getZoneColor(index)
     const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
+
+    if (isMobileLabelDensity && !isActive) {
+      return null
+    }
+
     const label = getProjectedLabelConfig(zone.name, shape, viewport, {
       isSelected: isActive,
       context: 'editor',
@@ -1167,38 +1199,71 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     labelToBox(plotBoundaryLabel),
     ...screenLabels.map(({ label }) => labelToBox(label)),
   ].filter(Boolean)
-  const dimensionLabels = showDimensions
-    ? [
-      ...createDimensionLabels({
+  const dimensionLabels = (() => {
+    const labels = []
+    const usedBoxes = [...occupiedDimensionBoxes]
+    const selectedZoneId = selectedTarget.type === 'zone' ? selectedTarget.id : null
+    const densityOptions = isMobileLabelDensity
+      ? {
+        hideShortEdges: true,
+        skipCollisions: true,
+      }
+      : {}
+    const shouldShowPlotDimensions = showDimensions && (!isMobileLabelDensity || selectedTarget.type === 'boundary')
+
+    if (shouldShowPlotDimensions) {
+      labels.push(...createDimensionLabels({
         shape: renderedBoundary,
         viewport,
         viewportBounds,
         idPrefix: 'plot-edge',
-        occupiedBoxes: occupiedDimensionBoxes,
-        minScreenLength: 64,
-      }).map((label) => ({ ...label, scope: 'plot' })),
-      ...zones.flatMap((zone) => {
-        const zoneId = String(zone.id)
-        const shape = renderedLayouts[zoneId]
+        occupiedBoxes: usedBoxes,
+        minScreenLength: isMobileLabelDensity ? 48 : 64,
+        ...densityOptions,
+      }).map((label) => ({ ...label, scope: 'plot' })))
+    }
 
-        if (!shape) {
-          return []
-        }
+    const sortedZones = [...zones].sort((left, right) => {
+      if (!selectedZoneId) {
+        return 0
+      }
 
-        return createDimensionLabels({
-          shape,
-          viewport,
-          viewportBounds,
-          idPrefix: `zone-${zoneId}-edge`,
-          occupiedBoxes: occupiedDimensionBoxes,
-          minScreenLength: 58,
-        }).map((label) => ({
-          ...label,
-          scope: selectedTarget.type === 'zone' && selectedTarget.id === zoneId ? 'zone-active' : 'zone',
-        }))
-      }),
-    ]
-    : []
+      if (String(left.id) === selectedZoneId) {
+        return -1
+      }
+
+      if (String(right.id) === selectedZoneId) {
+        return 1
+      }
+
+      return 0
+    })
+
+    sortedZones.forEach((zone) => {
+      const zoneId = String(zone.id)
+      const shape = renderedLayouts[zoneId]
+      const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
+
+      if (!shape || (!showDimensions && !(isMobileLabelDensity && isActive))) {
+        return
+      }
+
+      labels.push(...createDimensionLabels({
+        shape,
+        viewport,
+        viewportBounds,
+        idPrefix: `zone-${zoneId}-edge`,
+        occupiedBoxes: usedBoxes,
+        minScreenLength: isMobileLabelDensity ? 48 : 58,
+        ...densityOptions,
+      }).map((label) => ({
+        ...label,
+        scope: isActive ? 'zone-active' : 'zone',
+      })))
+    })
+
+    return labels
+  })()
   const layerItems = [
     { id: 'boundary', label: 'Sklypo riba', active: true, color: '#47633b' },
     { id: 'zones', label: `${zones.length} zonos`, active: zones.length > 0, color: '#b9683f' },

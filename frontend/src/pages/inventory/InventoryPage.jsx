@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { MeasurementBadge } from '../../components/garden/GardenControls.jsx'
 import PageHeader from '../../components/layout/PageHeader.jsx'
@@ -37,6 +37,22 @@ const emptyForm = {
 
 function normalizeInventoryName(value) {
   return String(value ?? '').trim().toLowerCase()
+}
+
+const INVENTORY_TEXT_TRANSLATIONS = {
+  'Plant support': 'Augalų atrama',
+  'Plant supports': 'Augalų atramos',
+  Quantity: 'Kiekis',
+  Status: 'Būsena',
+  unit: 'vnt.',
+}
+
+function translateInventoryText(value) {
+  if (value === null || value === undefined) {
+    return value
+  }
+
+  return INVENTORY_TEXT_TRANSLATIONS[String(value)] ?? String(value)
 }
 
 function buildResourceKey(resource) {
@@ -131,7 +147,7 @@ export default function InventoryPage() {
 
   const typeLockedByTask = Boolean(selectedTaskResource)
 
-  function applyResourceSuggestion(resource) {
+  const applyResourceSuggestion = useCallback((resource) => {
     const matchingItem = inventoryMatchesByResource.get(buildResourceKey(resource))
 
     startTransition(() => {
@@ -139,7 +155,7 @@ export default function InventoryPage() {
       setEditingId(matchingItem?.id ?? null)
       setForm(buildSuggestedForm(resource, matchingItem))
     })
-  }
+  }, [inventoryMatchesByResource])
 
   function handleChange(event) {
     setSuccessMessage('')
@@ -165,7 +181,7 @@ export default function InventoryPage() {
 
     applyResourceSuggestion(inventoryRequestContext.missing[0])
     setHasAppliedRequestPrefill(true)
-  }, [hasAppliedRequestPrefill, inventoryMatchesByResource, inventoryRequestContext, inventoryState.loading])
+  }, [applyResourceSuggestion, hasAppliedRequestPrefill, inventoryRequestContext, inventoryState.loading])
 
   async function handleEdit(itemId) {
     setError('')
@@ -274,7 +290,7 @@ export default function InventoryPage() {
     return (
       <ResourceCard>
         <ResourceCardHeader
-          title={item.name}
+          title={translateInventoryText(item.name)}
           subtitle={formatInventoryUnit(item.unit)}
           badge={<Badge tone={item.is_available ? 'success' : 'warning'}>{item.is_available ? 'Yra sandėlyje' : 'Trūksta'}</Badge>}
         />
@@ -302,7 +318,7 @@ export default function InventoryPage() {
   }
 
   const inventoryColumns = [
-    { key: 'name', label: 'Pavadinimas', render: (item) => item.name },
+    { key: 'name', label: 'Pavadinimas', render: (item) => translateInventoryText(item.name) },
     { key: 'type', label: 'Tipas', render: (item) => formatInventoryType(item.type) },
     { key: 'unit', label: 'Vienetas', render: (item) => formatInventoryUnit(item.unit) },
     { key: 'quantity', label: 'Kiekis', render: (item) => safeNumber(item.quantity, item.type === 'tool' ? 0 : 2) },
@@ -365,7 +381,7 @@ export default function InventoryPage() {
                     className={`inventory-request-card ${isSelected ? 'is-selected' : ''}`.trim()}
                   >
                     <div className="stack stack-sm">
-                      <strong>{resource.name}</strong>
+                      <strong>{translateInventoryText(resource.name)}</strong>
                       <div className="resource-summary-row">
                         <StatRow
                           label="Reikia"
@@ -386,7 +402,7 @@ export default function InventoryPage() {
                       </div>
                       <div className="inline-note inline-note-compact">
                         {matchingItem
-                          ? `Rastas esamas įrašas. Forma paruošta atnaujinti „${matchingItem.name}“ iki ${formatQuantityInput(Number(matchingItem.quantity) + Number(resource.shortage_quantity ?? 0), resource.type)} ${formatInventoryUnit(resource.unit)}.`
+                          ? `Rastas esamas įrašas. Forma paruošta atnaujinti „${translateInventoryText(matchingItem.name)}“ iki ${formatQuantityInput(Number(matchingItem.quantity) + Number(resource.shortage_quantity ?? 0), resource.type)} ${formatInventoryUnit(resource.unit)}.`
                           : 'Atitinkančio inventoriaus įrašo nerasta. Forma paruošta sukurti įrašą su trūkstamu kiekiu.'}
                       </div>
                       <ActionRow>

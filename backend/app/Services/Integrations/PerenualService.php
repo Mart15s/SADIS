@@ -97,72 +97,6 @@ class PerenualService
     /**
      * @return array<string, mixed>
      */
-    public function debugSearchPlants(string $query, int $limit = 5): array
-    {
-        $query = trim($query);
-
-        if ($query === '') {
-            return [
-                'query' => $query,
-                'results' => [],
-                'raw_response' => [],
-                'request' => [
-                    'source' => 'cache',
-                    'cache_key' => 'perenual-search:',
-                    'result_count' => 0,
-                ],
-            ];
-        }
-
-        $cached = $this->rememberWithMeta(
-            sprintf('perenual-search:%s:%d', Str::lower($query), self::DEFAULT_SEARCH_RESULT_LIMIT),
-            now()->addHour(),
-            fn (): array => $this->searchSpeciesResponse($query, self::DEFAULT_SEARCH_RESULT_LIMIT)
-        );
-
-        $results = collect($cached['value']['data'] ?? [])
-            ->filter(fn (mixed $item) => is_array($item) && isset($item['id'], $item['common_name']))
-            ->map(fn (array $item) => [
-                'item' => $item,
-                'score' => $this->scoreSpeciesMatch($query, $item),
-            ])
-            ->filter(fn (array $ranked) => $ranked['score'] > 0)
-            ->sortByDesc(fn (array $ranked) => ($ranked['score'] * 100) + $this->speciesTieBreakerScore($ranked['item']))
-            ->map(function (array $ranked): array {
-                $item = $ranked['item'];
-
-                return [
-                    'id' => (int) $item['id'],
-                    'name' => (string) $item['common_name'],
-                    'scientific_name' => $this->sanitizeCatalogScientificName($item['scientific_name'] ?? null),
-                    'other_names' => $this->sanitizeCatalogStringList($item['other_name'] ?? []),
-                    'family' => $this->sanitizeCatalogString($item['family'] ?? null),
-                    'cycle' => $this->sanitizeCatalogString($item['cycle'] ?? null),
-                    'watering' => $this->sanitizeCatalogString($item['watering'] ?? null),
-                    'sunlight' => $this->sanitizeCatalogStringList($item['sunlight'] ?? []),
-                    'image' => $this->resolveSearchImage($item),
-                    'match_score' => $ranked['score'],
-                ];
-            })
-            ->take(max(1, min($limit, self::DEFAULT_SEARCH_RESULT_LIMIT)))
-            ->values()
-            ->all();
-
-        return [
-            'query' => $query,
-            'results' => $results,
-            'raw_response' => $cached['value']['data'] ?? [],
-            'request' => [
-                'source' => $cached['hit'] ? 'cache' : 'live_api',
-                'cache_key' => $cached['key'],
-                'result_count' => count($cached['value']['data'] ?? []),
-            ],
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
     public function fetchSpeciesSeed(string $plantName, ?int $speciesId = null): array
     {
         $species = null;
@@ -203,42 +137,6 @@ class PerenualService
             'details' => $details,
             'care_guides' => $this->normalizeCareGuidesFromPayloads($careGuidePayloads),
             'care_guides_raw' => $careGuidePayloads,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function debugLoadSpecies(int $speciesId, ?string $careGuideType = null): array
-    {
-        $details = $this->rememberWithMeta(
-            $this->detailsCacheKey($speciesId),
-            now()->addDay(),
-            fn (): array => $this->fetchSpeciesDetailsById($speciesId)
-        );
-
-        $careGuide = $this->rememberWithMeta(
-            $this->careGuideCacheKey($speciesId, $careGuideType),
-            now()->addDay(),
-            fn (): array => $this->fetchSpeciesCareGuideById($speciesId, $careGuideType)
-        );
-
-        return [
-            'details' => [
-                'payload' => $details['value'],
-                'request' => [
-                    'source' => $details['hit'] ? 'cache' : 'live_api',
-                    'cache_key' => $details['key'],
-                ],
-            ],
-            'care_guide' => [
-                'payload' => $careGuide['value'],
-                'request' => [
-                    'source' => $careGuide['hit'] ? 'cache' : 'live_api',
-                    'cache_key' => $careGuide['key'],
-                    'type' => $careGuideType ?: 'all',
-                ],
-            ],
         ];
     }
 

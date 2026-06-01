@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/plots/{plot}/calendars', [CalendarController::class, 'index']);
     Route::post('/plots/{plot}/calendars', [CalendarController::class, 'store']);
     Route::get('/plots/{plot}/calendars/{calendar}', [CalendarController::class, 'show']);
+    Route::post('/plots/{plot}/calendars/{calendar}/weather-refresh', [CalendarController::class, 'refreshWeather']);
 
     Route::get('/calendars/{calendar}/tasks', [CalendarTaskController::class, 'index']);
     Route::patch('/tasks/{task}/complete', [CalendarTaskController::class, 'complete']);

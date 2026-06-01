@@ -22,6 +22,7 @@ class WeatherForecastResource extends JsonResource
             'source_date' => $this->source_date?->toDateString(),
             'source_city' => $this->source_city,
             'city' => $this->city,
+            'fetched_at' => $this->fetched_at?->toIso8601String(),
             'is_seasonal_fallback' => (bool) $this->is_seasonal_fallback,
         ];
     }

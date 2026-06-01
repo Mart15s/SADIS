@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Throwable;
 
 class PasswordResetController extends Controller
 {
@@ -51,7 +52,16 @@ class PasswordResetController extends Controller
 
         if ($user) {
             $token = Password::broker()->createToken($user);
-            $this->emailServerBoundary->sendPasswordResetLink($user, $token);
+
+            try {
+                $this->emailServerBoundary->sendPasswordResetLink($user, $token);
+            } catch (Throwable $exception) {
+                report($exception);
+
+                return response()->json([
+                    'message' => 'Slaptažodžio atkūrimo laiško išsiųsti nepavyko. Patikrinkite el. pašto serverio nustatymus.',
+                ], 503);
+            }
         }
 
         return response()->json([

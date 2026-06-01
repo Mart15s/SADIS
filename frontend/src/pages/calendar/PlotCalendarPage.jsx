@@ -20,6 +20,7 @@ import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { api } from '../../lib/api.js'
 import {
   formatDate,
+  formatDateTime,
   formatInventoryUnit,
   formatMonthYear,
   formatNumberWithUnit,
@@ -381,6 +382,7 @@ export default function PlotCalendarPage() {
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [refreshingWeather, setRefreshingWeather] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [currentMonth, setCurrentMonth] = useState(() => (searchParams.get('date') ?? TODAY).slice(0, 7))
   const [dayModalOpen, setDayModalOpen] = useState(false)
@@ -447,6 +449,11 @@ export default function PlotCalendarPage() {
   const selectedDaySummary = detailState.data?.day_resource_summary?.[selectedDate] ?? null
   const weatherSources = [...new Set((detailState.data?.weather ?? []).map((forecast) => forecast.source).filter(Boolean))]
   const usingWeatherFallback = weatherSources.some((source) => source !== 'api')
+  const weatherFetchedTimes = (detailState.data?.weather ?? [])
+    .map((forecast) => forecast.fetched_at)
+    .filter(Boolean)
+    .sort()
+  const latestWeatherFetchedAt = weatherFetchedTimes[weatherFetchedTimes.length - 1]
 
   async function handleGenerate(event) {
     event.preventDefault()
@@ -480,6 +487,27 @@ export default function PlotCalendarPage() {
       setError(requestError.message)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleRefreshWeather() {
+    if (!selectedCalendarId) return
+
+    setRefreshingWeather(true)
+    setError('')
+
+    try {
+      const response = await api.refreshCalendarWeather(plotId, selectedCalendarId)
+      if (response.calendar) {
+        detailState.setData(response.calendar)
+      } else {
+        await detailState.reload()
+      }
+      setToastMessage(response.message ?? 'Orų prognozė atnaujinta.')
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setRefreshingWeather(false)
     }
   }
 
@@ -685,6 +713,19 @@ export default function PlotCalendarPage() {
                 </div>
               ) : null}
 
+              <div className="calendar-weather-refresh-row">
+                <span className="muted">
+                  Prognozė atnaujinta: {latestWeatherFetchedAt ? formatDateTime(latestWeatherFetchedAt) : 'nėra duomenų'}
+                </span>
+                <Button
+                  variant="secondary"
+                  onClick={handleRefreshWeather}
+                  disabled={!canEdit || refreshingWeather || !selectedCalendarId}
+                >
+                  {refreshingWeather ? 'Atnaujinama...' : 'Atnaujinti prognozę'}
+                </Button>
+              </div>
+
               <MapLayerControl
                 title="Kalendoriaus sluoksniai"
                 items={[
@@ -790,6 +831,9 @@ export default function PlotCalendarPage() {
                     {weatherSourceNote(selectedForecast)}
                   </div>
                 ) : null}
+                <div className="inline-note day-drawer-note">
+                  Atnaujinta: {selectedForecast.fetched_at ? formatDateTime(selectedForecast.fetched_at) : 'nėra duomenų'}
+                </div>
                 <div className="day-modal-weather">
                   <StatRow label="Min." value={formatTemperatureC(selectedForecast.temp_min ?? selectedForecast.temperature)} />
                   <StatRow label="Maks." value={formatTemperatureC(selectedForecast.temp_max ?? selectedForecast.temperature)} />
@@ -911,7 +955,7 @@ export default function PlotCalendarPage() {
                       {linkedReplenishmentTask ? (
                         <div className="day-task-card-dependency">
                           <span className="day-task-card-dependency-label">Priklauso nuo</span>
-                          <strong>{linkedReplenishmentTask.name}</strong>
+                          <strong>{translateVisibleText(linkedReplenishmentTask.name)}</strong>
                         </div>
                       ) : null}
 
