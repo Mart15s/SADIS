@@ -2,6 +2,7 @@ import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useS
 import { Circle, Group, Layer, Line, Rect, Stage } from 'react-konva'
 import { MapLayerControl, MeasurementBadge, PlotScaleControl } from '../garden/GardenControls.jsx'
 import Button from '../ui/Button.jsx'
+import PlotPlanOverlay from './PlotPlanOverlay.jsx'
 import { safeNumber } from '../../lib/constants.js'
 import { getBoundaryLabelLayout } from '../../lib/plotCanvasLabels.js'
 import {
@@ -11,6 +12,7 @@ import {
   formatSquareMeters,
 } from '../../lib/plotMeasurements.js'
 import { getProjectedLabelConfig, getZoneColor, projectShape } from '../../lib/plotRender.js'
+import { hexToRgba } from '../../lib/plotPlan.js'
 import {
   GRID_SIZE,
   MAX_ZOOM,
@@ -278,6 +280,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   plotSize,
   plotGeometry,
   zones,
+  plants = [],
   canEdit,
   activeZoneId,
   persistState = true,
@@ -294,6 +297,11 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   onBoundaryCommit,
   showLayerConsole = true,
   mapFirstHud = false,
+  showPlantMarkers = true,
+  showZoneNames = true,
+  bordersOnly = false,
+  onMarkerPositionChange,
+  onMarkerPositionReset,
 }, ref) {
   const containerRef = useRef(null)
   const stageRef = useRef(null)
@@ -1160,7 +1168,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   const plotBoundaryLabel = isMobileLabelDensity && selectedTarget.type !== 'boundary'
     ? null
     : plotBoundaryLabelCandidate
-  const screenLabels = zones.map((zone, index) => {
+  const screenLabels = (showZoneNames ? zones : []).map((zone, index) => {
     const zoneId = String(zone.id)
     const shape = renderedLayouts[zoneId]
 
@@ -1168,7 +1176,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       return null
     }
 
-    const colors = getZoneColor(index)
+    const colors = getZoneColor(index, zone)
     const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
 
     if (isMobileLabelDensity && !isActive) {
@@ -1423,7 +1431,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
               }
 
               const points = getShapePoints(shape)
-              const colors = getZoneColor(index)
+              const colors = getZoneColor(index, zone)
               const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
               const isHovered = hoveredZoneId === zoneId
 
@@ -1470,9 +1478,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                     name="zone-shape"
                     points={flattenPoints(points)}
                     closed
-                    fill={colors.fill}
-                    opacity={isHovered || isActive ? 0.94 : 0.84}
-                    stroke={isActive ? '#b9683f' : colors.stroke}
+                    fill={hexToRgba(colors.fill, bordersOnly ? 0 : (isHovered || isActive ? 0.36 : 0.32))}
+                    stroke={colors.stroke}
                     strokeWidth={isActive ? activeStrokeWidth : strokeWidth}
                     hitStrokeWidth={hitStrokeWidth}
                     shadowColor={isActive ? 'rgba(185, 104, 63, 0.45)' : 'rgba(36, 49, 31, 0.16)'}
@@ -1484,8 +1491,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                     <Line
                       points={flattenPoints(points)}
                       closed
-                      fill="rgba(242, 106, 33, 0.12)"
-                      stroke="#f26a21"
+                      fill="rgba(255, 255, 255, 0.03)"
+                      stroke={colors.stroke}
                       strokeWidth={Math.max(activeStrokeWidth * 0.48, strokeWidth)}
                       hitStrokeWidth={hitStrokeWidth}
                       listening={false}
@@ -1710,10 +1717,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
                 borderColor: isActive ? 'rgba(185, 104, 63, 0.34)' : 'rgba(36, 49, 31, 0.12)',
                 background: label.mode === 'marker'
                   ? 'rgba(255, 252, 248, 0.98)'
-                  : label.mode === 'full'
-                    ? 'rgba(255, 250, 242, 0.9)'
-                    : 'rgba(255, 251, 246, 0.95)',
-                color: label.mode === 'marker' ? color.stroke : '#24311f',
+                  : hexToRgba(color.fill, color.foreground === '#FFFFFF' ? 0.9 : 0.2),
+                color: label.mode === 'marker' ? color.stroke : (color.foreground ?? '#24311f'),
                 boxShadow: isActive
                   ? '0 14px 28px rgba(185, 104, 63, 0.22)'
                   : '0 8px 18px rgba(36, 49, 31, 0.08)',
@@ -1744,13 +1749,27 @@ export default memo(forwardRef(function PlotDesignerCanvas({
             </div>
           ))}
         </div>
+        {showPlantMarkers ? (
+          <PlotPlanOverlay
+            zones={zones}
+            plants={plants}
+            layouts={renderedLayouts}
+            viewport={viewport}
+            plotId={plotId}
+            canEdit={canEdit}
+            mobile={isMobileLabelDensity}
+            onSelectZone={onSelectZone}
+            onMarkerPositionChange={onMarkerPositionChange}
+            onMarkerPositionReset={onMarkerPositionReset}
+          />
+        ) : null}
       </div>
 
       {!mapFirstHud && zones.length > 0 ? (
         <div className="designer-legend" aria-label="Zonų legenda">
           {zones.map((zone, index) => {
             const zoneId = String(zone.id)
-            const colors = getZoneColor(index)
+            const colors = getZoneColor(index, zone)
             const label = screenLabels.find((entry) => entry.id === zoneId)?.label
             const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
 
@@ -1782,7 +1801,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
           <div className="designer-legend" aria-label="Zonų legenda">
             {zones.length > 0 ? zones.map((zone, index) => {
               const zoneId = String(zone.id)
-              const colors = getZoneColor(index)
+              const colors = getZoneColor(index, zone)
               const isActive = selectedTarget.type === 'zone' && selectedTarget.id === zoneId
 
               return (

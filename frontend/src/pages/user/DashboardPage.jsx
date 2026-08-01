@@ -42,30 +42,30 @@ export default function DashboardPage() {
     return (
       <div className="page-stack">
         <PageHeader
-          eyebrow="Sveiki"
-          title="Daržo darbai vienoje darbo srityje"
-          description="Planuokite sklypus, stebėkite augalų būklę ir valdykite daržo darbus aiškioje naudotojo sąsajoje."
+          eyebrow="Welcome"
+          title="Garden work in one workspace"
+          description="Plan plots, monitor plant status, and manage garden work from one clear interface."
           actions={(
             <>
               <Link to="/login">
-                <Button variant="secondary">Prisijungti</Button>
+                <Button variant="secondary">Sign in</Button>
               </Link>
               <Link to="/register">
-                <Button>Registruotis</Button>
+                <Button>Create account</Button>
               </Link>
             </>
           )}
         />
 
-        <SectionCard title="Kas pasiekiama prisijungus" description="Sistema padeda sprendimus priimti remiantis sklypų, augalų ir inventoriaus duomenimis.">
+        <SectionCard title="What you can do after signing in" description="Make decisions using your plot, plant, and inventory data.">
           <ul>
-            <li>Kurkite sklypus ir vizualiai tvarkykite augalų zonas.</li>
-            <li>Sekite augalus, būklės istoriją, rotaciją ir kalendoriaus darbus.</li>
-            <li>Valdykite inventorių, dalykitės sklypais pagal roles, registruokite derlių ir eksportuokite PDF ataskaitas.</li>
+            <li>Create plots and arrange plant zones visually.</li>
+            <li>Track plants, status history, rotation, and calendar work.</li>
+            <li>Manage inventory, share plots by role, record harvests, and export PDF reports.</li>
           </ul>
           <ActionRow>
             <Link to="/forgot-password">
-              <Button variant="secondary">Atkurti slaptažodį</Button>
+              <Button variant="secondary">Reset password</Button>
             </Link>
           </ActionRow>
         </SectionCard>
@@ -74,7 +74,7 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <LoadingState title="Įkeliama daržo apžvalga..." />
+    return <LoadingState title="Loading garden overview..." />
   }
 
   if (error) {
@@ -89,13 +89,13 @@ export default function DashboardPage() {
     ...data.plots.slice(0, 3).map((plot) => ({
       id: `plot-${plot.id}`,
       label: plot.name,
-      meta: `${plot.city || 'Miestas nenurodytas'} - sukurta ${formatDate(plot.creation_date)}`,
+      meta: `${plot.city || 'City not specified'} - created ${formatDate(plot.creation_date)}`,
       tone: 'leaf',
     })),
     ...lowInventory.slice(0, 2).map((item) => ({
       id: `inventory-${item.id}`,
-      label: `${item.name} reikia papildyti`,
-      meta: `${formatInventoryType(item.type)} - liko ${formatQuantity(item.quantity, item.unit)}`,
+      label: `${item.name} needs restocking`,
+      meta: `${formatInventoryType(item.type)} - ${formatQuantity(item.quantity, item.unit)} left`,
       tone: 'amber',
     })),
   ]
@@ -103,25 +103,25 @@ export default function DashboardPage() {
   return (
     <div className="page-stack dashboard-workbench">
       <PageHeader
-        eyebrow="Daržo valdymas"
-        title="Planavimo lenta"
-        description="Darbo sritis apima sklypus, zonas, augalų būklę, nuo oro priklausančius darbus ir inventoriaus pasirengimą."
+        eyebrow="Garden management"
+        title="Planning board"
+        description="The workspace includes plots, zones, plant status, weather-based tasks, and inventory readiness."
         meta={(
           <>
-            <StatusBadge kind="connection">Daržo duomenys sinchronizuoti</StatusBadge>
-            <StatusBadge kind="ownership">{data.plots.length > 0 ? `${data.plots.length} aktyvūs sklypai` : 'Sklypų dar nėra'}</StatusBadge>
+            <StatusBadge kind="connection">Garden data synced</StatusBadge>
+            <StatusBadge kind="ownership">{data.plots.length > 0 ? `${data.plots.length} active plots` : 'No plots yet'}</StatusBadge>
           </>
         )}
         actions={(
           <>
             <Link to="/account">
-              <Button variant="secondary">Paskyra</Button>
+              <Button variant="secondary">Account</Button>
             </Link>
             <Link to="/plots">
-              <Button>Atidaryti sklypus</Button>
+              <Button>Open plots</Button>
             </Link>
             <Link to="/inventory">
-              <Button variant="secondary">Inventorius</Button>
+              <Button variant="secondary">Inventory</Button>
             </Link>
           </>
         )}
@@ -129,28 +129,28 @@ export default function DashboardPage() {
 
       <section className="dashboard-map-band">
         <div className="dashboard-map-copy">
-          <span className="workspace-section-eyebrow">Aktyvus daržo modelis</span>
-          <h2>Sklypai, zonos, augalai ir darbai vienoje valdymo apžvalgoje.</h2>
+          <span className="workspace-section-eyebrow">Active garden model</span>
+          <h2>Plots, zones, plants, and work in one management overview.</h2>
           <p>
-            Ši apžvalga remiasi realiais planavimo objektais: sklypų planais, pažymėtomis zonomis,
-            kalendoriaus darbais ir priežiūrai reikalingomis atsargomis.
+            This overview is based on real planning objects: plot plans, marked zones,
+            calendar work, and the inventory needed for care.
           </p>
         </div>
-        <div className="dashboard-measurement-strip" aria-label="Daržo suvestinė">
-          <MeasurementBadge label="Sklypai" value={data.plots.length} tone="earth" />
-          <MeasurementBadge label="Zonos" value={totalZones} tone="field" />
-          <MeasurementBadge label="Augalai" value={totalPlants} tone="leaf" />
-          <MeasurementBadge label="Inventorius" value={data.inventory.length} tone="amber" />
+        <div className="dashboard-measurement-strip" aria-label="Garden summary">
+          <MeasurementBadge label="Plots" value={data.plots.length} tone="earth" />
+          <MeasurementBadge label="Zones" value={totalZones} tone="field" />
+          <MeasurementBadge label="Plants" value={totalPlants} tone="leaf" />
+          <MeasurementBadge label="Inventory" value={data.inventory.length} tone="amber" />
         </div>
       </section>
 
       <section className="dashboard-context-grid">
         <SectionCard
-          title="Aktyvūs sklypai"
+          title="Active plots"
           description=""
           actions={(
             <Link to="/plots">
-              <Button variant="ghost">Rodyti visus sklypus</Button>
+              <Button variant="ghost">Show all plots</Button>
             </Link>
           )}
           className="dashboard-active-plots"
@@ -170,18 +170,18 @@ export default function DashboardPage() {
                       <StatusBadge kind="ownership">{formatAccessRole(plot.access_role ?? 'viewer')}</StatusBadge>
                     </div>
                     <span className="muted">
-                      {plot.city || 'Miestas nenurodytas'} / {formatSquareMetersValue(plot.plot_size, 2)}
+                      {plot.city || 'City not specified'} / {formatSquareMetersValue(plot.plot_size, 2)}
                     </span>
                     <div className="dashboard-mini-metrics">
-                      <MeasurementBadge label="Zonos" value={plot.plant_zones_count ?? 0} tone="field" />
-                      <MeasurementBadge label="Augalai" value={plot.plants_count ?? 0} tone="leaf" />
+                      <MeasurementBadge label="Zones" value={plot.plant_zones_count ?? 0} tone="field" />
+                      <MeasurementBadge label="Plants" value={plot.plants_count ?? 0} tone="leaf" />
                     </div>
                     <ActionRow>
                       <Link to={`/plots/${plot.id}`}>
-                        <Button variant="ghost">Atidaryti planą</Button>
+                        <Button variant="ghost">Open plan</Button>
                       </Link>
                       <Link to={`/plots/${plot.id}/calendar`}>
-                        <Button variant="secondary">Kalendorius</Button>
+                        <Button variant="secondary">Calendar</Button>
                       </Link>
                     </ActionRow>
                   </div>
@@ -190,11 +190,11 @@ export default function DashboardPage() {
             </section>
           ) : (
             <EmptyState
-              title="Sklypų dar nėra"
-              description="Sukurkite pirmą sklypą, kad galėtumėte naudoti zonas, augalus, kalendorius ir analitiką."
+              title="No plots yet"
+              description="Create your first plot to use zones, plants, calendars, and analytics."
               action={(
                 <Link to="/plots">
-                  <Button>Sukurti pirmą sklypą</Button>
+                  <Button>Create your first plot</Button>
                 </Link>
               )}
             />
@@ -202,55 +202,55 @@ export default function DashboardPage() {
         </SectionCard>
 
         <div className="dashboard-side-stack">
-          <SectionCard title="Šiandienos daržo darbai" description="">
+          <SectionCard title="Today's garden work" description="">
             <div className="dashboard-task-lane">
               {data.plots.slice(0, 3).map((plot) => (
                 <Link key={`task-${plot.id}`} to={`/plots/${plot.id}/calendar`} className="dashboard-task-row">
-                  <span className="dashboard-task-date">Šiandien</span>
+                  <span className="dashboard-task-date">Today</span>
                   <strong>{plot.name}</strong>
-                  <span>Atidaryti pažymėtų zonų kalendoriaus darbus</span>
+                  <span>Open calendar work for marked zones</span>
                 </Link>
               ))}
               {data.plots.length === 0 ? (
-                <p className="muted">Sukurkite sklypą ir sugeneruokite kalendorių, kad čia matytumėte suplanuotus darbus.</p>
+                <p className="muted">Create a plot and generate a calendar to see planned work here.</p>
               ) : null}
             </div>
           </SectionCard>
 
-          <SectionCard title="Oro įtaka" description="">
+          <SectionCard title="Weather impact" description="">
             <div className="dashboard-weather-stack">
-              <span className="weather-rule-chip">Lietus gali praleisti laistymą</span>
-              <span className="weather-rule-chip">Šalna prideda apsaugos darbus</span>
-              <span className="weather-rule-chip">Karštis didina laistymo poreikį</span>
-              <span className="weather-rule-chip">Vėjas gali sukelti apsaugos užduotis</span>
+              <span className="weather-rule-chip">Rain can skip watering</span>
+              <span className="weather-rule-chip">Frost adds protection tasks</span>
+              <span className="weather-rule-chip">Heat increases watering needs</span>
+              <span className="weather-rule-chip">Wind can create protection tasks</span>
             </div>
           </SectionCard>
         </div>
       </section>
 
       <section className="dashboard-context-grid dashboard-context-grid-secondary">
-        <SectionCard title="Augalų būsenos" description="">
+        <SectionCard title="Plant status" description="">
           {visiblePlants.length > 0 ? (
             <div className="dashboard-plant-list">
               {visiblePlants.map((plant) => (
                 <Link key={plant.id} to={`/plants/${plant.id}`} className="dashboard-plant-row">
                   <div>
                     <strong>{plant.name}</strong>
-                    <span>{plant.plot?.name ?? 'Nežinomas sklypas'} - {plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Zona nenurodyta'}</span>
+                    <span>{plant.plot?.name ?? 'Unknown plot'} - {plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Zone not specified'}</span>
                   </div>
                   <PlantStatusBadge status={plant.condition ?? plant.lifecycle_phase} careLinked={plant.has_plant_care} />
                 </Link>
               ))}
             </div>
           ) : (
-            <EmptyState title="Augalų įrašų nėra" description="Pridėkite pasodintus augalus augalų darbo srityje arba tiesiai iš sklypo zonų." />
+            <EmptyState title="No plant records" description="Add planted plants from the plant workspace or directly from plot zones." />
           )}
         </SectionCard>
 
-        <SectionCard title="Planavimo istorijos suvestinė" description="">
+        <SectionCard title="Planning history summary" description="">
           <GardenTimeline
             items={timelineItems}
-            emptyText="Sukurkite sklypą, nubraižykite zonas arba pakoreguokite inventorių, kad pradėtumėte kaupti planavimo istoriją."
+            emptyText="Create a plot, draw zones, or adjust inventory to start building planning history."
           />
         </SectionCard>
       </section>

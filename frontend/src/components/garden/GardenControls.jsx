@@ -13,7 +13,7 @@ export function MeasurementBadge({ label, value, unit, tone = 'earth', className
   )
 }
 
-export function MapLayerControl({ title = 'Žemėlapio sluoksniai', items = [], className = '' }) {
+export function MapLayerControl({ title = 'Map layers', items = [], className = '' }) {
   return (
     <div className={`map-layer-control ${className}`.trim()}>
       <span className="map-layer-title">{title}</span>
@@ -34,7 +34,7 @@ export function MapLayerControl({ title = 'Žemėlapio sluoksniai', items = [], 
 
 export function PlotScaleControl({ zoom, snapEnabled, dimensionsVisible }) {
   return (
-    <div className="plot-scale-control" aria-label="Sklypo mastelio valdikliai">
+    <div className="plot-scale-control" aria-label="Plot scale controls">
       <div className="plot-scale-ruler" aria-hidden="true">
         <span />
         <span />
@@ -43,7 +43,7 @@ export function PlotScaleControl({ zoom, snapEnabled, dimensionsVisible }) {
       <div className="plot-scale-copy">
         <strong>{zoom}</strong>
         <span>
-          {snapEnabled ? 'Lygiavimas prie tinklelio įjungtas' : 'Laisvas išdėstymas'} - {dimensionsVisible ? 'matmenys rodomi' : 'matmenys paslėpti'}
+          {snapEnabled ? 'Grid snapping on' : 'Free layout'} - {dimensionsVisible ? 'dimensions visible' : 'dimensions hidden'}
         </span>
       </div>
     </div>
@@ -54,13 +54,13 @@ export function ZoneInspector({
   zone,
   measurements,
   plantCount = 0,
-  emptyTitle = 'Zona nepasirinkta',
-  emptyDescription = 'Pasirinkite zoną sklypo plane, kad matytumėte dirvožemį, augalus ir matmenis.',
+  emptyTitle = 'No zone selected',
+  emptyDescription = 'Select a zone in the plot plan to see soil, plants, and dimensions.',
 }) {
   if (!zone) {
     return (
       <div className="zone-inspector zone-inspector-empty">
-        <span className="zone-inspector-kicker">Zonos informacija</span>
+        <span className="zone-inspector-kicker">Zone information</span>
         <strong>{emptyTitle}</strong>
         <p>{emptyDescription}</p>
       </div>
@@ -70,25 +70,25 @@ export function ZoneInspector({
   return (
     <div className="zone-inspector">
       <div className="zone-inspector-head">
-        <span className="zone-inspector-kicker">Zonos informacija</span>
+        <span className="zone-inspector-kicker">Zone information</span>
         <Badge tone="soft">{formatSoilType(zone.soil_type)}</Badge>
       </div>
       <strong className="zone-inspector-title">{zone.name}</strong>
       <div className="zone-inspector-grid">
-        <MeasurementBadge label="Plotas" value={measurements?.area ?? '0'} tone="field" />
-        <MeasurementBadge label="Perimetras" value={measurements?.perimeter ?? '0'} tone="earth" />
-        <MeasurementBadge label="Augalai" value={plantCount} tone="leaf" />
-        <MeasurementBadge label="Rotacija" value={zone.rotation_stage ?? 0} tone="amber" />
+        <MeasurementBadge label="Area" value={measurements?.area ?? '0'} tone="field" />
+        <MeasurementBadge label="Perimeter" value={measurements?.perimeter ?? '0'} tone="earth" />
+        <MeasurementBadge label="Plants" value={plantCount} tone="leaf" />
+        <MeasurementBadge label="Rotation" value={zone.rotation_stage ?? 0} tone="amber" />
       </div>
       <div className="zone-inspector-note">
-        <span>Kraštinių ilgiai</span>
-        <strong>{measurements?.sideSummary || 'Geometrijos nėra'}</strong>
+        <span>Side lengths</span>
+        <strong>{measurements?.sideSummary || 'No geometry'}</strong>
       </div>
     </div>
   )
 }
 
-export function GardenTimeline({ items = [], emptyText = 'Planavimo įvykių dar nėra.' }) {
+export function GardenTimeline({ items = [], emptyText = 'No planning events yet.' }) {
   return (
     <div className="garden-timeline">
       {items.length > 0 ? items.map((item) => (
@@ -118,7 +118,7 @@ export function PlantStatusBadge({ status, careLinked, className = '' }) {
 
   return (
     <Badge tone={tone} className={`plant-status-badge ${className}`.trim()}>
-      {status ? formatPlantCondition(status) : (careLinked === false ? 'Priežiūros profilis nesusietas' : 'Suplanuota')}
+      {status ? formatPlantCondition(status) : (careLinked === false ? 'Care profile not linked' : 'Planned')}
     </Badge>
   )
 }

@@ -107,6 +107,12 @@ describe('PlotDetailPage explicit save workspace', () => {
     )
   }
 
+  async function enterEditMode() {
+    const editMode = screen.getByRole('tab', { name: 'Redagavimas' })
+    fireEvent.click(editMode)
+    await waitFor(() => expect(editMode).toHaveClass('is-active'))
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.stubGlobal('confirm', vi.fn(() => true))
@@ -195,6 +201,8 @@ describe('PlotDetailPage explicit save workspace', () => {
       expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
     })
 
+    await enterEditMode()
+
     fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
 
     await waitFor(() => {
@@ -223,6 +231,35 @@ describe('PlotDetailPage explicit save workspace', () => {
         }),
       ],
     }))
+  })
+
+  it('undoes and redoes zone draft changes and clears redo after a new action', async () => {
+    renderPage()
+
+    await waitFor(() => expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument())
+    await enterEditMode()
+    fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
+    await waitFor(() => expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText('Zonos pavadinimas'), { target: { value: 'Zone B' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Pritaikyti zonos duomenis' }))
+
+    const undo = screen.getByRole('button', { name: 'Atšaukti' })
+    const redo = screen.getByRole('button', { name: 'Pakartoti' })
+    await waitFor(() => expect(undo).toBeEnabled())
+
+    fireEvent.click(undo)
+    await waitFor(() => expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument())
+    expect(redo).toBeEnabled()
+
+    fireEvent.click(redo)
+    await waitFor(() => expect(screen.getByDisplayValue('Zone B')).toBeInTheDocument())
+
+    fireEvent.click(undo)
+    await waitFor(() => expect(screen.getByDisplayValue('Zone A')).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText('Zonos pavadinimas'), { target: { value: 'Zone C' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Pritaikyti zonos duomenis' }))
+    await waitFor(() => expect(redo).toBeDisabled())
   })
 
   it('keeps the zone selection cleared when the canvas reports an empty-background click', async () => {
@@ -255,6 +292,8 @@ describe('PlotDetailPage explicit save workspace', () => {
     await waitFor(() => {
       expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
     })
+
+    await enterEditMode()
 
     fireEvent.click(screen.getByRole('button', { name: 'Select zone' }))
 
@@ -391,7 +430,9 @@ describe('PlotDetailPage explicit save workspace', () => {
       expect(screen.getByTestId('plot-designer-canvas')).toBeInTheDocument()
     })
 
-    expect(screen.getByRole('button', { name: 'Zonų vaizdas' })).toHaveAttribute('aria-pressed', 'true')
+    await enterEditMode()
+
+    expect(screen.getByRole('tab', { name: 'Redagavimas' })).toHaveAttribute('aria-selected', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Ribų vaizdas' }))
 

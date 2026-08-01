@@ -88,40 +88,40 @@ export default function PlotsPage() {
       .some((value) => value.toLowerCase().includes(needle))
   })
 
-  if (plotsState.loading) return <LoadingState title="Įkeliami sklypai..." />
+  if (plotsState.loading) return <LoadingState title="Loading plots..." />
   if (plotsState.error) return <ErrorState error={plotsState.error} onRetry={plotsState.reload} />
 
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Sklypų registras"
-        title="Sklypų planai"
-        description="Peržiūrėkite daržo darbo sritis kaip suplanuotus objektus su plotu, zonomis, augalais ir greitais redaktoriaus veiksmais."
+        eyebrow="Plot registry"
+        title="Plot plans"
+        description="Browse garden workspaces as planned objects with area, zones, plants, and quick editor actions."
         meta={(
           <>
-            <StatusBadge kind="ownership">{plotsState.data.length} sklypai iš viso</StatusBadge>
-            <StatusBadge kind="selection" tone="neutral">{filteredPlots.length} atitinka filtrus</StatusBadge>
+            <StatusBadge kind="ownership">{plotsState.data.length} plots total</StatusBadge>
+            <StatusBadge kind="selection" tone="neutral">{filteredPlots.length} match filters</StatusBadge>
           </>
         )}
       />
 
       <div className="plots-layout">
         <SectionCard
-          title="Peržiūrėti sklypus"
-          description="Ieškokite pagal sklypo pavadinimą, miestą, aprašą arba prieigos teisę."
+          title="Browse plots"
+          description="Search by plot name, city, description, or access role."
         >
           <FilterBar
             resultCount={filteredPlots.length}
             onClear={search ? () => setSearch('') : null}
           >
-            <FormField id="plot-search" label="Ieškoti sklypo" className="plots-search-field">
+            <FormField id="plot-search" label="Search plot" className="plots-search-field">
               <div className="search-input-wrap">
                 <span className="search-icon"><SearchIcon /></span>
                 <input
                   id="plot-search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Pavadinimas, miestas, aprašas arba prieigos teisė"
+                  placeholder="Name, city, description, or access role"
                 />
               </div>
             </FormField>
@@ -129,11 +129,11 @@ export default function PlotsPage() {
 
           {filteredPlots.length === 0 ? (
             <EmptyState
-              title="Sklypų nerasta"
-              description="Sukurkite pirmą sklypą arba pakeiskite paiešką, kad matytumėte daugiau rezultatų."
+              title="No plots found"
+              description="Create your first plot or change the search to see more results."
             />
           ) : (
-            <ResponsiveList className="plot-grid plot-browser-grid" ariaLabel="Sklypų sąrašas">
+            <ResponsiveList className="plot-grid plot-browser-grid" ariaLabel="Plot list">
               {filteredPlots.map((plot) => (
                 <ResourceCard key={plot.id} className="plot-browser-card">
                   <PlotBoundaryMiniMap
@@ -143,45 +143,45 @@ export default function PlotsPage() {
                   />
                   <ResourceCardHeader
                     title={plot.name}
-                    subtitle={plot.city || 'Miestas nenurodytas'}
+                    subtitle={plot.city || 'City not specified'}
                     badge={<StatusBadge kind="ownership">{formatAccessRole(plot.access_role ?? 'viewer')}</StatusBadge>}
                   />
 
                   <ResourceCardMeta>
                     <MapLayerControl
-                      title={plot.city || 'Miestas nenurodytas'}
+                      title={plot.city || 'City not specified'}
                       items={[
                         { id: 'boundary', label: formatSquareMetersValue(plot.plot_size, 2), active: true, color: '#47633b' },
-                        { id: 'zones', label: `${plot.plant_zones_count ?? 0} zonos`, active: Number(plot.plant_zones_count ?? 0) > 0, color: '#b9683f' },
-                        { id: 'plants', label: `${plot.plants_count ?? 0} augalai`, active: Number(plot.plants_count ?? 0) > 0, color: '#237d52' },
+                        { id: 'zones', label: `${plot.plant_zones_count ?? 0} zones`, active: Number(plot.plant_zones_count ?? 0) > 0, color: '#b9683f' },
+                        { id: 'plants', label: `${plot.plants_count ?? 0} plants`, active: Number(plot.plants_count ?? 0) > 0, color: '#237d52' },
                       ]}
                     />
                   </ResourceCardMeta>
 
                   <ResourceCardBody>
                     <p className="muted plot-browser-copy">
-                      {plot.description || 'Aprašo dar nėra.'}
+                      {plot.description || 'No description yet.'}
                     </p>
 
                     <div className="plot-browser-metrics">
-                      <MeasurementBadge label="Sukurta" value={formatDate(plot.creation_date)} tone="earth" />
-                      <MeasurementBadge label="Plotas" value={formatSquareMetersValue(plot.plot_size, 2)} tone="field" />
+                      <MeasurementBadge label="Created" value={formatDate(plot.creation_date)} tone="earth" />
+                      <MeasurementBadge label="Area" value={formatSquareMetersValue(plot.plot_size, 2)} tone="field" />
                     </div>
                   </ResourceCardBody>
 
                   <ResourceCardFooter>
                     <ActionRow className="resource-action-row">
                       <Link to={`/plots/${plot.id}`}>
-                        <Button variant="ghost" size="sm"><ArrowIcon /> Atidaryti</Button>
+                        <Button variant="ghost" size="sm"><ArrowIcon /> Open</Button>
                       </Link>
                       <Link to={`/plots/${plot.id}/calendar`}>
-                        <Button variant="secondary" size="sm"><CalendarIcon /> Kalendorius</Button>
+                        <Button variant="secondary" size="sm"><CalendarIcon /> Calendar</Button>
                       </Link>
                       <Link to={`/plots/${plot.id}/analytics`}>
-                        <Button variant="secondary" size="sm"><BarChartIcon /> Analitika</Button>
+                        <Button variant="secondary" size="sm"><BarChartIcon /> Analytics</Button>
                       </Link>
                       <Link to={`/plots/${plot.id}/edit`}>
-                        <Button variant="secondary" size="sm"><PencilIcon /> Redaguoti</Button>
+                        <Button variant="secondary" size="sm"><PencilIcon /> Edit</Button>
                       </Link>
                     </ActionRow>
                   </ResourceCardFooter>
@@ -193,18 +193,18 @@ export default function PlotsPage() {
 
         <div className="plots-form-panel">
           <SectionCard
-            title="Sukurti sklypą"
-            description="Pažymėkite sklypo ribą žemėlapyje, nubraižykite vidines zonas ir išsaugokite planą."
+            title="Create plot"
+            description="Mark the plot boundary on the map, draw internal zones, and save the plan."
           >
             <div className="page-stack">
               <div className="plot-create-entry-steps">
-                <span>1. Riba</span>
-                <span>2. Zonos</span>
-                <span>3. Suvestinė</span>
+                <span>1. Boundary</span>
+                <span>2. Zones</span>
+                <span>3. Summary</span>
               </div>
               <ActionRow>
                 <Link to="/plots/new">
-                  <Button><PlusIcon /> Sukurti sklypą</Button>
+                  <Button><PlusIcon /> Create plot</Button>
                 </Link>
               </ActionRow>
             </div>

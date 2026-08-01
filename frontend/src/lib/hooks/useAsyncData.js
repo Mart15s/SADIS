@@ -11,7 +11,11 @@ export function useAsyncData(loader, deps = [], initialData = null) {
 
     try {
       const nextData = await loader()
-      setData(nextData)
+      // A successful DELETE/204 has no body. Do not replace valid render state
+      // with an invalid empty value while a page is still mounted.
+      if (nextData !== undefined) {
+        setData(nextData)
+      }
     } catch (nextError) {
       setError(nextError)
     } finally {

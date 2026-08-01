@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SoilType;
+use App\Support\ZoneColor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,12 +19,14 @@ class PlantZone extends Model
     protected $fillable = [
         'plot_id',
         'name',
+        'color_hex',
         'zone_size',
         'soil_type',
         'rotation_stage',
         'last_planting_date',
         'fk_plot_id',
         'geometry',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -33,6 +36,7 @@ class PlantZone extends Model
             'soil_type' => SoilType::class,
             'last_planting_date' => 'date',
             'geometry' => 'array',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -41,6 +45,8 @@ class PlantZone extends Model
         static::saving(function (PlantZone $plantZone): void {
             $plantZone->plot_id ??= $plantZone->fk_plot_id;
             $plantZone->fk_plot_id ??= $plantZone->plot_id;
+            $plantZone->color_hex = ZoneColor::normalize($plantZone->color_hex)
+                ?? ZoneColor::suggestForPlot($plantZone->plot_id ?? $plantZone->fk_plot_id, $plantZone->id);
         });
     }
 
@@ -69,5 +75,10 @@ class PlantZone extends Model
     public function usedOn(): HasMany
     {
         return $this->hasMany(UsedOn::class, 'fk_plant_zone_id');
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
     }
 }

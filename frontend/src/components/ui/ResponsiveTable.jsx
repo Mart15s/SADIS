@@ -5,8 +5,8 @@ export default function ResponsiveTable({
   items,
   getKey,
   renderCard,
-  tableLabel = 'Duomenų lentelė',
-  cardListLabel = 'Duomenų sąrašas',
+  tableLabel = 'Data table',
+  cardListLabel = 'Data list',
   className = '',
 }) {
   return (

@@ -11,6 +11,7 @@ import {
 } from '../../components/shared/StatusView.jsx'
 import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
+import DestructiveButton from '../../components/ui/DestructiveButton.jsx'
 import { DefinitionList, StatRow } from '../../components/ui/DefinitionList.jsx'
 import { DialogBody, DialogHeader, Drawer } from '../../components/ui/Dialog.jsx'
 import FormField from '../../components/ui/FormField.jsx'
@@ -34,6 +35,22 @@ import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 function flattenCalendarTasks(calendar) {
   return Object.values(calendar?.tasks_by_date ?? {}).flat()
+}
+
+function normalizeCalendar(calendar) {
+  if (!calendar || typeof calendar !== 'object' || Array.isArray(calendar)) return null
+
+  return {
+    ...calendar,
+    available_dates: Array.isArray(calendar.available_dates) ? calendar.available_dates : [],
+    weather: Array.isArray(calendar.weather) ? calendar.weather : [],
+    day_resource_summary: calendar.day_resource_summary && typeof calendar.day_resource_summary === 'object'
+      ? calendar.day_resource_summary
+      : {},
+    tasks_by_date: calendar.tasks_by_date && typeof calendar.tasks_by_date === 'object'
+      ? calendar.tasks_by_date
+      : {},
+  }
 }
 
 function uniqueOptions(calendar, keyId, keyName) {
@@ -103,54 +120,30 @@ function buildInventoryLink(task, context = {}) {
 
   if (context.plotId) {
     params.set('returnTo', buildCalendarReturnPath(context.plotId, context.calendarId, context.date))
-    params.set('returnLabel', context.date ? `Grįžti į ${formatDate(context.date)}` : 'Grįžti į kalendorių')
+    params.set('returnLabel', context.date ? `Back to ${formatDate(context.date)}` : 'Back to calendar')
   }
 
   return `/inventory?${params.toString()}`
 }
 
 function taskInventoryLabel(mode) {
-  if (mode === 'available') return 'Inventorius paruoštas'
-  if (mode === 'shortage') return 'Inventoriaus trūkumas'
-  if (mode === 'replenishment') return 'Papildymo priminimas'
-  return 'Inventorius nereikalingas'
+  if (mode === 'available') return 'Inventory ready'
+  if (mode === 'shortage') return 'Inventory shortage'
+  if (mode === 'replenishment') return 'Replenishment reminder'
+  return 'No inventory needed'
 }
 
 const VISIBLE_TEXT_TRANSLATIONS = {
-  'Inventory is fully covered for planned work on this day.': 'Inventoriaus pakanka visiems šios dienos suplanuotiems darbams.',
-  'Inventory is fully covered.': 'Inventoriaus pakanka.',
-  'Feed flowering tomatoes': 'Patręšti žydinčius pomidorus',
-  'Apply lightly and water in after feeding.': 'Tręškite saikingai ir po tręšimo palaistykite.',
-  "Tomato 'Sungold'": 'Pomidoras „Sungold“',
-  'Tomato': 'Pomidoras',
-  'Basil': 'Bazilikas',
-  'Cucumber': 'Agurkas',
-  'Carrot': 'Morka',
-  'Beetroot': 'Burokėlis',
-  'Lettuce': 'Salota',
-  'Spinach': 'Špinatas',
-  'Cabbage': 'Kopūstas',
-  'Pepper': 'Paprika',
-  'Strawberry': 'Braškė',
-  'Bean': 'Pupelė',
-  'Pea': 'Žirnis',
-  'Corn': 'Kukurūzas',
-  'Tomato and Basil Bed': 'Pomidorų ir bazilikų lysvė',
-  'Root Vegetable Bed': 'Šakniavaisių lysvė',
-  'Leafy Greens Bed': 'Lapinių daržovių lysvė',
-  'Raspberry Canes': 'Aviečių zona',
-  'Young Apple Guild': 'Jaunos obels zona',
-  'Contained Mint Box': 'Mėtų dėžė',
-  'Fertilizer': 'Trąšos',
-  'Compost': 'Kompostas',
-  'Tomato organic fertilizer': 'Organinės pomidorų trąšos',
-  'Straw mulch': 'Šiaudų mulčias',
-  'Neem oil spray': 'Nimbamedžio aliejaus purškalas',
-  'Copper-free biofungicide': 'Biofungicidas be vario',
-  'Row cover': 'Apsauginė danga',
-  'Plant ties': 'Augalų raiščiai',
-  'Plant support': 'Augalų atramos',
-  'Protective cover': 'Apsauginė danga',
+  'Stebėti įsitvirtinimą': 'Monitor establishment',
+  'Jaunus augalus įsitvirtinimo metu reikia stebėti atidžiau.': 'Young plants should be monitored more closely while they become established.',
+  'Faktinė būklė': 'Current status',
+  'Tikėtina būklė': 'Expected status',
+  'Detalės': 'Details',
+  'Atlikti': 'Complete',
+  'Atnaujinta:': 'Updated:',
+  'Orai': 'Weather',
+  'Dienos resursai': 'Daily resources',
+  'Veiksmai': 'Actions',
 }
 
 function translateVisibleText(value) {
@@ -163,14 +156,12 @@ function translateVisibleText(value) {
   }
 
   return String(value)
-    .replace(/\bRestocked:/g, 'Papildyta:')
-    .replace(/\bBuy\s+/g, 'Nupirkti: ')
-    .replace(/\bPlant support\b/g, 'Augalų atramos')
-    .replace(/\bProtective cover\b/g, 'Apsauginė danga')
-    .replace(/\bFertilizer\b/g, 'Trąšos')
-    .replace(/(\d+)\.(\d{2})\s+unit\b/g, '$1,$2 vnt.')
-    .replace(/(\d+)\.(\d{2})(?=\s+(?:vnt\.|kg|g|l|ml)\b)/g, '$1,$2')
-    .replace(/\bunit\b/g, 'vnt.')
+    .replace(/\bPapildyta:/g, 'Restocked:')
+    .replace(/\bNupirkti:\s*/g, 'Buy ')
+    .replace(/\bTrąšos\b/g, 'Fertilizer')
+    .replace(/\bApsauginė danga\b/g, 'Protective cover')
+    .replace(/\bAugalų atramos\b/g, 'Plant support')
+    .replace(/\bvnt\./g, 'unit')
 }
 
 function summarizeInventoryContext(task, isReplenishmentTask) {
@@ -179,19 +170,19 @@ function summarizeInventoryContext(task, isReplenishmentTask) {
   }
 
   if (task.inventory_mode === 'shortage' && task.inventory_context.shortage_count > 0) {
-    return `Aptikta trūkumų: ${task.inventory_context.shortage_count}`
+    return `Shortages found: ${task.inventory_context.shortage_count}`
   }
 
   if (!isReplenishmentTask && (task.inventory_context.buy_task_ids ?? []).length > 0) {
-    return 'Susieta papildymo užduotis jau yra'
+    return 'A linked replenishment task already exists'
   }
 
   if ((task.inventory_context.open_buy_task_ids ?? []).length > 0) {
-    return 'Atvira pirkimo užduotis jau yra'
+    return 'An open purchase task already exists'
   }
 
   if (task.inventory_mode === 'available') {
-    return 'Reikalingas inventorius yra paruoštas'
+    return 'Required inventory is ready'
   }
 
   return taskInventoryLabel(task.inventory_mode)
@@ -200,22 +191,22 @@ function summarizeInventoryContext(task, isReplenishmentTask) {
 function describeTaskFocus(task, missingResources, isReplenishmentTask, linkedReplenishmentTask = null) {
   const firstMissing = missingResources[0]
   const firstMissingLabel = firstMissing
-    ? `${translateVisibleText(firstMissing.name ?? firstMissing.resource_name)}: trūksta ${safeNumber(firstMissing.shortage_quantity, firstMissing.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(firstMissing.unit)}`
+    ? `${translateVisibleText(firstMissing.name ?? firstMissing.resource_name)}: missing ${safeNumber(firstMissing.shortage_quantity, firstMissing.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(firstMissing.unit)}`
     : null
 
   if (task.status === 'completed') {
     return {
       tone: 'success',
-      label: 'Atlikta',
-      detail: translateVisibleText(task.comment) || 'Šis veiksmas jau atliktas.',
+      label: 'Completed',
+      detail: translateVisibleText(task.comment) || 'This action is already completed.',
     }
   }
 
   if (task.status === 'canceled' || task.status === 'cancelled') {
     return {
       tone: 'danger',
-      label: 'Atšaukta',
-      detail: translateVisibleText(task.comment) || 'Šis veiksmas atšauktas ir nebereikalauja darbo.',
+      label: 'Canceled',
+      detail: translateVisibleText(task.comment) || 'This action was canceled and no longer requires work.',
     }
   }
 
@@ -223,52 +214,52 @@ function describeTaskFocus(task, missingResources, isReplenishmentTask, linkedRe
     const blockedTaskCount = firstMissing?.blocked_task_count ?? task.inventory_context?.replenishment?.blocked_task_count ?? 0
     return {
       tone: firstMissing ? 'warning' : 'soft',
-      label: 'Papildymo užduotis',
+      label: 'Replenishment task',
       detail: firstMissingLabel
-        ? `Atlikus šią užduotį inventorius papildomas. ${firstMissingLabel}${blockedTaskCount ? `, atblokuojamų užduočių: ${blockedTaskCount}.` : '.'}`
-        : 'Atlikus šią užduotį inventorius papildomas ir atblokuojamos susietos užduotys.',
+        ? `Completing this task replenishes inventory. ${firstMissingLabel}${blockedTaskCount ? `, unblocked tasks: ${blockedTaskCount}.` : '.'}`
+        : 'Completing this task replenishes inventory and unblocks linked tasks.',
     }
   }
 
   if (task.status === 'pending' && firstMissing) {
     const dependencyLabel = linkedReplenishmentTask
-      ? `„${translateVisibleText(linkedReplenishmentTask.name)}“`
-      : 'susieta papildymo užduotis'
+      ? `"${translateVisibleText(linkedReplenishmentTask.name)}"`
+      : 'the linked replenishment task'
     return {
       tone: 'danger',
-      label: 'Blokuota dėl trūkumo',
-      detail: `Užduotis bus blokuota, kol bus atlikta ${dependencyLabel}. Atsargos papildomos ten, ne čia. ${firstMissingLabel}`,
+      label: 'Blocked by shortage',
+      detail: `This task is blocked until ${dependencyLabel} is completed. Inventory is replenished there, not here. ${firstMissingLabel}`,
     }
   }
 
   if (task.workflow_context?.kind === 'lifecycle_review' && task.plant_id) {
     return {
       tone: 'warning',
-      label: 'Reikia augalo peržiūros',
-      detail: 'Atidarykite augalo įrašą ir patvirtinkite būklę prieš atlikdami užduotį.',
+      label: 'Plant review required',
+      detail: 'Open the plant record and confirm the status before completing this task.',
     }
   }
 
   if (task.type === 'harvest' && task.plant_id) {
     return {
       tone: 'warning',
-      label: 'Reikia registruoti derlių',
-      detail: 'Užregistruokite derlių susietame augalo procese.',
+      label: 'Harvest record required',
+      detail: 'Record the harvest in the linked plant workflow.',
     }
   }
 
   if (task.actual_condition && task.actual_condition !== 'healthy') {
     return {
       tone: 'warning',
-      label: `Būklė: ${formatPlantCondition(task.actual_condition)}`,
-      detail: translateVisibleText(task.reason) || 'Užduotis reaguoja į šiai dienai nustatytą augalo būklę.',
+      label: `Status: ${formatPlantCondition(task.actual_condition)}`,
+      detail: translateVisibleText(task.reason) || 'This task responds to the plant status recorded for this day.',
     }
   }
 
   if (task.reason) {
     return {
       tone: 'soft',
-      label: 'Suplanuota pagal taisyklę',
+      label: 'Planned by rule',
       detail: translateVisibleText(task.reason),
     }
   }
@@ -276,7 +267,7 @@ function describeTaskFocus(task, missingResources, isReplenishmentTask, linkedRe
   if (task.comment) {
     return {
       tone: 'neutral',
-      label: 'Naudotojo pastaba',
+      label: 'User note',
       detail: translateVisibleText(task.comment),
     }
   }
@@ -284,7 +275,7 @@ function describeTaskFocus(task, missingResources, isReplenishmentTask, linkedRe
   return {
     tone: task.inventory_mode === 'available' ? 'success' : 'neutral',
     label: taskInventoryLabel(task.inventory_mode),
-    detail: summarizeInventoryContext(task, isReplenishmentTask) || 'Paruošta veiksmui.',
+    detail: summarizeInventoryContext(task, isReplenishmentTask) || 'Ready for action.',
   }
 }
 
@@ -300,16 +291,16 @@ function getLinkedReplenishmentTask(task, tasks) {
 
 function resourceTypeLabel(resource) {
   if (resource.resource_type_label) return resource.resource_type_label
-  return (resource.resource_mode ?? resource.consumption_mode) === 'consumable' ? 'Sunaudojama' : 'Daugkartinė'
+  return (resource.resource_mode ?? resource.consumption_mode) === 'consumable' ? 'Consumable' : 'Reusable'
 }
 
 function weatherSourceLabel(source) {
-  if (source === 'api') return 'Tiesioginė Meteo.lt prognozė'
-  if (source === 'stored_city_date') return 'Išsaugota prognozė pagal miestą ir datą'
-  if (source === 'stored_other_city_date') return 'Išsaugota prognozė pagal datą'
-  if (source === 'seasonal') return 'Sezoninė atsarginė prognozė'
-  if (source === 'legacy_unknown') return 'Ankstesni prognozės duomenys'
-  return 'Atsarginė prognozė'
+  if (source === 'api') return 'Direct Meteo.lt forecast'
+  if (source === 'stored_city_date') return 'Stored forecast by city and date'
+  if (source === 'stored_other_city_date') return 'Stored forecast by date'
+  if (source === 'seasonal') return 'Seasonal fallback forecast'
+  if (source === 'legacy_unknown') return 'Legacy forecast data'
+  return 'Fallback forecast'
 }
 
 function weatherSourceNote(forecast) {
@@ -321,25 +312,25 @@ function weatherSourceNote(forecast) {
 
   if (source === 'stored_city_date' || source === 'stored_other_city_date') {
     if (sourceDate && sourceCity) {
-      return `Šaltinis: atsarginė ${sourceCity} prognozė pagal ${sourceDate} duomenis`
+      return `Source: fallback ${sourceCity} forecast using ${sourceDate} data`
     }
 
     if (sourceDate) {
-      return `Šaltinis: atsarginė prognozė pagal ${sourceDate} duomenis`
+      return `Source: fallback forecast using ${sourceDate} data`
     }
 
-    return 'Šaltinis: atsarginė prognozė'
+    return 'Source: fallback forecast'
   }
 
   if (source === 'seasonal') {
-    return 'Šaltinis: sezoninė atsarginė prognozė'
+    return 'Source: seasonal fallback forecast'
   }
 
   if (source === 'legacy_unknown') {
-    return 'Šaltinis: ankstesni prognozės duomenys'
+    return 'Source: legacy forecast data'
   }
 
-  return `Šaltinis: ${weatherSourceLabel(source).toLowerCase()}`
+  return `Source: ${weatherSourceLabel(source).toLowerCase()}`
 }
 
 function getMonthDays(yearMonth) {
@@ -395,7 +386,11 @@ export default function PlotCalendarPage() {
         api.getPlot(plotId),
         api.listCalendars(plotId),
       ])
-      return { plot, calendars, accessRole }
+      return {
+        plot: plot && typeof plot === 'object' ? plot : null,
+        calendars: Array.isArray(calendars) ? calendars : [],
+        accessRole,
+      }
     },
     [plotId],
     { plot: null, calendars: [], accessRole: null },
@@ -410,7 +405,7 @@ export default function PlotCalendarPage() {
   const detailState = useAsyncData(
     async () => {
       if (!selectedCalendarId) return null
-      return api.getCalendar(plotId, selectedCalendarId)
+      return normalizeCalendar(await api.getCalendar(plotId, selectedCalendarId))
     },
     [plotId, selectedCalendarId],
     null,
@@ -432,11 +427,12 @@ export default function PlotCalendarPage() {
   const tasksState = useAsyncData(
     async () => {
       if (!selectedCalendarId || !selectedDate) return []
-      return api.listCalendarTasks(selectedCalendarId, {
+      const tasks = await api.listCalendarTasks(selectedCalendarId, {
         date: selectedDate,
         plant_id: filters.plant_id || undefined,
         zone_id: filters.zone_id || undefined,
       })
+      return Array.isArray(tasks) ? tasks : []
     },
     [selectedCalendarId, selectedDate, filters.plant_id, filters.zone_id],
     [],
@@ -462,8 +458,11 @@ export default function PlotCalendarPage() {
     try {
       const created = await api.generateCalendar(plotId, generateForm)
       await pageState.reload()
-      startTransition(() => { setselectedCalendarId(created.id) })
-      setToastMessage('Kalendorius sėkmingai sugeneruotas.')
+      const nextCalendarId = created?.id ?? pageState.data.calendars[0]?.id
+      if (nextCalendarId) {
+        startTransition(() => { setselectedCalendarId(nextCalendarId) })
+      }
+      setToastMessage('Calendar generated successfully.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -472,15 +471,17 @@ export default function PlotCalendarPage() {
   }
 
   async function handleTaskAction(taskId, action) {
+    if (submitting) return
+    if (action === 'reject' && !window.confirm('Remove this calendar action?')) return
     setSubmitting(true)
     setError('')
     try {
       if (action === 'complete') {
         await api.completeTask(taskId)
-        setToastMessage('Darbas pažymėtas kaip atliktas.')
+        setToastMessage('Action completed.')
       } else {
         await api.rejectTask(taskId)
-        setToastMessage('Darbas atmestas.')
+        setToastMessage('Action removed.')
       }
       await Promise.all([tasksState.reload(), detailState.reload()])
     } catch (requestError) {
@@ -498,12 +499,12 @@ export default function PlotCalendarPage() {
 
     try {
       const response = await api.refreshCalendarWeather(plotId, selectedCalendarId)
-      if (response.calendar) {
+      if (response?.calendar) {
         detailState.setData(response.calendar)
       } else {
         await detailState.reload()
       }
-      setToastMessage(response.message ?? 'Orų prognozė atnaujinta.')
+      setToastMessage(response?.message ?? 'Weather forecast refreshed.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -521,7 +522,7 @@ export default function PlotCalendarPage() {
     setDayModalOpen(false)
   }
 
-  if (pageState.loading) return <LoadingState title="Įkeliami kalendoriai..." />
+  if (pageState.loading) return <LoadingState title="Loading calendars..." />
   if (pageState.error) return <ErrorState error={pageState.error} onRetry={pageState.reload} />
 
   const monthDays = getMonthDays(currentMonth)
@@ -530,11 +531,11 @@ export default function PlotCalendarPage() {
     <div className="page-stack">
       <PlotSectionNav
         plotId={plotId}
-        plotName={pageState.data.plot?.name ?? 'Sklypas'}
+        plotName={pageState.data.plot?.name ?? 'Plot'}
         sectionKey="calendar"
         isOwner={pageState.data.accessRole === 'owner'}
-        description="Pasirinkite laikotarpį, sugeneruokite rekomendacijų kalendorių ir atidarykite dienos užduotis."
-        meta={selectedCalendarId ? <StatusBadge kind="selection">Kalendorius #{selectedCalendarId}</StatusBadge> : null}
+        description="Choose a period, generate a recommendation calendar, and open daily tasks."
+        meta={selectedCalendarId ? <StatusBadge kind="selection">Calendar #{selectedCalendarId}</StatusBadge> : null}
       />
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
@@ -544,18 +545,18 @@ export default function PlotCalendarPage() {
           {canEdit ? (
             <form onSubmit={handleGenerate}>
               <FormSection
-                title="Generuoti kalendorių"
-                description="Nustatykite planavimo laikotarpį. Orai, augalų priežiūra ir inventorius bus sujungti serverio pusėje."
+        title="Generate calendar"
+        description="Set the planning period. Weather, plant care, and inventory are combined on the server."
                 className="calendar-rail-card calendar-generator-card"
               >
                 <div className="calendar-generator-highlights">
-                  <span className="calendar-generator-highlight">Meteo.lt prognozės taisyklės</span>
-                  <span className="calendar-generator-highlight">Augalų priežiūros intervalai</span>
-                  <span className="calendar-generator-highlight">Inventoriaus patikra</span>
+                  <span className="calendar-generator-highlight">Meteo.lt forecast rules</span>
+                  <span className="calendar-generator-highlight">Plant care intervals</span>
+                  <span className="calendar-generator-highlight">Inventory check</span>
                 </div>
 
                 <div className="calendar-generator-fields">
-                  <FormField id="calendar-start" label="Pradžios data">
+                  <FormField id="calendar-start" label="Start date">
                     <input
                       id="calendar-start"
                       type="date"
@@ -564,7 +565,7 @@ export default function PlotCalendarPage() {
                       required
                     />
                   </FormField>
-                  <FormField id="calendar-end" label="Pabaigos data">
+                  <FormField id="calendar-end" label="End date">
                     <input
                       id="calendar-end"
                       type="date"
@@ -578,16 +579,16 @@ export default function PlotCalendarPage() {
                 {error ? <span className="field-error">{error}</span> : null}
                 {submitting ? (
                   <ProcessingState
-                    title="Generuojamas kalendorius"
-                    description="Sistema jungia orų prognozę, augalų priežiūrą ir sklypo duomenis į suplanuotas užduotis."
-                    steps={['Ruošiami sklypo duomenys', 'Tikrinamos orų taisyklės', 'Generuojamos užduotys']}
+                    title="Generating calendar"
+                    description="The system combines weather forecasts, plant care, and plot data into planned tasks."
+                    steps={['Preparing plot data', 'Checking weather rules', 'Generating tasks']}
                     compact
                   />
                 ) : null}
 
                 <ActionRow>
                   <Button type="submit" loading={submitting}>
-                    {submitting ? 'Generuojamas kalendorius' : 'Generuoti'}
+                    {submitting ? 'Generating calendar' : 'Generate'}
                   </Button>
                 </ActionRow>
               </FormSection>
@@ -595,15 +596,15 @@ export default function PlotCalendarPage() {
           ) : null}
 
           <SectionCard
-            title="Sugeneruoti kalendoriai"
-            description="Perjunkite rekomendacijų generavimo rezultatus neprarasdami mėnesio vaizdo."
+          title="Generated calendars"
+            description="Switch between generated recommendation results without losing the monthly view."
             className="calendar-rail-card calendar-list-card"
             actions={<StatusBadge kind="selection" tone="neutral">{pageState.data.calendars.length}</StatusBadge>}
           >
             {pageState.data.calendars.length === 0 ? (
               <div className="calendar-list-empty">
-                <strong>Kalendorių dar nėra</strong>
-                <p className="muted">Sugeneruokite pirmą rekomendacijų kalendorių, kad matytumėte mėnesio tinklelį ir dienos užduotis.</p>
+                <strong>No calendars yet</strong>
+                <p className="muted">Generate your first recommendation calendar to see the monthly grid and daily tasks.</p>
               </div>
             ) : (
               <div className="stack stack-sm">
@@ -615,10 +616,10 @@ export default function PlotCalendarPage() {
                     onClick={() => { startTransition(() => { setselectedCalendarId(calendar.id) }) }}
                   >
                     <div className="calendar-choice-copy">
-                      <h3>Kalendorius #{calendar.id}</h3>
+                      <h3>Calendar #{calendar.id}</h3>
                       <span className="muted">{formatDate(calendar.start_date)} - {formatDate(calendar.end_date)}</span>
                     </div>
-                    <StatusBadge kind="selection" tone="neutral">{calendar.tasks_count ?? 0} užduočių</StatusBadge>
+                    <StatusBadge kind="selection" tone="neutral">{calendar.tasks_count ?? 0} tasks</StatusBadge>
                   </button>
                 ))}
               </div>
@@ -627,18 +628,18 @@ export default function PlotCalendarPage() {
 
           {detailState.data ? (
             <SectionCard
-              title="Užduočių filtrai"
-              description="Susitelkite į vieną augalą arba zoną, kai norite siauresnės dienos peržiūros."
+          title="Task filters"
+              description="Focus on one plant or zone when you want a narrower daily view."
               className="calendar-rail-card"
               compact
             >
-              <FormField id="calendar-plant-filter" label="Augalas">
+              <FormField id="calendar-plant-filter" label="Plant">
                 <select
                   id="calendar-plant-filter"
                   value={filters.plant_id}
                   onChange={(event) => setFilters((current) => ({ ...current, plant_id: event.target.value }))}
                 >
-                  <option value="">Visi augalai</option>
+                  <option value="">All plants</option>
                   {plantOptions.map((plant) => <option key={plant.id} value={plant.id}>{translateVisibleText(plant.name)}</option>)}
                 </select>
               </FormField>
@@ -648,7 +649,7 @@ export default function PlotCalendarPage() {
                   value={filters.zone_id}
                   onChange={(event) => setFilters((current) => ({ ...current, zone_id: event.target.value }))}
                 >
-                  <option value="">Visos zonos</option>
+                  <option value="">All zones</option>
                   {zoneOptions.map((zone) => <option key={zone.id} value={zone.id}>{translateVisibleText(zone.name)}</option>)}
                 </select>
               </FormField>
@@ -657,90 +658,90 @@ export default function PlotCalendarPage() {
         </aside>
 
         <section className="page-stack calendar-main-panel">
-          {detailState.loading ? <LoadingState title="Įkeliamas kalendorius..." /> : null}
+          {detailState.loading ? <LoadingState title="Loading calendar..." /> : null}
           {detailState.error ? <ErrorState error={detailState.error} onRetry={detailState.reload} /> : null}
 
           {!detailState.loading && !detailState.data ? (
             <SectionCard
-              title="Planavimo darbo sritis"
-              description="Mėnesio tinklelis atsiranda sugeneravus kalendorių, o dienos peržiūroje rodomi orai, trūkumai ir veiksmai."
+              title="Planning workspace"
+              description="The monthly grid appears after generating a calendar. Daily details show weather, shortages, and actions."
               className="calendar-empty-workspace"
             >
               <div className="calendar-empty-guide">
                 <article className="calendar-empty-step">
                   <span className="calendar-empty-step-index">1</span>
                   <div className="calendar-empty-step-copy">
-                    <strong>Pasirinkite planavimo laikotarpį</strong>
-                    <p>Pasirinkite datų intervalą, kad generatorius naudotų tinkamą orų prognozės periodą.</p>
+                    <strong>Choose a planning period</strong>
+                    <p>Select a date range so the generator uses the right weather forecast period.</p>
                   </div>
                 </article>
                 <article className="calendar-empty-step">
                   <span className="calendar-empty-step-index">2</span>
                   <div className="calendar-empty-step-copy">
-                    <strong>Sugeneruokite rekomendacijas</strong>
-                    <p>Backend dalis suplanuoja darbus pagal augalų priežiūrą, prognozę ir dabartinę sklypo būseną.</p>
+                    <strong>Generate recommendations</strong>
+                    <p>The backend schedules work from plant care, forecast, and current plot status.</p>
                   </div>
                 </article>
                 <article className="calendar-empty-step">
                   <span className="calendar-empty-step-index">3</span>
                   <div className="calendar-empty-step-copy">
-                    <strong>Atidarykite dienos detales</strong>
-                    <p>Pirmiausia peržiūrėkite blokavimus arba augalų būklę, tada atlikite, atmeskite arba pereikite į inventorių.</p>
+                    <strong>Open daily details</strong>
+                    <p>Review blockers or plant status first, then complete, delete, or go to inventory.</p>
                   </div>
                 </article>
               </div>
 
               <div className="calendar-empty-preview">
-                <span className="calendar-empty-preview-label">Kas rodoma po generavimo</span>
+                <span className="calendar-empty-preview-label">What appears after generation</span>
                 <div className="calendar-empty-preview-bars">
                   <span className="calendar-empty-preview-bar calendar-empty-preview-bar-soft" />
                   <span className="calendar-empty-preview-bar calendar-empty-preview-bar-brand" />
                   <span className="calendar-empty-preview-bar calendar-empty-preview-bar-warning" />
                 </div>
-                <p className="muted">Užimtumo juostos dienose padeda greitai pastebėti intensyvias arba blokuotas datas.</p>
+                <p className="muted">Daily workload bars help you quickly spot busy or blocked dates.</p>
               </div>
             </SectionCard>
           ) : null}
 
           {!detailState.loading && detailState.data ? (
             <SectionCard
-              title="Mėnesio vaizdas"
-              description="Dienos langeliuose aiškiai rodoma užimtumo juosta, būsena ir trūkumų įtaka."
+          title="Monthly view"
+              description="Day cells clearly show workload, status, and shortage impact."
             >
               {usingWeatherFallback ? (
                 <div className="inline-note">
-                  Orų prognozėje naudojami atsarginiai duomenys: {weatherSources.map(weatherSourceLabel).join(', ')}.
+                  Weather forecast uses fallback data: {weatherSources.map(weatherSourceLabel).join(', ')}.
                 </div>
               ) : null}
 
               <div className="calendar-weather-refresh-row">
                 <span className="muted">
-                  Prognozė atnaujinta: {latestWeatherFetchedAt ? formatDateTime(latestWeatherFetchedAt) : 'nėra duomenų'}
+                  Forecast updated: {latestWeatherFetchedAt ? formatDateTime(latestWeatherFetchedAt) : 'no data'}
                 </span>
                 <Button
                   variant="secondary"
                   onClick={handleRefreshWeather}
                   disabled={!canEdit || refreshingWeather || !selectedCalendarId}
                 >
-                  {refreshingWeather ? 'Atnaujinama...' : 'Atnaujinti prognozę'}
+                  {refreshingWeather ? 'Refreshing...' : 'Refresh forecast'}
                 </Button>
               </div>
 
               <MapLayerControl
-                title="Kalendoriaus sluoksniai"
+                title="Calendar layers"
                 items={[
-                  { id: 'tasks', label: 'Užduotys', active: true, color: '#49683f' },
-                  { id: 'weather', label: usingWeatherFallback ? 'Atsarginė prognozė' : 'Meteo.lt prognozė', active: true, color: '#b76d17' },
-                  { id: 'inventory', label: 'Inventoriaus padengimas', active: true, color: '#ef6d22' },
-                  { id: 'priority', label: 'Prioritetų apkrova', active: true, color: '#c44934' },
+                  { id: 'tasks', label: 'Tasks', active: true, color: '#49683f' },
+                  { id: 'weather', label: usingWeatherFallback ? 'Fallback forecast' : 'Meteo.lt forecast', active: true, color: '#b76d17' },
+                  { id: 'inventory', label: 'Inventory coverage', active: true, color: '#ef6d22' },
+                  { id: 'priority', label: 'Priority load', active: true, color: '#c44934' },
                 ]}
                 className="calendar-layer-control"
               />
 
               <div className="month-nav">
-                <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, -1))}>Ankstesnis</Button>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, -1))}>Previous</Button>
                 <span className="month-title">{formatMonthTitle(currentMonth)}</span>
-                <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, 1))}>Kitas</Button>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentMonth((month) => shiftMonth(month, 1))}>Next</Button>
               </div>
 
               <div className="month-weekdays">
@@ -765,14 +766,14 @@ export default function PlotCalendarPage() {
                   const isToday = day === TODAY
                   const tone = getDayTone(taskCount, dayStatus)
                   const workloadLabel = dayStatus === 'blocked'
-                    ? 'Blokuota'
+                    ? 'Blocked'
                     : dayStatus === 'partially_blocked'
-                      ? 'Trūksta'
+                      ? 'Missing'
                       : taskCount >= 4
-                        ? 'Užimta'
+                        ? 'Busy'
                         : taskCount >= 1
-                          ? 'Suplanuota'
-                          : 'Laisva'
+                          ? 'Planned'
+                          : 'Free'
 
                   return (
                     <button
@@ -781,11 +782,11 @@ export default function PlotCalendarPage() {
                       aria-label={day.slice(8)}
                       className={`month-day month-day-${tone} ${isSelected ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}`.trim()}
                       onClick={() => handleDayClick(day)}
-                      title={hasTasks ? `${day}: ${taskCount} užduočių` : day}
+                      title={hasTasks ? `${day}: ${taskCount} tasks` : day}
                     >
                       <span className="month-day-num">{day.slice(8)}</span>
                       <span className="month-day-state">{workloadLabel}</span>
-                      <span className="month-day-tasks">{taskCount ? `${taskCount} užduočių` : 'Užduočių nėra'}</span>
+                      <span className="month-day-tasks">{taskCount ? `${taskCount} tasks` : 'No tasks'}</span>
                       <span className="month-day-load" aria-hidden="true">
                         <span
                           className={`month-day-load-bar month-day-load-${tone}`.trim()}
@@ -798,7 +799,7 @@ export default function PlotCalendarPage() {
               </div>
 
               <p className="muted calendar-footnote">
-                Pasirinktos dienos būsena, apkrova ir trūkumai matomi tiesiai mėnesio tinklelyje.
+                The selected day's status, workload, and shortages are visible directly in the monthly grid.
               </p>
             </SectionCard>
           ) : null}
@@ -815,64 +816,64 @@ export default function PlotCalendarPage() {
       >
         <DialogHeader
           title={selectedDate ? formatDate(selectedDate) : '--'}
-          subtitle={tasksState.loading ? 'Įkeliami veiksmai...' : `${tasksState.data.length} veiksmų pasirinktai dienai`}
+          subtitle={tasksState.loading ? 'Loading actions...' : `${tasksState.data.length} actions for the selected day`}
           titleId="calendar-day-title"
           subtitleId="calendar-day-subtitle"
           onClose={closeDayModal}
-          closeLabel="Uždaryti dienos detales"
+          closeLabel="Close day details"
         />
         <DialogBody className="day-modal-body page-stack">
 
             {selectedForecast ? (
               <section className="dialog-section day-drawer-section">
-                <p className="dialog-section-title day-drawer-label">Orai</p>
+                <p className="dialog-section-title day-drawer-label">Weather</p>
                 {selectedForecast.source && selectedForecast.source !== 'api' ? (
                   <div className="inline-note day-drawer-note">
                     {weatherSourceNote(selectedForecast)}
                   </div>
                 ) : null}
                 <div className="inline-note day-drawer-note">
-                  Atnaujinta: {selectedForecast.fetched_at ? formatDateTime(selectedForecast.fetched_at) : 'nėra duomenų'}
+                  Updated: {selectedForecast.fetched_at ? formatDateTime(selectedForecast.fetched_at) : 'no data'}
                 </div>
                 <div className="day-modal-weather">
                   <StatRow label="Min." value={formatTemperatureC(selectedForecast.temp_min ?? selectedForecast.temperature)} />
-                  <StatRow label="Maks." value={formatTemperatureC(selectedForecast.temp_max ?? selectedForecast.temperature)} />
-                  <StatRow label="Lietus" value={formatNumberWithUnit(selectedForecast.precipitation, 'mm', 1)} />
-                  <StatRow label="Vėjas" value={formatNumberWithUnit(selectedForecast.wind_kmh ?? 0, 'km/h', 1)} />
+                  <StatRow label="Max." value={formatTemperatureC(selectedForecast.temp_max ?? selectedForecast.temperature)} />
+                  <StatRow label="Rain" value={formatNumberWithUnit(selectedForecast.precipitation, 'mm', 1)} />
+                  <StatRow label="Wind" value={formatNumberWithUnit(selectedForecast.wind_kmh ?? 0, 'km/h', 1)} />
                 </div>
               </section>
             ) : null}
 
             {selectedDaySummary ? (
               <section className="dialog-section day-drawer-section page-stack">
-                <p className="dialog-section-title day-drawer-label">Dienos resursai</p>
+                <p className="dialog-section-title day-drawer-label">Daily resources</p>
                 <div
                   className="inline-note"
                   style={['partially_blocked', 'blocked'].includes(selectedDaySummary.day_inventory_status) ? { color: 'var(--danger)' } : undefined}
                 >
                   {translateVisibleText(selectedDaySummary.summary_text)
                     ?? (selectedDaySummary.day_inventory_status === 'fully_covered'
-                      ? 'Šios dienos darbams inventoriaus pakanka.'
-                      : 'Suplanuoti darbai blokuojami dėl inventoriaus trūkumo.')}
+                      ? 'Inventory is sufficient for this day.'
+                      : 'Planned work is blocked because inventory is missing.')}
                 </div>
                 {(selectedDaySummary.grouped_resource_summary ?? selectedDaySummary.resources ?? []).map((resource) => (
                   <div key={`${selectedDate}-${resource.resource_key}`} className="resource-summary-row">
                     <StatRow
                       label={translateVisibleText(resource.resource_name)}
-                      value={`Reikia ${safeNumber(resource.required_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
+                      value={`Required ${safeNumber(resource.required_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
                     />
                     <StatRow
                       label={resourceTypeLabel(resource)}
                       className={resource.shortage_quantity > 0 ? 'stat-row-danger' : ''}
-                      value={`Turima ${safeNumber(resource.available_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}${resource.shortage_quantity > 0
-                        ? ` / trūksta ${safeNumber(resource.shortage_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}`
+                      value={`Available ${safeNumber(resource.available_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}${resource.shortage_quantity > 0
+                        ? ` / missing ${safeNumber(resource.shortage_quantity, resource.inventory_item_type === 'tool' ? 0 : 2)}`
                         : ''}`}
                     />
                   </div>
                 ))}
                 {(selectedDaySummary.replenishment_tasks ?? selectedDaySummary.buy_tasks ?? []).length > 0 ? (
                   <div className="stack stack-sm">
-                    <span className="muted">Sugeneruotos papildymo užduotys:</span>
+                    <span className="muted">Generated replenishment tasks:</span>
                     {(selectedDaySummary.replenishment_tasks ?? selectedDaySummary.buy_tasks ?? []).map((task) => (
                       <span key={`buy-summary-${task.id}`} className="muted">
                         {translateVisibleText(task.name)} - {safeNumber(task.item_quantity, 2)} {translateVisibleText(task.item) ?? ''}
@@ -883,18 +884,18 @@ export default function PlotCalendarPage() {
               </section>
             ) : null}
 
-            {tasksState.loading ? <LoadingState title="Įkeliami veiksmai..." /> : null}
+            {tasksState.loading ? <LoadingState title="Loading actions..." /> : null}
             {tasksState.error ? <ErrorState error={tasksState.error} onRetry={tasksState.reload} /> : null}
 
             {!tasksState.loading && !tasksState.error && tasksState.data.length === 0 ? (
-              <EmptyState title="Šią dieną veiksmų nėra" description="Pasirinkite kitą datą arba išvalykite filtrus." />
+              <EmptyState title="No actions for this day" description="Choose another date or clear filters." />
             ) : null}
 
             {!tasksState.loading && !tasksState.error ? (
               <section className="dialog-section day-actions-section">
                 <div className="day-actions-header">
-                  <p className="dialog-section-title">Veiksmai</p>
-                  <span className="muted">Suplanuota: {tasksState.data.length}</span>
+                  <p className="dialog-section-title">Actions</p>
+                  <span className="muted">Planned: {tasksState.data.length}</span>
                 </div>
                 <div className="task-groups day-task-groups">
                 {error ? <span className="field-error">{error}</span> : null}
@@ -908,28 +909,33 @@ export default function PlotCalendarPage() {
                   const inventorySummary = summarizeInventoryContext(task, isReplenishmentTask)
                   const resourceRequirements = task.resource_requirements ?? task.required_resources ?? []
                   const quickFacts = [
-                    task.actual_condition ? `Faktinė būklė: ${formatPlantCondition(task.actual_condition)}` : null,
-                    task.simulated_phase ? `Tikėtina būklė: ${formatPlantCondition(task.simulated_phase)}` : null,
+                    task.actual_condition ? `Current status: ${formatPlantCondition(task.actual_condition)}` : null,
+                    task.simulated_phase ? `Expected status: ${formatPlantCondition(task.simulated_phase)}` : null,
                     task.lifecycle_transition?.is_transition_day
-                      ? `${task.lifecycle_transition.from} -> ${task.lifecycle_transition.to}`
+                      ? `Expected transition: ${formatPlantCondition(task.lifecycle_transition.from)} → ${formatPlantCondition(task.lifecycle_transition.to)}`
                       : null,
                     ...(
                       isReplenishmentTask
-                        ? missingResources.map((resource) => `Trūksta ${safeNumber(resource.shortage_quantity, 2)} ${formatInventoryUnit(resource.unit)}: ${translateVisibleText(resource.name ?? resource.resource_name)}${resource.blocked_task_count ? `, blokuotų užduočių: ${resource.blocked_task_count}` : ''}`)
+                        ? missingResources.map((resource) => `Missing ${safeNumber(resource.shortage_quantity, 2)} ${formatInventoryUnit(resource.unit)}: ${translateVisibleText(resource.name ?? resource.resource_name)}${resource.blocked_task_count ? `, blocked tasks: ${resource.blocked_task_count}` : ''}`)
                         : []
                     ),
                   ].filter(Boolean)
+                  const presentationQuickFacts = quickFacts.map((fact, index) => {
+                    if (index === 0 && task.actual_condition) return `Current status: ${formatPlantCondition(task.actual_condition)}`
+                    if (index === 1 && task.simulated_phase) return `Expected status: ${formatPlantCondition(task.simulated_phase)}`
+                    return fact
+                  })
                   const taskDetails = [
-                    task.reason && taskFocus.detail !== translateVisibleText(task.reason) ? { label: 'Planavimo taisyklė', value: translateVisibleText(task.reason) } : null,
-                    task.comment && taskFocus.detail !== translateVisibleText(task.comment) ? { label: 'Naudotojo pastaba', value: translateVisibleText(task.comment) } : null,
-                    task.type ? { label: 'Užduoties tipas', value: formatTaskType(task.type) } : null,
+                    task.reason && taskFocus.detail !== translateVisibleText(task.reason) ? { label: 'Planning rule', value: translateVisibleText(task.reason) } : null,
+                    task.comment && taskFocus.detail !== translateVisibleText(task.comment) ? { label: 'User note', value: translateVisibleText(task.comment) } : null,
+                    task.type ? { label: 'Task type', value: formatTaskType(task.type) } : null,
                     !isReplenishmentTask && task.item
-                      ? { label: 'Medžiaga', value: task.item_quantity ? `${translateVisibleText(task.item)} x ${safeNumber(task.item_quantity, 2)}` : translateVisibleText(task.item) }
+                      ? { label: 'Material', value: task.item_quantity ? `${translateVisibleText(task.item)} x ${safeNumber(task.item_quantity, 2)}` : translateVisibleText(task.item) }
                       : null,
                     linkedReplenishmentTask
-                      ? { label: 'Priklausomybė', value: `Pirma reikia atlikti „${translateVisibleText(linkedReplenishmentTask.name)}“` }
+                      ? { label: 'Dependency', value: `Complete "${translateVisibleText(linkedReplenishmentTask.name)}" first` }
                       : null,
-                    inventorySummary ? { label: 'Inventoriaus kontekstas', value: inventorySummary } : null,
+                    inventorySummary ? { label: 'Inventory context', value: inventorySummary } : null,
                   ].filter(Boolean)
 
                   return (
@@ -938,7 +944,7 @@ export default function PlotCalendarPage() {
                         <div className="day-task-card-title-block">
                           <strong className="day-task-card-title">{translateVisibleText(task.name)}</strong>
                           <span className="day-task-card-context">
-                            {translateVisibleText(task.plant_name) || 'Sklypo lygis'} - {translateVisibleText(task.zone_name) || 'Zona nenurodyta'}
+                            {translateVisibleText(task.plant_name) || 'Plot level'} - {translateVisibleText(task.zone_name) || 'Zone not specified'}
                           </span>
                         </div>
                         <div className="day-task-card-badges">
@@ -954,14 +960,14 @@ export default function PlotCalendarPage() {
 
                       {linkedReplenishmentTask ? (
                         <div className="day-task-card-dependency">
-                          <span className="day-task-card-dependency-label">Priklauso nuo</span>
+                          <span className="day-task-card-dependency-label">Depends on</span>
                           <strong>{translateVisibleText(linkedReplenishmentTask.name)}</strong>
                         </div>
                       ) : null}
 
                       {quickFacts.length > 0 ? (
                         <div className="day-task-card-facts">
-                          {quickFacts.map((fact) => (
+                          {presentationQuickFacts.map((fact) => (
                             <span key={`${task.id}-${fact}`} className="day-task-card-fact">{fact}</span>
                           ))}
                         </div>
@@ -978,7 +984,7 @@ export default function PlotCalendarPage() {
                               })
                             }}
                           >
-                            Pereiti prie papildymo užduoties
+                            Go to replenishment task
                           </Button>
                         ) : null}
 
@@ -990,7 +996,7 @@ export default function PlotCalendarPage() {
                               date: selectedDate,
                             })}
                           >
-                            <Button variant="secondary">Eiti į inventorių</Button>
+                            <Button variant="secondary">Go to inventory</Button>
                           </Link>
                         ) : null}
 
@@ -1000,16 +1006,16 @@ export default function PlotCalendarPage() {
                             state={{
                               pendingReviewTask: task,
                               backTo: buildCalendarReturnPath(plotId, selectedCalendarId, selectedDate),
-                              backLabel: selectedDate ? `Grįžti į ${formatDate(selectedDate)}` : 'Grįžti į kalendorių',
+                              backLabel: selectedDate ? `Back to ${formatDate(selectedDate)}` : 'Back to calendar',
                             }}
                           >
-                            <Button variant="secondary">Atidaryti augalo peržiūrą</Button>
+                            <Button variant="secondary">Open plant review</Button>
                           </Link>
                         ) : null}
 
                         {canEdit && task.status === 'pending' && task.type === 'harvest' && task.plant_id ? (
                           <Link to={`/plots/${plotId}/harvests?plantId=${task.plant_id}&taskId=${task.id}&date=${task.date || ''}`}>
-                            <Button variant="secondary">Registruoti derlių</Button>
+                            <Button variant="secondary">Record harvest</Button>
                           </Link>
                         ) : null}
 
@@ -1019,18 +1025,22 @@ export default function PlotCalendarPage() {
                               onClick={() => handleTaskAction(task.id, 'complete')}
                               disabled={submitting || hasInventoryShortage || task.can_complete === false}
                             >
-                              {isReplenishmentTask ? 'Atlikti papildymą' : 'Atlikti'}
+              {isReplenishmentTask ? 'Complete replenishment' : 'Complete'}
                             </Button>
-                            <Button variant="danger" onClick={() => handleTaskAction(task.id, 'reject')} disabled={submitting}>
-                              Atmesti
-                            </Button>
+                            <DestructiveButton
+                              label="Delete calendar action"
+                              onClick={() => handleTaskAction(task.id, 'reject')}
+                              disabled={submitting}
+                            >
+                              Delete
+                            </DestructiveButton>
                           </ActionRow>
                         ) : null}
                       </div>
 
                       {(taskDetails.length > 0 || resourceRequirements.length > 0 || missingResources.length > 0) ? (
                         <details className="task-card-details">
-                          <summary>Detalės</summary>
+                          <summary>Details</summary>
                           <div className="task-card-detail-stack">
                             {taskDetails.length > 0 ? (
                               <DefinitionList className="task-card-detail-list" items={taskDetails} />
@@ -1038,17 +1048,17 @@ export default function PlotCalendarPage() {
 
                             {resourceRequirements.length > 0 ? (
                               <div className="task-card-detail-block">
-                                <strong>Resursų poreikis</strong>
+                                <strong>Resource requirements</strong>
                                 <div className="task-card-resource-list">
                                   {resourceRequirements.map((resource) => (
                                     <StatRow
                                       key={`${task.id}-${resource.id ?? resource.name}`}
                                       className="task-card-resource-row"
                                       label={translateVisibleText(resource.name ?? resource.resource_name)}
-                                      value={`Reikia ${safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}${resource.available_quantity !== null && resource.available_quantity !== undefined
-                                        ? ` / turima ${safeNumber(resource.available_quantity, resource.type === 'tool' ? 0 : 2)}`
+                                      value={`Required ${safeNumber(resource.required_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}${resource.available_quantity !== null && resource.available_quantity !== undefined
+                                        ? ` / available ${safeNumber(resource.available_quantity, resource.type === 'tool' ? 0 : 2)}`
                                         : ''}${resource.is_shortage || resource.shortage_quantity > 0
-                                        ? ` / trūksta ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)}`
+                                        ? ` / missing ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)}`
                                         : ''}`}
                                     />
                                   ))}
@@ -1058,14 +1068,14 @@ export default function PlotCalendarPage() {
 
                             {missingResources.length > 0 ? (
                               <div className="task-card-detail-block">
-                                <strong>Trūkumai</strong>
+                                <strong>Shortages</strong>
                                 <div className="task-card-resource-list">
                                   {missingResources.map((resource) => (
                                     <StatRow
                                       key={`${task.id}-missing-${resource.id ?? resource.resource_name}`}
                                       className="task-card-resource-row stat-row-danger"
                                       label={translateVisibleText(resource.name ?? resource.resource_name)}
-                                      value={`Trūksta ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
+                                      value={`Missing ${safeNumber(resource.shortage_quantity, resource.type === 'tool' ? 0 : 2)} ${formatInventoryUnit(resource.unit)}`}
                                     />
                                   ))}
                                 </div>

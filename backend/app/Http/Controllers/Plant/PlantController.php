@@ -10,14 +10,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Plant\PlantResource;
 use App\Models\CatalogPlant;
 use App\Models\Plant;
-use App\Models\PlantCare;
 use App\Models\PlantZone;
 use App\Models\Plot;
-use App\Services\Plot\AccessService;
-use App\Services\Plant\CatalogPlantService;
 use App\Services\Integrations\PerenualService;
+use App\Services\Plant\CatalogPlantService;
 use App\Services\Plant\PlantCareService;
 use App\Services\Plant\PlantLifecycleService;
+use App\Services\Plot\AccessService;
 use App\Services\Plot\PlotSnapshotService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +36,7 @@ class PlantController extends Controller
         ]);
 
         $plants = $this->accessiblePlantQuery($request, $accessService)
-            ->with(['plot', 'plantZone', 'catalogPlant.plantCare'])
+            ->with(['plot', 'plantZone', 'catalogPlant.plantCare', 'tasks' => fn ($query) => $query->where('state', 'pending')->orderBy('date')])
             ->when(
                 filled($validated['q'] ?? null),
                 fn (Builder $query) => $this->applyPlantSearch($query, (string) $validated['q'])
@@ -57,7 +56,10 @@ class PlantController extends Controller
 
         return response()->json(
             PlantResource::collection(
-                $plot->plants()->with(['plot', 'plantZone', 'catalogPlant.plantCare'])->get()
+                $plot->plants()
+                    ->whereHas('plantZone', fn ($query) => $query->whereNull('archived_at'))
+                    ->with(['plot', 'plantZone', 'catalogPlant.plantCare', 'tasks' => fn ($query) => $query->where('state', 'pending')->orderBy('date')])
+                    ->get()
             )->resolve()
         );
     }
@@ -138,6 +140,7 @@ class PlantController extends Controller
 
         $validated = $request->validate([
             'name' => ['required_without:fk_catalog_plant_id', 'nullable', 'string', 'max:255'],
+            'variety' => ['nullable', 'string', 'max:255'],
             'growing_time_days' => ['nullable', 'integer', 'min:0'],
             'recommended_temperature' => ['nullable', 'numeric'],
             'recommended_humidity' => ['nullable', 'numeric'],
@@ -146,6 +149,13 @@ class PlantController extends Controller
             'disease_notes' => ['nullable', 'string', 'max:255'],
             'rest_time_days' => ['nullable', 'integer', 'min:0'],
             'plant_size' => ['nullable', 'numeric', 'min:0'],
+            'quantity' => ['nullable', 'numeric', 'min:0'],
+            'occupied_area' => ['nullable', 'numeric', 'min:0'],
+            'season' => ['nullable', 'string', 'max:40'],
+            'harvest_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'marker_position_x' => ['nullable', 'numeric', 'between:0,1'],
+            'marker_position_y' => ['nullable', 'numeric', 'between:0,1'],
             'photo_url' => ['nullable', 'string', 'max:255'],
             'reusable' => ['sometimes', 'boolean'],
             'type' => ['required_without:fk_catalog_plant_id', 'nullable', Rule::enum(PlantType::class)],
@@ -325,6 +335,7 @@ class PlantController extends Controller
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
+            'variety' => ['nullable', 'string', 'max:255'],
             'growing_time_days' => ['nullable', 'integer', 'min:0'],
             'recommended_temperature' => ['nullable', 'numeric'],
             'recommended_humidity' => ['nullable', 'numeric'],
@@ -333,6 +344,13 @@ class PlantController extends Controller
             'disease_notes' => ['nullable', 'string', 'max:255'],
             'rest_time_days' => ['nullable', 'integer', 'min:0'],
             'plant_size' => ['nullable', 'numeric', 'min:0'],
+            'quantity' => ['nullable', 'numeric', 'min:0'],
+            'occupied_area' => ['nullable', 'numeric', 'min:0'],
+            'season' => ['nullable', 'string', 'max:40'],
+            'harvest_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'marker_position_x' => ['nullable', 'numeric', 'between:0,1'],
+            'marker_position_y' => ['nullable', 'numeric', 'between:0,1'],
             'photo_url' => ['nullable', 'string', 'max:255'],
             'reusable' => ['sometimes', 'boolean'],
             'type' => ['sometimes', Rule::enum(PlantType::class)],
@@ -449,6 +467,7 @@ class PlantController extends Controller
         $zone = PlantZone::query()
             ->whereKey($zoneId)
             ->where('plot_id', $plot->id)
+            ->whereNull('archived_at')
             ->first();
 
         abort_unless($zone, 422, 'The selected plant zone does not belong to the plot.');
@@ -463,6 +482,7 @@ class PlantController extends Controller
     {
         return $request->validate([
             'name' => [$partial ? 'sometimes' : 'required_without:fk_catalog_plant_id', 'nullable', 'string', 'max:255'],
+            'variety' => ['nullable', 'string', 'max:255'],
             'growing_time_days' => ['nullable', 'integer', 'min:0'],
             'recommended_temperature' => ['nullable', 'numeric'],
             'recommended_humidity' => ['nullable', 'numeric'],
@@ -471,6 +491,13 @@ class PlantController extends Controller
             'disease_notes' => ['nullable', 'string', 'max:255'],
             'rest_time_days' => ['nullable', 'integer', 'min:0'],
             'plant_size' => ['nullable', 'numeric', 'min:0'],
+            'quantity' => ['nullable', 'numeric', 'min:0'],
+            'occupied_area' => ['nullable', 'numeric', 'min:0'],
+            'season' => ['nullable', 'string', 'max:40'],
+            'harvest_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'marker_position_x' => ['nullable', 'numeric', 'between:0,1'],
+            'marker_position_y' => ['nullable', 'numeric', 'between:0,1'],
             'photo_url' => ['nullable', 'string', 'max:255'],
             'reusable' => ['sometimes', 'boolean'],
             'type' => [$partial ? 'sometimes' : 'required_without:fk_catalog_plant_id', 'nullable', Rule::enum(PlantType::class)],
@@ -490,6 +517,7 @@ class PlantController extends Controller
     {
         $attributes = Arr::only($validated, [
             'name',
+            'variety',
             'growing_time_days',
             'recommended_temperature',
             'recommended_humidity',
@@ -498,6 +526,13 @@ class PlantController extends Controller
             'disease_notes',
             'rest_time_days',
             'plant_size',
+            'quantity',
+            'occupied_area',
+            'season',
+            'harvest_date',
+            'notes',
+            'marker_position_x',
+            'marker_position_y',
             'photo_url',
             'reusable',
             'type',

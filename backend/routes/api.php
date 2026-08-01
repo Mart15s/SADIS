@@ -1,30 +1,30 @@
 <?php
 
-use App\Http\Controllers\Calendar\CalendarController;
-use App\Http\Controllers\Calendar\TaskController as CalendarTaskController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Calendar\CalendarController;
+use App\Http\Controllers\Calendar\TaskController as CalendarTaskController;
 use App\Http\Controllers\Community\CommunityController;
 use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Location\ReverseGeocodeController;
+use App\Http\Controllers\Plant\CatalogPlantController;
+use App\Http\Controllers\Plant\PlantConditionController;
+use App\Http\Controllers\Plant\PlantController;
 use App\Http\Controllers\Plot\AnalyticsController;
 use App\Http\Controllers\Plot\ExportController;
 use App\Http\Controllers\Plot\HarvestController;
 use App\Http\Controllers\Plot\HistoryController;
-use App\Http\Controllers\Plot\ShareController;
-use App\Http\Controllers\Plot\WorkspaceController;
-use App\Http\Controllers\User\AccountController as UserAccountController;
-use App\Http\Controllers\User\LoginController;
-use App\Http\Controllers\User\CurrentUserController;
-use App\Http\Controllers\User\LogoutController;
-use App\Http\Controllers\User\PasswordResetController;
-use App\Http\Controllers\User\SignUpController;
-use App\Http\Controllers\Plant\PlantController;
-use App\Http\Controllers\Plant\CatalogPlantController;
-use App\Http\Controllers\Plant\PlantConditionController;
 use App\Http\Controllers\Plot\PlotController;
 use App\Http\Controllers\Plot\RotationController;
 use App\Http\Controllers\Plot\SchemeController;
+use App\Http\Controllers\Plot\ShareController;
+use App\Http\Controllers\Plot\WorkspaceController;
+use App\Http\Controllers\User\AccountController as UserAccountController;
+use App\Http\Controllers\User\CurrentUserController;
+use App\Http\Controllers\User\LoginController;
+use App\Http\Controllers\User\LogoutController;
+use App\Http\Controllers\User\PasswordResetController;
+use App\Http\Controllers\User\SignUpController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [SignUpController::class, 'store']);
@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/plots/{plot}/plant-zones', [SchemeController::class, 'index']);
     Route::post('/plots/{plot}/plant-zones', [SchemeController::class, 'store']);
     Route::patch('/plots/{plot}/plant-zones/{plantZone}', [SchemeController::class, 'update']);
+    Route::post('/plots/{plot}/plant-zones/{plantZone}/archive', [SchemeController::class, 'archive']);
     Route::delete('/plots/{plot}/plant-zones/{plantZone}', [SchemeController::class, 'destroy']);
 
     Route::get('/plants', [PlantController::class, 'listAll']);

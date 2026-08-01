@@ -2,6 +2,7 @@
 
 namespace App\Services\Plot;
 
+use App\Models\CatalogPlant;
 use App\Models\GardenOwner;
 use App\Models\Plant;
 use App\Models\PlantZone;
@@ -18,8 +19,7 @@ class PlotWorkspaceService
     public function __construct(
         private readonly CatalogPlantService $catalogPlantService,
         private readonly PlantCareService $plantCareService,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array{
@@ -56,6 +56,7 @@ class PlotWorkspaceService
                     'created' => 0,
                     'updated' => 0,
                     'deleted' => 0,
+                    'archived' => 0,
                 ],
                 'plants' => [
                     'created' => 0,
@@ -74,9 +75,14 @@ class PlotWorkspaceService
                 $changes['plot_changed'] = true;
             }
 
-            $existingZones = $plot->plantZones()->get()->keyBy(fn (PlantZone $zone): string => (string) $zone->id);
-            $existingPlants = $plot->plants()->with('catalogPlant.plantCare')->get()->keyBy(fn (Plant $plant): string => (string) $plant->id);
+            $existingZones = $plot->plantZones()->whereNull('archived_at')->get()->keyBy(fn (PlantZone $zone): string => (string) $zone->id);
+            $existingPlants = $plot->plants()
+                ->whereHas('plantZone', fn ($query) => $query->whereNull('archived_at'))
+                ->with('catalogPlant.plantCare')
+                ->get()
+                ->keyBy(fn (Plant $plant): string => (string) $plant->id);
             $zoneReferenceMap = [];
+            $zoneModels = [];
             $retainedZoneIds = [];
             $retainedPlantIds = [];
 
@@ -88,7 +94,17 @@ class PlotWorkspaceService
                     'rotation_stage' => (int) ($zonePayload['rotation_stage'] ?? 0),
                     'last_planting_date' => $zonePayload['last_planting_date'] ?? null,
                     'geometry' => $zonePayload['geometry'] ?? null,
+                    'color_hex' => $zonePayload['color_hex'] ?? null,
+                    'archived_at' => $zonePayload['archived_at'] ?? null,
                 ];
+
+                if (! array_key_exists('color_hex', $zonePayload)) {
+                    unset($zoneAttributes['color_hex']);
+                }
+
+                if (! array_key_exists('archived_at', $zonePayload)) {
+                    unset($zoneAttributes['archived_at']);
+                }
                 $referenceKey = $this->draftReferenceKey($zonePayload);
                 $zoneId = $zonePayload['id'] ?? null;
 
@@ -101,7 +117,7 @@ class PlotWorkspaceService
                         ]);
                     }
 
-                    if ($this->hasModelChanges($zone, $zoneAttributes, ['name', 'zone_size', 'soil_type', 'rotation_stage', 'last_planting_date', 'geometry'])) {
+                    if ($this->hasModelChanges($zone, $zoneAttributes, array_keys($zoneAttributes))) {
                         $zone->update($zoneAttributes);
                         $changes['zones']['updated'] += 1;
                     }
@@ -109,6 +125,8 @@ class PlotWorkspaceService
                     $retainedZoneIds[] = $zone->id;
                     $zoneReferenceMap[(string) $zone->id] = $zone->id;
                     $zoneReferenceMap[$referenceKey] = $zone->id;
+                    $zoneModels[$zone->id] = $zone;
+
                     continue;
                 }
 
@@ -121,15 +139,25 @@ class PlotWorkspaceService
                 $retainedZoneIds[] = $zone->id;
                 $zoneReferenceMap[$referenceKey] = $zone->id;
                 $zoneReferenceMap[(string) $zone->id] = $zone->id;
+                $zoneModels[$zone->id] = $zone;
             }
 
             foreach ($payload['plants'] as $plantPayload) {
                 $resolvedZoneId = $this->resolveZoneReference($plantPayload['fk_plant_zone_id'], $zoneReferenceMap);
+                $this->validateMarkerPosition($plantPayload, $zoneModels[$resolvedZoneId] ?? null);
                 $plantAttributes = [
                     'name' => $plantPayload['name'],
                     'type' => $plantPayload['type'] ?? null,
                     'condition' => $plantPayload['condition'],
                     'plant_date' => $plantPayload['plant_date'],
+                    'variety' => $plantPayload['variety'] ?? null,
+                    'quantity' => $plantPayload['quantity'] ?? null,
+                    'occupied_area' => $plantPayload['occupied_area'] ?? null,
+                    'season' => $plantPayload['season'] ?? null,
+                    'harvest_date' => $plantPayload['harvest_date'] ?? null,
+                    'notes' => $plantPayload['notes'] ?? null,
+                    'marker_position_x' => $plantPayload['marker_position_x'] ?? null,
+                    'marker_position_y' => $plantPayload['marker_position_y'] ?? null,
                     'disease' => (bool) ($plantPayload['disease'] ?? false),
                     'disease_notes' => $plantPayload['disease_notes'] ?? null,
                     'fk_catalog_plant_id' => $plantPayload['fk_catalog_plant_id'] ?? null,
@@ -154,6 +182,14 @@ class PlotWorkspaceService
                         'type',
                         'condition',
                         'plant_date',
+                        'variety',
+                        'quantity',
+                        'occupied_area',
+                        'season',
+                        'harvest_date',
+                        'notes',
+                        'marker_position_x',
+                        'marker_position_y',
                         'disease',
                         'disease_notes',
                         'fk_catalog_plant_id',
@@ -176,6 +212,7 @@ class PlotWorkspaceService
                     }
 
                     $retainedPlantIds[] = $plant->id;
+
                     continue;
                 }
 
@@ -191,20 +228,35 @@ class PlotWorkspaceService
                 $retainedPlantIds[] = $plant->id;
             }
 
+            $zonesToDelete = $existingZones
+                ->reject(fn (PlantZone $zone): bool => in_array($zone->id, $retainedZoneIds, true));
+            $protectedZoneIds = $zonesToDelete
+                ->filter(fn (PlantZone $zone): bool => $zone->plants()->exists() || $zone->rotationHistory()->exists())
+                ->pluck('id')
+                ->all();
+
             $plantsToDelete = $existingPlants
-                ->reject(fn (Plant $plant): bool => in_array($plant->id, $retainedPlantIds, true));
+                ->reject(fn (Plant $plant): bool => in_array($plant->id, $retainedPlantIds, true))
+                ->reject(fn (Plant $plant): bool => in_array((int) ($plant->plant_zone_id ?? $plant->fk_plant_zone_id), $protectedZoneIds, true));
 
             if ($plantsToDelete->isNotEmpty()) {
                 Plant::query()->whereIn('id', $plantsToDelete->pluck('id')->all())->delete();
                 $changes['plants']['deleted'] = $plantsToDelete->count();
             }
 
-            $zonesToDelete = $existingZones
-                ->reject(fn (PlantZone $zone): bool => in_array($zone->id, $retainedZoneIds, true));
-
             if ($zonesToDelete->isNotEmpty()) {
-                PlantZone::query()->whereIn('id', $zonesToDelete->pluck('id')->all())->delete();
-                $changes['zones']['deleted'] = $zonesToDelete->count();
+                $deletableZoneIds = $zonesToDelete->pluck('id')->diff($protectedZoneIds)->all();
+
+                if ($protectedZoneIds !== []) {
+                    PlantZone::query()->whereIn('id', $protectedZoneIds)->update(['archived_at' => now()]);
+                    $changes['zones']['archived'] = count($protectedZoneIds);
+                }
+
+                if ($deletableZoneIds !== []) {
+                    PlantZone::query()->whereIn('id', $deletableZoneIds)->delete();
+                }
+
+                $changes['zones']['deleted'] = count($deletableZoneIds);
             }
 
             $historyEntry = null;
@@ -224,9 +276,9 @@ class PlotWorkspaceService
 
             return [
                 'plot' => $freshPlot,
-                'zones' => $freshPlot?->plantZones()->orderBy('id')->get()->map->toArray()->all() ?? [],
-                'plants' => $freshPlot?->plants()->with(['plot', 'plantZone', 'catalogPlant.plantCare'])->orderBy('id')->get()
-                    ?? new EloquentCollection(),
+                'zones' => $freshPlot?->plantZones()->whereNull('archived_at')->orderBy('id')->get()->map->toArray()->all() ?? [],
+                'plants' => $freshPlot?->plants()->whereHas('plantZone', fn ($query) => $query->whereNull('archived_at'))->with(['plot', 'plantZone', 'catalogPlant.plantCare', 'tasks' => fn ($query) => $query->whereIn('state', ['pending'])->orderBy('date')])->orderBy('id')->get()
+                    ?? new EloquentCollection,
                 'history_entry' => $historyEntry,
                 'changes' => $changes,
             ];
@@ -251,6 +303,7 @@ class PlotWorkspaceService
             ['count' => $zoneSummary['created'], 'label' => 'zona pridėta'],
             ['count' => $zoneSummary['updated'], 'label' => 'zona atnaujinta'],
             ['count' => $zoneSummary['deleted'], 'label' => 'zona pašalinta'],
+            ['count' => $zoneSummary['archived'] ?? 0, 'label' => 'zona archyvuota'],
             ['count' => $plantSummary['created'], 'label' => 'augalas pridėtas'],
             ['count' => $plantSummary['updated'], 'label' => 'augalas atnaujintas'],
             ['count' => $plantSummary['deleted'], 'label' => 'augalas pašalintas'],
@@ -268,7 +321,7 @@ class PlotWorkspaceService
 
         if ($changes['plot_changed'] && ($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) === 0) {
             $label = 'Išsaugotas išdėstymo pakeitimas';
-        } elseif (($zoneSummary['created'] + $zoneSummary['updated'] + $zoneSummary['deleted']) > 0 && ($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) === 0) {
+        } elseif (($zoneSummary['created'] + $zoneSummary['updated'] + $zoneSummary['deleted'] + ($zoneSummary['archived'] ?? 0)) > 0 && ($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) === 0) {
             $label = 'Išsaugoti zonų pakeitimai';
         } elseif (($plantSummary['created'] + $plantSummary['updated'] + $plantSummary['deleted']) > 0 && ! $changes['plot_changed']) {
             $label = 'Išsaugotas sodinimo pakeitimas';
@@ -301,9 +354,6 @@ class PlotWorkspaceService
         return (string) $clientId;
     }
 
-    /**
-     * @param  mixed  $reference
-     */
     private function resolveZoneReference(mixed $reference, array $zoneReferenceMap): int
     {
         $key = (string) $reference;
@@ -317,9 +367,6 @@ class PlotWorkspaceService
         ]);
     }
 
-    /**
-     * @param  mixed  $identifier
-     */
     private function isPersistedIdentifier(mixed $identifier): bool
     {
         return is_int($identifier) || (is_string($identifier) && ctype_digit($identifier));
@@ -374,13 +421,58 @@ class PlotWorkspaceService
         return $value;
     }
 
+    /** @param array<string, mixed> $plantPayload */
+    private function validateMarkerPosition(array $plantPayload, ?PlantZone $zone): void
+    {
+        $x = $plantPayload['marker_position_x'] ?? null;
+        $y = $plantPayload['marker_position_y'] ?? null;
+
+        if ($x === null && $y === null) {
+            return;
+        }
+
+        if ($x === null || $y === null || ! $zone || ! $this->markerPositionIsInsideZone((float) $x, (float) $y, $zone->geometry)) {
+            throw ValidationException::withMessages([
+                'plants' => ['Plant marker position must be a complete point inside its assigned zone.'],
+            ]);
+        }
+    }
+
+    /** @param array<string, mixed>|null $geometry */
+    private function markerPositionIsInsideZone(float $x, float $y, ?array $geometry): bool
+    {
+        $points = $geometry['points'] ?? [];
+        if (count($points) < 3) {
+            return false;
+        }
+
+        $xs = array_map(fn (array $point): float => (float) $point['x'], $points);
+        $ys = array_map(fn (array $point): float => (float) $point['y'], $points);
+        $point = [
+            'x' => min($xs) + ($x * (max($xs) - min($xs))),
+            'y' => min($ys) + ($y * (max($ys) - min($ys))),
+        ];
+        $inside = false;
+
+        foreach ($points as $index => $current) {
+            $next = $points[($index + 1) % count($points)];
+            $intersects = (($current['y'] > $point['y']) !== ($next['y'] > $point['y']))
+                && ($point['x'] < (($next['x'] - $current['x']) * ($point['y'] - $current['y']) / (($next['y'] - $current['y']) ?: PHP_FLOAT_EPSILON)) + $current['x']);
+            if ($intersects) {
+                $inside = ! $inside;
+            }
+        }
+
+        return $inside;
+    }
+
     private function syncCatalogPlant(Plant $plant, ?int $catalogPlantId): void
     {
         if ($catalogPlantId === null) {
             return;
         }
 
-        $catalogPlant = \App\Models\CatalogPlant::query()->with('plantCare')->findOrFail($catalogPlantId);
+        $catalogPlant = CatalogPlant::query()->with('plantCare')->findOrFail($catalogPlantId);
         $this->catalogPlantService->assignCatalogPlantToPlant($plant, $catalogPlant);
     }
 

@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import AppShell from './components/layout/AppShell.jsx'
+import BrandLogo from './components/layout/BrandLogo.jsx'
 import AdminRoute from './components/shared/AdminRoute.jsx'
 import ProtectedRoute from './components/shared/ProtectedRoute.jsx'
 import { useAuth } from './context/AuthContext.jsx'
@@ -33,17 +34,11 @@ import ResetPasswordPage from './pages/user/ResetPasswordPage.jsx'
 function AuthShell() {
   return (
     <main className="auth-shell">
-      <div className="auth-shell-brand" aria-label="SADiS">
-        <span className="brand-leaf" aria-hidden="true">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10 17V9" />
-            <path d="M10 9.5c-2.2-.1-4.1-1.6-4.8-4 3-.1 4.6 1.1 4.8 4Z" />
-            <path d="M10.2 8c.3-2.7 2-4.2 5-4.5.1 3-1.6 4.7-5 4.5Z" />
-          </svg>
-        </span>
+      <div className="auth-shell-brand" aria-label="Yava">
+        <BrandLogo className="brand-logo--auth" alt="Yava logo" />
         <span className="brand-copy">
-          <span className="brand-title">SAD<em>iS</em></span>
-          <span className="brand-subtitle">Asmeninio sodo ar daržo informacinė sistema</span>
+          <span className="brand-title">Yava</span>
+          <span className="brand-subtitle">Yava seed. Yava plan. Yava harvest.</span>
         </span>
       </div>
       <div className="auth-shell-container">

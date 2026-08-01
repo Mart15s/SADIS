@@ -1,18 +1,19 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import BrandLogo from './BrandLogo.jsx'
 import Badge from '../ui/Badge.jsx'
 import Button from '../ui/Button.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 
 const baseLinks = [
-  { to: '/', label: 'Pradžia', icon: 'dashboard' },
+  { to: '/', label: 'Home', icon: 'dashboard' },
 ]
 
 const authLinks = [
-  { to: '/account', label: 'Paskyra', icon: 'account' },
-  { to: '/community', label: 'Bendruomenė', icon: 'community' },
-  { to: '/plots', label: 'Sklypai', icon: 'plots' },
-  { to: '/plants', label: 'Augalai', icon: 'plants' },
-  { to: '/inventory', label: 'Inventorius', icon: 'inventory' },
+  { to: '/account', label: 'Account', icon: 'account' },
+  { to: '/community', label: 'Community', icon: 'community' },
+  { to: '/plots', label: 'Plots', icon: 'plots' },
+  { to: '/plants', label: 'Plants', icon: 'plants' },
+  { to: '/inventory', label: 'Inventory', icon: 'inventory' },
 ]
 
 function SidebarIcon({ name }) {
@@ -95,11 +96,11 @@ export default function Sidebar({
   const links = [
     ...baseLinks,
     ...(isAuthenticated ? authLinks : []),
-    ...(isAdmin ? [{ to: '/admin/users', label: 'Administravimas', icon: 'admin', badge: { tone: 'warning', text: 'Administratorius' } }] : []),
+    ...(isAdmin ? [{ to: '/admin/users', label: 'Administration', icon: 'admin', badge: { tone: 'warning', text: 'Administrator' } }] : []),
     ...(!isAuthenticated
       ? [
-          { to: '/login', label: 'Prisijungti', icon: 'auth' },
-          { to: '/register', label: 'Registruotis', icon: 'auth' },
+          { to: '/login', label: 'Sign in', icon: 'auth' },
+          { to: '/register', label: 'Create account', icon: 'auth' },
         ]
       : []),
   ]
@@ -115,29 +116,23 @@ export default function Sidebar({
       id={variant === 'drawer' ? 'app-navigation-drawer' : undefined}
       className={`shell-sidebar shell-sidebar--${variant} ${isCollapsed ? 'is-collapsed' : ''}`.trim()}
       role={variant === 'drawer' ? 'dialog' : undefined}
-      aria-label="Programos navigacija"
+      aria-label="Application navigation"
       aria-modal={variant === 'drawer' ? 'true' : undefined}
     >
       <div className="brand-lockup">
-        <span className="brand-leaf" aria-hidden="true">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10 17V9" />
-            <path d="M10 9.5c-2.2-.1-4.1-1.6-4.8-4 3-.1 4.6 1.1 4.8 4Z" />
-            <path d="M10.2 8c.3-2.7 2-4.2 5-4.5.1 3-1.6 4.7-5 4.5Z" />
-          </svg>
-        </span>
+        <BrandLogo className="brand-logo--sidebar" alt="Yava logo" />
         <span className="brand-copy">
-          <span className="brand-title">SAD<em>iS</em></span>
-          <span className="brand-subtitle">Asmeninio sodo ar daržo informacinė sistema</span>
+          <span className="brand-title">Yava</span>
+          <span className="brand-subtitle">Garden planning system</span>
         </span>
         {variant === 'desktop' ? (
           <button
             type="button"
             className="sidebar-collapse-button"
             onClick={onToggleCollapse}
-            aria-label={isCollapsed ? 'Išskleisti navigaciją' : 'Suskleisti navigaciją'}
+            aria-label={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
             aria-pressed={isCollapsed}
-            title={isCollapsed ? 'Išskleisti navigaciją' : 'Suskleisti navigaciją'}
+            title={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
           >
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={isCollapsed ? 'M8 5l5 5-5 5' : 'M12 5l-5 5 5 5'} />
@@ -149,7 +144,7 @@ export default function Sidebar({
             type="button"
             className="drawer-close-button"
             onClick={onNavigate}
-            aria-label="Uždaryti navigaciją"
+            aria-label="Close navigation"
           >
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
               <path d="M5 5l10 10M15 5 5 15" />
@@ -158,7 +153,7 @@ export default function Sidebar({
         ) : null}
       </div>
 
-      <nav className="sidebar-nav" aria-label="Pagrindinė navigacija">
+      <nav className="sidebar-nav" aria-label="Primary navigation">
         {links.map((link) => (
           <NavLink
             key={link.to}
@@ -192,13 +187,13 @@ export default function Sidebar({
               </div>
             </div>
             <Button variant="ghost" onClick={handleLogout} fullWidth>
-              Atsijungti
+              Sign out
             </Button>
           </>
         ) : (
           <div className="sidebar-user-info">
-            <span className="sidebar-user-name">Svečias</span>
-            <span className="sidebar-user-email">Prisijunkite, kad naudotumėte visas funkcijas</span>
+            <span className="sidebar-user-name">Guest</span>
+            <span className="sidebar-user-email">Sign in to use all features</span>
           </div>
         )}
       </div>

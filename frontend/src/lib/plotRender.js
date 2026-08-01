@@ -9,6 +9,7 @@ import {
   mergeZoneLayouts,
   roundTo,
 } from './plotDesigner.js'
+import { zoneVisualColors } from './plotPlan.js'
 
 export const ZONE_COLORS = [
   { fill: '#9cb98c', stroke: '#47633b' },
@@ -65,7 +66,11 @@ function fallbackBoundaryShape(plotGeometry, plotSize) {
   return estimateBoundaryFromArea(plotSize)
 }
 
-export function getZoneColor(index) {
+export function getZoneColor(index, zone = null) {
+  if (zone?.color_hex) {
+    return zoneVisualColors(zone, index)
+  }
+
   return ZONE_COLORS[index % ZONE_COLORS.length]
 }
 
@@ -155,7 +160,7 @@ export function buildPreviewModel({
         return null
       }
 
-      const color = getZoneColor(index)
+      const color = getZoneColor(index, zone)
 
       return {
         id: zone.id ?? index,

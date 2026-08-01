@@ -1,4 +1,4 @@
-# SADiS Frontend
+# Yava Frontend
 
 React SPA skirta Laravel API `/api/*` endpointams.
 

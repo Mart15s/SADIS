@@ -29,6 +29,24 @@ function draftSummary(plan) {
   }
 }
 
+function normalizeDraft(response) {
+  const draft = response?.draft
+  const plan = draft?.plan
+
+  if (!draft?.id || !plan || typeof plan !== 'object') {
+    throw new Error('The rotation plan was saved, but Yava received an invalid plan response.')
+  }
+
+  return {
+    ...draft,
+    plan: {
+      ...plan,
+      summary: plan.summary && typeof plan.summary === 'object' ? plan.summary : {},
+      plants: Array.isArray(plan.plants) ? plan.plants : [],
+    },
+  }
+}
+
 function zoneName(zone, fallback = 'Nežinoma zona') {
   return zone?.name || zone?.zone_name || fallback
 }
@@ -138,7 +156,7 @@ export default function PlotRotationPage() {
       const response = await api.createRotationPlan(plotId, {
         planning_date: planningDate,
       })
-      setDraft(response.draft)
+      setDraft(normalizeDraft(response))
       setSuccess('Rotacijos juodraštis sugeneruotas.')
     } catch (requestError) {
       setError(requestError.message)
@@ -182,7 +200,7 @@ export default function PlotRotationPage() {
         entry.plant.id,
         payloadForDecision(value, manualNote),
       )
-      setDraft(response.draft)
+      setDraft(normalizeDraft(response))
       setSuccess('Rotacijos juodraštis atnaujintas.')
     } catch (requestError) {
       setError(requestError.message)

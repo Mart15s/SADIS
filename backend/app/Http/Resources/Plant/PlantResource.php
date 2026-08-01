@@ -21,6 +21,7 @@ class PlantResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'variety' => $this->variety,
             'growing_time_days' => $this->growing_time_days,
             'recommended_temperature' => $this->recommended_temperature === null ? null : (float) $this->recommended_temperature,
             'recommended_humidity' => $this->recommended_humidity === null ? null : (float) $this->recommended_humidity,
@@ -29,6 +30,13 @@ class PlantResource extends JsonResource
             'disease_notes' => $this->disease_notes,
             'rest_time_days' => $this->rest_time_days,
             'plant_size' => $this->plant_size === null ? null : (float) $this->plant_size,
+            'quantity' => $this->quantity === null ? null : (float) $this->quantity,
+            'occupied_area' => $this->occupied_area === null ? null : (float) $this->occupied_area,
+            'season' => $this->season,
+            'harvest_date' => $this->harvest_date?->toDateString(),
+            'notes' => $this->notes,
+            'marker_position_x' => $this->marker_position_x === null ? null : (float) $this->marker_position_x,
+            'marker_position_y' => $this->marker_position_y === null ? null : (float) $this->marker_position_y,
             'photo_url' => $this->photo_url,
             'reusable' => (bool) $this->reusable,
             'type' => $plantType,
@@ -79,6 +87,16 @@ class PlantResource extends JsonResource
                 'fertilizing_interval_days' => $loadedSharedPlantCare->fertilizing_interval_days,
                 'pest_check_interval_days' => $loadedSharedPlantCare->pest_check_interval_days,
             ] : null,
+            'nearest_recommended_task' => $this->relationLoaded('tasks')
+                ? optional($this->tasks->first(), fn ($task) => [
+                    'id' => $task->id,
+                    'name' => $task->name,
+                    'date' => $task->date?->toDateString(),
+                    'type' => is_object($task->task_type) && isset($task->task_type->value)
+                        ? $task->task_type->value
+                        : ($task->task_type ?? $task->type),
+                ])
+                : null,
         ];
     }
 }

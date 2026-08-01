@@ -80,13 +80,17 @@ export default function PlotEditPage() {
     setError('')
 
     try {
-      await api.updatePlot(plotId, {
+      const updatedPlot = await api.updatePlot(plotId, {
         ...form,
         plot_size: Number(form.plot_size),
         share: form.share,
       })
-      setToastMessage('Sklypo duomenys išsaugoti.')
-      navigate(`/plots/${plotId}`)
+      if (updatedPlot) {
+        pageState.setData((current) => ({ ...current, plot: updatedPlot }))
+      } else {
+        await pageState.reload()
+      }
+      setToastMessage('Plot details saved.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -95,14 +99,17 @@ export default function PlotEditPage() {
   }
 
   async function handleDelete() {
+    if (!window.confirm('Delete this plot permanently?')) return
     setSubmitting(true)
     setError('')
 
     try {
       await api.deletePlot(plotId)
-      navigate('/plots')
+      pageState.setData((current) => ({ ...current, plot: null }))
+      setToastMessage('Plot deleted.')
     } catch (requestError) {
       setError(requestError.message)
+    } finally {
       setSubmitting(false)
     }
   }

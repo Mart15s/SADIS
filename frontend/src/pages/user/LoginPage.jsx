@@ -39,16 +39,16 @@ export default function LoginPage() {
 
   return (
     <div className="page-stack auth-card">
-      <PageHeader title="Prisijungti" />
+      <PageHeader title="Sign in" />
 
       <form className="panel input-grid" onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="email">El. paštas</label>
+          <label htmlFor="email">Email address</label>
           <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
         </div>
 
         <div className="field">
-          <label htmlFor="password">Slaptažodis</label>
+          <label htmlFor="password">Password</label>
           <input
             id="password"
             name="password"
@@ -63,13 +63,13 @@ export default function LoginPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Jungiamasi...' : 'Prisijungti'}
+            {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
           <Link to="/forgot-password">
-            <Button variant="secondary">Pamiršote slaptažodį?</Button>
+            <Button variant="secondary">Forgot password?</Button>
           </Link>
           <Link to="/register">
-            <Button variant="ghost">Sukurti paskyrą</Button>
+            <Button variant="ghost">Create an account</Button>
           </Link>
         </div>
       </form>

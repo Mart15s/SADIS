@@ -6,12 +6,12 @@ export default function NotFoundPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Puslapis nerastas"
-        description="Tokio puslapio nėra. Naudokite šoninę navigaciją ir grįžkite į sistemos modulius."
+        title="Page not found"
+        description="This page does not exist. Use the sidebar to return to an application section."
       />
       <div className="panel">
         <Link to="/">
-          <Button>Grįžti į pradžią</Button>
+          <Button>Return home</Button>
         </Link>
       </div>
     </div>

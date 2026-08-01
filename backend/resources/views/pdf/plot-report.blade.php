@@ -2,24 +2,24 @@
 <html lang="lt">
 <head>
     <meta charset="UTF-8">
-    <title>Sklypo ataskaita</title>
+    <title>Yava – sklypo ataskaita</title>
     <style>
         body {
-            color: #1f2933;
+            color: #32332D;
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             line-height: 1.45;
             margin: 28px;
         }
         h1, h2, h3 {
-            color: #12344d;
+            color: #8D5134;
             margin: 0 0 10px;
         }
         h1 {
             font-size: 24px;
         }
         h2 {
-            border-bottom: 1px solid #d9e2ec;
+            border-bottom: 1px solid #ead6c4;
             font-size: 16px;
             margin-top: 26px;
             padding-bottom: 6px;
@@ -32,7 +32,7 @@
             margin: 0 0 8px;
         }
         .muted {
-            color: #52606d;
+            color: #66584e;
         }
         .meta-table,
         .data-table {
@@ -43,12 +43,12 @@
         .meta-table td,
         .data-table th,
         .data-table td {
-            border: 1px solid #d9e2ec;
+            border: 1px solid #ead6c4;
             padding: 8px;
             vertical-align: top;
         }
         .data-table th {
-            background: #f0f4f8;
+            background: #FAF1E6;
             font-size: 11px;
             text-align: left;
         }
@@ -108,7 +108,7 @@
     </style>
 </head>
 <body>
-    <h1>SAD System sklypo ataskaita</h1>
+    <h1>Yava sklypo ataskaita</h1>
     <p class="muted">
         Sugeneruota: {{ $generated_at->toIso8601String() }}
     </p>

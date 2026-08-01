@@ -13,7 +13,10 @@ import {
 import PlotDesignerCanvas from '../../components/plot/PlotDesignerCanvas.jsx'
 import PlotLocationMap from '../../components/plot/PlotLocationMap.jsx'
 import PlotPlantingDrawer from '../../components/plot/PlotPlantingDrawer.jsx'
+import PlotPlanControls from '../../components/plot/PlotPlanControls.jsx'
+import ZoneColorControl from '../../components/plot/ZoneColorControl.jsx'
 import PlotSectionNav from '../../components/plot/PlotSectionNav.jsx'
+import PlotWorkspaceModeSwitch from '../../components/plot/PlotWorkspaceModeSwitch.jsx'
 import {
   EmptyState,
   ErrorState,
@@ -42,18 +45,24 @@ import {
 import {
   buildDesignerStateFromPersistence,
   calculateArea,
+  getShapeBounds,
   isShapeInsideBoundary,
+  pointInPolygon,
   shapeToGeometry,
 } from '../../lib/plotDesigner.js'
 import { assertSanitizedGeometryPayload } from '../../lib/plotGeometry.js'
 import { calculateLatLngArea, calculateLatLngCenter, calculateLatLngPerimeter } from '../../lib/geoMeasurements.js'
 import { buildShapeMetrics, formatMeters, formatSquareMeters } from '../../lib/plotMeasurements.js'
+import { getPlantStatusSemantic, normalizeZoneColor, plantingSeason, plantingYear, suggestZoneColor } from '../../lib/plotPlan.js'
+import { markerPosition } from '../../lib/plantVisual.js'
+import { plotPlanText } from '../../lib/plotPlanLt.js'
 
 const emptyZoneForm = {
   name: '',
   soil_type: SOIL_TYPES[0],
   rotation_stage: 0,
   last_planting_date: '',
+  color_hex: '',
 }
 
 function zoneToForm(zone) {
@@ -62,6 +71,7 @@ function zoneToForm(zone) {
     soil_type: zone?.soil_type ?? SOIL_TYPES[0],
     rotation_stage: zone?.rotation_stage ?? 0,
     last_planting_date: zone?.last_planting_date ?? '',
+    color_hex: zone?.color_hex ?? '',
   }
 }
 
@@ -123,6 +133,13 @@ function createPersistedWorkspace(data) {
       rotation_stage: zone.rotation_stage ?? 0,
       last_planting_date: zone.last_planting_date ?? '',
       geometry: zone.geometry ?? null,
+      color_hex: zone.color_hex ?? '',
+      archived_at: zone.archived_at ?? null,
+      active_planting_count: zone.active_planting_count ?? 0,
+      historical_planting_count: zone.historical_planting_count ?? 0,
+      rotation_history_count: zone.rotation_history_count ?? 0,
+      harvest_history_count: zone.harvest_history_count ?? 0,
+      principal_plants: zone.principal_plants ?? [],
     })),
     plants: data.plants.map((plant) => ({
       id: plant.id,
@@ -131,6 +148,14 @@ function createPersistedWorkspace(data) {
       type: plant.type ?? null,
       condition: plant.condition,
       plant_date: plant.plant_date,
+      variety: plant.variety ?? '',
+      quantity: plant.quantity ?? null,
+      occupied_area: plant.occupied_area ?? null,
+      season: plant.season ?? '',
+      harvest_date: plant.harvest_date ?? null,
+      notes: plant.notes ?? '',
+      marker_position_x: plant.marker_position_x ?? null,
+      marker_position_y: plant.marker_position_y ?? null,
       disease: Boolean(plant.disease),
       disease_notes: plant.disease_notes ?? '',
       fk_catalog_plant_id: plant.fk_catalog_plant_id ?? plant.catalogPlant?.id ?? plant.catalog_plant?.id ?? null,
@@ -143,6 +168,29 @@ function createPersistedWorkspace(data) {
 
 function createEmptyFeedback() {
   return { type: 'idle', message: '' }
+}
+
+function cloneWorkspace(workspace) {
+  return JSON.parse(JSON.stringify(workspace))
+}
+
+function reconcileMarkerPositions(plot, zones, plants) {
+  if (!plot) return plants
+  const { layouts } = buildDesignerStateFromPersistence({
+    plotSize: plot.plot_size,
+    plotGeometry: plot.geometry,
+    zones,
+    storedState: null,
+  })
+  return plants.map((plant) => {
+    const position = markerPosition(plant)
+    const zoneId = plant.fk_plant_zone_id ?? plant.plant_zone_id
+    const shape = layouts[String(zoneId)] ?? layouts[zoneId]
+    if (!position || !shape) return plant
+    const bounds = getShapeBounds(shape)
+    const point = { x: bounds.left + (position.x * bounds.width), y: bounds.top + (position.y * bounds.height) }
+    return pointInPolygon(point, shape) ? plant : { ...plant, marker_position_x: null, marker_position_y: null }
+  })
 }
 
 const INSPECTOR_TYPES = {
@@ -234,6 +282,14 @@ export default function PlotDetailPage() {
   const [activeInspector, setActiveInspector] = useState(null)
   const [editorView, seteditorView] = useState(EDITOR_VIEWS.zones)
   const [boundaryClosed, setBoundaryClosed] = useState(true)
+  // Viewing is safe by default. Editing is always an intentional action so
+  // canvas pans and ordinary marker taps cannot mutate the plan.
+  const [plotMode, setPlotMode] = useState('view')
+  const [workspaceMode, setWorkspaceMode] = useState('view')
+  const [viewOptions, setViewOptions] = useState({ showPlants: true, showZoneNames: true, bordersOnly: false })
+  const [filters, setFilters] = useState({ year: '', season: '', plant: '', status: '' })
+  const historyRef = useRef({ past: [], future: [], current: null, applying: false })
+  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false })
 
   const pageState = useAsyncData(
     async () => {
@@ -246,9 +302,9 @@ export default function PlotDetailPage() {
       ])
 
       return {
-        plot,
-        zones,
-        plants,
+        plot: plot && typeof plot === 'object' ? plot : null,
+        zones: Array.isArray(zones) ? zones : [],
+        plants: Array.isArray(plants) ? plants : [],
         accessRole,
       }
     },
@@ -262,6 +318,7 @@ export default function PlotDetailPage() {
   )
 
   const canEdit = ['owner', 'editor'].includes(pageState.data.accessRole)
+  const canEditPlan = canEdit && plotMode === 'edit'
   const isOwner = pageState.data.accessRole === 'owner'
   const persistedWorkspace = useMemo(() => (
     pageState.data.plot ? createPersistedWorkspace(pageState.data) : null
@@ -302,6 +359,22 @@ export default function PlotDetailPage() {
     () => calculateLatLngPerimeter(mapBoundaryPoints, mapBoundaryPoints.length >= 3),
     [mapBoundaryPoints],
   )
+  const hasActiveFilters = Object.values(filters).some(Boolean)
+  const filteredPlants = useMemo(() => draftPlants.filter((plant) => {
+    if (filters.year && plantingYear(plant) !== filters.year) return false
+    if (filters.season && plantingSeason(plant) !== filters.season) return false
+    if (filters.plant && plant.name !== filters.plant) return false
+    if (filters.status && getPlantStatusSemantic(plant).key !== filters.status) return false
+    return true
+  }), [draftPlants, filters])
+  const visibleZones = useMemo(() => draftZones.filter((zone) => {
+    if (zone.archived_at) return false
+    if (!hasActiveFilters) return true
+    return filteredPlants.some((plant) => sameId(plant.fk_plant_zone_id ?? plant.plant_zone_id, zone.id))
+  }), [draftZones, filteredPlants, hasActiveFilters])
+  const visiblePlants = useMemo(() => filteredPlants.filter((plant) => (
+    visibleZones.some((zone) => sameId(zone.id, plant.fk_plant_zone_id ?? plant.plant_zone_id))
+  )), [filteredPlants, visibleZones])
 
   useUnsavedChangesGuard({
     when: isDirty,
@@ -331,6 +404,13 @@ export default function PlotDetailPage() {
     setZoneError('')
     setPlantError('')
     setSaveError('')
+    historyRef.current = {
+      past: [],
+      future: [],
+      current: cloneWorkspace(nextWorkspace),
+      applying: false,
+    }
+    setHistoryState({ canUndo: false, canRedo: false })
   }, [persistedSignature, persistedWorkspace, plotId])
 
   useEffect(() => {
@@ -363,6 +443,46 @@ export default function PlotDetailPage() {
   }, [draftPlants, draftPlot, draftReady, draftZones, isDirty, persistedSignature, plotId])
 
   useEffect(() => {
+    if (!draftReady || !draftPlot) return
+
+    const history = historyRef.current
+    const current = cloneWorkspace({ plot: draftPlot, zones: draftZones, plants: draftPlants })
+
+    if (history.applying) {
+      history.applying = false
+      history.current = current
+      setHistoryState({ canUndo: history.past.length > 0, canRedo: history.future.length > 0 })
+      return
+    }
+
+    if (!history.current) {
+      history.current = current
+      return
+    }
+
+    if (createPlotWorkspaceSignature(history.current) === createPlotWorkspaceSignature(current)) return
+
+    history.past = [...history.past, history.current].slice(-20)
+    history.current = current
+    history.future = []
+    setHistoryState({ canUndo: true, canRedo: false })
+  }, [draftPlants, draftPlot, draftReady, draftZones])
+
+  useEffect(() => {
+    function handleHistoryShortcut(event) {
+      if (!canEdit || plotMode !== 'edit' || !(event.ctrlKey || event.metaKey)) return
+      if (event.key.toLowerCase() !== 'z' && event.key.toLowerCase() !== 'y') return
+
+      event.preventDefault()
+      if (event.key.toLowerCase() === 'y' || event.shiftKey) handleRedo()
+      else handleUndo()
+    }
+
+    window.addEventListener('keydown', handleHistoryShortcut)
+    return () => window.removeEventListener('keydown', handleHistoryShortcut)
+  })
+
+  useEffect(() => {
     if (!draftReady) {
       return
     }
@@ -387,6 +507,43 @@ export default function PlotDetailPage() {
     return createWorkspaceClientId(prefix, existingItems)
   }
 
+  function applyWorkspaceHistorySnapshot(snapshot) {
+    const next = cloneWorkspace(snapshot)
+    historyRef.current.applying = true
+    setDraftPlot(next.plot)
+    setDraftZones(next.zones)
+    setDraftPlants(next.plants)
+
+    const nextSelectedZone = next.zones.find((zone) => sameId(zone.id, selectedZoneId) && !zone.archived_at) ?? null
+    setSelectedZoneId(nextSelectedZone?.id ?? null)
+    setZoneForm(zoneToForm(nextSelectedZone))
+    if (!nextSelectedZone) setActiveInspector(null)
+  }
+
+  function handleUndo() {
+    const history = historyRef.current
+    if (!history.past.length || !history.current) return
+
+    const previous = history.past.at(-1)
+    history.past = history.past.slice(0, -1)
+    history.future = [history.current, ...history.future].slice(0, 20)
+    history.current = previous
+    applyWorkspaceHistorySnapshot(previous)
+    setHistoryState({ canUndo: history.past.length > 0, canRedo: true })
+  }
+
+  function handleRedo() {
+    const history = historyRef.current
+    if (!history.future.length || !history.current) return
+
+    const next = history.future[0]
+    history.future = history.future.slice(1)
+    history.past = [...history.past, history.current].slice(-20)
+    history.current = next
+    applyWorkspaceHistorySnapshot(next)
+    setHistoryState({ canUndo: true, canRedo: history.future.length > 0 })
+  }
+
   function handleZoneSelect(zone) {
     if (!zone) {
       setSelectedZoneId(null)
@@ -408,7 +565,10 @@ export default function PlotDetailPage() {
 
   function openNewZoneInspector() {
     setSelectedZoneId(null)
-    setZoneForm(emptyZoneForm)
+    setZoneForm({
+      ...emptyZoneForm,
+      color_hex: suggestZoneColor(draftZones.filter((zone) => !zone.archived_at).map((zone) => zone.color_hex)),
+    })
     setActiveInspector(INSPECTOR_TYPES.zone)
   }
 
@@ -425,6 +585,27 @@ export default function PlotDetailPage() {
     if (activeInspector === INSPECTOR_TYPES.boundary) {
       setActiveInspector(null)
     }
+  }
+
+  function handleWorkspaceModeChange(nextMode) {
+    setWorkspaceMode(nextMode)
+
+    if (nextMode === 'edit') {
+      setPlotMode('edit')
+      changeeditorView(EDITOR_VIEWS.zones)
+      return
+    }
+
+    if (nextMode === 'view') {
+      setPlotMode('view')
+      changeeditorView(EDITOR_VIEWS.zones)
+      return
+    }
+
+    // The zone view intentionally does not reset the plan mode. This keeps
+    // in-progress edits and the selected zone intact, matching the previous
+    // independent "Zonų vaizdas" control behaviour.
+    changeeditorView(EDITOR_VIEWS.zones)
   }
 
   function commitMapBoundaryPoints(nextBoundaryPoints, nextMapView = mapPreviewView) {
@@ -564,6 +745,9 @@ export default function PlotDetailPage() {
       soil_type: zoneForm.soil_type,
       rotation_stage: Number(zoneForm.rotation_stage || 0),
       last_planting_date: zoneForm.last_planting_date || '',
+      color_hex: normalizeZoneColor(zoneForm.color_hex)
+        ?? suggestZoneColor(draftZones.filter((zone) => !zone.archived_at).map((zone) => zone.color_hex)),
+      archived_at: null,
       geometry: shapeToGeometry(shape, boundaryShape),
     }
 
@@ -599,6 +783,11 @@ export default function PlotDetailPage() {
       return
     }
 
+    if (zoneForm.color_hex && !normalizeZoneColor(zoneForm.color_hex)) {
+      setZoneError('Spalva turi būti šešių skaitmenų HEX formatu, pvz., #4F7A5A.')
+      return
+    }
+
     setZoneError('')
     setDraftZones((current) => current.map((zone) => (
       sameId(zone.id, selectedZoneId)
@@ -608,6 +797,7 @@ export default function PlotDetailPage() {
           soil_type: zoneForm.soil_type,
           rotation_stage: Number(zoneForm.rotation_stage || 0),
           last_planting_date: zoneForm.last_planting_date || '',
+          color_hex: normalizeZoneColor(zoneForm.color_hex) ?? zone.color_hex,
         }
         : zone
     )))
@@ -619,9 +809,14 @@ export default function PlotDetailPage() {
       return
     }
 
+    const zone = draftZones.find((entry) => sameId(entry.id, selectedZoneId))
     const plantsInZone = draftPlants.filter((plant) => sameId(plant.fk_plant_zone_id, selectedZoneId))
+    const protectedCount = plantsInZone.length
+      + Number(zone?.historical_planting_count ?? 0)
+      + Number(zone?.rotation_history_count ?? 0)
+      + Number(zone?.harvest_history_count ?? 0)
 
-    if (plantsInZone.length > 0) {
+    if (protectedCount > 0) {
       setZoneError('Prieš šalindami zoną iš juodraščio pašalinkite joje esančius augalus.')
       return
     }
@@ -634,9 +829,57 @@ export default function PlotDetailPage() {
     setToastMessage('Zona pašalinta iš juodraščio.')
   }
 
+  function handleZoneArchive() {
+    if (!selectedZoneId) return
+
+    setDraftZones((current) => current.map((zone) => sameId(zone.id, selectedZoneId)
+      ? { ...zone, archived_at: new Date().toISOString() }
+      : zone))
+    setSelectedZoneId(null)
+    setZoneForm(emptyZoneForm)
+    setActiveInspector(null)
+    setZoneError('')
+    setToastMessage('Zona archyvuota juodraštyje. Istoriniai duomenys bus išsaugoti.')
+  }
+
+  function handleZoneDuplicate() {
+    const source = draftZones.find((zone) => sameId(zone.id, selectedZoneId))
+    if (!source) return
+
+    const clientId = createTempId('draft-zone', draftZones)
+    const geometry = source.geometry?.points ? {
+      ...source.geometry,
+      points: source.geometry.points.map((point) => ({
+        x: Math.min(0.98, Number(point.x) + 0.025),
+        y: Math.min(0.98, Number(point.y) + 0.025),
+      })),
+    } : source.geometry
+    const duplicate = {
+      ...source,
+      id: clientId,
+      client_id: clientId,
+      name: `${source.name} kopija`,
+      color_hex: suggestZoneColor(draftZones.filter((zone) => !zone.archived_at).map((zone) => zone.color_hex)),
+      archived_at: null,
+      geometry,
+      active_planting_count: 0,
+      historical_planting_count: 0,
+      rotation_history_count: 0,
+      harvest_history_count: 0,
+      principal_plants: [],
+    }
+    setDraftZones((current) => [...current, duplicate])
+    handleZoneSelect(duplicate)
+    setToastMessage('Zonos kopija pridėta į juodraštį.')
+  }
+
+  function handleAddPlantQuickAction() {
+    document.querySelector('[data-testid="open-plant-drawer"]')?.click()
+  }
+
   function handleZoneGeometryCommit(zoneId, shape, boundaryShape) {
     setZoneError('')
-    setDraftZones((current) => current.map((zone) => (
+    const nextZones = draftZones.map((zone) => (
       sameId(zone.id, zoneId)
         ? {
           ...zone,
@@ -644,7 +887,9 @@ export default function PlotDetailPage() {
           geometry: shapeToGeometry(shape, boundaryShape),
         }
         : zone
-    )))
+    ))
+    setDraftZones(nextZones)
+    setDraftPlants((current) => reconcileMarkerPositions(draftPlot, nextZones, current))
   }
 
   function handleBoundaryCommit(nextBoundary, nextLayouts) {
@@ -654,7 +899,12 @@ export default function PlotDetailPage() {
       plot_size: calculateArea(nextBoundary),
       geometry: withPreservedMapGeometry(shapeToGeometry(nextBoundary), current.geometry),
     } : current)
-    setDraftZones((current) => current.map((zone) => {
+    const nextPlot = draftPlot ? {
+      ...draftPlot,
+      plot_size: calculateArea(nextBoundary),
+      geometry: withPreservedMapGeometry(shapeToGeometry(nextBoundary), draftPlot.geometry),
+    } : draftPlot
+    const nextZones = draftZones.map((zone) => {
       const nextShape = nextLayouts[String(zone.id)]
 
       if (!nextShape) {
@@ -666,7 +916,9 @@ export default function PlotDetailPage() {
         zone_size: calculateArea(nextShape),
         geometry: shapeToGeometry(nextShape, nextBoundary),
       }
-    }))
+    })
+    setDraftZones(nextZones)
+    setDraftPlants((current) => reconcileMarkerPositions(nextPlot, nextZones, current))
   }
 
   async function handlePlantCreate(payload) {
@@ -689,6 +941,23 @@ export default function PlotDetailPage() {
     setPlantError('')
     setDraftPlants((current) => current.filter((plant) => !sameId(plant.id, plantId)))
     setToastMessage('Augalas pašalintas iš juodraščio.')
+  }
+
+  function handleMarkerPositionChange(plantId, position) {
+    setDraftPlants((current) => current.map((plant) => (
+      sameId(plant.id, plantId)
+        ? { ...plant, marker_position_x: position.x, marker_position_y: position.y }
+        : plant
+    )))
+  }
+
+  function handleMarkerPositionReset(plantId) {
+    setDraftPlants((current) => current.map((plant) => (
+      sameId(plant.id, plantId)
+        ? { ...plant, marker_position_x: null, marker_position_y: null }
+        : plant
+    )))
+    setToastMessage('Atkurta automatinė augalo žymos pozicija.')
   }
 
   function resetDraftToPersisted() {
@@ -778,6 +1047,8 @@ export default function PlotDetailPage() {
           soil_type: zone.soil_type,
           rotation_stage: Number(zone.rotation_stage || 0),
           last_planting_date: zone.last_planting_date || null,
+          color_hex: normalizeZoneColor(zone.color_hex),
+          archived_at: zone.archived_at || null,
           geometry: zone.geometry ?? null,
         })),
         plants: draftPlants.map((plant) => ({
@@ -787,12 +1058,28 @@ export default function PlotDetailPage() {
           type: plant.type ?? null,
           condition: plant.condition,
           plant_date: plant.plant_date,
+          variety: plant.variety || null,
+          quantity: plant.quantity === '' ? null : plant.quantity ?? null,
+          occupied_area: plant.occupied_area === '' ? null : plant.occupied_area ?? null,
+          season: plant.season || null,
+          harvest_date: plant.harvest_date || null,
+          notes: plant.notes || null,
+          marker_position_x: plant.marker_position_x ?? null,
+          marker_position_y: plant.marker_position_y ?? null,
           disease: Boolean(plant.disease),
           disease_notes: plant.disease_notes || null,
           fk_catalog_plant_id: plant.fk_catalog_plant_id ?? null,
           fk_plant_zone_id: plant.fk_plant_zone_id,
         })),
       })
+
+      // Refetch after a valid empty-success response rather than committing
+      // undefined data to the mounted page.
+      if (!response?.plot || !Array.isArray(response.zones) || !Array.isArray(response.plants)) {
+        await pageState.reload()
+        setToastMessage('Plot changes saved.')
+        return
+      }
 
       pageState.setData((current) => ({
         ...current,
@@ -865,8 +1152,8 @@ export default function PlotDetailPage() {
   } : null
   const editorLayers = [
     { id: 'boundary', label: 'Sklypo riba', active: Boolean(measurementState?.boundary), color: '#47633b' },
-    { id: 'zones', label: `${draftZones.length} zonos`, active: draftZones.length > 0, color: '#b9683f' },
-    { id: 'plants', label: `${draftPlants.length} augalai`, active: draftPlants.length > 0, color: '#237d52' },
+    { id: 'zones', label: `${visibleZones.length} zonos`, active: visibleZones.length > 0, color: '#b9683f' },
+    { id: 'plants', label: `${visiblePlants.length} augalai`, active: visiblePlants.length > 0, color: '#237d52' },
     { id: 'measurements', label: 'Matmenys', active: true, color: '#ef6d22' },
   ]
   const boundaryeditorLayers = [
@@ -874,7 +1161,7 @@ export default function PlotDetailPage() {
     { id: 'corners', label: `${mapBoundaryPoints.length} kampai`, active: mapBoundaryPoints.length > 0, color: '#b9683f' },
     { id: 'center', label: mapBoundaryCenter ? 'Apskaičiuotas centras' : 'Centras laukia', active: Boolean(mapBoundaryCenter), color: '#237d52' },
   ]
-  const zoneTimelineItems = draftZones.slice(0, 5).map((zone) => ({
+  const zoneTimelineItems = visibleZones.slice(0, 5).map((zone) => ({
     id: zone.id,
     label: zone.name,
     meta: `${formatSquareMeters(zone.zone_size ?? 0, 1)} - ${formatSoilType(zone.soil_type)}`,
@@ -938,14 +1225,11 @@ export default function PlotDetailPage() {
         ].filter(Boolean).join(' ')}
       >
         <div className="plot-editor-view-toggle" aria-label="editor view">
-          <button
-            type="button"
-            className={`plot-panel-toggle ${editorView === EDITOR_VIEWS.zones ? 'is-active' : ''}`.trim()}
-            onClick={() => changeeditorView(EDITOR_VIEWS.zones)}
-            aria-pressed={editorView === EDITOR_VIEWS.zones}
-          >
-            Zonų vaizdas
-          </button>
+          <PlotWorkspaceModeSwitch
+            value={workspaceMode}
+            onChange={handleWorkspaceModeChange}
+            canEdit={canEdit}
+          />
           <button
             type="button"
             className={`plot-panel-toggle ${editorView === EDITOR_VIEWS.boundary ? 'is-active' : ''}`.trim()}
@@ -954,6 +1238,12 @@ export default function PlotDetailPage() {
           >
             Ribų vaizdas
           </button>
+          {canEdit ? (
+            <div className="plot-history-controls" role="group" aria-label="Atšaukimas ir pakartojimas">
+              <Button size="sm" variant="ghost" onClick={handleUndo} disabled={!historyState.canUndo || plotMode !== 'edit'}>Atšaukti</Button>
+              <Button size="sm" variant="ghost" onClick={handleRedo} disabled={!historyState.canRedo || plotMode !== 'edit'}>Pakartoti</Button>
+            </div>
+          ) : null}
         </div>
 
         <div className="plot-workspace-panel-toggles" aria-label="Darbo srities paneliai">
@@ -1021,6 +1311,19 @@ export default function PlotDetailPage() {
             className="plot-editor-layer-console"
           />
 
+          {editorView === EDITOR_VIEWS.zones ? (
+            <PlotPlanControls
+              options={viewOptions}
+              onOptionsChange={setViewOptions}
+              filters={filters}
+              onFiltersChange={setFilters}
+              plants={draftPlants}
+              zones={visibleZones}
+              onReset={() => setFilters({ year: '', season: '', plant: '', status: '' })}
+              onSelectZone={handleZoneSelect}
+            />
+          ) : null}
+
           <div className="plot-layer-metrics">
             {editorView === EDITOR_VIEWS.boundary ? (
               <>
@@ -1071,11 +1374,11 @@ export default function PlotDetailPage() {
           <div className="plot-layer-section">
             <div className="plot-layer-section-head">
               <strong>Zonos</strong>
-              <span>{draftZones.length}</span>
+              <span>{visibleZones.length}</span>
             </div>
-            {draftZones.length > 0 ? (
+            {visibleZones.length > 0 ? (
               <div className="plot-layer-object-list" role="list">
-                {draftZones.map((zone, index) => {
+                {visibleZones.map((zone, index) => {
                   const isSelected = sameId(zone.id, selectedZoneId)
                   const plantCount = draftPlants.filter((plant) => sameId(plant.fk_plant_zone_id, zone.id)).length
 
@@ -1129,7 +1432,7 @@ export default function PlotDetailPage() {
                 center: mapBoundaryCenter ?? DEFAULT_MAP_VIEW.center,
                 zoom: draftPlot.geometry?.map?.zoom ?? DEFAULT_MAP_VIEW.zoom,
               }}
-              readOnly={!canEdit}
+              readOnly={!canEditPlan}
               className="plot-location-map--workspace"
               onBoundaryPointAdd={handleBoundaryPointAdd}
               onBoundaryPointInsert={handleBoundaryPointInsert}
@@ -1142,7 +1445,7 @@ export default function PlotDetailPage() {
                 className="plot-mobile-floating-action plot-mobile-floating-action--boundary"
                 aria-label="Greitai uždaryti ribą"
                 onClick={handleBoundaryClose}
-                disabled={!canEdit}
+                disabled={!canEditPlan}
               >
                 Uždaryti ribą
               </Button>
@@ -1150,15 +1453,22 @@ export default function PlotDetailPage() {
             </>
           ) : (
           <>
+          {hasActiveFilters && visibleZones.length === 0 ? (
+            <div className="plot-filter-empty-state">
+              <EmptyStatePanel title="Nėra filtro rezultatų" description={plotPlanText('noFilterResults')} tone="subtle" />
+              <Button size="sm" variant="secondary" onClick={() => setFilters({ year: '', season: '', plant: '', status: '' })}>{plotPlanText('resetFilters')}</Button>
+            </div>
+          ) : null}
           <PlotDesignerCanvas
             ref={designerCanvasRef}
             plotId={plotId}
             plotName={pageState.data.plot.name}
             plotSize={draftPlot.plot_size}
             plotGeometry={draftPlot.geometry}
-            zones={draftZones}
-            plants={draftPlants}
-            canEdit={canEdit}
+            zones={visibleZones}
+            plants={visiblePlants}
+            canEdit={canEditPlan}
+            mobile={typeof window !== 'undefined' && window.matchMedia?.('(max-width: 768px)').matches}
             activeZoneId={selectedZoneId}
             persistState={false}
             showSaveAction={false}
@@ -1167,6 +1477,11 @@ export default function PlotDetailPage() {
             layoutSaveFeedback={createEmptyFeedback()}
             showLayerConsole={false}
             mapFirstHud
+            showPlantMarkers={viewOptions.showPlants}
+            showZoneNames={viewOptions.showZoneNames}
+            bordersOnly={viewOptions.bordersOnly}
+            onMarkerPositionChange={handleMarkerPositionChange}
+            onMarkerPositionReset={handleMarkerPositionReset}
             onSaveLayout={handleSave}
             onSelectZone={handleZoneSelect}
             onSelectBoundary={handleBoundarySelect}
@@ -1317,6 +1632,20 @@ export default function PlotDetailPage() {
               </StatusBadge>
             )}
           >
+            {selectedZone ? (
+              <details className="plot-zone-quick-actions">
+                <summary aria-label="Zonos veiksmai">⋯</summary>
+                <div role="menu">
+                  <button type="button" onClick={() => setActiveInspector(INSPECTOR_TYPES.zone)}>{plotPlanText('viewInformation')}</button>
+                  {canEditPlan ? <button type="button" onClick={() => document.getElementById('zone-name')?.focus()}>{plotPlanText('editZone')}</button> : null}
+                  {canEditPlan ? <button type="button" onClick={() => document.querySelector('.zone-color-control input[type="text"]')?.focus()}>{plotPlanText('changeColor')}</button> : null}
+                  {canEditPlan ? <button type="button" onClick={handleAddPlantQuickAction}>{plotPlanText('addPlant')}</button> : null}
+                  {canEditPlan ? <button type="button" onClick={handleZoneDuplicate}>{plotPlanText('duplicateZone')}</button> : null}
+                  {canEditPlan ? <button type="button" onClick={handleZoneArchive}>{plotPlanText('archiveZone')}</button> : null}
+                  {canEditPlan ? <button type="button" className="is-danger" onClick={handleZoneDelete}>{plotPlanText('deleteZone')}</button> : null}
+                </div>
+              </details>
+            ) : null}
             <ZoneInspector
               zone={selectedZone}
               measurements={formattedSelectedZoneMeasurements}
@@ -1330,6 +1659,12 @@ export default function PlotDetailPage() {
             title={selectedZone ? 'Zonos duomenys' : 'Naujos zonos juodraštis'}
             description="Prieš išsaugodami visą sklypą pritaikykite zonos duomenų pakeitimus juodraščiui."
           >
+            <ZoneColorControl
+              value={zoneForm.color_hex}
+              onChange={(color_hex) => setZoneForm((current) => ({ ...current, color_hex }))}
+              usedColors={draftZones.filter((zone) => !sameId(zone.id, selectedZoneId) && !zone.archived_at).map((zone) => zone.color_hex)}
+              disabled={!canEditPlan}
+            />
             <form className="input-grid" onSubmit={handleZoneApply}>
               <div className="field field-span-2">
                 <label htmlFor="zone-name">Zonos pavadinimas</label>
@@ -1337,7 +1672,7 @@ export default function PlotDetailPage() {
                   id="zone-name"
                   value={zoneForm.name}
                   onChange={(event) => setZoneForm((current) => ({ ...current, name: event.target.value }))}
-                  disabled={!canEdit}
+                  disabled={!canEditPlan}
                 />
               </div>
               <div className="field">
@@ -1346,7 +1681,7 @@ export default function PlotDetailPage() {
                   id="zone-soil-type"
                   value={zoneForm.soil_type}
                   onChange={(event) => setZoneForm((current) => ({ ...current, soil_type: event.target.value }))}
-                  disabled={!canEdit}
+                  disabled={!canEditPlan}
                 >
                   {SOIL_TYPES.map((soilType) => (
                     <option key={soilType} value={soilType}>{formatSoilType(soilType)}</option>
@@ -1362,7 +1697,7 @@ export default function PlotDetailPage() {
                   step="1"
                   value={zoneForm.rotation_stage}
                   onChange={(event) => setZoneForm((current) => ({ ...current, rotation_stage: event.target.value }))}
-                  disabled={!canEdit}
+                  disabled={!canEditPlan}
                 />
               </div>
               <details className="advanced-zone-details field-span-2" open={Boolean(zoneForm.last_planting_date)}>
@@ -1374,7 +1709,7 @@ export default function PlotDetailPage() {
                     type="date"
                     value={zoneForm.last_planting_date}
                     onChange={(event) => setZoneForm((current) => ({ ...current, last_planting_date: event.target.value }))}
-                    disabled={!canEdit}
+                    disabled={!canEditPlan}
                   />
                 </div>
               </details>
@@ -1384,13 +1719,13 @@ export default function PlotDetailPage() {
               <div className="form-actions">
                 {selectedZone ? (
                   <>
-                    <Button type="submit" variant="secondary">Pritaikyti zonos duomenis</Button>
-                    <Button variant="ghost" onClick={openNewZoneInspector}>Naujos zonos juodraštis</Button>
-                    <Button variant="danger" onClick={handleZoneDelete}>Šalinti zoną</Button>
+                    <Button type="submit" variant="secondary" disabled={!canEditPlan}>Pritaikyti zonos duomenis</Button>
+                    <Button variant="ghost" onClick={openNewZoneInspector} disabled={!canEditPlan}>Naujos zonos juodraštis</Button>
+                    <Button variant="danger" onClick={handleZoneDelete} disabled={!canEditPlan}>Šalinti zoną</Button>
                   </>
                 ) : (
                   <>
-                    <Button onClick={handleZoneCreateFromForm} variant="secondary">Pridėti zoną į juodraštį</Button>
+                    <Button onClick={handleZoneCreateFromForm} variant="secondary" disabled={!canEditPlan}>Pridėti zoną į juodraštį</Button>
                     <Button variant="ghost" onClick={() => setZoneForm(emptyZoneForm)}>Išvalyti formą</Button>
                   </>
                 )}
@@ -1425,7 +1760,7 @@ export default function PlotDetailPage() {
                             <Button variant="ghost" size="sm">Atidaryti</Button>
                           </Link>
                         ) : null}
-                        {canEdit ? (
+                        {canEditPlan ? (
                           <Button variant="ghost" size="sm" onClick={() => handlePlantDelete(plant.id)}>Šalinti</Button>
                         ) : null}
                       </div>
@@ -1451,7 +1786,7 @@ export default function PlotDetailPage() {
           {plantError ? <span className="field-error">{plantError}</span> : null}
           <PlotPlantingDrawer
             selectedZone={selectedZone}
-            canEdit={canEdit}
+            canEdit={canEditPlan}
             busy={saving}
             onCreatePlant={handlePlantCreate}
           />

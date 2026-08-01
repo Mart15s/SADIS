@@ -15,11 +15,11 @@ export const INVENTORY_UNITS = ['unit', 'g', 'kg', 'ml', 'l', 'm', 'cm', 'bag', 
 export const MATERIAL_UNITS = INVENTORY_UNITS
 export const TOOL_UNITS = ['unit']
 export const INVENTORY_UNIT_LABELS = {
-  unit: 'vnt.',
-  units: 'vnt.',
-  pcs: 'vnt.',
-  piece: 'vnt.',
-  pieces: 'vnt.',
+  unit: 'unit',
+  units: 'units',
+  pcs: 'pcs',
+  piece: 'piece',
+  pieces: 'pieces',
   g: 'g',
   gram: 'g',
   grams: 'g',
@@ -46,8 +46,8 @@ export const INVENTORY_UNIT_LABELS = {
   centimeters: 'cm',
   centimetre: 'cm',
   centimetres: 'cm',
-  bag: 'maiš.',
-  bags: 'maiš.',
+  bag: 'bag',
+  bags: 'bags',
   pack: 'pak.',
   packs: 'pak.',
   package: 'pak.',
@@ -57,8 +57,8 @@ export const INVENTORY_UNIT_LABELS = {
 export const ACCESS_ROLES = ['viewer', 'editor']
 export const USER_ROLES = ['owner', 'admin']
 
-const DISPLAY_LOCALE = 'lt-LT'
-const NUMBER_LOCALE = 'lt-LT'
+const DISPLAY_LOCALE = 'en-US'
+const NUMBER_LOCALE = 'en-US'
 const DATE_FORMATTER = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   year: 'numeric',
   month: '2-digit',
@@ -74,7 +74,7 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
 
 export function formatDate(value, options = {}) {
   if (!value) {
-    return 'Nenurodyta'
+    return 'Not specified'
   }
 
   return Object.keys(options).length
@@ -84,7 +84,7 @@ export function formatDate(value, options = {}) {
 
 export function formatDateTime(value) {
   if (!value) {
-    return 'Nenurodyta'
+    return 'Not specified'
   }
 
   return DATE_TIME_FORMATTER.format(new Date(value))
@@ -102,11 +102,11 @@ export function hasDisplayValue(value) {
   return value !== null && value !== undefined && value !== ''
 }
 
-export function formatDisplayValue(value, fallback = 'Nenurodyta') {
+export function formatDisplayValue(value, fallback = 'Not specified') {
   return hasDisplayValue(value) ? value : fallback
 }
 
-export function formatCompactNumber(value, digits = 0, fallback = 'Nenurodyta') {
+export function formatCompactNumber(value, digits = 0, fallback = 'Not specified') {
   if (!hasDisplayValue(value) || Number.isNaN(Number(value))) {
     return fallback
   }
@@ -116,7 +116,7 @@ export function formatCompactNumber(value, digits = 0, fallback = 'Nenurodyta') 
   }).format(Number(value))
 }
 
-export function formatDayCount(value, fallback = 'Nenurodyta') {
+export function formatDayCount(value, fallback = 'Not specified') {
   if (!hasDisplayValue(value) || Number.isNaN(Number(value))) {
     return fallback
   }
@@ -124,11 +124,11 @@ export function formatDayCount(value, fallback = 'Nenurodyta') {
   const numeric = Number(value)
   const rounded = formatCompactNumber(numeric, Number.isInteger(numeric) ? 0 : 1)
   const absolute = Math.abs(numeric)
-  const unit = absolute % 10 === 1 && absolute % 100 !== 11 ? 'diena' : 'dienos'
+  const unit = absolute === 1 ? 'day' : 'days'
   return `${rounded} ${unit}`
 }
 
-export function formatTemperatureC(value, digits = 1, fallback = 'Nenurodyta') {
+export function formatTemperatureC(value, digits = 1, fallback = 'Not specified') {
   if (!hasDisplayValue(value) || Number.isNaN(Number(value))) {
     return fallback
   }
@@ -136,7 +136,7 @@ export function formatTemperatureC(value, digits = 1, fallback = 'Nenurodyta') {
   return `${formatCompactNumber(value, digits)} °C`
 }
 
-export function formatArea(valueInSquareMeters, digits = 1, fallback = 'Nenurodyta') {
+export function formatArea(valueInSquareMeters, digits = 1, fallback = 'Not specified') {
   if (!hasDisplayValue(valueInSquareMeters) || Number.isNaN(Number(valueInSquareMeters))) {
     return fallback
   }
@@ -155,7 +155,7 @@ export function formatArea(valueInSquareMeters, digits = 1, fallback = 'Nenurody
   return squareMeters
 }
 
-export function formatLength(valueInMeters, digits = 1, fallback = 'Nenurodyta') {
+export function formatLength(valueInMeters, digits = 1, fallback = 'Not specified') {
   if (!hasDisplayValue(valueInMeters) || Number.isNaN(Number(valueInMeters))) {
     return fallback
   }
@@ -163,7 +163,7 @@ export function formatLength(valueInMeters, digits = 1, fallback = 'Nenurodyta')
   return `${formatCompactNumber(valueInMeters, digits)} m`
 }
 
-export function formatSquareMetersValue(value, digits = 2, fallback = 'Nenurodyta') {
+export function formatSquareMetersValue(value, digits = 2, fallback = 'Not specified') {
   if (!hasDisplayValue(value) || Number.isNaN(Number(value))) {
     return fallback
   }
@@ -171,7 +171,7 @@ export function formatSquareMetersValue(value, digits = 2, fallback = 'Nenurodyt
   return formatArea(value, digits, fallback)
 }
 
-export function formatNumberWithUnit(value, unit, digits = 0, fallback = 'Nenurodyta') {
+export function formatNumberWithUnit(value, unit, digits = 0, fallback = 'Not specified') {
   if (!hasDisplayValue(value) || Number.isNaN(Number(value))) {
     return fallback
   }
@@ -180,10 +180,10 @@ export function formatNumberWithUnit(value, unit, digits = 0, fallback = 'Nenuro
 }
 
 export function formatInventoryUnit(unit) {
-  return INVENTORY_UNIT_LABELS[String(unit ?? '').toLowerCase()] ?? unit ?? 'vnt.'
+  return INVENTORY_UNIT_LABELS[String(unit ?? '').toLowerCase()] ?? unit ?? 'unit'
 }
 
-export function formatQuantity(value, unit, digits = 0, fallback = 'Nenurodyta') {
+export function formatQuantity(value, unit, digits = 0, fallback = 'Not specified') {
   if (!hasDisplayValue(value) || Number.isNaN(Number(value))) {
     return fallback
   }
@@ -192,113 +192,126 @@ export function formatQuantity(value, unit, digits = 0, fallback = 'Nenurodyta')
 }
 
 export const SOIL_TYPE_LABELS = {
-  clay: 'Molis',
-  peaty: 'Durpinga',
-  rocky: 'Akmeninga',
-  sandy: 'Smėlinga',
+  clay: 'Clay',
+  peaty: 'Peaty',
+  rocky: 'Rocky',
+  sandy: 'Sandy',
 }
 
 export const PLANT_TYPE_LABELS = {
-  berry: 'Uoga',
+  berry: 'Berry',
   cereal: 'Javai',
-  flower: 'Gėlė',
-  forage: 'Pašarinis augalas',
-  fruit: 'Vaisius',
-  herb: 'Prieskoninis augalas',
-  legume: 'Ankštinis augalas',
-  oilseed: 'Aliejinis augalas',
-  shrub: 'Krūmas',
-  tree: 'Medis',
-  vegetable: 'Daržovė',
+  flower: 'Flower',
+  forage: 'Forage crop',
+  fruit: 'Fruit',
+  herb: 'Herb',
+  legume: 'Legume',
+  oilseed: 'Oilseed',
+  shrub: 'Shrub',
+  tree: 'Tree',
+  vegetable: 'Vegetable',
 }
 
 export const PLANT_CONDITION_LABELS = {
-  diseased: 'Sergantis',
-  dried: 'Išdžiūvęs',
-  flowering: 'Žydi',
-  germinating: 'Dygsta',
-  growing: 'Auga',
-  healthy: 'Sveikas',
-  mature: 'Subrendęs',
-  planted: 'Pasodintas',
-  regenerating: 'Atsigauna',
-  seedling: 'Daigas',
+  diseased: 'Diseased',
+  dried: 'Withered',
+  flowering: 'Flowering',
+  germinating: 'Germinating',
+  growing: 'Growing',
+  healthy: 'Healthy',
+  mature: 'Mature',
+  planted: 'Planted',
+  regenerating: 'Recovering',
+  seedling: 'Seedling',
 }
 
 export const TASK_STATUS_LABELS = {
-  pending: 'Laukiama',
-  planned: 'Suplanuota',
-  completed: 'Atlikta',
-  rejected: 'Atmesta',
+  pending: 'Pending',
+  planned: 'Planned',
+  completed: 'Completed',
+  rejected: 'Removed',
 }
 
 export const TASK_TYPE_LABELS = {
-  watering: 'Laistymas',
-  fertilizing: 'Tręšimas',
-  pest_check: 'Kenkėjų patikra',
-  harvest: 'Derliaus nuėmimas',
-  buy: 'Pirkimas',
-  frost_protection: 'Apsauga nuo šalnos',
-  heat_extra_watering: 'Papildomas laistymas per karštį',
-  wind_protection: 'Apsauga nuo vėjo',
-  lifecycle_review: 'Augalo būklės peržiūra',
+  watering: 'Watering',
+  fertilizing: 'Fertilizing',
+  pest_check: 'Pest check',
+  harvest: 'Harvest',
+  buy: 'Purchase',
+  frost_protection: 'Frost protection',
+  heat_extra_watering: 'Extra watering in hot weather',
+  wind_protection: 'Wind protection',
+  lifecycle_review: 'Plant status review',
 }
 
 export const PRIORITY_LABELS = {
-  low: 'Žemas',
-  medium: 'Vidutinis',
-  high: 'Aukštas',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
 }
 
 export const INVENTORY_TYPE_LABELS = {
-  material: 'Medžiaga',
-  tool: 'Įrankis',
+  material: 'Material',
+  tool: 'Tool',
 }
 
 export const ACCESS_ROLE_LABELS = {
-  viewer: 'Peržiūros teisė',
-  editor: 'Redagavimo teisė',
-  owner: 'Savininkas',
-  admin: 'Administratorius',
+  viewer: 'Viewer',
+  editor: 'Editor',
+  owner: 'Owner',
+  admin: 'Administrator',
 }
 
 export const USER_ROLE_LABELS = {
-  owner: 'Savininkas',
-  admin: 'Administratorius',
+  owner: 'Owner',
+  admin: 'Administrator',
 }
 
 export const ROTATION_STATUS_LABELS = {
-  assigned: 'Priskirta',
-  blocked: 'Blokuota',
-  generated: 'Sugeneruota',
-  manual_override: 'Rankinis įrašas',
-  ready: 'Paruošta',
-  rejected: 'Atmesta',
-  stays: 'Lieka vietoje',
-  unresolved: 'Neišspręsta',
+  assigned: 'Assigned',
+  blocked: 'Blocked',
+  generated: 'Generated',
+  manual_override: 'Manual override',
+  ready: 'Ready',
+  rejected: 'Rejected',
+  stays: 'Stays in place',
+  unresolved: 'Unresolved',
 }
 
 export const SNAPSHOT_TYPE_LABELS = {
-  created_plot_version: 'Sukurta sklypo versija',
-  initial_plot_version: 'Sukurta pradinė sklypo versija',
-  manual: 'Rankinis įrašas',
-  saved_layout_update: 'Išsaugotas išdėstymo pakeitimas',
-  update: 'Išsaugotas pakeitimas',
+  created_plot_version: 'Created plot version',
+  initial_plot_version: 'Created initial plot version',
+  manual: 'Manual entry',
+  saved_layout_update: 'Saved layout update',
+  update: 'Saved update',
 }
 
 const SNAPSHOT_TEXT_TRANSLATIONS = {
-  'Saved layout update': 'Išsaugotas išdėstymo pakeitimas',
-  'Layout updated, 3 zone addeds.': 'Išdėstymas atnaujintas, pridėtos 3 zonos.',
-  'Created plot version': 'Sukurta sklypo versija',
-  'Initial plot version was created.': 'Sukurta pradinė sklypo versija.',
+  'Saved layout update': 'Saved layout update',
+  'Layout updated, 3 zone addeds.': 'Layout updated, 3 zones added.',
+  'Created plot version': 'Created plot version',
+  'Initial plot version was created.': 'Initial plot version was created.',
 }
 
-function formatMappedValue(value, labels, fallback = 'Nenurodyta') {
+// Database/API enum values stay unchanged; only their presentation is localized.
+const ENGLISH_ENUM_LABELS = {
+  planted: 'Planted', germinating: 'Germinating', growing: 'Growing', flowering: 'Flowering',
+  mature: 'Mature', diseased: 'Diseased', dried: 'Withered', healthy: 'Healthy',
+  regenerating: 'Recovering', seedling: 'Seedling',
+  pending: 'Pending', planned: 'Planned', completed: 'Completed', rejected: 'Removed',
+  low: 'Low', medium: 'Medium', high: 'High', material: 'Material', tool: 'Tool',
+  viewer: 'Viewer', editor: 'Editor', owner: 'Owner', admin: 'Administrator',
+  watering: 'Watering', fertilizing: 'Fertilizing', pest_check: 'Pest check', harvest: 'Harvest',
+  buy: 'Purchase', lifecycle_review: 'Plant status review',
+}
+
+function formatMappedValue(value, labels, fallback = 'Not specified') {
   if (!hasDisplayValue(value)) {
     return fallback
   }
 
-  return labels[String(value).toLowerCase()] ?? value
+  const key = String(value).toLowerCase()
+  return ENGLISH_ENUM_LABELS[key] ?? labels[key] ?? value
 }
 
 export function formatSoilType(type) {
@@ -349,7 +362,7 @@ export function formatSnapshotType(type) {
   return formatMappedValue(type, SNAPSHOT_TYPE_LABELS)
 }
 
-export function formatSnapshotText(value, fallback = 'Nenurodyta') {
+export function formatSnapshotText(value, fallback = 'Not specified') {
   if (!hasDisplayValue(value)) {
     return fallback
   }
@@ -359,7 +372,7 @@ export function formatSnapshotText(value, fallback = 'Nenurodyta') {
 
 export function formatMonthYear(value) {
   if (!value) {
-    return 'Nenurodyta'
+    return 'Not specified'
   }
 
   return new Intl.DateTimeFormat(DISPLAY_LOCALE, {

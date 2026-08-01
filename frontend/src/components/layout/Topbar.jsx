@@ -1,37 +1,38 @@
 import { Link, useLocation } from 'react-router-dom'
+import BrandLogo from './BrandLogo.jsx'
 
 const routeLabels = [
-  { pattern: /^\/$/, label: 'Pradžia' },
-  { pattern: /^\/account$/, label: 'Paskyra' },
-  { pattern: /^\/community$/, label: 'Bendruomenė' },
-  { pattern: /^\/plots\/new$/, label: 'Naujas sklypas' },
-  { pattern: /^\/plots\/[^/]+\/edit$/, label: 'Sklypo redagavimas' },
-  { pattern: /^\/plots\/[^/]+\/calendar$/, label: 'Kalendorius' },
-  { pattern: /^\/plots\/[^/]+\/history$/, label: 'Planavimo istorija' },
-  { pattern: /^\/plots\/[^/]+\/harvests$/, label: 'Derlius' },
-  { pattern: /^\/plots\/[^/]+\/analytics$/, label: 'Analitika' },
-  { pattern: /^\/plots\/[^/]+\/sharing$/, label: 'Bendrinimas' },
-  { pattern: /^\/plots\/[^/]+\/rotation$/, label: 'Rotacija' },
-  { pattern: /^\/plots\/[^/]+$/, label: 'Sklypo planas' },
-  { pattern: /^\/plots$/, label: 'Sklypai' },
-  { pattern: /^\/plants\/new$/, label: 'Naujas augalas' },
-  { pattern: /^\/plants\/[^/]+\/edit$/, label: 'Augalo redagavimas' },
-  { pattern: /^\/plants\/[^/]+$/, label: 'Augalo informacija' },
-  { pattern: /^\/plants$/, label: 'Augalai' },
-  { pattern: /^\/catalog-plants/, label: 'Augalų katalogas' },
-  { pattern: /^\/inventory$/, label: 'Inventorius' },
-  { pattern: /^\/admin\/users$/, label: 'Naudotojų valdymas' },
+  { pattern: /^\/$/, label: 'Home' },
+  { pattern: /^\/account$/, label: 'Account' },
+  { pattern: /^\/community$/, label: 'Community' },
+  { pattern: /^\/plots\/new$/, label: 'New plot' },
+  { pattern: /^\/plots\/[^/]+\/edit$/, label: 'Edit plot' },
+  { pattern: /^\/plots\/[^/]+\/calendar$/, label: 'Calendar' },
+  { pattern: /^\/plots\/[^/]+\/history$/, label: 'Planning history' },
+  { pattern: /^\/plots\/[^/]+\/harvests$/, label: 'Harvests' },
+  { pattern: /^\/plots\/[^/]+\/analytics$/, label: 'Analytics' },
+  { pattern: /^\/plots\/[^/]+\/sharing$/, label: 'Sharing' },
+  { pattern: /^\/plots\/[^/]+\/rotation$/, label: 'Rotation' },
+  { pattern: /^\/plots\/[^/]+$/, label: 'Plot plan' },
+  { pattern: /^\/plots$/, label: 'Plots' },
+  { pattern: /^\/plants\/new$/, label: 'New plant' },
+  { pattern: /^\/plants\/[^/]+\/edit$/, label: 'Edit plant' },
+  { pattern: /^\/plants\/[^/]+$/, label: 'Plant information' },
+  { pattern: /^\/plants$/, label: 'Plants' },
+  { pattern: /^\/catalog-plants/, label: 'Plant catalog' },
+  { pattern: /^\/inventory$/, label: 'Inventory' },
+  { pattern: /^\/admin\/users$/, label: 'User management' },
 ]
 
 function getRouteLabel(pathname) {
-  return routeLabels.find((route) => route.pattern.test(pathname))?.label ?? 'Darbo sritis'
+  return routeLabels.find((route) => route.pattern.test(pathname))?.label ?? 'Workspace'
 }
 
 export default function Topbar({ isWide = false, pageHeader = null }) {
   const location = useLocation()
   const currentLabel = getRouteLabel(location.pathname)
   const title = pageHeader?.title ?? currentLabel
-  const kicker = pageHeader?.eyebrow ?? 'SADiS'
+  const kicker = pageHeader?.eyebrow ?? 'Yava'
   const hasPageChrome = Boolean(pageHeader?.meta || pageHeader?.actions)
 
   return (
@@ -41,15 +42,11 @@ export default function Topbar({ isWide = false, pageHeader = null }) {
         isWide ? 'topbar-wide' : '',
         pageHeader ? 'topbar--page-header' : '',
       ].filter(Boolean).join(' ')}
-      aria-label="Darbo srities juosta"
+      aria-label="Workspace bar"
     >
       <div className="topbar-left">
-        <Link to="/" className="topbar-mark" aria-label="Eiti į pradžią">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M10 17V9" />
-            <path d="M10 9.5c-2.2-.1-4.1-1.6-4.8-4 3-.1 4.6 1.1 4.8 4Z" />
-            <path d="M10.2 8c.3-2.7 2-4.2 5-4.5.1 3-1.6 4.7-5 4.5Z" />
-          </svg>
+        <Link to="/" className="topbar-mark" aria-label="Go to home">
+          <BrandLogo className="brand-logo--topbar" alt="Yava logo" />
         </Link>
         <div className="topbar-copy">
           <span className="topbar-kicker">{kicker}</span>

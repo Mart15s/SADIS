@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ config('app.name', 'SADiS') }}</title>
+        <title>{{ config('app.name', 'Yava') }}</title>
         <style>
             body {
                 align-items: center;
@@ -35,7 +35,7 @@
     </head>
     <body>
         <main>
-            <h1>SADiS API</h1>
+            <h1>Yava API</h1>
             <p>Asmeninio sodo ar daržo informacinės sistemos backend veikia.</p>
         </main>
     </body>

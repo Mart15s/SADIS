@@ -60,7 +60,14 @@ export function unwrapCollection(payload) {
     return payload.data
   }
 
-  return payload
+  return []
+}
+
+// Laravel resources can be returned directly or in a `{ data: ... }` envelope.
+// 204 is an intentionally successful response with no resource to render.
+export function unwrapResource(payload) {
+  if (payload === '' || payload === null || payload === undefined) return null
+  return payload?.data ?? payload
 }
 
 export const apiClient = axios.create({
@@ -83,7 +90,10 @@ apiClient.interceptors.request.use((config) => {
 })
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.status === 204 || response.data === '') response.data = null
+    return response
+  },
   (error) => {
     if ([401, 419].includes(error.response?.status) && unauthorizedHandler) {
       unauthorizedHandler()
@@ -120,11 +130,11 @@ export async function downloadBlob(path, fallbackFileName) {
 export const api = {
   async getMe() {
     const { data } = await apiClient.get('/me')
-    return data?.data ?? data
+    return unwrapResource(data)
   },
   async updateMe(payload) {
     const { data } = await apiClient.patch('/me', payload)
-    return data?.data ?? data
+    return unwrapResource(data)
   },
   async login(payload) {
     const { data } = await apiClient.post('/login', payload)
@@ -152,29 +162,29 @@ export const api = {
   },
   async reverseGeocode(params) {
     const { data } = await apiClient.get('/geocode/reverse', { params })
-    return data?.data ?? data
+    return unwrapResource(data)
   },
   async getPlot(plotId) {
     const { data } = await apiClient.get(`/plots/${plotId}`)
-    return data
+    return unwrapResource(data)
   },
   async createPlot(payload) {
     const { data } = await apiClient.post('/plots', payload)
-    return data
+    return unwrapResource(data)
   },
   async updatePlot(plotId, payload) {
     const { data } = await apiClient.patch(`/plots/${plotId}`, payload)
-    return data
+    return unwrapResource(data)
   },
   async commitPlotWorkspace(plotId, payload) {
     const { data } = await apiClient.put(`/plots/${plotId}/workspace`, payload)
-    return data
+    return unwrapResource(data)
   },
   async deletePlot(plotId) {
     await apiClient.delete(`/plots/${plotId}`)
   },
-  async listPlantZones(plotId) {
-    const { data } = await apiClient.get(`/plots/${plotId}/plant-zones`)
+  async listPlantZones(plotId, params = {}) {
+    const { data } = await apiClient.get(`/plots/${plotId}/plant-zones`, { params })
     return unwrapCollection(data)
   },
   async createPlantZone(plotId, payload) {
@@ -187,6 +197,10 @@ export const api = {
   },
   async deletePlantZone(plotId, zoneId) {
     await apiClient.delete(`/plots/${plotId}/plant-zones/${zoneId}`)
+  },
+  async archivePlantZone(plotId, zoneId) {
+    const { data } = await apiClient.post(`/plots/${plotId}/plant-zones/${zoneId}/archive`)
+    return data
   },
   async listPlants(plotId) {
     const { data } = await apiClient.get(`/plots/${plotId}/plants`)

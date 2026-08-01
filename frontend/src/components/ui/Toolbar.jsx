@@ -1,7 +1,7 @@
 export default function Toolbar({
   children,
   className = '',
-  label = 'Įrankių juosta',
+  label = 'Toolbar',
 }) {
   return (
     <div className={`toolbar ${className}`.trim()} role="toolbar" aria-label={label}>

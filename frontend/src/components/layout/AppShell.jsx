@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import { PageChromeContext } from './PageChromeContext.jsx'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
+import BrandLogo from './BrandLogo.jsx'
 
 export default function AppShell() {
   const { isAdmin, isAuthenticated } = useAuth()
@@ -49,20 +50,20 @@ export default function AppShell() {
           onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
         />
         <main className={`shell-main ${isPloteditorRoute ? 'shell-main--plot-editor' : ''}`.trim()}>
-          <div className="mobile-shell-bar" aria-label="Mobilioji navigacija">
+          <div className="mobile-shell-bar" aria-label="Mobile navigation">
             <button
               type="button"
               className="mobile-shell-menu-button"
               aria-controls="app-navigation-drawer"
               aria-expanded={isMobileNavigationOpen}
-              aria-label="Atidaryti navigaciją"
+              aria-label="Open navigation"
               onClick={() => setIsMobileNavigationOpen(true)}
             >
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
                 <path d="M4 5.5h12M4 10h12M4 14.5h12" />
               </svg>
             </button>
-            <span className="mobile-shell-title">SADiS</span>
+            <span className="mobile-shell-title"><BrandLogo className="brand-logo--mobile" alt="Yava logo" /><span>Yava</span></span>
           </div>
           {isWorkspaceRoute ? null : <Topbar isWide={isWorkspaceRoute} pageHeader={activePageHeader} />}
           <div
@@ -79,7 +80,7 @@ export default function AppShell() {
           <button
             type="button"
             className="drawer-backdrop"
-            aria-label="Uždaryti navigaciją"
+            aria-label="Close navigation"
             onClick={() => setIsMobileNavigationOpen(false)}
           />
           <Sidebar

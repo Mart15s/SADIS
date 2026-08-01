@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { MapLayerControl, MeasurementBadge } from '../../components/garden/GardenControls.jsx'
 import PlotDesignerCanvas from '../../components/plot/PlotDesignerCanvas.jsx'
 import PlotLocationMap from '../../components/plot/PlotLocationMap.jsx'
+import ZoneColorControl from '../../components/plot/ZoneColorControl.jsx'
 import { FloatingPanel, WorkspaceStage } from '../../components/plot/PlotWorkspaceShell.jsx'
 import {
   ErrorState,
@@ -20,6 +21,7 @@ import { assertSanitizedGeometryPayload } from '../../lib/plotGeometry.js'
 import { calculateArea, shapeToGeometry } from '../../lib/plotDesigner.js'
 import { calculateLatLngArea, calculateLatLngCenter, calculateLatLngPerimeter } from '../../lib/geoMeasurements.js'
 import { formatMeters, formatSquareMeters } from '../../lib/plotMeasurements.js'
+import { normalizeZoneColor, suggestZoneColor } from '../../lib/plotPlan.js'
 
 const CREATE_DRAFT_KEY = 'sad-plot-create-draft-v1'
 const DEFAULT_LOCATION = { lat: 54.6872, lng: 25.2797 }
@@ -43,6 +45,7 @@ const emptyZoneForm = {
   soil_type: SOIL_TYPES[0],
   rotation_stage: 0,
   last_planting_date: '',
+  color_hex: '',
 }
 
 function sameId(left, right) {
@@ -139,6 +142,7 @@ function zoneToForm(zone) {
     soil_type: zone?.soil_type ?? SOIL_TYPES[0],
     rotation_stage: zone?.rotation_stage ?? 0,
     last_planting_date: zone?.last_planting_date ?? '',
+    color_hex: zone?.color_hex ?? '',
   }
 }
 
@@ -409,6 +413,7 @@ export default function PlotCreatePage() {
       soil_type: zoneForm.soil_type,
       rotation_stage: Number(zoneForm.rotation_stage || 0),
       last_planting_date: zoneForm.last_planting_date || '',
+      color_hex: normalizeZoneColor(zoneForm.color_hex) ?? suggestZoneColor(draftZones.map((zone) => zone.color_hex)),
       geometry: shapeToGeometry(shape, boundaryShape),
     }
 
@@ -441,6 +446,11 @@ export default function PlotCreatePage() {
       return
     }
 
+    if (zoneForm.color_hex && !normalizeZoneColor(zoneForm.color_hex)) {
+      setZoneError('Spalva turi būti šešių skaitmenų HEX formatu, pvz., #4F7A5A.')
+      return
+    }
+
     setDraftZones((current) => current.map((zone) => (
       sameId(zone.id, selectedZoneId)
         ? {
@@ -449,6 +459,7 @@ export default function PlotCreatePage() {
           soil_type: zoneForm.soil_type,
           rotation_stage: Number(zoneForm.rotation_stage || 0),
           last_planting_date: zoneForm.last_planting_date || '',
+          color_hex: normalizeZoneColor(zoneForm.color_hex) ?? zone.color_hex,
         }
         : zone
     )))
@@ -556,6 +567,10 @@ export default function PlotCreatePage() {
         geometry: fullPlotGeometry,
       })
 
+      if (!created?.id) {
+        throw new Error('The plot was saved, but Yava did not receive its details. Please try again.')
+      }
+
       if (sanitizedZones.length > 0) {
         await api.commitPlotWorkspace(created.id, {
           plot: {
@@ -570,6 +585,7 @@ export default function PlotCreatePage() {
             soil_type: zone.soil_type,
             rotation_stage: Number(zone.rotation_stage || 0),
             last_planting_date: zone.last_planting_date || null,
+            color_hex: normalizeZoneColor(zone.color_hex),
             geometry: zone.geometry,
           })),
           plants: [],
@@ -962,6 +978,11 @@ export default function PlotCreatePage() {
             <p className="section-copy">
               Nubrėžkite zoną ribos viduje, tada čia patikslinsite jos pavadinimą, dirvožemį ir rotacijos duomenis.
             </p>
+            <ZoneColorControl
+              value={zoneForm.color_hex}
+              onChange={(color_hex) => setZoneForm((current) => ({ ...current, color_hex }))}
+              usedColors={draftZones.filter((zone) => !sameId(zone.id, selectedZoneId)).map((zone) => zone.color_hex)}
+            />
             <form className="input-grid" onSubmit={handleZoneApply}>
               <div className="field field-span-2">
                 <label htmlFor="create-zone-name">Zonos pavadinimas</label>

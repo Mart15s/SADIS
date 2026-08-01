@@ -1,9 +1,11 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
 :root {
   color-scheme: light;
-  --font-sans: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Nunito", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-sans);
   --font-size-body: 16px;
   --line-body: 24px;
   --line-reading: 24px;
@@ -86,7 +88,6 @@ body,
 #root {
   min-height: 100%;
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 body {
@@ -96,7 +97,6 @@ body {
   font-size: var(--font-size-body);
   font-weight: 400;
   line-height: var(--line-body);
-  overflow-x: clip;
 }
 
 a {
@@ -5656,7 +5656,7 @@ th,
   }
 }
 
-/* SADIS unified workbench refinements */
+/* Yava unified workbench refinements */
 
 html {
   scroll-padding-top: calc(72px + var(--space-4));
@@ -10807,6 +10807,226 @@ tbody tr:hover td {
   }
 }
 
+/* Professional plot-plan management */
+.designer-stage {
+  position: relative;
+}
+
+.designer-plan-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.plot-plant-marker {
+  position: absolute;
+  min-width: 44px;
+  min-height: 44px;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(36, 49, 31, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #24311f;
+  box-shadow: 0 7px 18px rgba(36, 49, 31, 0.16);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 750;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.plot-plant-marker:hover,
+.plot-plant-marker:focus-visible {
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 0 10px 24px rgba(36, 49, 31, 0.23);
+  outline: 3px solid rgba(56, 111, 79, 0.32);
+  outline-offset: 2px;
+}
+
+.plot-plant-marker--close {
+  border-radius: 12px;
+  flex-wrap: wrap;
+  max-width: 108px;
+}
+
+.plot-plant-marker--close small {
+  flex-basis: 100%;
+  color: var(--muted-text, #647061);
+  font-weight: 600;
+}
+
+.plot-plant-icon,
+.plot-plant-info-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+}
+
+.plot-plant-info-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  color: #315c43;
+}
+
+.plot-plant-marker.is-draggable {
+  cursor: grab;
+}
+
+.plot-plant-marker.is-draggable:active {
+  cursor: grabbing;
+}
+
+.plot-marker-reposition-notice {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
+  padding: .6rem .8rem;
+  border-radius: 10px;
+  background: #263b2d;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(20,32,24,.25);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.plot-plant-marker--aggregate,
+.plot-plant-marker--overflow {
+  background: #263b2d;
+  color: #fff;
+}
+
+.plot-plant-status {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.plot-plant-status.is-healthy { background: #2f7d4d; }
+.plot-plant-status.is-attention { background: #a87316; }
+.plot-plant-status.is-critical { background: #b43c35; }
+.plot-plant-status.is-inactive { background: #727a73; }
+.plot-plant-status.is-neutral { background: #667085; }
+
+.plot-plant-info-card,
+.plot-zone-plant-popover {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  width: min(340px, calc(100% - 2rem));
+  max-height: min(430px, calc(100% - 2rem));
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid rgba(36, 49, 31, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 22px 55px rgba(20, 32, 24, 0.28);
+  color: #24311f;
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.plot-zone-plant-popover { right: auto; left: 1rem; }
+.plot-plan-close { float: right; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; font-size: 1.35rem; cursor: pointer; }
+.plot-plant-info-heading { display: flex; align-items: center; gap: 0.65rem; padding-right: 2.5rem; }
+.plot-plant-info-heading div { display: grid; gap: 0.15rem; }
+.plot-plant-info-heading small { color: #687267; }
+.plot-plant-info-grid { display: grid; gap: 0.45rem; margin: 0.9rem 0; }
+.plot-plant-info-grid div { display: grid; grid-template-columns: minmax(92px, 0.7fr) 1.3fr; gap: 0.55rem; }
+.plot-plant-info-grid dt { color: #687267; }
+.plot-plant-info-grid dd { margin: 0; font-weight: 650; }
+.plot-plant-info-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.plot-zone-plant-popover-list { display: grid; gap: 0.35rem; margin-top: 0.75rem; }
+.plot-zone-plant-popover-list button { min-height: 44px; padding: 0.55rem 0.7rem; border: 1px solid rgba(36,49,31,.12); border-radius: 10px; background: #f7f9f5; text-align: left; }
+
+.zone-color-control { grid-column: 1 / -1; display: grid; gap: 0.75rem; padding: 0.9rem; border: 1px solid rgba(36,49,31,.12); border-radius: 14px; background: #f8faf6; }
+.zone-color-preview-row { display: flex; align-items: center; gap: 0.7rem; }
+.zone-color-preview-row div { display: grid; }
+.zone-color-preview-row small { color: #687267; }
+.zone-color-preview { width: 46px; height: 46px; border: 2px solid rgba(36,49,31,.28); border-radius: 12px; box-shadow: inset 0 0 0 3px rgba(255,255,255,.45); }
+.zone-color-palette { display: grid; grid-template-columns: repeat(8, minmax(32px, 1fr)); gap: 0.45rem; }
+.zone-color-palette button { min-width: 36px; min-height: 36px; border: 2px solid transparent; border-radius: 9px; cursor: pointer; }
+.zone-color-palette button.is-selected { border-color: #17251b; outline: 3px solid rgba(56,111,79,.2); }
+.zone-color-palette button:focus-visible { outline: 3px solid rgba(56,111,79,.45); outline-offset: 2px; }
+.zone-color-inputs { display: grid; grid-template-columns: minmax(110px, .6fr) 1.4fr; gap: 0.6rem; }
+.zone-color-inputs label { display: grid; gap: 0.3rem; }
+.zone-color-inputs input { min-height: 44px; }
+.zone-color-suggestion { justify-self: start; min-height: 44px; border: 0; background: transparent; color: #386f4f; font-weight: 700; cursor: pointer; }
+
+.plot-plan-controls { display: grid; gap: 0.8rem; padding: 0.8rem 0; border-block: 1px solid rgba(36,49,31,.1); }
+.plot-plan-toggle-grid { display: grid; gap: 0.4rem; }
+.plot-plan-toggle { min-height: 44px; display: flex; align-items: center; gap: 0.55rem; cursor: pointer; }
+.plot-plan-toggle input { width: 1.1rem; height: 1.1rem; }
+.plot-plan-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
+.plot-plan-filter-grid label { display: grid; gap: 0.25rem; font-size: 0.78rem; color: #687267; }
+.plot-plan-filter-grid select { min-height: 42px; }
+.plot-plan-legend summary { min-height: 44px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 750; }
+.plot-plan-legend-list { display: grid; gap: 0.35rem; }
+.plot-plan-legend-list button { min-height: 54px; display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 0.55rem; padding: 0.45rem; border: 1px solid transparent; border-radius: 10px; background: transparent; text-align: left; cursor: pointer; }
+.plot-plan-legend-list button:hover { border-color: rgba(36,49,31,.14); background: #f7f9f5; }
+.plot-plan-legend-list button > span:last-child { display: grid; }
+.plot-plan-legend-list small { color: #687267; }
+.plot-plan-legend-swatch { width: 26px; height: 26px; border: 2px solid; border-radius: 8px; }
+
+.plot-plan-mode-switch,
+.plot-history-controls { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem; border: 1px solid rgba(36,49,31,.12); border-radius: 12px; background: rgba(255,255,255,.84); }
+.plot-plan-mode-switch button { min-height: 40px; padding: 0.4rem 0.7rem; border: 0; border-radius: 9px; background: transparent; color: #5e685d; font-weight: 720; cursor: pointer; }
+.plot-plan-mode-switch button.is-active { background: #315c43; color: #fff; box-shadow: 0 4px 12px rgba(49,92,67,.22); }
+
+.plot-zone-quick-actions { position: relative; margin-left: auto; width: max-content; }
+.plot-zone-quick-actions summary { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid rgba(36,49,31,.14); border-radius: 11px; cursor: pointer; font-size: 1.3rem; list-style: none; }
+.plot-zone-quick-actions summary::-webkit-details-marker { display: none; }
+.plot-zone-quick-actions > div { position: absolute; right: 0; top: calc(100% + .35rem); z-index: 20; width: 230px; display: grid; padding: .35rem; border: 1px solid rgba(36,49,31,.14); border-radius: 12px; background: #fff; box-shadow: 0 16px 34px rgba(20,32,24,.2); }
+.plot-zone-quick-actions button { min-height: 44px; padding: .55rem .7rem; border: 0; border-radius: 8px; background: transparent; text-align: left; cursor: pointer; }
+.plot-zone-quick-actions button:hover { background: #f3f7f1; }
+.plot-zone-quick-actions button.is-danger { color: #a42f2a; }
+.plot-filter-empty-state { position: absolute; top: 1rem; left: 50%; z-index: 12; width: min(420px, calc(100% - 2rem)); transform: translateX(-50%); padding: .75rem; border-radius: 14px; background: rgba(255,255,255,.96); box-shadow: 0 12px 30px rgba(20,32,24,.18); }
+
+@media (max-width: 768px) {
+  .plot-editor-view-toggle { flex-wrap: wrap; }
+  .plot-plan-mode-switch { order: -2; width: 100%; }
+  .plot-plan-mode-switch button { flex: 1; min-height: 44px; }
+  .plot-history-controls { order: -1; }
+  .plot-plant-marker--close small { display: none; }
+  .plot-plant-info-card,
+  .plot-zone-plant-popover { right: .65rem; left: .65rem; bottom: .65rem; width: auto; max-height: 70%; }
+  .plot-context-rail.inspector-panel {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 1000;
+    width: 100%;
+    max-width: none;
+    max-height: min(68svh, 680px);
+    overflow: auto;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -18px 55px rgba(20,32,24,.28);
+  }
+  .zone-color-palette { grid-template-columns: repeat(4, 1fr); }
+  .zone-color-palette button { min-height: 44px; }
+  .zone-color-inputs,
+  .plot-plan-filter-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plot-plant-marker { transition: none; }
+}
+
 /* =========================================================
    COMPACT SCROLLABLE PLOT TABS — NO WASTED EDGE SPACE
    ========================================================= */
@@ -13002,4 +13222,354 @@ textarea {
   .plot-create-compact-nav .plot-compact-title {
     font-size: 1rem !important;
   }
+}
+
+/* Yava design system — semantic tokens and final component overrides. */
+:root {
+  --yava-orange: #EE6D23;
+  --yava-orange-brown: #DA743A;
+  --yava-charcoal: #32332D;
+  --yava-cream: #FAF1E6;
+  --yava-brown: #8D5134;
+  --color-background: var(--yava-cream);
+  --color-surface: #fffaf4;
+  --color-surface-elevated: #fffdf9;
+  --color-text-primary: var(--yava-charcoal);
+  --color-text-secondary: #66584e;
+  --color-border: rgba(50, 51, 45, 0.16);
+  --color-primary: #a8531b;
+  --color-primary-hover: #8d5134;
+  --color-primary-active: #744128;
+  --color-focus-ring: rgba(218, 116, 58, 0.45);
+  --color-success: #257052;
+  --color-warning: #9a621a;
+  --color-danger: #ae4139;
+  --bg: var(--color-background);
+  --bg-accent: #f6eadb;
+  --panel: rgba(255, 250, 244, 0.96);
+  --panel-strong: var(--color-surface-elevated);
+  --panel-muted: #f8ecdf;
+  --line: var(--color-border);
+  --line-strong: rgba(50, 51, 45, 0.24);
+  --text: var(--color-text-primary);
+  --text-strong: var(--color-text-primary);
+  --text-soft: #4f4a43;
+  --text-muted: var(--color-text-secondary);
+  --text-faint: #756b61;
+  --brand: var(--yava-orange);
+  --brand-dark: var(--color-primary-hover);
+  --brand-soft: rgba(238, 109, 35, 0.13);
+  --brand-gradient: var(--color-primary);
+  --accent: var(--yava-brown);
+  --accent-soft: rgba(141, 81, 52, 0.12);
+  --neutral: #66584e;
+  --neutral-soft: rgba(102, 88, 78, 0.1);
+  --selected: var(--color-primary);
+  --danger: var(--color-danger);
+  --warning: var(--color-warning);
+  --success: var(--color-success);
+  --border: 1px solid var(--color-border);
+  --shadow-raised: 0 8px 24px rgba(71, 48, 34, 0.08);
+  --shadow-sm: 0 2px 8px rgba(71, 48, 34, 0.06);
+  --shadow: var(--shadow-raised);
+  --shadow-lg: 0 18px 44px rgba(71, 48, 34, 0.14);
+  --radius-control: 10px;
+  --radius-input: 10px;
+  --radius-button: 10px;
+  --radius-card: 14px;
+  --radius-section: 14px;
+  --radius-shell: 16px;
+  --workspace-bg: var(--color-background);
+  --workspace-surface: var(--color-surface);
+  --workspace-surface-solid: var(--color-surface-elevated);
+  --workspace-panel: rgba(255, 250, 244, 0.92);
+  --workspace-control: var(--color-surface-elevated);
+  --workspace-hover: rgba(238, 109, 35, 0.09);
+  --workspace-selected: rgba(218, 116, 58, 0.16);
+  --workspace-soil: var(--yava-brown);
+  --workspace-amber: var(--yava-orange-brown);
+  --workspace-green: var(--color-primary);
+  --workspace-green-dark: var(--color-primary-hover);
+  --workspace-line: var(--color-border);
+  --workspace-line-strong: rgba(50, 51, 45, 0.24);
+  --workspace-focus: 0 0 0 4px rgba(218, 116, 58, 0.2);
+  --workspace-shadow: var(--shadow-raised);
+  --workspace-float-shadow: var(--shadow-lg);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.button-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  box-shadow: none;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(141, 81, 52, 0.18);
+}
+
+.button-primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+.button-secondary,
+.button-ghost {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.button-secondary:hover:not(:disabled),
+.button-ghost:hover:not(:disabled) {
+  background: #f7e8d9;
+  border-color: rgba(141, 81, 52, 0.3);
+}
+
+.button-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.button-danger:hover:not(:disabled) {
+  background: #a82e29;
+  border-color: #a82e29;
+  color: #fff;
+}
+
+.error-boundary-panel {
+  display: grid;
+  place-items: start;
+  gap: 1rem;
+  max-width: 42rem;
+  margin: 12vh auto;
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.field input,
+.field select,
+.field textarea {
+  min-height: 44px;
+  border-color: var(--color-border);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--yava-orange-brown);
+  box-shadow: 0 0 0 3px rgba(218, 116, 58, 0.18);
+}
+
+.panel,
+.card,
+.surface,
+.section-card,
+.stat-card,
+.empty-state,
+.empty-state-panel,
+.status-card,
+.status-hero,
+.modal-surface {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge {
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.badge-success { color: var(--color-success); }
+.badge-warning { color: var(--color-warning); }
+.badge-danger { color: var(--color-danger); }
+
+.brand-logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  max-width: none;
+  object-fit: contain;
+}
+
+.brand-logo--sidebar { width: 42px; height: 42px; }
+.brand-logo--topbar { width: 38px; height: 38px; }
+.brand-logo--auth { width: 64px; height: 64px; }
+.brand-logo--mobile { width: 30px; height: 30px; }
+.brand-title { font-family: var(--font-sans); color: var(--yava-charcoal); }
+.brand-title em { color: inherit; }
+.topbar-mark { display: inline-flex; align-items: center; justify-content: center; }
+.topbar-page-chrome,
+.topbar-page-meta,
+.topbar-page-actions {
+  min-width: 0;
+  overflow: visible;
+  flex-wrap: wrap;
+}
+
+/* One source of truth for the Plot Viewer / Plot Editor mode bar. */
+.plot-workspace-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 430px);
+  min-width: 0;
+  min-height: 48px;
+  padding: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(141, 81, 52, 0.18);
+  border-radius: 14px;
+  background: #fff8f0;
+  box-shadow: 0 2px 8px rgba(71, 48, 34, 0.06);
+}
+
+.plot-workspace-mode-switch > button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.6rem;
+  overflow-wrap: anywhere;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.plot-workspace-mode-switch > button:hover:not(:disabled) {
+  background: rgba(238, 109, 35, 0.09);
+  color: var(--yava-brown);
+}
+
+.plot-workspace-mode-switch > button.is-active {
+  background: #f4d6bd;
+  color: var(--yava-charcoal);
+  box-shadow: inset 0 0 0 1px rgba(141, 81, 52, 0.14);
+}
+
+.plot-workspace-mode-switch > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.plot-workspace-mode-switch > button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.plot-workspace-mode-switch__short-label { display: none; }
+
+.plot-editor-view-toggle {
+  align-items: center;
+  gap: 0.45rem;
+  max-width: calc(100% - 2rem);
+  overflow: visible;
+}
+
+.plot-editor-view-toggle .plot-panel-toggle {
+  min-height: 44px;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.plot-editor-view-toggle .plot-panel-toggle.is-active,
+.plot-editor-view-toggle .plot-panel-toggle:hover {
+  background: #f7e8d9;
+  color: var(--yava-brown);
+}
+
+@media (max-width: 640px) {
+  .workspace-page--editor .plot-editor-layout {
+    position: static !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle,
+  .workspace-page--editor .plot-workspace-panel-toggles,
+  .workspace-page--editor .plot-editor-layout--boundary .plot-workspace-panel-toggles {
+    position: static !important;
+    inset: auto !important;
+    display: grid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .workspace-page--editor .plot-editor-view-toggle { grid-template-columns: minmax(0, 1fr); }
+
+  .workspace-page--editor .plot-workspace-panel-toggles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .workspace-page--editor .plot-workspace-panel-toggles .plot-panel-toggle {
+    min-width: 0 !important;
+    min-height: 44px;
+    padding-inline: 0.45rem;
+    white-space: normal !important;
+  }
+
+  .workspace-page--editor .plot-editor-main,
+  .workspace-page--editor .plot-editor-main .designer-panel,
+  .workspace-page--editor .plot-editor-main .designer-stage,
+  .workspace-page--editor .plot-location-map--workspace,
+  .workspace-page--editor .plot-location-map--workspace .plot-location-map-canvas {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: min(64svh, 560px) !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .plot-workspace-mode-switch > button { padding-inline: 0.28rem; font-size: 0.78rem; }
+  .plot-workspace-mode-switch > button:nth-child(3) .plot-workspace-mode-switch__full-label { display: none; }
+  .plot-workspace-mode-switch > button:nth-child(3) .plot-workspace-mode-switch__short-label { display: inline; }
 }

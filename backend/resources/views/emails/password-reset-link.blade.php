@@ -1,6 +1,6 @@
 Sveiki,
 
-Slaptažodį galite atkurti naudodami šią nuorodą:
+Yava paskyros slaptažodį galite atkurti naudodami šią nuorodą:
 
 {{ $resetUrl }}
 

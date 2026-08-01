@@ -2,23 +2,33 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const sections = [
-  { key: 'editor', label: 'Planas', icon: '✎', to: (plotId) => `/plots/${plotId}` },
-  { key: 'calendar', label: 'Kalendorius', icon: '◷', to: (plotId) => `/plots/${plotId}/calendar` },
-  { key: 'history', label: 'Istorija', icon: '↺', to: (plotId) => `/plots/${plotId}/history` },
-  { key: 'harvests', label: 'Derlius', icon: '✓', to: (plotId) => `/plots/${plotId}/harvests` },
-  { key: 'analytics', label: 'Analitika', icon: '⌁', to: (plotId) => `/plots/${plotId}/analytics` },
-  { key: 'sharing', label: 'Bendrinimas', icon: '↗', to: (plotId) => `/plots/${plotId}/sharing`, ownerOnly: true },
-  { key: 'rotation', label: 'Rotacija', icon: '⟳', to: (plotId) => `/plots/${plotId}/rotation` },
+  { key: 'editor', label: 'Plan', icon: 'P', to: (plotId) => `/plots/${plotId}` },
+  { key: 'calendar', label: 'Calendar', icon: 'C', to: (plotId) => `/plots/${plotId}/calendar` },
+  { key: 'history', label: 'History', icon: 'H', to: (plotId) => `/plots/${plotId}/history` },
+  { key: 'harvests', label: 'Harvests', icon: 'V', to: (plotId) => `/plots/${plotId}/harvests` },
+  { key: 'analytics', label: 'Analytics', icon: 'A', to: (plotId) => `/plots/${plotId}/analytics` },
+  { key: 'sharing', label: 'Sharing', icon: 'S', to: (plotId) => `/plots/${plotId}/sharing`, ownerOnly: true },
+  { key: 'rotation', label: 'Rotation', icon: 'R', to: (plotId) => `/plots/${plotId}/rotation` },
 ]
 
+const ENGLISH_SECTION_LABELS = {
+  editor: 'Plan',
+  calendar: 'Calendar',
+  history: 'History',
+  harvests: 'Harvests',
+  analytics: 'Analytics',
+  sharing: 'Sharing',
+  rotation: 'Rotation',
+}
+
 function getSectionLabel(sectionKey, fallback) {
-  return fallback ?? sections.find((section) => section.key === sectionKey)?.label ?? 'Planas'
+  return fallback ?? ENGLISH_SECTION_LABELS[sectionKey] ?? 'Plan'
 }
 
 export default function PlotSectionNav({
   plotId,
   isOwner = false,
-  plotName = 'Sklypas',
+  plotName = 'Plot',
   sectionKey = 'editor',
   sectionLabel,
   meta = null,
@@ -64,9 +74,9 @@ export default function PlotSectionNav({
   }
 
   return (
-    <section className="plot-compact-nav plot-page-header plot-section-switcher-shell" aria-label="Sklypo darbo sritis">
+    <section className="plot-compact-nav plot-page-header plot-section-switcher-shell" aria-label="Plot workspace">
       <div className="plot-compact-left">
-        <Link className="plot-compact-back" to="/plots" aria-label="Grįžti į sklypus">
+        <Link className="plot-compact-back" to="/plots" aria-label="Back to plots">
           <span aria-hidden="true">&larr;</span>
         </Link>
 
@@ -77,7 +87,7 @@ export default function PlotSectionNav({
           </div>
 
           {meta ? (
-            <div className="plot-compact-meta" aria-label="Sklypo metaduomenys">
+            <div className="plot-compact-meta" aria-label="Plot metadata">
               {meta}
             </div>
           ) : null}
@@ -90,11 +100,11 @@ export default function PlotSectionNav({
           className={`plot-section-trigger ${isOpen ? 'is-open' : ''}`.trim()}
           aria-haspopup="menu"
           aria-expanded={isOpen}
-          aria-label="Pasirinkti sklypo skyrių"
+          aria-label="Choose plot section"
           onClick={() => setIsOpen((current) => !current)}
         >
-          <span className="plot-section-select-icon" aria-hidden="true">{activeSection?.icon ?? '•'}</span>
-          <span className="plot-section-trigger-text">Skyrius: {activeSectionLabel}</span>
+          <span className="plot-section-select-icon" aria-hidden="true">{activeSection?.icon ?? '*'}</span>
+          <span className="plot-section-trigger-text">Section: {activeSectionLabel}</span>
           <span className="plot-section-trigger-caret" aria-hidden="true" />
         </button>
 
@@ -113,7 +123,7 @@ export default function PlotSectionNav({
                   onClick={() => handleSectionSelect(section)}
                 >
                   <span className="plot-section-menu-icon" aria-hidden="true">{section.icon}</span>
-                  <span>{section.label}</span>
+                  <span>{ENGLISH_SECTION_LABELS[section.key] ?? section.label}</span>
                 </button>
               )
             })}
@@ -124,7 +134,7 @@ export default function PlotSectionNav({
       {actions ? <div className="plot-compact-actions">{actions}</div> : null}
       {actions ? (
         <details className="plot-compact-actions-menu">
-          <summary>Veiksmai</summary>
+          <summary>Actions</summary>
           <div className="plot-compact-actions-menu-list">
             {actions}
           </div>

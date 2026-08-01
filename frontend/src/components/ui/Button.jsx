@@ -11,6 +11,7 @@ export default function Button({
   fullWidth = false,
   ...props
 }) {
+  const accessibleName = props['aria-label'] ?? (typeof children === 'string' ? children : undefined)
   return (
     <button
       type={type}
@@ -24,6 +25,8 @@ export default function Button({
         className,
       ].filter(Boolean).join(' ')}
       disabled={disabled || loading}
+      aria-label={accessibleName}
+      aria-busy={loading || undefined}
       aria-pressed={variant === 'toggle' ? active : undefined}
       {...props}
     >

@@ -24,6 +24,11 @@ function createInitialForm(selectedZone) {
     plant_date: new Date().toISOString().slice(0, 10),
     disease: false,
     disease_notes: '',
+    variety: '',
+    quantity: '',
+    occupied_area: '',
+    season: '',
+    notes: '',
     fk_plant_zone_id: String(selectedZone?.id ?? ''),
     fk_catalog_plant_id: '',
   }
@@ -141,6 +146,11 @@ export default function PlotPlantingDrawer({
         plant_date: form.plant_date,
         disease: Boolean(form.disease),
         disease_notes: form.disease_notes.trim() || null,
+        variety: form.variety.trim() || null,
+        quantity: form.quantity === '' ? null : Number(form.quantity),
+        occupied_area: form.occupied_area === '' ? null : Number(form.occupied_area),
+        season: form.season || null,
+        notes: form.notes.trim() || null,
         fk_catalog_plant_id: Number(form.fk_catalog_plant_id),
         fk_plant_zone_id: selectedZone.id,
         perenual_species_id: carePreview(selectedCatalogPlant)?.source_perenual_species_id ?? null,
@@ -326,6 +336,28 @@ export default function PlotPlantingDrawer({
                     </div>
 
                     <div className="field">
+                      <label htmlFor="placement-variety">Veislė</label>
+                      <input id="placement-variety" value={form.variety} onChange={(event) => setForm((current) => ({ ...current, variety: event.target.value }))} placeholder="Pasirinktinai" />
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="placement-quantity">Kiekis</label>
+                      <input id="placement-quantity" type="number" min="0" step="0.01" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} placeholder="vnt." />
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="placement-area">Užimamas plotas</label>
+                      <input id="placement-area" type="number" min="0" step="0.01" value={form.occupied_area} onChange={(event) => setForm((current) => ({ ...current, occupied_area: event.target.value }))} placeholder="m²" />
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="placement-season">Sezonas</label>
+                      <select id="placement-season" value={form.season} onChange={(event) => setForm((current) => ({ ...current, season: event.target.value }))}>
+                        <option value="">Pagal sodinimo datą</option><option value="spring">Pavasaris</option><option value="summer">Vasara</option><option value="autumn">Ruduo</option><option value="winter">Žiema</option>
+                      </select>
+                    </div>
+
+                    <div className="field">
                       <label htmlFor="placement-disease">Yra liga</label>
                       <select
                         id="placement-disease"
@@ -345,6 +377,11 @@ export default function PlotPlantingDrawer({
                         onChange={(event) => setForm((current) => ({ ...current, disease_notes: event.target.value }))}
                         placeholder="Pasirinktinės pastabos apie šį pasodintą augalą"
                       />
+                    </div>
+
+                    <div className="field field-span-2">
+                      <label htmlFor="placement-notes">Sodinimo pastabos</label>
+                      <textarea id="placement-notes" value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Pasirinktinės pastabos apie sodinimą" />
                     </div>
                   </div>
                 </section>
