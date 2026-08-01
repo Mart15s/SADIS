@@ -1,10 +1,21 @@
 import { Link, useLocation } from 'react-router-dom'
 import BrandLogo from './BrandLogo.jsx'
+import ContextSwitcher from './ContextSwitcher.jsx'
+import { useAuth } from '../../context/auth-context.js'
 
 const routeLabels = [
   { pattern: /^\/$/, label: 'Home' },
   { pattern: /^\/account$/, label: 'Account' },
   { pattern: /^\/community$/, label: 'Community' },
+  { pattern: /^\/communities/, label: 'Communities' },
+  { pattern: /^\/farms/, label: 'Farms' },
+  { pattern: /^\/fields/, label: 'Fields' },
+  { pattern: /^\/crops/, label: 'Crops' },
+  { pattern: /^\/crop-seasons/, label: 'Crop seasons' },
+  { pattern: /^\/tasks/, label: 'Tasks' },
+  { pattern: /^\/resources/, label: 'Resources' },
+  { pattern: /^\/reservations/, label: 'Reservations' },
+  { pattern: /^\/analytics/, label: 'Analytics' },
   { pattern: /^\/plots\/new$/, label: 'New plot' },
   { pattern: /^\/plots\/[^/]+\/edit$/, label: 'Edit plot' },
   { pattern: /^\/plots\/[^/]+\/calendar$/, label: 'Calendar' },
@@ -29,6 +40,7 @@ function getRouteLabel(pathname) {
 }
 
 export default function Topbar({ isWide = false, pageHeader = null }) {
+  const { isAuthenticated } = useAuth()
   const location = useLocation()
   const currentLabel = getRouteLabel(location.pathname)
   const title = pageHeader?.title ?? currentLabel
@@ -62,6 +74,7 @@ export default function Topbar({ isWide = false, pageHeader = null }) {
       ) : null}
 
       {!hasPageChrome ? <div className="topbar-actions" aria-hidden="true" /> : null}
+      {isAuthenticated ? <ContextSwitcher /> : null}
     </header>
   )
 }

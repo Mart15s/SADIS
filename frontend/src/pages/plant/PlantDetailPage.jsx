@@ -115,7 +115,7 @@ export default function PlantDetailPage() {
       to: '/plants',
       label: 'Grįžti į augalus',
     }
-  }, [location.state, plotId, resolvedPlotId])
+  }, [location.state, plotId])
 
   async function handleConditionSubmit(event) {
     event.preventDefault()

@@ -42,7 +42,7 @@ class AccountController extends Controller
         $service->deleteUser($user);
 
         return response()->json([
-            'message' => "Naudotojas s\u{117}kmingai pa\u{161}alintas",
+            'message' => 'The account was deactivated successfully.',
         ]);
     }
 }

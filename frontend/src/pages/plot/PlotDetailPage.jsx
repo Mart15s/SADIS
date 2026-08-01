@@ -378,7 +378,7 @@ export default function PlotDetailPage() {
 
   useUnsavedChangesGuard({
     when: isDirty,
-    message: 'Turite neišsaugotų sklypo pakeitimų. Išeiti neišsaugojus juodraščio?',
+    message: 'You have unsaved field changes. Leave without saving the draft?',
   })
 
   useEffect(() => {
@@ -388,9 +388,7 @@ export default function PlotDetailPage() {
 
     const restoredDraft = loadPlotWorkspaceDraft(plotId, persistedSignature)
     const nextWorkspace = restoredDraft ?? persistedWorkspace
-    const nextSelectedZone = selectedZoneId
-      ? nextWorkspace.zones.find((zone) => sameId(zone.id, selectedZoneId))
-      : null
+    const nextSelectedZone = null
 
     setDraftPlot(nextWorkspace.plot)
     setDraftZones(nextWorkspace.zones)
@@ -423,7 +421,7 @@ export default function PlotDetailPage() {
       center: getMapCenter(draftPlot.geometry, getMapBoundaryPoints(draftPlot.geometry)),
       zoom: draftPlot.geometry.map.zoom ?? 13,
     })
-  }, [draftPlot?.id, draftPlot?.geometry?.map])
+  }, [draftPlot?.geometry, draftPlot?.id])
 
   useEffect(() => {
     if (!draftReady) {

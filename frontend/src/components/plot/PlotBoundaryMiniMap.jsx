@@ -14,6 +14,7 @@ function finiteLatLng(point) {
   return { lat, lng }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function normalizeMapBoundary(geometry) {
   if (!Array.isArray(geometry?.map?.boundary)) {
     return []

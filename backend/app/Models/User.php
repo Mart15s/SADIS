@@ -25,6 +25,11 @@ class User extends Authenticatable
         'password',
         'reset_code',
         'role',
+        'phone',
+        'phone_verified_at',
+        'locale',
+        'status',
+        'deactivated_at',
     ];
 
     protected $hidden = [
@@ -37,6 +42,8 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'role' => UserRole::class,
+            'phone_verified_at' => 'datetime',
+            'deactivated_at' => 'datetime',
         ];
     }
 
@@ -63,5 +70,20 @@ class User extends Authenticatable
     public function communityPosts(): HasMany
     {
         return $this->hasMany(CommunityPost::class, 'garden_owner_id', 'id');
+    }
+
+    public function farmMemberships(): HasMany
+    {
+        return $this->hasMany(FarmMembership::class);
+    }
+
+    public function communityMemberships(): HasMany
+    {
+        return $this->hasMany(CommunityMembership::class);
+    }
+
+    public function onboardingProgress(): HasOne
+    {
+        return $this->hasOne(OnboardingProgress::class);
     }
 }

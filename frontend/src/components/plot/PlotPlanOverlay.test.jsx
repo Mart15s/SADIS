@@ -34,15 +34,15 @@ describe('PlotPlanOverlay', () => {
     )
 
     expect(screen.getByRole('button', { name: /Pomidoras/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Rodyti visus Šiltnamis augalus' })).toHaveTextContent('+1')
+    expect(screen.getByRole('button', { name: 'Show all crops in Šiltnamis' })).toHaveTextContent('+1')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Rodyti visus Šiltnamis augalus' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show all crops in Šiltnamis' }))
     expect(screen.getByRole('dialog', { name: 'Visi zonos augalai' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Salota' })).toHaveLength(1)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Pomidoras. Auga įprastai' }))
-    expect(screen.getByRole('dialog', { name: 'Augalo informacija' })).toBeInTheDocument()
-    expect(screen.getByText('Rekomenduojamų darbų nėra')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Pomidoras. Growing normally' }))
+    expect(screen.getByRole('dialog', { name: 'Plant information' })).toBeInTheDocument()
+    expect(screen.getByText('No recommended tasks')).toBeInTheDocument()
   })
 
   it('handles the development fixture with 100 zones and 300 plantings', () => {

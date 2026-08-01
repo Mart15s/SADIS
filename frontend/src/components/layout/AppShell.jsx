@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../context/auth-context.js'
 import { PageChromeContext } from './PageChromeContext.jsx'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
 import BrandLogo from './BrandLogo.jsx'
+import ContextSwitcher from './ContextSwitcher.jsx'
+import ErrorBoundary from '../shared/ErrorBoundary.jsx'
 
 export default function AppShell() {
   const { isAdmin, isAuthenticated } = useAuth()
@@ -16,8 +18,9 @@ export default function AppShell() {
   const isWorkspaceRoute = (
     /^\/plots\/new$/.test(location.pathname)
     || /^\/plots\/[^/]+(?:\/(?:calendar|history|harvests|analytics|sharing|rotation))?$/.test(location.pathname)
+    || /^\/fields\/[^/]+\/editor$/.test(location.pathname)
   )
-  const isPloteditorRoute = /^\/plots\/new$/.test(location.pathname) || /^\/plots\/[^/]+$/.test(location.pathname)
+  const isPloteditorRoute = /^\/plots\/new$/.test(location.pathname) || /^\/plots\/[^/]+$/.test(location.pathname) || /^\/fields\/[^/]+\/editor$/.test(location.pathname)
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const [pageHeader, setPageHeader] = useState(null)
   const pageChromeContext = useMemo(() => ({
@@ -64,6 +67,7 @@ export default function AppShell() {
               </svg>
             </button>
             <span className="mobile-shell-title"><BrandLogo className="brand-logo--mobile" alt="Yava logo" /><span>Yava</span></span>
+            {isAuthenticated ? <ContextSwitcher /> : null}
           </div>
           {isWorkspaceRoute ? null : <Topbar isWide={isWorkspaceRoute} pageHeader={activePageHeader} />}
           <div
@@ -73,7 +77,9 @@ export default function AppShell() {
               isPloteditorRoute ? 'page-container-plot-editor' : '',
             ].filter(Boolean).join(' ')}
           >
-            <Outlet />
+            <ErrorBoundary key={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
         <div className={`drawer-layer ${isMobileNavigationOpen ? 'is-open' : ''}`.trim()}>

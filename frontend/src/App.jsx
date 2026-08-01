@@ -3,285 +3,79 @@ import AppShell from './components/layout/AppShell.jsx'
 import BrandLogo from './components/layout/BrandLogo.jsx'
 import AdminRoute from './components/shared/AdminRoute.jsx'
 import ProtectedRoute from './components/shared/ProtectedRoute.jsx'
-import { useAuth } from './context/AuthContext.jsx'
-import AdminUsersPage from './pages/admin/AdminUsersPage.jsx'
-import PlotCalendarPage from './pages/calendar/PlotCalendarPage.jsx'
-import CommunityPage from './pages/community/CommunityPage.jsx'
-import InventoryPage from './pages/inventory/InventoryPage.jsx'
-import CatalogPlantDetailPage from './pages/plant/CatalogPlantDetailPage.jsx'
-import CatalogPlantFormPage from './pages/plant/CatalogPlantFormPage.jsx'
-import CatalogPlantsPage from './pages/plant/CatalogPlantsPage.jsx'
-import PlantDetailPage from './pages/plant/PlantDetailPage.jsx'
-import PlantFormPage from './pages/plant/PlantFormPage.jsx'
-import PlantsPage from './pages/plant/PlantsPage.jsx'
-import PlotAnalyticsPage from './pages/plot/PlotAnalyticsPage.jsx'
-import PlotCreatePage from './pages/plot/PlotCreatePage.jsx'
-import PlotDetailPage from './pages/plot/PlotDetailPage.jsx'
-import PlotEditPage from './pages/plot/PlotEditPage.jsx'
-import PlotHarvestsPage from './pages/plot/PlotHarvestsPage.jsx'
-import PlotHistoryPage from './pages/plot/PlotHistoryPage.jsx'
-import PlotRotationPage from './pages/plot/PlotRotationPage.jsx'
-import PlotSharingPage from './pages/plot/PlotSharingPage.jsx'
-import PlotsPage from './pages/plot/PlotsPage.jsx'
+import { useAuth } from './context/auth-context.js'
 import AccountPage from './pages/user/AccountPage.jsx'
-import DashboardPage from './pages/user/DashboardPage.jsx'
 import ForgotPasswordPage from './pages/user/ForgotPasswordPage.jsx'
 import LoginPage from './pages/user/LoginPage.jsx'
 import NotFoundPage from './pages/user/NotFoundPage.jsx'
 import RegisterPage from './pages/user/RegisterPage.jsx'
 import ResetPasswordPage from './pages/user/ResetPasswordPage.jsx'
+import DomainWorkspacePage from './pages/stage1/DomainWorkspacePage.jsx'
+import MembershipPage from './pages/stage1/MembershipPage.jsx'
+import AnalyticsWorkspacePage from './pages/stage1/AnalyticsWorkspacePage.jsx'
+import FieldEditorPage from './pages/stage1/FieldEditorPage.jsx'
+import OnboardingPage from './pages/stage1/OnboardingPage.jsx'
+import OtpVerificationPage from './pages/stage1/OtpVerificationPage.jsx'
+import Stage1DashboardPage from './pages/stage1/Stage1DashboardPage.jsx'
+import UserAdministrationPage from './pages/stage1/UserAdministrationPage.jsx'
 
 function AuthShell() {
-  return (
-    <main className="auth-shell">
-      <div className="auth-shell-brand" aria-label="Yava">
-        <BrandLogo className="brand-logo--auth" alt="Yava logo" />
-        <span className="brand-copy">
-          <span className="brand-title">Yava</span>
-          <span className="brand-subtitle">Yava seed. Yava plan. Yava harvest.</span>
-        </span>
-      </div>
-      <div className="auth-shell-container">
-        <Outlet />
-      </div>
-    </main>
-  )
+  return <main className="auth-shell">
+    <div className="auth-shell-brand" aria-label="Yava">
+      <BrandLogo className="brand-logo--auth" alt="Yava logo" />
+      <span className="brand-copy"><span className="brand-title">Yava</span><span className="brand-subtitle">Yava seed. Yava plan. Yava harvest.</span></span>
+    </div>
+    <div className="auth-shell-container"><Outlet /></div>
+  </main>
 }
 
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuth()
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />
-  }
-
-  return children
+  return isAuthenticated ? <Navigate to="/" replace /> : children
 }
 
-function App() {
-  return (
-    <Routes>
-      <Route element={<AuthShell />}>
-        <Route path="login" element={<AuthRoute><LoginPage /></AuthRoute>} />
-        <Route path="register" element={<AuthRoute><RegisterPage /></AuthRoute>} />
-        <Route path="forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
-        <Route path="reset-password" element={<AuthRoute><ResetPasswordPage /></AuthRoute>} />
-      </Route>
-      <Route element={<AppShell />}>
-        <Route index element={<DashboardPage />} />
-        <Route
-          path="community"
-          element={(
-            <ProtectedRoute>
-              <CommunityPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="account"
-          element={(
-            <ProtectedRoute>
-              <AccountPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots"
-          element={(
-            <ProtectedRoute>
-              <PlotsPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/new"
-          element={(
-            <ProtectedRoute>
-              <PlotCreatePage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="catalog-plants"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantsPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="catalog-plants/new"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantFormPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="catalog-plants/:catalogPlantId"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantDetailPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="catalog-plants/:catalogPlantId/edit"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantFormPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants"
-          element={(
-            <ProtectedRoute>
-              <PlantsPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants/new"
-          element={(
-            <ProtectedRoute>
-              <PlantFormPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants/catalog/new"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantFormPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants/catalog/:catalogPlantId"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantDetailPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants/catalog/:catalogPlantId/edit"
-          element={(
-            <ProtectedRoute>
-              <CatalogPlantFormPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants/:plantId"
-          element={(
-            <ProtectedRoute>
-              <PlantDetailPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plants/:plantId/edit"
-          element={(
-            <ProtectedRoute>
-              <PlantFormPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId"
-          element={(
-            <ProtectedRoute>
-              <PlotDetailPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/edit"
-          element={(
-            <ProtectedRoute>
-              <PlotEditPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/analytics"
-          element={(
-            <ProtectedRoute>
-              <PlotAnalyticsPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/history"
-          element={(
-            <ProtectedRoute>
-              <PlotHistoryPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/harvests"
-          element={(
-            <ProtectedRoute>
-              <PlotHarvestsPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/sharing"
-          element={(
-            <ProtectedRoute>
-              <PlotSharingPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/rotation"
-          element={(
-            <ProtectedRoute>
-              <PlotRotationPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/calendar"
-          element={(
-            <ProtectedRoute>
-              <PlotCalendarPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="plots/:plotId/plants/:plantId"
-          element={(
-            <ProtectedRoute>
-              <PlantDetailPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="inventory"
-          element={(
-            <ProtectedRoute>
-              <InventoryPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="admin/users"
-          element={(
-            <AdminRoute>
-              <AdminUsersPage />
-            </AdminRoute>
-          )}
-        />
-        <Route path="home" element={<Navigate to="/" replace />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
-  )
+function Private({ children }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>
 }
 
-export default App
+export default function App() {
+  return <Routes>
+    <Route element={<AuthShell />}>
+      <Route path="login" element={<AuthRoute><LoginPage /></AuthRoute>} />
+      <Route path="register" element={<AuthRoute><RegisterPage /></AuthRoute>} />
+      <Route path="forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
+      <Route path="reset-password" element={<AuthRoute><ResetPasswordPage /></AuthRoute>} />
+    </Route>
+    <Route element={<AppShell />}>
+      <Route index element={<Stage1DashboardPage />} />
+      <Route path="communities" element={<Private><DomainWorkspacePage resource="communities" /></Private>} />
+      <Route path="communities/:communityId/members" element={<Private><MembershipPage scope="community" /></Private>} />
+      <Route path="farms" element={<Private><DomainWorkspacePage resource="farms" /></Private>} />
+      <Route path="farms/:farmId/members" element={<Private><MembershipPage scope="farm" /></Private>} />
+      <Route path="fields" element={<Private><DomainWorkspacePage resource="fields" /></Private>} />
+      <Route path="fields/:fieldId/editor" element={<Private><FieldEditorPage /></Private>} />
+      <Route path="crops" element={<Private><DomainWorkspacePage resource="crops" /></Private>} />
+      <Route path="crop-seasons" element={<Private><DomainWorkspacePage resource="crop-seasons" /></Private>} />
+      <Route path="tasks" element={<Private><DomainWorkspacePage resource="tasks" /></Private>} />
+      <Route path="inventory" element={<Private><DomainWorkspacePage resource="inventories" /></Private>} />
+      <Route path="resources" element={<Private><DomainWorkspacePage resource="resources" /></Private>} />
+      <Route path="reservations" element={<Private><DomainWorkspacePage resource="reservations" /></Private>} />
+      <Route path="analytics" element={<Private><AnalyticsWorkspacePage /></Private>} />
+      <Route path="account" element={<Private><AccountPage /></Private>} />
+      <Route path="onboarding" element={<Private><OnboardingPage /></Private>} />
+      <Route path="verify-phone" element={<Private><OtpVerificationPage /></Private>} />
+      <Route path="admin/users" element={<AdminRoute><UserAdministrationPage /></AdminRoute>} />
+
+      {/* Stage 1 compatibility redirects keep bookmarks valid without loading
+          the retired garden vocabulary into the primary product bundle. */}
+      <Route path="community" element={<Navigate to="/communities" replace />} />
+      <Route path="plots" element={<Navigate to="/fields" replace />} />
+      <Route path="plots/*" element={<Navigate to="/fields" replace />} />
+      <Route path="plants" element={<Navigate to="/crop-seasons" replace />} />
+      <Route path="plants/*" element={<Navigate to="/crop-seasons" replace />} />
+      <Route path="catalog-plants/*" element={<Navigate to="/crops" replace />} />
+      <Route path="home" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Route>
+  </Routes>
+}

@@ -1,0 +1,132 @@
+export const domainDefinitions = {
+  users: {
+    title: 'Users', description: 'Manage account state and global roles. Sole farm owners must transfer ownership before deactivation.', item: 'user', empty: 'No users found.',
+    fields: [{ name: 'email', label: 'Email address', type: 'email', required: true }, { name: 'role', label: 'System role', required: true }, { name: 'status', label: 'Account status', required: true }],
+  },
+  communities: {
+    title: 'Communities',
+    description: 'Coordinate members, shared resources, invitations, and farm relationships.',
+    item: 'community',
+    empty: 'Create a community to collaborate with nearby farmers.',
+    fields: [
+      { name: 'name', label: 'Community name', required: true },
+      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'timezone', label: 'Timezone', defaultValue: 'Asia/Kolkata' },
+      { name: 'state_code', label: 'State or Union Territory code' },
+    ],
+  },
+  farms: {
+    title: 'Farms',
+    description: 'Manage farms, operating locations, members, and community links.',
+    item: 'farm',
+    empty: 'Add your first farm to begin planning fields and crop seasons.',
+    fields: [
+      { name: 'name', label: 'Farm name', required: true },
+      { name: 'total_area_square_metres', label: 'Area (m²)', type: 'number', required: true },
+      { name: 'timezone', label: 'Timezone', defaultValue: 'Asia/Kolkata' },
+      { name: 'state_code', label: 'State or Union Territory code' },
+      { name: 'district', label: 'District' },
+      { name: 'taluk', label: 'Taluk / Tehsil' },
+      { name: 'village_or_city', label: 'Village or city' },
+      { name: 'postal_code', label: 'Postal code' },
+      { name: 'address', label: 'Address', type: 'textarea' },
+    ],
+  },
+  fields: {
+    title: 'Fields',
+    description: 'Map field boundaries and optional management zones in square metres.',
+    item: 'field',
+    empty: 'Create a field inside the active farm.',
+    fields: [
+      { name: 'farm_id', label: 'Farm ID', required: true },
+      { name: 'name', label: 'Field name', required: true },
+      { name: 'area_square_metres', label: 'Area (m²)', type: 'number', required: true },
+      { name: 'soil_type', label: 'Soil type' },
+      { name: 'description', label: 'Description', type: 'textarea' },
+    ],
+  },
+  crops: {
+    title: 'Crop catalogue',
+    description: 'Use the global crop catalogue or create clearly labelled farm-specific crops.',
+    item: 'crop',
+    empty: 'No crop catalogue entries match this workspace.',
+    fields: [
+      { name: 'farm_id', label: 'Farm ID (custom crops only)' },
+      { name: 'name', label: 'Crop name', required: true },
+      { name: 'scientific_name', label: 'Scientific name' },
+      { name: 'category', label: 'Category' },
+    ],
+  },
+  'crop-seasons': {
+    title: 'Crop seasons',
+    description: 'Plan a crop on a field or zone for a defined growing period.',
+    item: 'crop season',
+    empty: 'Create a crop season to connect crops, field work, conditions, and harvests.',
+    fields: [
+      { name: 'field_id', label: 'Field ID', required: true },
+      { name: 'field_zone_id', label: 'Field zone ID (optional)' },
+      { name: 'crop_id', label: 'Crop ID', required: true },
+      { name: 'crop_variety_id', label: 'Variety ID (optional)' },
+      { name: 'name', label: 'Season name', required: true },
+      { name: 'starts_on', label: 'Starts on', type: 'date', required: true },
+      { name: 'ends_on', label: 'Ends on', type: 'date' },
+    ],
+  },
+  tasks: {
+    title: 'Tasks',
+    description: 'Plan field or community work, assign owners, and track completion.',
+    item: 'task',
+    empty: 'No tasks in the current workspace.',
+    fields: [
+      { name: 'title', label: 'Task title', required: true },
+      { name: 'farm_id', label: 'Farm ID' },
+      { name: 'community_id', label: 'Community ID' },
+      { name: 'field_id', label: 'Field ID' },
+      { name: 'crop_season_id', label: 'Crop season ID' },
+      { name: 'due_at', label: 'Due date and time', type: 'datetime-local' },
+      { name: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  },
+  inventories: {
+    title: 'Inventory',
+    description: 'Track farm or community stock through auditable inventory movements.',
+    item: 'inventory item',
+    empty: 'Add seeds, inputs, materials, or other stock.',
+    fields: [
+      { name: 'name', label: 'Item name', required: true },
+      { name: 'farm_id', label: 'Farm ID' },
+      { name: 'community_id', label: 'Community ID' },
+      { name: 'quantity', label: 'Opening quantity', type: 'number', required: true },
+      { name: 'unit', label: 'Unit', defaultValue: 'unit' },
+      { name: 'minimum_quantity', label: 'Low-stock threshold', type: 'number' },
+    ],
+  },
+  resources: {
+    title: 'Shared resources',
+    description: 'Publish community equipment and manage its availability.',
+    item: 'resource',
+    empty: 'No shared equipment or resources are available.',
+    fields: [
+      { name: 'community_id', label: 'Community ID', required: true },
+      { name: 'name', label: 'Resource name', required: true },
+      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'requires_approval', label: 'Requires approval', type: 'checkbox', defaultValue: true },
+    ],
+  },
+  reservations: {
+    title: 'Reservations',
+    description: 'Request equipment in half-open time slots; approval checks prevent conflicts.',
+    item: 'reservation',
+    empty: 'No reservation requests in this workspace.',
+    fields: [
+      { name: 'resource_id', label: 'Resource ID', required: true },
+      { name: 'starts_at', label: 'Starts at', type: 'datetime-local', required: true },
+      { name: 'ends_at', label: 'Ends at', type: 'datetime-local', required: true },
+      { name: 'purpose', label: 'Purpose', type: 'textarea' },
+    ],
+  },
+}
+
+export function makeInitialForm(definition) {
+  return Object.fromEntries(definition.fields.map((field) => [field.name, field.defaultValue ?? (field.type === 'checkbox' ? false : '')]))
+}

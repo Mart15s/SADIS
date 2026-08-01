@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../../components/layout/PageHeader.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../context/auth-context.js'
 import Button from '../../components/ui/Button.jsx'
 import FormSection from '../../components/ui/FormSection.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'

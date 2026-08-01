@@ -213,6 +213,7 @@ function targetHasNamedAncestor(target, names) {
   return false
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function classifyDesignerTarget(target) {
   if (!target || target === target.getStage?.()) {
     return 'background'
@@ -870,8 +871,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     const storedState = persistState
       ? loadDesignerState(plotId)
       : {
-        boundary: liveBoundaryRef.current ?? boundary,
-        layouts: liveLayoutsRef.current ?? layouts,
+        boundary: liveBoundaryRef.current ?? [],
+        layouts: liveLayoutsRef.current ?? {},
       }
     const nextState = buildDesignerStateFromPersistence({
       plotSize,
@@ -887,7 +888,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       hasUserViewportRef.current = false
       setFitSeed((current) => current + 1)
     }
-  }, [geometrySignature, persistState, plotId, plotSize])
+  }, [geometrySignature, persistState, plotGeometry, plotId, plotSize, zones])
 
   useEffect(() => {
     setDesignerState((current) => ({

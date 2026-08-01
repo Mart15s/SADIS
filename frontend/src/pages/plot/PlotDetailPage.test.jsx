@@ -108,7 +108,7 @@ describe('PlotDetailPage explicit save workspace', () => {
   }
 
   async function enterEditMode() {
-    const editMode = screen.getByRole('tab', { name: 'Redagavimas' })
+    const editMode = screen.getByRole('tab', { name: 'Edit' })
     fireEvent.click(editMode)
     await waitFor(() => expect(editMode).toHaveClass('is-active'))
   }
@@ -307,7 +307,7 @@ describe('PlotDetailPage explicit save workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pritaikyti zonos duomenis' }))
     fireEvent.click(screen.getByRole('button', { name: 'Redaguoti metaduomenis' }))
 
-    expect(globalThis.confirm).toHaveBeenCalledWith('Turite neišsaugotų sklypo pakeitimų. Išeiti neišsaugojus juodraščio?')
+    expect(globalThis.confirm).toHaveBeenCalledWith('You have unsaved field changes. Leave without saving the draft?')
     expect(screen.queryByText('metadata page')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Išsaugoti sklypo pakeitimus' })).toBeEnabled()
   })
@@ -432,7 +432,7 @@ describe('PlotDetailPage explicit save workspace', () => {
 
     await enterEditMode()
 
-    expect(screen.getByRole('tab', { name: 'Redagavimas' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Edit' })).toHaveAttribute('aria-selected', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Ribų vaizdas' }))
 

@@ -11,9 +11,11 @@ class LogoutController extends Controller
     public function destroy(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();
-
-        return response()->json([
-            'message' => 'Sėkmingai atsijungta.',
-        ]);
+        if ($request->hasSession()) {
+            auth('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+        return response()->json(['message' => 'Signed out successfully.']);
     }
 }

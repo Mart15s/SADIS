@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -10,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,75 +21,37 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
+        $trustedProxies = array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', '127.0.0.1,::1')))));
+        $middleware->trustProxies(at: $trustedProxies);
         $middleware->statefulApi();
-        $middleware->alias([
-            'admin' => AdminMiddleware::class,
-        ]);
+        $middleware->alias(['admin' => AdminMiddleware::class, 'active' => EnsureUserIsActive::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $shouldReturnJson = static fn (Request $request): bool => $request->is('api/*') || $request->expectsJson();
+        $json = static fn (Request $request): bool => $request->is('api/*') || $request->expectsJson();
 
-        $exceptions->render(function (ValidationException $exception, Request $request) use ($shouldReturnJson) {
-            if (! $shouldReturnJson($request)) {
-                return null;
-            }
-
-            return response()->json([
-                'message' => 'Patikrinkite pateiktus duomenis.',
-                'errors' => $exception->errors(),
-            ], $exception->status);
+        $exceptions->render(function (ValidationException $exception, Request $request) use ($json) {
+            if (! $json($request)) return null;
+            return response()->json(['message' => 'Check the submitted data.', 'errors' => $exception->errors()], $exception->status);
         });
-
-        $exceptions->render(function (AuthenticationException $exception, Request $request) use ($shouldReturnJson) {
-            if (! $shouldReturnJson($request)) {
-                return null;
-            }
-
-            return response()->json([
-                'message' => $exception->getMessage() ?: 'Prisijungimas reikalingas.',
-            ], 401);
+        $exceptions->render(function (AuthenticationException $exception, Request $request) use ($json) {
+            if (! $json($request)) return null;
+            return response()->json(['message' => $exception->getMessage() ?: 'Authentication is required.'], 401);
         });
-
-        $exceptions->render(function (AuthorizationException $exception, Request $request) use ($shouldReturnJson) {
-            if (! $shouldReturnJson($request)) {
-                return null;
-            }
-
-            return response()->json([
-                'message' => 'Neturite teisių atlikti šį veiksmą',
-            ], 403);
+        $exceptions->render(function (AuthorizationException $exception, Request $request) use ($json) {
+            if (! $json($request)) return null;
+            return response()->json(['message' => $exception->getMessage() ?: 'You do not have permission to perform this action.'], 403);
         });
-
-        $exceptions->render(function (ModelNotFoundException|NotFoundHttpException $exception, Request $request) use ($shouldReturnJson) {
-            if (! $shouldReturnJson($request)) {
-                return null;
-            }
-
-            return response()->json([
-                'message' => 'Resursas nerastas',
-            ], 404);
+        $exceptions->render(function (ModelNotFoundException|NotFoundHttpException $exception, Request $request) use ($json) {
+            if (! $json($request)) return null;
+            return response()->json(['message' => 'The requested resource was not found.'], 404);
         });
-
-        $exceptions->render(function (HttpExceptionInterface $exception, Request $request) use ($shouldReturnJson) {
-            if (! $shouldReturnJson($request)) {
-                return null;
-            }
-
-            $statusCode = $exception->getStatusCode();
-
-            if ($statusCode === 403) {
-                return response()->json([
-                    'message' => 'Neturite teisių atlikti šį veiksmą',
-                ], 403);
-            }
-
-            if ($statusCode === 404) {
-                return response()->json([
-                    'message' => 'Resursas nerastas',
-                ], 404);
-            }
-
-            return null;
+        $exceptions->render(function (HttpExceptionInterface $exception, Request $request) use ($json) {
+            if (! $json($request)) return null;
+            return match ($exception->getStatusCode()) {
+                403 => response()->json(['message' => $exception->getMessage() ?: 'You do not have permission to perform this action.'], 403),
+                404 => response()->json(['message' => 'The requested resource was not found.'], 404),
+                409 => response()->json(['message' => $exception->getMessage()], 409),
+                default => null,
+            };
         });
     })->create();

@@ -4,7 +4,7 @@ import Button from '../ui/Button.jsx'
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
-    this.state = { error: null }
+    this.state = { error: null, retryKey: 0 }
   }
 
   static getDerivedStateFromError(error) {
@@ -22,11 +22,14 @@ export default class ErrorBoundary extends Component {
           <p className="eyebrow">Yava</p>
           <h1>Something went wrong</h1>
           <p>Yava could not display this screen. Your saved data is safe.</p>
-          <Button onClick={() => this.setState({ error: null })}>Try again</Button>
+          <div className="form-actions">
+            <Button onClick={() => this.setState((state) => ({ error: null, retryKey: state.retryKey + 1 }))}>Try again</Button>
+            <a className="button button-secondary button-md" href="/">Return to overview</a>
+          </div>
         </main>
       )
     }
 
-    return this.props.children
+    return <div key={this.state.retryKey} className="error-boundary-content">{this.props.children}</div>
   }
 }

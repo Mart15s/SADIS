@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AuthContext } from './auth-context.js'
 import { api, registerUnauthorizedHandler } from '../lib/api.js'
 import {
   clearStoredAuth,
@@ -6,8 +7,6 @@ import {
   readStoredAuth,
   writeStoredAuth,
 } from '../lib/auth.js'
-
-const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [authState, setAuthState] = useState(() => readStoredAuth())
@@ -18,10 +17,6 @@ export function AuthProvider({ children }) {
   }), [])
 
   useEffect(() => {
-    if (!authState.token) {
-      return undefined
-    }
-
     let cancelled = false
 
     async function restoreSession() {
@@ -33,19 +28,22 @@ export function AuthProvider({ children }) {
         }
 
         const payload = writeStoredAuth({
-          token: authState.token,
           user: currentUser,
           profile: currentUser.profile,
         })
 
         setAuthState(payload)
-      } catch {
+      } catch (error) {
         if (cancelled) {
           return
         }
 
-        clearStoredAuth()
-        setAuthState(normalizeAuthPayload({}))
+        // Keep the last confirmed session during transient network/server
+        // failures. Only a confirmed authentication response signs out.
+        if ([401, 419].includes(error.status)) {
+          clearStoredAuth()
+          setAuthState(normalizeAuthPayload({}))
+        }
       }
     }
 
@@ -54,50 +52,50 @@ export function AuthProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [authState.token])
+  }, [])
 
-  async function authenticate(request) {
-    const payload = writeStoredAuth(request)
+  const authenticate = useCallback(async (request) => {
+    const currentUser = request?.user ?? await api.getMe()
+    const payload = writeStoredAuth({ user: currentUser, profile: request?.profile ?? currentUser?.profile })
     setAuthState(payload)
     return payload
-  }
+  }, [])
 
-  async function syncCurrentUser(currentUser) {
+  const syncCurrentUser = useCallback(async (currentUser) => {
     const payload = writeStoredAuth({
-      token: authState.token,
       user: currentUser,
       profile: currentUser.profile,
     })
 
     setAuthState(payload)
     return payload
-  }
+  }, [])
 
-  async function login(credentials) {
+  const login = useCallback(async (credentials) => {
     const payload = await api.login(credentials)
     return authenticate(payload)
-  }
+  }, [authenticate])
 
-  async function register(profileData) {
+  const register = useCallback(async (profileData) => {
     const payload = await api.register(profileData)
     return authenticate(payload)
-  }
+  }, [authenticate])
 
-  async function updateAccount(accountData) {
+  const updateAccount = useCallback(async (accountData) => {
     const currentUser = await api.updateMe(accountData)
     return syncCurrentUser(currentUser)
-  }
+  }, [syncCurrentUser])
 
-  async function logout() {
+  const logout = useCallback(async () => {
     try {
-      if (authState.token) {
+      if (authState.user) {
         await api.logout()
       }
     } finally {
       clearStoredAuth()
       setAuthState(normalizeAuthPayload({}))
     }
-  }
+  }, [authState.user])
 
   const value = useMemo(() => {
     const displayName = [authState.profile?.name, authState.profile?.surname]
@@ -106,7 +104,7 @@ export function AuthProvider({ children }) {
 
     return {
       ...authState,
-      isAuthenticated: Boolean(authState.token),
+      isAuthenticated: Boolean(authState.user),
       isAdmin: authState.user?.role === 'admin',
       displayName: displayName || authState.user?.email || 'Guest',
       login,
@@ -114,17 +112,7 @@ export function AuthProvider({ children }) {
       updateAccount,
       logout,
     }
-  }, [authState])
+  }, [authState, login, logout, register, updateAccount])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const value = useContext(AuthContext)
-
-  if (!value) {
-    throw new Error('useAuth must be used inside AuthProvider.')
-  }
-
-  return value
 }

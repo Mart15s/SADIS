@@ -26,13 +26,25 @@ use App\Http\Controllers\User\LogoutController;
 use App\Http\Controllers\User\PasswordResetController;
 use App\Http\Controllers\User\SignUpController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Yava\CommunityController as YavaCommunityController;
+use App\Http\Controllers\Yava\ContextController;
+use App\Http\Controllers\Yava\CropController as YavaCropController;
+use App\Http\Controllers\Yava\FarmController;
+use App\Http\Controllers\Yava\FieldController;
+use App\Http\Controllers\Yava\OnboardingController;
+use App\Http\Controllers\Yava\OperationsController;
+use App\Http\Controllers\Yava\OtpController;
 
-Route::post('/register', [SignUpController::class, 'store']);
+Route::post('/register', [SignUpController::class, 'store'])->middleware('throttle:registration');
 Route::post('/login', [LoginController::class, 'store']);
 Route::post('/forgot-password', [PasswordResetController::class, 'forgot']);
 Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+Route::middleware('throttle:otp')->prefix('v1/auth/otp')->group(function () {
+    Route::post('/request', [OtpController::class, 'request']);
+    Route::post('/verify', [OtpController::class, 'verify']);
+});
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/me', [CurrentUserController::class, 'show']);
     Route::patch('/me', [UserAccountController::class, 'update']);
     Route::post('/logout', [LogoutController::class, 'destroy']);
@@ -116,4 +128,91 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/community', [CommunityController::class, 'store']);
     Route::patch('/community/{post}', [CommunityController::class, 'update']);
     Route::delete('/community/{post}', [CommunityController::class, 'destroy']);
+
+    Route::prefix('v1')->group(function () {
+        Route::get('/contexts', [ContextController::class, 'index']);
+
+        Route::get('/communities', [YavaCommunityController::class, 'index']);
+        Route::post('/communities', [YavaCommunityController::class, 'store']);
+        Route::get('/communities/{community}', [YavaCommunityController::class, 'show']);
+        Route::patch('/communities/{community}', [YavaCommunityController::class, 'update']);
+        Route::delete('/communities/{community}', [YavaCommunityController::class, 'destroy']);
+        Route::post('/communities/{community}/invitations', [YavaCommunityController::class, 'invite']);
+        Route::get('/communities/{community}/invitations', [YavaCommunityController::class, 'invitations']);
+        Route::get('/communities/{community}/members', [YavaCommunityController::class, 'members']);
+        Route::post('/invitations/{code}/accept', [YavaCommunityController::class, 'acceptInvitation']);
+        Route::post('/communities/{community}/join-requests', [YavaCommunityController::class, 'requestJoin']);
+        Route::get('/communities/{community}/join-requests', [YavaCommunityController::class, 'joinRequests']);
+        Route::patch('/communities/{community}/join-requests/{joinRequest}', [YavaCommunityController::class, 'decideJoin']);
+        Route::post('/communities/{community}/join-requests/{joinRequest}/approve', [YavaCommunityController::class, 'approveJoin']);
+        Route::post('/communities/{community}/join-requests/{joinRequest}/reject', [YavaCommunityController::class, 'rejectJoin']);
+        Route::patch('/communities/{community}/members/{membership}', [YavaCommunityController::class, 'updateMember']);
+        Route::get('/communities/{community}/analytics', [OperationsController::class, 'communityAnalytics']);
+
+        Route::get('/farms', [FarmController::class, 'index']);
+        Route::post('/farms', [FarmController::class, 'store']);
+        Route::get('/farms/{farm}', [FarmController::class, 'show']);
+        Route::patch('/farms/{farm}', [FarmController::class, 'update']);
+        Route::delete('/farms/{farm}', [FarmController::class, 'destroy']);
+        Route::get('/farms/{farm}/members', [FarmController::class, 'members']);
+        Route::post('/farms/{farm}/members', [FarmController::class, 'addMember']);
+        Route::patch('/farms/{farm}/members/{membership}', [FarmController::class, 'updateMember']);
+        Route::post('/farms/{farm}/communities/{community}', [FarmController::class, 'linkCommunity']);
+        Route::post('/farm-community-links/{link}/{decision}', [FarmController::class, 'decideCommunityLink'])->whereIn('decision', ['approve', 'reject']);
+        Route::delete('/farms/{farm}/community-links/{link}', [FarmController::class, 'revokeCommunity']);
+        Route::get('/farms/{farm}/analytics', [OperationsController::class, 'farmAnalytics']);
+
+        Route::get('/fields', [FieldController::class, 'index']);
+        Route::post('/fields', [FieldController::class, 'store']);
+        Route::get('/fields/{field}', [FieldController::class, 'show']);
+        Route::patch('/fields/{field}', [FieldController::class, 'update']);
+        Route::delete('/fields/{field}', [FieldController::class, 'destroy']);
+        Route::put('/fields/{field}/workspace', [FieldController::class, 'workspace']);
+        Route::post('/fields/{field}/zones', [FieldController::class, 'storeZone']);
+        Route::patch('/fields/{field}/zones/{zone}', [FieldController::class, 'updateZone']);
+        Route::delete('/fields/{field}/zones/{zone}', [FieldController::class, 'destroyZone']);
+
+        Route::get('/crops', [YavaCropController::class, 'index']);
+        Route::post('/crops', [YavaCropController::class, 'store']);
+        Route::get('/crops/{crop}', [YavaCropController::class, 'show']);
+        Route::patch('/crops/{crop}', [YavaCropController::class, 'update']);
+        Route::delete('/crops/{crop}', [YavaCropController::class, 'destroy']);
+        Route::post('/crops/{crop}/varieties', [YavaCropController::class, 'storeVariety']);
+        Route::get('/crop-seasons', [YavaCropController::class, 'seasons']);
+        Route::post('/crop-seasons', [YavaCropController::class, 'storeSeason']);
+        Route::get('/crop-seasons/{cropSeason}', [YavaCropController::class, 'showSeason']);
+        Route::patch('/crop-seasons/{cropSeason}', [YavaCropController::class, 'updateSeason']);
+        Route::delete('/crop-seasons/{cropSeason}', [YavaCropController::class, 'destroySeason']);
+        Route::post('/crop-seasons/{cropSeason}/conditions', [YavaCropController::class, 'condition']);
+        Route::post('/crop-seasons/{cropSeason}/harvests', [YavaCropController::class, 'harvest']);
+        Route::get('/crop-seasons/{cropSeason}/rotation-warnings', [YavaCropController::class, 'rotationWarnings']);
+
+        Route::get('/tasks', [OperationsController::class, 'tasks']);
+        Route::post('/tasks', [OperationsController::class, 'storeTask']);
+        Route::get('/tasks/{task}', [OperationsController::class, 'showTask']);
+        Route::patch('/tasks/{task}', [OperationsController::class, 'updateTask']);
+        Route::delete('/tasks/{task}', [OperationsController::class, 'destroyTask']);
+        Route::post('/tasks/{task}/complete', [OperationsController::class, 'completeTask']);
+
+        Route::get('/inventories', [OperationsController::class, 'inventories']);
+        Route::post('/inventories', [OperationsController::class, 'storeInventory']);
+        Route::get('/inventories/{inventory}', [OperationsController::class, 'showInventory']);
+        Route::patch('/inventories/{inventory}', [OperationsController::class, 'updateInventory']);
+        Route::delete('/inventories/{inventory}', [OperationsController::class, 'destroyInventory']);
+        Route::post('/inventory-movements', [OperationsController::class, 'storeMovement']);
+
+        Route::get('/resources', [OperationsController::class, 'resources']);
+        Route::post('/resources', [OperationsController::class, 'storeResource']);
+        Route::get('/resources/{resource}', [OperationsController::class, 'showResource']);
+        Route::patch('/resources/{resource}', [OperationsController::class, 'updateResource']);
+        Route::delete('/resources/{resource}', [OperationsController::class, 'destroyResource']);
+        Route::get('/reservations', [OperationsController::class, 'reservations']);
+        Route::post('/reservations', [OperationsController::class, 'storeReservation']);
+        Route::get('/reservations/{reservation}', [OperationsController::class, 'showReservation']);
+        Route::post('/reservations/{reservation}/{transition}', [OperationsController::class, 'reservationTransition'])->whereIn('transition', ['approve', 'reject', 'cancel', 'complete']);
+        Route::get('/recommendations', [OperationsController::class, 'recommendations']);
+
+        Route::get('/onboarding', [OnboardingController::class, 'show']);
+        Route::put('/onboarding', [OnboardingController::class, 'update']);
+    });
 });

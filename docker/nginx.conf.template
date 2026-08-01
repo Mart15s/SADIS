@@ -7,6 +7,17 @@ server {
     charset utf-8;
     client_max_body_size 20M;
 
+    # Browser-side defence in depth. The application is a same-origin SPA; only
+    # OpenStreetMap raster tiles are loaded cross-origin.
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header Cross-Origin-Resource-Policy "same-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
     access_log /dev/stdout;
     error_log /dev/stderr warn;
 
@@ -26,6 +37,7 @@ server {
         try_files $uri =404;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
 
@@ -33,11 +45,18 @@ server {
         try_files $uri =404;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
 
     location ^~ /storage/ {
         try_files $uri =404;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Security-Policy "default-src 'none'; sandbox" always;
+    }
+
+    location ~ /\. {
+        deny all;
     }
 
     location = /api {

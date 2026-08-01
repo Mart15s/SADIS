@@ -28,7 +28,14 @@ php artisan route:cache --no-interaction
 php artisan view:cache --no-interaction
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
-    echo "RUN_MIGRATIONS=true; running Laravel migrations..."
+    echo "RUN_MIGRATIONS is deprecated. Use RUN_SCHEMA_MIGRATIONS=true for small, reviewed schema migrations only." >&2
+fi
+
+# This switch runs only Laravel schema migrations. Stage 1 legacy data
+# transformations are Artisan commands and are deliberately never invoked at
+# application boot; run them as an explicit, monitored deployment operation.
+if [ "${RUN_SCHEMA_MIGRATIONS:-false}" = "true" ]; then
+    echo "RUN_SCHEMA_MIGRATIONS=true; running reviewed Laravel schema migrations..."
     attempts=0
 
     until php artisan migrate --force --no-interaction; do
@@ -43,7 +50,7 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
         sleep 5
     done
 
-    echo "Laravel migrations completed."
+    echo "Laravel schema migrations completed."
 fi
 
 if [ "${RUN_DEMO_SEEDER:-false}" = "true" ]; then

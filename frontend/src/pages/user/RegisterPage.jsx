@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import Button from '../../components/ui/Button.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../context/auth-context.js'
 
 const initialForm = {
   name: '',

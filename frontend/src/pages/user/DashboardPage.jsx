@@ -7,7 +7,7 @@ import ActionRow from '../../components/ui/ActionRow.jsx'
 import Button from '../../components/ui/Button.jsx'
 import SectionCard from '../../components/ui/SectionCard.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../context/auth-context.js'
 import { api } from '../../lib/api.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 import {

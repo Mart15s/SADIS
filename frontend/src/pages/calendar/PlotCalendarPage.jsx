@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { MapLayerControl, TaskPriorityBadge } from '../../components/garden/GardenControls.jsx'
 import PlotSectionNav from '../../components/plot/PlotSectionNav.jsx'
@@ -411,7 +411,7 @@ export default function PlotCalendarPage() {
     null,
   )
 
-  const availableDates = detailState.data?.available_dates ?? []
+  const availableDates = useMemo(() => detailState.data?.available_dates ?? [], [detailState.data?.available_dates])
 
   useEffect(() => {
     if (!detailState.data) return

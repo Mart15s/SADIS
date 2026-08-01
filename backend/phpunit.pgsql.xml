@@ -5,21 +5,9 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="BPP PostgreSQL verification subset">
-            <file>tests/Feature/Auth/AuthenticationTest.php</file>
-            <file>tests/Feature/AccountProfileTest.php</file>
-            <file>tests/Feature/Plot/PlotManagementTest.php</file>
-            <file>tests/Feature/Plot/GeometryPersistenceTest.php</file>
-            <file>tests/Feature/PlantManagementApiTest.php</file>
-            <file>tests/Feature/CatalogPlantApiTest.php</file>
-            <file>tests/Feature/CalendarGenerationTest.php</file>
-            <file>tests/Feature/InventoryCalendarWorkflowTest.php</file>
-            <file>tests/Feature/HarvestTest.php</file>
-            <file>tests/Feature/Plot/RotationRecommendationTest.php</file>
-            <file>tests/Feature/AnalyticsTest.php</file>
-            <file>tests/Feature/AccessRightsTest.php</file>
-            <file>tests/Feature/CommunityTest.php</file>
-            <file>tests/Feature/PdfExportTest.php</file>
+        <testsuite name="Yava PostgreSQL full suite">
+            <directory>tests/Unit</directory>
+            <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>
@@ -35,10 +23,10 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="pgsql" force="true"/>
         <env name="DB_HOST" value="127.0.0.1"/>
-        <env name="DB_PORT" value="5432"/>
-        <env name="DB_DATABASE" value="sad_test"/>
-        <env name="DB_USERNAME" value="postgres"/>
-        <env name="DB_PASSWORD" value="postgres"/>
+        <env name="DB_PORT" value="55432"/>
+        <env name="DB_DATABASE" value="yava_test"/>
+        <env name="DB_USERNAME" value="yava_test"/>
+        <env name="DB_PASSWORD" value="yava_test_only"/>
         <env name="DB_URL" value="" force="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

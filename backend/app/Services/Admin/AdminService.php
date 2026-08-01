@@ -9,6 +9,7 @@ use App\Models\HasPlot;
 use App\Models\InventoryItem;
 use App\Models\Plot;
 use App\Models\User;
+use App\Models\FarmMembership;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -54,13 +55,13 @@ class AdminService
 
         if (! $roleEnum) {
             throw ValidationException::withMessages([
-                'role' => ['Nurodyta netinkama naudotojo role.'],
+                'role' => ['The selected user role is invalid.'],
             ]);
         }
 
         if ((int) Auth::id() === (int) $user->id && $roleEnum !== UserRole::Admin) {
             throw ValidationException::withMessages([
-                'role' => ['Administratorius negali panaikinti savo administratoriaus teisiu.'],
+                'role' => ['An administrator cannot remove their own administrator access.'],
             ]);
         }
 
@@ -88,70 +89,40 @@ class AdminService
     {
         if ((int) Auth::id() === (int) $user->id) {
             throw ValidationException::withMessages([
-                'user' => ['Administratorius negali pasalinti savo paskyros.'],
+                'user' => ['An administrator cannot remove their own account.'],
             ]);
         }
 
-        $user->loadMissing(['profile', 'gardenOwner']);
+        $soleOwnedFarm = FarmMembership::query()
+            ->where('user_id', $user->id)
+            ->where('role', 'owner')
+            ->where('status', 'active')
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')->from('farm_memberships as other_owners')
+                    ->whereColumn('other_owners.farm_id', 'farm_memberships.farm_id')
+                    ->whereColumn('other_owners.user_id', '!=', 'farm_memberships.user_id')
+                    ->where('other_owners.role', 'owner')->where('other_owners.status', 'active');
+            })
+            ->exists();
 
-        $owner = $user->gardenOwner;
-        $profile = $user->profile;
-        $plotIds = [];
-        $inventoryItemIds = [];
-
-        if ($owner) {
-            $plotIds = Plot::query()
-                ->where('garden_owner_id', $owner->id)
-                ->pluck('id')
-                ->unique()
-                ->all();
-
-            $inventoryItemIds = InventoryItem::query()
-                ->where('garden_owner_id', $owner->id)
-                ->pluck('id')
-                ->unique()
-                ->all();
+        if ($soleOwnedFarm) {
+            throw ValidationException::withMessages([
+                'user' => ['Transfer ownership of every solely owned farm before deleting this account.'],
+            ]);
         }
 
-        $adminUserId = Auth::id();
-        $targetUserId = $user->id;
-        $targetEmail = $user->email;
-
-        DB::transaction(function () use ($user, $profile, $plotIds, $inventoryItemIds, $adminUserId, $targetUserId, $targetEmail) {
+        // Stage 1 account removal is deliberately reversible: deactivate the
+        // identity and revoke credentials while retaining historical actors and
+        // every farm-domain record. A later retention workflow may anonymize it.
+        DB::transaction(function () use ($user): void {
             $user->tokens()->delete();
-
-            if ($user->gardenOwner?->id) {
-                Plot::query()
-                    ->where('garden_owner_id', $user->gardenOwner->id)
-                    ->update(['garden_owner_id' => null]);
-
-                InventoryItem::query()
-                    ->where('garden_owner_id', $user->gardenOwner->id)
-                    ->update(['garden_owner_id' => null]);
-            }
-
-            if ($profile) {
-                $profile->delete();
-            }
-
-            $user->delete();
-
-            $this->reassignLegacyLinkedPlots($plotIds);
-            $this->reassignLegacyLinkedInventoryItems($inventoryItemIds);
-            $this->deleteOrphanedPlots($plotIds);
-            $this->deleteOrphanedInventoryItems($inventoryItemIds);
-
+            $user->update(['status' => 'deactivated', 'deactivated_at' => now()]);
             AuditLog::query()->create([
-                'admin_user_id' => $adminUserId,
-                'action' => 'user_deleted',
-                'target_user_id' => null,
-                'context' => [
-                    'deleted_user_id' => $targetUserId,
-                    'deleted_email' => $targetEmail,
-                ],
-                'created_at' => now(),
+                'admin_user_id' => Auth::id(), 'action' => 'user_deactivated',
+                'target_user_id' => $user->id, 'context' => ['email' => $user->email], 'created_at' => now(),
             ]);
         });
+
     }
 
     /**

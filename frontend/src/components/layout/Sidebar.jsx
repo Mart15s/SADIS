@@ -2,18 +2,24 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import BrandLogo from './BrandLogo.jsx'
 import Badge from '../ui/Badge.jsx'
 import Button from '../ui/Button.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../context/auth-context.js'
 
 const baseLinks = [
   { to: '/', label: 'Home', icon: 'dashboard' },
 ]
 
 const authLinks = [
-  { to: '/account', label: 'Account', icon: 'account' },
-  { to: '/community', label: 'Community', icon: 'community' },
-  { to: '/plots', label: 'Plots', icon: 'plots' },
-  { to: '/plants', label: 'Plants', icon: 'plants' },
+  { to: '/communities', label: 'Communities', icon: 'community' },
+  { to: '/farms', label: 'Farms', icon: 'plots' },
+  { to: '/fields', label: 'Fields', icon: 'plots' },
+  { to: '/crops', label: 'Crop catalogue', icon: 'plants' },
+  { to: '/crop-seasons', label: 'Crop seasons', icon: 'plants' },
+  { to: '/tasks', label: 'Tasks', icon: 'tasks' },
   { to: '/inventory', label: 'Inventory', icon: 'inventory' },
+  { to: '/resources', label: 'Resources', icon: 'resources' },
+  { to: '/reservations', label: 'Reservations', icon: 'resources' },
+  { to: '/analytics', label: 'Analytics', icon: 'analytics' },
+  { to: '/account', label: 'Account', icon: 'account' },
 ]
 
 function SidebarIcon({ name }) {
@@ -55,6 +61,9 @@ function SidebarIcon({ name }) {
         <path d="M7.2 8.3h3.6" />
       </>
     ),
+    tasks: <><path d="M4 4h10v10H4z" /><path d="m6.5 9 1.5 1.5L11.8 7" /></>,
+    resources: <><path d="M3.5 6.2h11v7.2h-11z" /><path d="M6 6.2V4h6v2.2M6 9.5h6" /></>,
+    analytics: <><path d="M3.5 14.5V9h3v5.5zm4.5 0V5.5h3v9zm4.5 0V3h3v11.5z" /></>,
     admin: (
       <>
         <path d="M9 2.8 4.2 4.7v3c0 3 1.7 5.6 4.8 6.9 3.1-1.3 4.8-3.9 4.8-6.9v-3Z" />
@@ -123,7 +132,7 @@ export default function Sidebar({
         <BrandLogo className="brand-logo--sidebar" alt="Yava logo" />
         <span className="brand-copy">
           <span className="brand-title">Yava</span>
-          <span className="brand-subtitle">Garden planning system</span>
+          <span className="brand-subtitle">Farm operations platform</span>
         </span>
         {variant === 'desktop' ? (
           <button

@@ -14,7 +14,7 @@ class AdminMiddleware
         abort_unless(
             $request->user()?->role === UserRole::Admin,
             403,
-            'Tik administratoriai gali pasiekti siuos isteklius.'
+            'Only system administrators can access this resource.'
         );
 
         return $next($request);

@@ -22,7 +22,7 @@ import ResourceCard, {
   ResourceCardMeta,
 } from '../../components/ui/ResourceCard.jsx'
 import ResponsiveList from '../../components/ui/ResponsiveList.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../context/auth-context.js'
 import { api } from '../../lib/api.js'
 import { formatDateTime } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'

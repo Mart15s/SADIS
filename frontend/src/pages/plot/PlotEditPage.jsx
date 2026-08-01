@@ -105,8 +105,7 @@ export default function PlotEditPage() {
 
     try {
       await api.deletePlot(plotId)
-      pageState.setData((current) => ({ ...current, plot: null }))
-      setToastMessage('Plot deleted.')
+      navigate('/plots', { replace: true, state: { toast: 'Plot deleted.' } })
     } catch (requestError) {
       setError(requestError.message)
     } finally {

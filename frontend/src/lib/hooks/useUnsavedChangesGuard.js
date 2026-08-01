@@ -85,7 +85,7 @@ export function useUnsavedChangesGuard({ when, message }) {
         navigator.go = originalGo
       }
     }
-  }, [confirmNavigation, navigationContext, when])
+  }, [navigationContext, when])
 
   useEffect(() => {
     if (!when) {
@@ -122,5 +122,5 @@ export function useUnsavedChangesGuard({ when, message }) {
     return () => {
       window.removeEventListener('popstate', handlePopState)
     }
-  }, [confirmNavigation, when])
+  }, [when])
 }

@@ -3,7 +3,7 @@ import { getAuthToken } from './auth.js'
 
 let unauthorizedHandler = null
 
-const GENERIC_SERVER_ERROR = 'Užklausos nepavyko įvykdyti. Patikrinkite duomenis ir bandykite dar kartą.'
+const GENERIC_SERVER_ERROR = 'The request could not be completed. Check your data and try again.'
 
 function normalizeMessage(payload, status = null) {
   if (typeof payload?.message === 'string' && payload.message.trim()) {
@@ -22,12 +22,12 @@ function normalizeMessage(payload, status = null) {
     return validationMessages[0]
   }
 
-  return 'Užklausos nepavyko įvykdyti. Bandykite dar kartą.'
+  return 'The request could not be completed. Try again.'
 }
 
 function toApiError(error) {
   if (!error.response) {
-    return Object.assign(new Error('Nepavyko pasiekti serverio.'), {
+    return Object.assign(new Error('The server could not be reached. Check your connection and try again.'), {
       status: 0,
       details: null,
       original: error,
@@ -78,6 +78,13 @@ export const apiClient = axios.create({
     'X-Requested-With': 'XMLHttpRequest',
   },
 })
+
+async function ensureCsrfCookie() {
+  await axios.get('/sanctum/csrf-cookie', {
+    withCredentials: true,
+    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+  })
+}
 
 apiClient.interceptors.request.use((config) => {
   const token = getAuthToken()
@@ -137,10 +144,12 @@ export const api = {
     return unwrapResource(data)
   },
   async login(payload) {
+    await ensureCsrfCookie()
     const { data } = await apiClient.post('/login', payload)
     return data
   },
   async register(payload) {
+    await ensureCsrfCookie()
     const { data } = await apiClient.post('/register', payload)
     return data
   },
@@ -155,6 +164,68 @@ export const api = {
   async logout() {
     const { data } = await apiClient.post('/logout')
     return data
+  },
+  async listContexts() {
+    const { data } = await apiClient.get('/v1/contexts')
+    return unwrapCollection(data)
+  },
+  async listV1(resource, params = {}) {
+    const { data } = await apiClient.get(`/v1/${resource}`, { params })
+    return unwrapCollection(data)
+  },
+  async getV1(resource, id) {
+    const { data } = await apiClient.get(`/v1/${resource}/${id}`)
+    return unwrapResource(data)
+  },
+  async createV1(resource, payload) {
+    const { data } = await apiClient.post(`/v1/${resource}`, payload)
+    return unwrapResource(data)
+  },
+  async updateV1(resource, id, payload) {
+    const { data } = await apiClient.patch(`/v1/${resource}/${id}`, payload)
+    return unwrapResource(data)
+  },
+  async deleteV1(resource, id) {
+    const { data } = await apiClient.delete(`/v1/${resource}/${id}`)
+    return unwrapResource(data)
+  },
+  async transitionV1(resource, id, action, payload = {}) {
+    const { data } = await apiClient.post(`/v1/${resource}/${id}/${action}`, payload)
+    return unwrapResource(data)
+  },
+  async getV1Path(path, params = {}) {
+    const { data } = await apiClient.get(`/v1/${path}`, { params })
+    return unwrapResource(data)
+  },
+  async listV1Path(path, params = {}) {
+    const { data } = await apiClient.get(`/v1/${path}`, { params })
+    return unwrapCollection(data)
+  },
+  async postV1Path(path, payload = {}) {
+    const { data } = await apiClient.post(`/v1/${path}`, payload)
+    return unwrapResource(data)
+  },
+  async putV1Path(path, payload = {}) {
+    const { data } = await apiClient.put(`/v1/${path}`, payload)
+    return unwrapResource(data)
+  },
+  async saveOnboarding(payload) {
+    const { data } = await apiClient.put('/v1/onboarding', payload)
+    return unwrapResource(data)
+  },
+  async getOnboarding() {
+    const { data } = await apiClient.get('/v1/onboarding')
+    return unwrapResource(data)
+  },
+  async requestOtp(payload) {
+    await ensureCsrfCookie()
+    const { data } = await apiClient.post('/v1/auth/otp/request', payload)
+    return unwrapResource(data)
+  },
+  async verifyOtp(payload) {
+    await ensureCsrfCookie()
+    const { data } = await apiClient.post('/v1/auth/otp/verify', payload)
+    return unwrapResource(data)
   },
   async listPlots() {
     const { data } = await apiClient.get('/plots')

@@ -47,12 +47,12 @@ describe('InventoryPage task replenishment flow', () => {
       expect(screen.getByDisplayValue('Protective cover')).toBeInTheDocument()
     })
 
-    expect(screen.getByRole('heading', { name: /Pridėti inventoriaus įrašą/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Add inventory record/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/Pavadinimas/i)).toHaveValue('Protective cover')
     expect(screen.getByLabelText(/Tipas/i)).toHaveValue('tool')
     expect(screen.getByLabelText(/Tipas/i)).toBeDisabled()
     expect(screen.getByLabelText(/Kiekis/i)).toHaveValue(23)
-    expect(screen.getAllByRole('link', { name: /Grįžti į kalendoriaus dieną/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /Return to calendar day/i })[0]).toHaveAttribute(
       'href',
       '/plots/5/calendar?calendarId=9&date=2026-04-20',
     )
@@ -91,7 +91,7 @@ describe('InventoryPage task replenishment flow', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Redaguoti inventoriaus įrašą/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Edit inventory record/i })).toBeInTheDocument()
     })
 
     expect(screen.getByLabelText(/Pavadinimas/i)).toHaveValue('Protective cover')

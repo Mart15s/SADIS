@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sad-system-web
+    name: yava-web
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -15,8 +15,10 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: pgsql
-      - key: RUN_MIGRATIONS
-        value: true
+      # Prefer an explicit pre-deploy operation. Enabling this only runs normal
+      # Laravel schema migrations; Stage 1 data conversion is never run at boot.
+      - key: RUN_SCHEMA_MIGRATIONS
+        value: false
       - key: RUN_DEMO_SEEDER
         value: false
       - key: RUN_DEMO1_RICH_SEEDER
@@ -33,5 +35,11 @@ services:
         sync: false
       - key: SANCTUM_STATEFUL_DOMAINS
         sync: false
+      - key: AUTH_EMIT_LEGACY_TOKEN
+        value: false
+      - key: TRUSTED_PROXIES
+        sync: false
+      - key: OTP_PROVIDER
+        value: unconfigured
       - key: PERENUAL_API_KEY
         sync: false
