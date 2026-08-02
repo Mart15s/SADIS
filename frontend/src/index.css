@@ -13690,7 +13690,8 @@ body { max-width: 100%; overflow-x: hidden; color: var(--yava-ink); background: 
   .modal-layer:has(> .stage1-modal) { align-items: end; padding: 0; }
   .field-editor-page .page-header { padding-inline: .65rem; }
   .field-editor { min-height: calc(100svh - 12.5rem); border-radius: 0; border-inline: 0; }
-  .field-editor-toolbar { top: .5rem; right: .5rem; left: .5rem; max-width: none; justify-content: flex-start; flex-wrap: wrap; transform: none; overflow-x: visible; }
+  .field-editor-toolbar { top: .5rem; right: .5rem; left: .5rem; max-width: none; justify-content: flex-start; flex-wrap: nowrap; transform: none; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
+  .field-editor-toolbar button { flex: 0 0 auto; }
   .field-editor-sheet { position: absolute; top: auto; right: 0; bottom: 0; left: 0; width: 100%; max-height: 62%; padding-bottom: 5.5rem; border-radius: 20px 20px 0 0; transform: translateY(calc(100% + 1rem)); }
   .field-editor-fab { bottom: 5rem; }
   .field-editor-mobile-actions { position: absolute; z-index: 7; right: .75rem; bottom: .75rem; left: .75rem; display: grid; grid-template-columns: 1fr 1.35fr; gap: .5rem; padding: .5rem; border: 1px solid var(--yava-border); border-radius: 14px; background: rgba(255,253,249,.96); box-shadow: var(--yava-shadow); }

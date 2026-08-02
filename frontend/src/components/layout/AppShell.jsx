@@ -15,16 +15,17 @@ export default function AppShell() {
     if (typeof window === 'undefined') return false
     return window.matchMedia('(max-width: 1100px)').matches
   })
+  const isFieldEditorRoute = /^\/fields\/[^/]+\/editor$/.test(location.pathname)
   const isWorkspaceRoute =
     /^\/plots\/new$/.test(location.pathname) ||
     /^\/plots\/[^/]+(?:\/(?:calendar|history|harvests|analytics|sharing|rotation))?$/.test(
       location.pathname,
     ) ||
-    /^\/fields\/[^/]+\/editor$/.test(location.pathname)
+    isFieldEditorRoute
   const isPloteditorRoute =
     /^\/plots\/new$/.test(location.pathname) ||
     /^\/plots\/[^/]+$/.test(location.pathname) ||
-    /^\/fields\/[^/]+\/editor$/.test(location.pathname)
+    isFieldEditorRoute
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const [pageHeader, setPageHeader] = useState(null)
   const pageChromeContext = useMemo(
@@ -129,7 +130,7 @@ export default function AppShell() {
             </span>
             {isAuthenticated ? <ContextSwitcher /> : null}
           </div>
-          {isWorkspaceRoute ? (
+          {isWorkspaceRoute && !isFieldEditorRoute ? (
             <h1 className="sr-only">{activePageHeader?.title ?? 'Workspace'}</h1>
           ) : (
             <Topbar isWide={isWorkspaceRoute} pageHeader={activePageHeader} />
