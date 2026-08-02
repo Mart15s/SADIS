@@ -111,4 +111,5 @@ Additional references:
 - [Roles, permissions, and data sharing](docs/AUTHORIZATION.md)
 - [API transition matrix](docs/API_TRANSITION_MATRIX.md)
 - [Acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md)
+- [Latest Stage 1 verification record](docs/STAGE_1_VERIFICATION.md)
 - [Known limitations and Stage 2 exclusions](docs/KNOWN_LIMITATIONS.md)

@@ -2,21 +2,26 @@
 
 Record the tested commit, date, browser/device, database engine, and operator. A checkbox is evidence only when the scenario was actually executed.
 
+The latest completed internal regression evidence is recorded in
+[`STAGE_1_VERIFICATION.md`](STAGE_1_VERIFICATION.md). This checklist remains the
+deployment-operator sign-off and deliberately leaves production-only steps
+unchecked until they are exercised in the target environment.
+
 ## Automated gates
 
-- [ ] `php artisan test` passes on the default test database.
-- [ ] `vendor/bin/phpunit --configuration phpunit.pgsql.xml` passes against disposable PostgreSQL without duplicate-configuration warnings.
-- [ ] `vendor/bin/pint --test` passes.
-- [ ] `composer audit --locked` has no unresolved applicable advisory.
-- [ ] `npm test` passes.
-- [ ] `npm run lint` passes.
-- [ ] `npm run build` passes.
-- [ ] `npm audit` findings are resolved or documented with applicability and upgrade plan.
-- [ ] Fresh PostgreSQL migration succeeds.
-- [ ] Production Docker image builds from the final lock files and reaches a healthy state.
-- [ ] Container smoke checks cover `/up`, `/`, deep-link SPA fallback, unauthenticated API JSON, and nginx/PHP-FPM failure handling.
-- [ ] Legacy dry-run, execution rehearsal, rerun/idempotency, count, and orphan reports are captured.
-- [ ] Automated source scan finds no hardcoded Lithuanian primary-UI text.
+- [x] `php artisan test` passes on the default test database.
+- [x] `vendor/bin/phpunit --configuration phpunit.pgsql.xml` passes against disposable PostgreSQL without duplicate-configuration warnings.
+- [x] `vendor/bin/pint --test` passes.
+- [x] `composer audit --locked` has no unresolved applicable advisory.
+- [x] `npm test` passes.
+- [x] `npm run lint` passes.
+- [x] `npm run build` passes.
+- [x] `npm audit` findings are resolved or documented with applicability and upgrade plan.
+- [x] Fresh PostgreSQL migration succeeds.
+- [x] Production Docker image builds from the final lock files and reaches a healthy state.
+- [x] Container smoke checks cover `/up`, `/`, deep-link SPA fallback, unauthenticated API JSON, and nginx/PHP-FPM failure handling.
+- [x] Legacy dry-run, execution rehearsal, rerun/idempotency, count, and orphan reports are captured.
+- [x] Automated source scan finds no hardcoded Lithuanian primary-UI text.
 
 ## Identity and onboarding
 
