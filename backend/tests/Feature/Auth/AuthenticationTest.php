@@ -31,12 +31,24 @@ class AuthenticationTest extends TestCase
     public function test_login_me_and_logout_keep_the_shell_auth_contract(): void
     {
         $user = $this->user('login@example.com', 'password123');
+        $this->withHeader('Origin', 'http://localhost');
         $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password123'])
             ->assertOk()->assertJsonPath('user.email', $user->email)->assertJsonMissingPath('token');
 
-        Sanctum::actingAs($user);
         $this->getJson('/api/me')->assertOk()->assertJsonPath('email', $user->email);
         $this->postJson('/api/logout')->assertOk()->assertJsonPath('message', 'Signed out successfully.');
+        $this->assertGuest('web');
+    }
+
+    public function test_logout_revokes_a_real_personal_access_token(): void
+    {
+        $user = $this->user('token-logout@example.com');
+        $token = $user->createToken('logout-test')->plainTextToken;
+
+        $this->withToken($token)->postJson('/api/logout')
+            ->assertOk()->assertJsonPath('message', 'Signed out successfully.');
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
     public function test_guest_and_deactivated_users_cannot_restore_authenticated_state(): void
