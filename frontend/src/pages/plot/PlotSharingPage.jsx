@@ -53,7 +53,7 @@ export default function PlotSharingPage() {
         recipient_email: '',
         role: 'viewer',
       })
-      setSuccess('Bendrinimo prieiga atnaujinta.')
+      setSuccess('Sharing access updated.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -99,7 +99,7 @@ export default function PlotSharingPage() {
         meta={(
           <>
             <StatusBadge kind="selection" tone="neutral">{formatAccessRole(pageState.data.accessRole)}</StatusBadge>
-            {isOwner ? <StatusBadge kind="status" tone="success">Savininko valdymas</StatusBadge> : null}
+            {isOwner ? <StatusBadge kind="status" tone="success">Owner controls</StatusBadge> : null}
           </>
         )}
       />
@@ -107,7 +107,7 @@ export default function PlotSharingPage() {
 
       {!isOwner ? (
         <EmptyState
-          title="Reikalinga savininko prieiga"
+          title="Owner access required"
           description="Only the field owner can grant or revoke sharing access."
         />
       ) : (
@@ -128,12 +128,12 @@ export default function PlotSharingPage() {
                   type="email"
                   value={form.recipient_email}
                   onChange={(event) => setForm((current) => ({ ...current, recipient_email: event.target.value }))}
-                  placeholder="naudotojas@example.com"
+                  placeholder="user@example.com"
                   required
                 />
               </div>
               <div className="field">
-                <label htmlFor="share-role">Prieigos lygis</label>
+                <label htmlFor="share-role">Access level</label>
                 <select
                   id="share-role"
                   value={form.role}
@@ -179,7 +179,7 @@ export default function PlotSharingPage() {
                         </StatusBadge>
                       </div>
                       <span className="muted">{accessRight.email}</span>
-                      <span className="plot-sharing-meta">Suteikta {formatDateTime(accessRight.granted_at)}</span>
+                      <span className="plot-sharing-meta">Granted {formatDateTime(accessRight.granted_at)}</span>
                     </div>
                     <Button
                       variant="ghost"

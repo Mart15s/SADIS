@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useSearchParams } from 'react-router-dom'
 import AppShell from './components/layout/AppShell.jsx'
 import BrandLogo from './components/layout/BrandLogo.jsx'
 import AdminRoute from './components/shared/AdminRoute.jsx'
@@ -19,6 +19,7 @@ import OtpVerificationPage from './pages/stage1/OtpVerificationPage.jsx'
 import Stage1DashboardPage from './pages/stage1/Stage1DashboardPage.jsx'
 import UserAdministrationPage from './pages/stage1/UserAdministrationPage.jsx'
 import { LoadingState } from './components/shared/StatusView.jsx'
+import { safeRedirectPath } from './lib/navigation.js'
 
 function AuthShell() {
   return (
@@ -37,10 +38,15 @@ function AuthShell() {
   )
 }
 
-function AuthRoute({ children }) {
+export function AuthRoute({ children }) {
   const { isAuthenticated, restoring } = useAuth()
+  const [searchParams] = useSearchParams()
   if (restoring) return <LoadingState title="Restoring your session…" />
-  return isAuthenticated ? <Navigate to="/" replace /> : children
+  return isAuthenticated ? (
+    <Navigate to={safeRedirectPath(searchParams.get('redirect'))} replace />
+  ) : (
+    children
+  )
 }
 
 function Private({ children }) {

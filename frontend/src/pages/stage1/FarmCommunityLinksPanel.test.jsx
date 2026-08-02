@@ -3,13 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import FarmCommunityLinksPanel from './FarmCommunityLinksPanel.jsx'
 import { api } from '../../lib/api.js'
 
-const workspaceState = {
-  active: { type: 'farm', id: '7', permissions: ['manage_members'] },
-}
-
-vi.mock('../../context/useWorkspace.js', () => ({
-  useWorkspace: () => workspaceState,
-}))
+const farmContext = { type: 'farm', id: '7', permissions: ['manage_members'] }
 
 vi.mock('../../lib/api.js', () => ({
   api: {
@@ -23,14 +17,13 @@ vi.mock('../../lib/api.js', () => ({
 describe('farm–community link management', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    workspaceState.active = { type: 'farm', id: '7', permissions: ['manage_members'] }
     api.listV1Path.mockResolvedValue([])
     api.listV1.mockResolvedValue([{ id: 12, name: 'Mysuru Growers' }])
     api.postV1Path.mockResolvedValue({ id: 31, status: 'pending' })
   })
 
   it('requests a scoped community link from the active farm', async () => {
-    render(<FarmCommunityLinksPanel scope="farm" />)
+    render(<FarmCommunityLinksPanel scope="farm" context={farmContext} />)
 
     fireEvent.change(await screen.findByLabelText('Community'), { target: { value: '12' } })
     fireEvent.click(screen.getByLabelText('crop summary'))
@@ -46,9 +39,32 @@ describe('farm–community link management', () => {
   })
 
   it('does not expose link management without resolved permission', () => {
-    workspaceState.active = { type: 'farm', id: '7', permissions: ['view_farm'] }
-    const { container } = render(<FarmCommunityLinksPanel scope="farm" />)
+    const context = { type: 'farm', id: '7', permissions: ['view_farm'] }
+    const { container } = render(<FarmCommunityLinksPanel scope="farm" context={context} />)
     expect(container).toBeEmptyDOMElement()
     expect(api.listV1Path).not.toHaveBeenCalled()
+  })
+
+  it('lets an authorized community manager approve a pending link', async () => {
+    const context = { type: 'community', id: '9', permissions: ['manage_members'] }
+    api.listV1Path.mockResolvedValue([
+      {
+        id: 31,
+        status: 'pending',
+        farm: { id: 7, name: 'North field' },
+        analytics_scopes: ['crop_summary'],
+        farm_access_permissions: ['view_farm'],
+      },
+    ])
+
+    render(<FarmCommunityLinksPanel scope="community" context={context} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }))
+
+    await waitFor(() =>
+      expect(api.postV1Path).toHaveBeenCalledWith('farm-community-links/31/approve'),
+    )
+    expect(api.listV1Path).toHaveBeenCalledWith('farm-community-links', { community_id: '9' })
+    expect(api.listV1).not.toHaveBeenCalled()
   })
 })

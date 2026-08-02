@@ -18,7 +18,7 @@ import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 function plantZoneLabel(plant, zones) {
   const zoneId = plant.plant_zone_id ?? plant.fk_plant_zone_id ?? null
   const zone = zones.find((entry) => String(entry.id) === String(zoneId))
-  return zone?.name ?? 'Zona nenurodyta'
+  return zone?.name ?? 'Zone not specified'
 }
 
 export default function PlotHistoryPage() {
@@ -112,8 +112,8 @@ export default function PlotHistoryPage() {
                       <p className="plot-history-row-summary">{formatSnapshotText(snapshot.summary)}</p>
                     </div>
                     <div className="plot-history-row-meta">
-                      <StatusBadge kind="selection" tone="neutral">{snapshot.zone_count ?? 0} zonos</StatusBadge>
-                      <StatusBadge kind="selection" tone="neutral">{snapshot.plant_count ?? 0} augalai</StatusBadge>
+                      <StatusBadge kind="selection" tone="neutral">{snapshot.zone_count ?? 0} zones</StatusBadge>
+                      <StatusBadge kind="selection" tone="neutral">{snapshot.plant_count ?? 0} plants</StatusBadge>
                     </div>
                   </button>
                 )
@@ -135,7 +135,7 @@ export default function PlotHistoryPage() {
                 <div className="plot-history-preview-meta">
                   <MetricCard label="Zones" value={versionZones.length} />
                   <MetricCard label="Plants" value={versionPlants.length} />
-                  <MetricCard label="Sklypo plotas" value={formatSquareMetersValue(snapshotPayload.plot?.plot_size, 2, '--')} />
+                  <MetricCard label="Field area" value={formatSquareMetersValue(snapshotPayload.plot?.plot_size, 2, '--')} />
                 </div>
 
                 <PlanPreview

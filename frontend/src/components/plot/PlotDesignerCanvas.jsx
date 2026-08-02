@@ -1160,7 +1160,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         ? { className: 'badge badge-success', text: layoutSaveFeedback.message }
         : null
   const plotBoundaryLabelCandidate = getBoundaryLabelLayout({
-    plotName: plotName?.trim() || 'Sklypo riba',
+    plotName: plotName?.trim() || 'Field boundary',
     areaText: formatSquareMeters(calculateArea(renderedBoundary), 1),
     screenPoints: projectShape(renderedBoundary, viewport),
     viewportBounds,
@@ -1275,8 +1275,8 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     return labels
   })()
   const layerItems = [
-    { id: 'boundary', label: 'Sklypo riba', active: true, color: '#47633b' },
-    { id: 'zones', label: `${zones.length} zonos`, active: zones.length > 0, color: '#b9683f' },
+    { id: 'boundary', label: 'Field boundary', active: true, color: '#47633b' },
+    { id: 'zones', label: `${zones.length} zones`, active: zones.length > 0, color: '#b9683f' },
     { id: 'grid', label: 'Tinklelis', active: true, color: '#8c7c66' },
     { id: 'dimensions', label: 'Matmenys', active: showDimensions, color: '#ef6d22' },
   ]
@@ -1330,13 +1330,13 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       </div>
 
       <div className="designer-map-console">
-        {showLayerConsole ? <MapLayerControl title="Matomi rodiniai" items={layerItems} /> : null}
+        {showLayerConsole ? <MapLayerControl title="Visible layers" items={layerItems} /> : null}
         {!mapFirstHud ? <PlotScaleControl zoom={zoomLabel} snapEnabled={snapEnabled} dimensionsVisible={showDimensions} /> : null}
       </div>
 
       <div className="designer-meta-grid">
-        <MeasurementBadge label="Sklypo plotas" value={formatSquareMeters(calculateArea(renderedBoundary), 1)} tone="field" className="designer-measurement" />
-        <MeasurementBadge label="Sklypo perimetras" value={formatMeters(plotMetrics.perimeter)} tone="earth" className="designer-measurement" />
+        <MeasurementBadge label="Field area" value={formatSquareMeters(calculateArea(renderedBoundary), 1)} tone="field" className="designer-measurement" />
+        <MeasurementBadge label="Field perimeter" value={formatMeters(plotMetrics.perimeter)} tone="earth" className="designer-measurement" />
         <MeasurementBadge label="Side lengths" value={plotMetrics.sideSummary || 'No geometry'} tone="amber" className="designer-measurement designer-measurement-wide" />
         <MeasurementBadge
           label={selectedZone ? 'Selected zone' : 'Mapped zones'}

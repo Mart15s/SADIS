@@ -129,7 +129,9 @@ export default function AppShell() {
             </span>
             {isAuthenticated ? <ContextSwitcher /> : null}
           </div>
-          {isWorkspaceRoute ? null : (
+          {isWorkspaceRoute ? (
+            <h1 className="sr-only">{activePageHeader?.title ?? 'Workspace'}</h1>
+          ) : (
             <Topbar isWide={isWorkspaceRoute} pageHeader={activePageHeader} />
           )}
           <div

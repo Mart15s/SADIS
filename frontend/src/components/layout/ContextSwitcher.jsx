@@ -7,14 +7,7 @@ export default function ContextSwitcher() {
   const value = active ? `${active.type}:${active.id}` : ''
 
   return (
-    <label
-      className="context-switcher"
-      title={
-        error
-          ? t('context.refreshError')
-          : undefined
-      }
-    >
+    <label className="context-switcher" title={error ? t('context.refreshError') : undefined}>
       <span>{t('context.label')}</span>
       <select
         aria-label={t('context.label')}

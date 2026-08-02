@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ErrorState, LoadingState, SuccessToast } from '../../components/shared/StatusView.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
-import { useWorkspace } from '../../context/useWorkspace.js'
 import { api } from '../../lib/api.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
@@ -25,10 +24,8 @@ function humanize(value) {
   return value.replaceAll('_', ' ')
 }
 
-export default function FarmCommunityLinksPanel({ scope }) {
-  const { active } = useWorkspace()
-  const canManage =
-    active?.type === scope && active.permissions?.includes('manage_members')
+export default function FarmCommunityLinksPanel({ scope, context }) {
+  const canManage = context?.type === scope && context.permissions?.includes('manage_members')
   const [communityId, setCommunityId] = useState('')
   const [selectedAnalytics, setSelectedAnalytics] = useState([])
   const [selectedPermissions, setSelectedPermissions] = useState(['view_farm'])
@@ -40,12 +37,12 @@ export default function FarmCommunityLinksPanel({ scope }) {
     async () => {
       if (!canManage) return { links: [], communities: [] }
       const [links, communities] = await Promise.all([
-        api.listV1Path('farm-community-links', { [`${scope}_id`]: active.id }),
+        api.listV1Path('farm-community-links', { [`${scope}_id`]: context.id }),
         scope === 'farm' ? api.listV1('communities') : Promise.resolve([]),
       ])
       return { links, communities }
     },
-    [active?.id, canManage, scope],
+    [context?.id, canManage, scope],
     { links: [], communities: [] },
   )
 
@@ -59,7 +56,7 @@ export default function FarmCommunityLinksPanel({ scope }) {
     setPending('create')
     setError('')
     try {
-      await api.postV1Path(`farms/${active.id}/communities/${communityId}`, {
+      await api.postV1Path(`farms/${context.id}/communities/${communityId}`, {
         analytics_scopes: selectedAnalytics,
         farm_access_permissions: selectedPermissions,
       })
@@ -172,8 +169,8 @@ export default function FarmCommunityLinksPanel({ scope }) {
             <div>
               <strong>{scope === 'farm' ? link.community?.name : link.farm?.name}</strong>
               <p>
-                Analytics: {link.analytics_scopes?.map(humanize).join(', ') || 'none'} · Farm access:{' '}
-                {link.farm_access_permissions?.map(humanize).join(', ') || 'none'}
+                Analytics: {link.analytics_scopes?.map(humanize).join(', ') || 'none'} · Farm
+                access: {link.farm_access_permissions?.map(humanize).join(', ') || 'none'}
               </p>
             </div>
             <div className="stage1-member-actions">

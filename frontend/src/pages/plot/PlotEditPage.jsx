@@ -117,11 +117,11 @@ export default function PlotEditPage() {
     return (
       <div className="page-stack">
         <PageHeader
-          title="Sklypo redaktorius"
+          title="Field editor"
           description="Your current role can view this field, but only owners and editors can update it."
         />
         <EmptyState
-          title="Redagavimo prieiga negalima"
+          title="Editing access unavailable"
           description="Return to the field overview if you only need to read its data."
           action={(
             <Link to={`/plots/${plotId}`}>
@@ -136,7 +136,7 @@ export default function PlotEditPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Sklypo nustatymai"
+        eyebrow="Field settings"
         title="Edit field details"
         description={`Update ${pageState.data.plot.name}'s identity, location, size, and community visibility without changing its layout.`}
         meta={(
@@ -159,7 +159,7 @@ export default function PlotEditPage() {
           <input id="edit-city" name="city" value={form.city} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="edit-size">Sklypo plotas</label>
+          <label htmlFor="edit-size">Field area</label>
           <input
             id="edit-size"
             name="plot_size"
@@ -207,9 +207,9 @@ export default function PlotEditPage() {
 
         {submitting ? (
           <ProcessingState
-            title="Saugomi sklypo nustatymai"
-            description="Atnaujinami sklypo duomenys ir darbo sritis."
-            steps={['Tikrinami laukai', 'Saugomi metaduomenys', 'Atnaujinamas sklypo vaizdas']}
+            title="Saving field settings"
+            description="Updating the field data and workspace."
+            steps={['Validating fields', 'Saving metadata', 'Updating the field view']}
             compact
           />
         ) : null}

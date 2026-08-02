@@ -108,12 +108,12 @@ export default function PlotHarvestsPage() {
         meta={(
           <>
             <Badge tone="soft">{pageState.data.harvests.length} harvest records</Badge>
-            <Badge tone="neutral">{pageState.data.plants.length} galimi augalai</Badge>
+            <Badge tone="neutral">{pageState.data.plants.length} available plants</Badge>
           </>
         )}
         actions={(
           <Link to={`/plots/${plotId}/analytics`}>
-            <Button variant="secondary">Analitika</Button>
+            <Button variant="secondary">Analytics</Button>
           </Link>
         )}
       />

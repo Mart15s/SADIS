@@ -777,7 +777,7 @@ export function getBoundaryLabelLayout({
   }
 
   const metrics = getBoundaryAnchorMetrics(points)
-  const titleText = [plotName?.trim(), areaText?.trim()].filter(Boolean).join(' | ') || 'Sklypo riba'
+  const titleText = [plotName?.trim(), areaText?.trim()].filter(Boolean).join(' | ') || 'Field boundary'
   const modeCandidates = [
     {
       mode: 'full',

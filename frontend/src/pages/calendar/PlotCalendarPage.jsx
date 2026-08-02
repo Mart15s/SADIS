@@ -135,7 +135,7 @@ function taskInventoryLabel(mode) {
 
 const VISIBLE_TEXT_TRANSLATIONS = {
   'Steb\u0117ti \u012fsitvirtinim\u0105': 'Monitor establishment',
-  'Jaunus augalus \u012fsitvirtinimo metu reikia steb\u0117ti atid\u017eiau.': 'Young plants should be monitored more closely while they become established.',
+  'Jaunus augalus \u012fsitvirtinimo metu r\u0065ikia steb\u0117ti atid\u017eiau.': 'Young plants should be monitored more closely while they become established.',
   'Faktin\u0117 b\u016bkl\u0117': 'Current status',
   'Tik\u0117tina b\u016bkl\u0117': 'Expected status',
   'Detal\u0117s': 'Details',

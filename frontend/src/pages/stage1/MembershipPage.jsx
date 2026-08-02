@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button.jsx'
 import { api } from '../../lib/api.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 import { useWorkspace } from '../../context/useWorkspace.js'
+import FarmCommunityLinksPanel from './FarmCommunityLinksPanel.jsx'
 
 const farmRoles = ['owner', 'admin', 'manager', 'worker', 'viewer']
 const communityRoles = ['admin', 'coordinator', 'resource_manager', 'member']
@@ -40,7 +41,9 @@ export default function MembershipPage({ scope }) {
         api.listV1Path(`${basePath}/invitations`),
         api.listV1Path(`${basePath}/join-requests`),
       ])
-      const failed = [invitationsResult, requestsResult].find((result) => result.status === 'rejected')
+      const failed = [invitationsResult, requestsResult].find(
+        (result) => result.status === 'rejected',
+      )
       return {
         members,
         invitations: invitationsResult.status === 'fulfilled' ? invitationsResult.value : [],
@@ -190,37 +193,37 @@ export default function MembershipPage({ scope }) {
         </div>
         {canManage ? (
           <form className="panel stage1-form" onSubmit={addMember}>
-          <h2>{scope === 'community' ? 'Invite a member' : 'Add a farm member'}</h2>
-          <label className="field">
-            <span>{scope === 'community' ? 'Email address' : 'User ID'}</span>
-            <input
-              type={scope === 'community' ? 'email' : 'number'}
-              min={scope === 'farm' ? '1' : undefined}
-              required
-              value={identifier}
-              onChange={(event) => setIdentifier(event.target.value)}
-            />
-          </label>
-          <label className="field">
-            <span>Role</span>
-            <select value={role} onChange={(event) => setRole(event.target.value)}>
-              {roles.map((value) => (
-                <option value={value} key={value}>
-                  {value.replaceAll('_', ' ')}
-                </option>
-              ))}
-            </select>
-          </label>
-          {invitationCode ? (
-            <div className="stage1-invitation-code" role="status">
-              <strong>Invitation code</strong>
-              <code>{invitationCode}</code>
-              <p>Share this code through a trusted channel. It is shown only once.</p>
-            </div>
-          ) : null}
-          <Button type="submit" loading={pending === 'invite'}>
-            {scope === 'community' ? 'Create invitation' : 'Add member'}
-          </Button>
+            <h2>{scope === 'community' ? 'Invite a member' : 'Add a farm member'}</h2>
+            <label className="field">
+              <span>{scope === 'community' ? 'Email address' : 'User ID'}</span>
+              <input
+                type={scope === 'community' ? 'email' : 'number'}
+                min={scope === 'farm' ? '1' : undefined}
+                required
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span>Role</span>
+              <select value={role} onChange={(event) => setRole(event.target.value)}>
+                {roles.map((value) => (
+                  <option value={value} key={value}>
+                    {value.replaceAll('_', ' ')}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {invitationCode ? (
+              <div className="stage1-invitation-code" role="status">
+                <strong>Invitation code</strong>
+                <code>{invitationCode}</code>
+                <p>Share this code through a trusted channel. It is shown only once.</p>
+              </div>
+            ) : null}
+            <Button type="submit" loading={pending === 'invite'}>
+              {scope === 'community' ? 'Create invitation' : 'Add member'}
+            </Button>
           </form>
         ) : null}
       </section>
@@ -257,6 +260,7 @@ export default function MembershipPage({ scope }) {
           </div>
         </section>
       ) : null}
+      <FarmCommunityLinksPanel scope={scope} context={context} />
     </div>
   )
 }

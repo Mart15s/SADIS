@@ -5,12 +5,14 @@ import process from 'node:process'
 import { describe, expect, it } from 'vitest'
 
 function productionSources(directory = 'src') {
-  return readdirSync(resolve(process.cwd(), directory), { withFileTypes: true }).flatMap((entry) => {
-    const path = `${directory}/${entry.name}`
-    if (entry.isDirectory()) return entry.name === 'test' ? [] : productionSources(path)
-    if (!/\.(?:js|jsx)$/u.test(entry.name) || /\.test\.(?:js|jsx)$/u.test(entry.name)) return []
-    return [path]
-  })
+  return readdirSync(resolve(process.cwd(), directory), { withFileTypes: true }).flatMap(
+    (entry) => {
+      const path = `${directory}/${entry.name}`
+      if (entry.isDirectory()) return entry.name === 'test' ? [] : productionSources(path)
+      if (!/\.(?:js|jsx)$/u.test(entry.name) || /\.test\.(?:js|jsx)$/u.test(entry.name)) return []
+      return [path]
+    },
+  )
 }
 
 const primarySources = productionSources()

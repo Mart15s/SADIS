@@ -216,26 +216,26 @@ export default function Sidebar({
         {links.map((link) => {
           const label = t(link.labelKey)
           return (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            end={link.to === '/'}
-            onClick={onNavigate}
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            title={isCollapsed ? label : undefined}
-          >
-            <SidebarIcon name={link.icon} />
-            <span className="sidebar-link-main">
-              <span className="sidebar-link-label">{label}</span>
-            </span>
-            {link.badge ? (
-              <span className="sidebar-link-trailing">
-                <Badge tone={link.badge.tone} size="sm" className="sidebar-nav-badge">
-                  {t(link.badge.textKey)}
-                </Badge>
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.to === '/'}
+              onClick={onNavigate}
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+              title={isCollapsed ? label : undefined}
+            >
+              <SidebarIcon name={link.icon} />
+              <span className="sidebar-link-main">
+                <span className="sidebar-link-label">{label}</span>
               </span>
-            ) : null}
-          </NavLink>
+              {link.badge ? (
+                <span className="sidebar-link-trailing">
+                  <Badge tone={link.badge.tone} size="sm" className="sidebar-nav-badge">
+                    {t(link.badge.textKey)}
+                  </Badge>
+                </span>
+              ) : null}
+            </NavLink>
           )
         })}
       </nav>
