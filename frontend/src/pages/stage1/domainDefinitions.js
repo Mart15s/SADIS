@@ -157,6 +157,7 @@ export const domainDefinitions = {
       { name: 'name', label: 'Item name', required: true },
       { name: 'farm_id', label: 'Farm', scope: true },
       { name: 'community_id', label: 'Community', scope: true },
+      { name: 'category', label: 'Category' },
       { name: 'quantity', label: 'Opening quantity', type: 'number', required: true },
       { name: 'unit', label: 'Unit', defaultValue: 'unit' },
       { name: 'reorder_level', label: 'Low-stock threshold', type: 'number' },
@@ -173,7 +174,22 @@ export const domainDefinitions = {
     fields: [
       { name: 'community_id', label: 'Community', required: true, scope: true },
       { name: 'name', label: 'Resource name', required: true },
+      {
+        name: 'type',
+        label: 'Resource type',
+        type: 'select',
+        options: ['machinery', 'tractor', 'tool', 'community_worker', 'agronomist_service'],
+        defaultValue: 'machinery',
+      },
       { name: 'description', label: 'Description', type: 'textarea' },
+      {
+        name: 'status',
+        label: 'Status',
+        type: 'select',
+        options: ['available', 'maintenance', 'retired'],
+        defaultValue: 'available',
+      },
+      { name: 'timezone', label: 'Timezone', defaultValue: 'Asia/Kolkata' },
       {
         name: 'requires_approval',
         label: 'Requires approval',

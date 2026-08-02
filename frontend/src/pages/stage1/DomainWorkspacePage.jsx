@@ -5,15 +5,23 @@ import { ErrorState, LoadingState, SuccessToast } from '../../components/shared/
 import Badge from '../../components/ui/Badge.jsx'
 import Button from '../../components/ui/Button.jsx'
 import { Dialog } from '../../components/ui/Dialog.jsx'
+import { useAuth } from '../../context/auth-context.js'
 import { useWorkspace } from '../../context/useWorkspace.js'
 import { api } from '../../lib/api.js'
+import { deserializeDateTimeFields, serializeDateTimeFields } from '../../lib/dateTime.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 import { useI18n } from '../../i18n/i18n-context.js'
 import { domainDefinitions, makeInitialForm } from './domainDefinitions.js'
 import CommunityAccessPanel from './CommunityAccessPanel.jsx'
 
 function displayName(item, definition) {
-  return item.name || item.title || item.crop?.name || `${definition.item} ${item.id}`
+  return (
+    item.name ||
+    item.title ||
+    item.resource?.name ||
+    item.crop?.name ||
+    `${definition.item} ${item.id}`
+  )
 }
 
 function contextParams(active) {
@@ -149,6 +157,7 @@ function MovementHistory({ item, references = {}, showEmpty = false }) {
 
 export default function DomainWorkspacePage({ resource }) {
   const definition = domainDefinitions[resource]
+  const { user } = useAuth()
   const { active, contexts, reload: reloadContexts } = useWorkspace()
   const { formatArea, formatDate, formatDateTime } = useI18n()
   const [query, setQuery] = useState('')
@@ -317,14 +326,22 @@ export default function DomainWorkspacePage({ resource }) {
 
   function startEdit(item) {
     const initial = makeInitialForm(definition)
+    const displayValues = deserializeDateTimeFields(item, definition.fields, active?.timezone)
     definition.fields.forEach((field) => {
-      initial[field.name] = item[field.name] ?? initial[field.name]
+      initial[field.name] = displayValues[field.name] ?? initial[field.name]
     })
     setForm(initial)
     setEditingId(item.id)
     setMutationError('')
     setMutationDetails({})
     setIsFormOpen(true)
+  }
+
+  function closeForm() {
+    if (pendingId) return
+    setIsFormOpen(false)
+    setMutationError('')
+    setMutationDetails({})
   }
 
   async function submit(event) {
@@ -334,9 +351,11 @@ export default function DomainWorkspacePage({ resource }) {
     setMutationError('')
     setMutationDetails({})
     try {
+      const payload = serializeDateTimeFields(form, definition.fields, active?.timezone)
+      if (editingId && resource === 'inventories') delete payload.quantity
       const saved = editingId
-        ? await api.updateV1(resource, editingId, form)
-        : await api.createV1(resource, form)
+        ? await api.updateV1(resource, editingId, payload)
+        : await api.createV1(resource, payload)
       pageState.setData((current) =>
         editingId
           ? current.map((item) =>
@@ -440,7 +459,13 @@ export default function DomainWorkspacePage({ resource }) {
     setRecordActionPending(true)
     setRecordActionError('')
     setRecordActionDetails({})
-    const payload = compactPayload(recordActionForm)
+    const payload = compactPayload(
+      serializeDateTimeFields(
+        recordActionForm,
+        recordActionDefinitions[recordAction.type].fields,
+        active?.timezone,
+      ),
+    )
 
     try {
       let saved
@@ -605,6 +630,44 @@ export default function DomainWorkspacePage({ resource }) {
                   </dd>
                 </>
               ) : null}
+              {resource === 'inventories' && item.category ? (
+                <>
+                  <dt>Category</dt>
+                  <dd>{item.category}</dd>
+                </>
+              ) : null}
+              {resource === 'inventories' &&
+              item.reorder_level !== null &&
+              item.reorder_level !== undefined ? (
+                <>
+                  <dt>Stock level</dt>
+                  <dd>
+                    {Number(item.quantity) <= Number(item.reorder_level) ? (
+                      <Badge tone="warning">Low stock</Badge>
+                    ) : (
+                      'In stock'
+                    )}
+                  </dd>
+                </>
+              ) : null}
+              {resource === 'resources' && item.type ? (
+                <>
+                  <dt>Type</dt>
+                  <dd>{item.type.replaceAll('_', ' ')}</dd>
+                </>
+              ) : null}
+              {resource === 'resources' && item.timezone ? (
+                <>
+                  <dt>Time zone</dt>
+                  <dd>{item.timezone}</dd>
+                </>
+              ) : null}
+              {resource === 'reservations' && item.ends_at ? (
+                <>
+                  <dt>Ends</dt>
+                  <dd>{formatDateTime(item.ends_at, {}, item.timezone || active?.timezone)}</dd>
+                </>
+              ) : null}
               {item.role ? (
                 <>
                   <dt>Your role</dt>
@@ -634,7 +697,7 @@ export default function DomainWorkspacePage({ resource }) {
             </dl>
             {resource === 'inventories' ? <MovementHistory item={item} /> : null}
             <div className="stage1-card-actions">
-              {resource === 'fields' ? (
+              {resource === 'fields' && canManageItem(item) ? (
                 <Link className="button button-primary button-sm" to={`/fields/${item.id}/editor`}>
                   Open editor
                 </Link>
@@ -672,14 +735,6 @@ export default function DomainWorkspacePage({ resource }) {
                   >
                     Reject
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => transition(item, 'cancel')}
-                    disabled={Boolean(pendingId)}
-                  >
-                    Cancel
-                  </Button>
                 </>
               ) : null}
               {resource === 'reservations' && canTransition && item.status === 'approved' ? (
@@ -691,15 +746,19 @@ export default function DomainWorkspacePage({ resource }) {
                   >
                     Complete
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => transition(item, 'cancel')}
-                    disabled={Boolean(pendingId)}
-                  >
-                    Cancel
-                  </Button>
                 </>
+              ) : null}
+              {resource === 'reservations' &&
+              ['pending', 'approved'].includes(item.status) &&
+              (canTransition || String(item.requested_by_user_id) === String(user?.id)) ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => transition(item, 'cancel')}
+                  disabled={Boolean(pendingId)}
+                >
+                  Cancel
+                </Button>
               ) : null}
               {resource === 'tasks' && canManageItem(item) && item.status !== 'completed' ? (
                 <Button
@@ -767,9 +826,7 @@ export default function DomainWorkspacePage({ resource }) {
 
       <Dialog
         open={isFormOpen}
-        onClose={() => {
-          if (!pendingId) setIsFormOpen(false)
-        }}
+        onClose={closeForm}
         labelledBy="stage1-form-title"
         className="stage1-modal"
       >
@@ -782,7 +839,7 @@ export default function DomainWorkspacePage({ resource }) {
             className="stage1-close"
             aria-label="Close"
             disabled={Boolean(pendingId)}
-            onClick={() => setIsFormOpen(false)}
+            onClick={closeForm}
           >
             ×
           </button>
@@ -873,11 +930,7 @@ export default function DomainWorkspacePage({ resource }) {
             <Button type="submit" loading={Boolean(pendingId)}>
               {pendingId ? 'Saving…' : 'Save'}
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setIsFormOpen(false)}
-              disabled={Boolean(pendingId)}
-            >
+            <Button variant="secondary" onClick={closeForm} disabled={Boolean(pendingId)}>
               Cancel
             </Button>
           </div>

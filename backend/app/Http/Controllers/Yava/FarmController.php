@@ -94,19 +94,32 @@ class FarmController extends Controller
             'user_id' => ['required', 'exists:users,id'],
             'role' => ['required', 'in:owner,admin,manager,worker,viewer'],
             'permissions' => ['sometimes', 'array'],
-            'permissions.*' => ['string', 'in:'.implode(',', PermissionService::FARM_PERMISSIONS)],
         ]);
-        $membership = DB::transaction(function () use ($farm, $data, $request): FarmMembership {
-            $membership = FarmMembership::query()->updateOrCreate(
-                ['farm_id' => $farm->id, 'user_id' => $data['user_id']],
-                ['role' => $data['role'], 'status' => 'active', 'invited_by_user_id' => $request->user()->id, 'joined_at' => now(), 'revoked_at' => null]
-            );
-            foreach ($data['permissions'] ?? [] as $permission) {
-                FarmMemberPermission::query()->updateOrCreate(['farm_membership_id' => $membership->id, 'permission' => $permission], ['allowed' => true]);
+        $permissionOverrides = array_key_exists('permissions', $data)
+            ? $this->normalizePermissionOverrides($data['permissions'])
+            : null;
+        $membership = DB::transaction(function () use ($farm, $data, $request, $permissionOverrides): FarmMembership {
+            Farm::query()->lockForUpdate()->findOrFail($farm->id);
+            $membership = FarmMembership::query()->where('farm_id', $farm->id)
+                ->where('user_id', $data['user_id'])->lockForUpdate()->first();
+            if ($membership && $membership->role === 'owner' && $membership->status === 'active' && $data['role'] !== 'owner'
+                && FarmMembership::query()->where('farm_id', $farm->id)->where('role', 'owner')->where('status', 'active')->count() === 1) {
+                throw ValidationException::withMessages(['membership' => ['Transfer farm ownership before removing or demoting the sole owner.']]);
+            }
+            $membership ??= new FarmMembership(['farm_id' => $farm->id, 'user_id' => $data['user_id']]);
+            $membership->fill([
+                'role' => $data['role'], 'status' => 'active', 'invited_by_user_id' => $request->user()->id,
+                'joined_at' => $membership->joined_at ?? now(), 'revoked_at' => null,
+            ])->save();
+            if ($permissionOverrides !== null) {
+                $membership->permissions()->delete();
+                foreach ($permissionOverrides as $override) {
+                    FarmMemberPermission::query()->create(['farm_membership_id' => $membership->id] + $override);
+                }
             }
 
             return $membership;
-        });
+        }, 3);
 
         return response()->json(['data' => $membership->load('permissions')], 201);
     }
@@ -118,9 +131,12 @@ class FarmController extends Controller
         $data = $request->validate([
             'role' => ['sometimes', 'in:owner,admin,manager,worker,viewer'],
             'status' => ['sometimes', 'in:active,revoked'],
-            'permissions' => ['sometimes', 'array'], 'permissions.*' => ['string', 'in:'.implode(',', PermissionService::FARM_PERMISSIONS)],
+            'permissions' => ['sometimes', 'array'],
         ]);
-        $membership = DB::transaction(function () use ($membership, $farm, $data): FarmMembership {
+        $permissionOverrides = array_key_exists('permissions', $data)
+            ? $this->normalizePermissionOverrides($data['permissions'])
+            : null;
+        $membership = DB::transaction(function () use ($membership, $farm, $data, $permissionOverrides): FarmMembership {
             Farm::query()->lockForUpdate()->findOrFail($farm->id);
             $locked = FarmMembership::query()->lockForUpdate()->findOrFail($membership->id);
             $removesOwner = $locked->role === 'owner' && $locked->status === 'active'
@@ -128,14 +144,17 @@ class FarmController extends Controller
             if ($removesOwner && FarmMembership::query()->where('farm_id', $farm->id)->where('role', 'owner')->where('status', 'active')->count() === 1) {
                 throw ValidationException::withMessages(['membership' => ['Transfer farm ownership before removing or demoting the sole owner.']]);
             }
-            $locked->update(array_filter([
+            $updates = array_filter([
                 'role' => $data['role'] ?? null, 'status' => $data['status'] ?? null,
-                'revoked_at' => ($data['status'] ?? null) === 'revoked' ? now() : null,
-            ], fn ($value) => $value !== null));
-            if (array_key_exists('permissions', $data)) {
+            ], fn ($value) => $value !== null);
+            if (isset($data['status'])) {
+                $updates['revoked_at'] = $data['status'] === 'revoked' ? now() : null;
+            }
+            $locked->update($updates);
+            if ($permissionOverrides !== null) {
                 $locked->permissions()->delete();
-                foreach ($data['permissions'] as $permission) {
-                    FarmMemberPermission::query()->create(['farm_membership_id' => $locked->id, 'permission' => $permission, 'allowed' => true]);
+                foreach ($permissionOverrides as $override) {
+                    FarmMemberPermission::query()->create(['farm_membership_id' => $locked->id] + $override);
                 }
             }
 
@@ -243,5 +262,31 @@ class FarmController extends Controller
         }
 
         return $payload;
+    }
+
+    private function normalizePermissionOverrides(array $permissions): array
+    {
+        $normalized = [];
+        foreach ($permissions as $key => $value) {
+            if (is_string($value)) {
+                $permission = $value;
+                $allowed = true;
+            } elseif (is_array($value)) {
+                $permission = $value['permission'] ?? null;
+                $allowed = $value['allowed'] ?? null;
+            } elseif (is_string($key) && is_bool($value)) {
+                $permission = $key;
+                $allowed = $value;
+            } else {
+                throw ValidationException::withMessages(['permissions' => ['Each permission must be a name or an object containing permission and allowed.']]);
+            }
+
+            if (! is_string($permission) || ! in_array($permission, PermissionService::FARM_PERMISSIONS, true) || ! is_bool($allowed)) {
+                throw ValidationException::withMessages(['permissions' => ['Each permission override must use a canonical permission name and a boolean allowed value.']]);
+            }
+            $normalized[$permission] = ['permission' => $permission, 'allowed' => $allowed];
+        }
+
+        return array_values($normalized);
     }
 }

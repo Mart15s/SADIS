@@ -14,6 +14,30 @@ const shortcuts = [
   ['/resources', 'Shared resources', 'Request and manage community equipment.'],
 ]
 
+function harvestLabel(analytics, farms, formatNumber) {
+  const totals = { ...(analytics.harvest_quantities || {}) }
+  if (farms.length) {
+    Object.keys(totals).forEach((unit) => delete totals[unit])
+    farms.forEach((farm) => {
+      Object.entries(farm.harvest_quantities || {}).forEach(([unit, quantity]) => {
+        totals[unit] = (totals[unit] || 0) + Number(quantity || 0)
+      })
+      if (!farm.harvest_quantities && farm.harvest_quantity != null) {
+        const unit = farm.harvest_unit || 'kg'
+        totals[unit] = (totals[unit] || 0) + Number(farm.harvest_quantity || 0)
+      }
+    })
+  }
+  if (!Object.keys(totals).length && analytics.harvest_quantity != null) {
+    totals[analytics.harvest_unit || 'kg'] = Number(analytics.harvest_quantity || 0)
+  }
+
+  const entries = Object.entries(totals)
+  return entries.length
+    ? entries.map(([unit, quantity]) => `${formatNumber(quantity)} ${unit}`).join(' · ')
+    : '0'
+}
+
 async function loadDashboard(active) {
   if (!active) return { analytics: {}, analyticsAvailable: false, recommendations: [] }
   const analyticsPath = `${active.type === 'farm' ? 'farms' : 'communities'}/${active.id}/analytics`
@@ -95,7 +119,7 @@ export default function Stage1DashboardPage() {
           />
           <MetricCard
             label="Harvest recorded"
-            value={`${formatNumber(active.type === 'farm' ? analytics.harvest_quantity || 0 : communityFarms.reduce((sum, farm) => sum + Number(farm.harvest_quantity || 0), 0))} kg`}
+            value={harvestLabel(analytics, communityFarms, formatNumber)}
           />
         </div>
       ) : (
@@ -124,7 +148,7 @@ export default function Stage1DashboardPage() {
             recommendations.map((item) => (
               <article key={item.id}>
                 <strong>{item.title}</strong>
-                <p>{item.description}</p>
+                <p>{item.message || item.description}</p>
               </article>
             ))
           ) : (

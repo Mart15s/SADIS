@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button.jsx'
 import { api } from '../../lib/api.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 import { useWorkspace } from '../../context/useWorkspace.js'
+import { useI18n } from '../../i18n/i18n-context.js'
 import FarmCommunityLinksPanel from './FarmCommunityLinksPanel.jsx'
 
 const farmRoles = ['owner', 'admin', 'manager', 'worker', 'viewer']
@@ -17,10 +18,27 @@ function memberLabel(member) {
   return profileName || member.name || member.user?.email || `Member ${member.user_id || member.id}`
 }
 
+function invitationRecipient(invitation) {
+  return invitation.email || invitation.phone || 'Private recipient'
+}
+
+function invitationStatus(invitation) {
+  if (
+    invitation.status === 'pending' &&
+    invitation.expires_at &&
+    new Date(invitation.expires_at).getTime() < Date.now()
+  ) {
+    return 'expired'
+  }
+
+  return invitation.status || 'pending'
+}
+
 export default function MembershipPage({ scope }) {
   const params = useParams()
   const id = params[`${scope}Id`]
   const { contexts } = useWorkspace()
+  const { formatDateTime } = useI18n()
   const context = contexts.find((item) => item.type === scope && String(item.id) === String(id))
   const canManage = Boolean(context?.permissions?.includes('manage_members'))
   const [identifier, setIdentifier] = useState('')
@@ -227,6 +245,40 @@ export default function MembershipPage({ scope }) {
           </form>
         ) : null}
       </section>
+      {scope === 'community' && canManage ? (
+        <section className="panel">
+          <h2>Invitation history</h2>
+          <div className="stage1-list">
+            {pageState.data.invitations.map((invitation) => {
+              const status = invitationStatus(invitation)
+
+              return (
+                <article key={invitation.id}>
+                  <div>
+                    <strong>{invitationRecipient(invitation)}</strong>
+                    <p>
+                      {invitation.role ? `${invitation.role.replaceAll('_', ' ')} · ` : ''}
+                      Expires {formatDateTime(invitation.expires_at)}
+                    </p>
+                  </div>
+                  <Badge
+                    tone={
+                      status === 'accepted'
+                        ? 'success'
+                        : status === 'pending'
+                          ? 'warning'
+                          : 'neutral'
+                    }
+                  >
+                    {status}
+                  </Badge>
+                </article>
+              )
+            })}
+            {pageState.data.invitations.length === 0 ? <p>No invitations created yet.</p> : null}
+          </div>
+        </section>
+      ) : null}
       {scope === 'community' && canManage ? (
         <section className="panel">
           <h2>Join requests</h2>

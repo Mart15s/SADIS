@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     try {
       await register(form)
-      navigate('/')
+      navigate('/onboarding', { replace: true })
     } catch (requestError) {
       setError(requestError.message)
     } finally {

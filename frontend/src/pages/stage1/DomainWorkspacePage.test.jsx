@@ -20,6 +20,9 @@ const workspaceState = vi.hoisted(() => ({
 vi.mock('../../context/useWorkspace.js', () => ({
   useWorkspace: () => workspaceState,
 }))
+vi.mock('../../context/auth-context.js', () => ({
+  useAuth: () => ({ user: { id: 42 } }),
+}))
 vi.mock('../../lib/api.js', () => ({
   api: {
     listV1: vi.fn(),
@@ -46,15 +49,17 @@ function renderPage(resource = 'tasks') {
 describe('Stage 1 resilient domain workspace', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    workspaceState.active.permissions = [
-      'manage_fields',
-      'manage_crops',
-      'manage_tasks',
-      'manage_inventory',
-    ]
+    workspaceState.active = {
+      type: 'farm',
+      id: '7',
+      name: 'Sunrise Farm',
+      timezone: 'Asia/Kolkata',
+      permissions: ['manage_fields', 'manage_crops', 'manage_tasks', 'manage_inventory'],
+    }
     api.listV1.mockResolvedValue([])
     api.listV1Path.mockResolvedValue([])
     api.getV1.mockResolvedValue(null)
+    api.transitionV1.mockResolvedValue({})
   })
 
   it('scopes requests to the active farm and prevents duplicate submissions while saving', async () => {
@@ -91,6 +96,8 @@ describe('Stage 1 resilient domain workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('The task could not be saved.')
     expect(screen.getByLabelText('Task title')).toHaveValue('Water north field')
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByText('The task could not be saved.')).not.toBeInTheDocument()
   })
 
   it('auto-scopes a crop season and offers scoped fields and crops as selectors', async () => {
@@ -235,5 +242,108 @@ describe('Stage 1 resilient domain workspace', () => {
     expect(screen.getByLabelText('Recent movements for Seed bags')).toHaveTextContent(
       'receipt — 5 bag · Field #3 · Crop season #18',
     )
+  })
+
+  it('hides the Field Editor link without manage_fields permission', async () => {
+    workspaceState.active.permissions = ['view_farm']
+    api.listV1.mockResolvedValue([{ id: 3, farm_id: 7, name: 'North field' }])
+
+    renderPage('fields')
+
+    expect(await screen.findByRole('heading', { name: 'North field' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Open editor' })).not.toBeInTheDocument()
+  })
+
+  it('serializes local task times in the active farm timezone', async () => {
+    api.createV1.mockResolvedValue({ id: 12, title: 'Inspect irrigation', status: 'pending' })
+    renderPage('tasks')
+    await screen.findByText('Start here')
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add task' })[0])
+    fireEvent.change(screen.getByLabelText('Task title'), {
+      target: { value: 'Inspect irrigation' },
+    })
+    fireEvent.change(screen.getByLabelText('Planned start'), {
+      target: { value: '2026-08-02T10:15' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() =>
+      expect(api.createV1).toHaveBeenCalledWith(
+        'tasks',
+        expect.objectContaining({ starts_at: '2026-08-02T04:45:00.000Z' }),
+      ),
+    )
+  })
+
+  it('lets a requester cancel their reservation without manager permissions', async () => {
+    workspaceState.active = {
+      type: 'community',
+      id: '9',
+      name: 'Mysuru Growers',
+      timezone: 'Asia/Kolkata',
+      permissions: ['view'],
+    }
+    api.listV1.mockResolvedValue([
+      {
+        id: 31,
+        requested_by_user_id: 42,
+        resource: { name: 'Shared tractor' },
+        status: 'pending',
+        starts_at: '2026-08-03T04:30:00.000Z',
+        ends_at: '2026-08-03T05:30:00.000Z',
+      },
+    ])
+    api.transitionV1.mockResolvedValue({ id: 31, status: 'cancelled' })
+
+    renderPage('reservations')
+    await screen.findByRole('heading', { name: 'Shared tractor' })
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(api.transitionV1).toHaveBeenCalledWith('reservations', 31, 'cancel'))
+  })
+
+  it('shows inventory category and a minimum-stock warning', async () => {
+    api.listV1.mockResolvedValue([
+      {
+        id: 25,
+        name: 'Seed bags',
+        category: 'seed',
+        quantity: 2,
+        reorder_level: 3,
+        unit: 'bag',
+        movements: [],
+      },
+    ])
+
+    renderPage('inventories')
+    await screen.findByRole('heading', { name: 'Seed bags' })
+    expect(screen.getByText('seed')).toBeInTheDocument()
+    expect(screen.getByText('Low stock')).toBeInTheDocument()
+  })
+
+  it('edits inventory metadata without attempting a direct balance change', async () => {
+    api.listV1.mockResolvedValue([
+      {
+        id: 25,
+        name: 'Seed bags',
+        category: 'seed',
+        quantity: 10,
+        reorder_level: 3,
+        unit: 'bag',
+        movements: [],
+      },
+    ])
+    api.updateV1.mockResolvedValue({ id: 25, name: 'Seed bags', category: 'grain', unit: 'bag' })
+
+    renderPage('inventories')
+    await screen.findByRole('heading', { name: 'Seed bags' })
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'grain' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(api.updateV1).toHaveBeenCalled())
+    const [, , payload] = api.updateV1.mock.calls[0]
+    expect(payload.category).toBe('grain')
+    expect(payload).not.toHaveProperty('quantity')
   })
 })

@@ -45,6 +45,8 @@ vendor/bin/pint --test
 cd ../frontend
 npm test
 npm run lint
+npm run format:check
+npm run english:scan
 npm run build
 npm audit
 ```
@@ -106,6 +108,7 @@ php artisan yava:stage1-report
 
 Additional references:
 
+- [Stage 1 user testing guide](docs/USER_TESTING_GUIDE.md)
 - [Environment variables](docs/ENVIRONMENT.md)
 - [Security model and operations](docs/SECURITY.md)
 - [Roles, permissions, and data sharing](docs/AUTHORIZATION.md)

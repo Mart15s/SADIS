@@ -20,6 +20,7 @@ use App\Services\Yava\InventoryMovementService;
 use App\Services\Yava\PermissionService;
 use App\Services\Yava\ReservationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class OperationsController extends Controller
@@ -128,6 +129,13 @@ class OperationsController extends Controller
     {
         $this->authorizeScope($request, $permissions, $inventory->toArray(), 'manage_inventory');
         $data = $request->validate($this->inventoryRules(true));
+        if (array_key_exists('quantity', $data)
+            && abs((float) $data['quantity'] - (float) $inventory->quantity) > 0.000001) {
+            throw ValidationException::withMessages([
+                'quantity' => ['Record an inventory movement to change the available quantity.'],
+            ]);
+        }
+        unset($data['quantity']);
         foreach (['farm_id', 'community_id'] as $scope) {
             if (array_key_exists($scope, $data) && (int) ($data[$scope] ?? 0) !== (int) ($inventory->{$scope} ?? 0)) {
                 throw ValidationException::withMessages([$scope => ['Inventory cannot be moved between farm or community scopes.']]);
@@ -219,7 +227,7 @@ class OperationsController extends Controller
 
     public function showResource(Request $request, SharedResource $resource, PermissionService $permissions)
     {
-        $permissions->authorizeCommunity($request->user(), $resource->community_id);
+        $this->authorizeResourceView($request, $permissions, $resource);
 
         return response()->json(['data' => $resource]);
     }
@@ -240,6 +248,8 @@ class OperationsController extends Controller
     public function destroyResource(Request $request, SharedResource $resource, PermissionService $permissions)
     {
         $permissions->authorizeCommunity($request->user(), $resource->community_id, 'manage_resources');
+        abort_if(ResourceReservation::query()->where('shared_resource_id', $resource->id)->exists(), 422,
+            'A resource with reservation history cannot be deleted. Retire it instead.');
         $resource->delete();
 
         return response()->json(null, 204);
@@ -250,8 +260,11 @@ class OperationsController extends Controller
         $query = ResourceReservation::query()->with('resource');
         if ($request->filled('resource_id')) {
             $resource = SharedResource::findOrFail($request->integer('resource_id'));
-            $permissions->authorizeCommunity($request->user(), $resource->community_id);
+            $this->authorizeResourceView($request, $permissions, $resource);
             $query->where('shared_resource_id', $resource->id);
+            if (! $permissions->hasCommunityPermission($request->user(), $resource->community_id, 'manage_resources')) {
+                $query->where('requested_by_user_id', $request->user()->id);
+            }
         } elseif ($request->filled('community_id')) {
             $communityId = $request->integer('community_id');
             $permissions->authorizeCommunity($request->user(), $communityId);
@@ -274,9 +287,16 @@ class OperationsController extends Controller
             'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date'], 'purpose' => ['nullable', 'string', 'max:1000'],
         ]);
         $resource = SharedResource::findOrFail($data['resource_id']);
-        $permissions->authorizeCommunity($request->user(), $resource->community_id);
+        abort_unless($resource->status === 'available', 422, 'Only available resources can be reserved.');
         if (isset($data['farm_id'])) {
             $permissions->authorizeFarm($request->user(), (int) $data['farm_id'], 'view_farm');
+            abort_unless(FarmCommunityLink::query()
+                ->where('farm_id', $data['farm_id'])
+                ->where('community_id', $resource->community_id)
+                ->where('status', 'active')->exists(), 422,
+                'The requesting farm must have an active link to the resource community.');
+        } else {
+            $permissions->authorizeCommunity($request->user(), $resource->community_id);
         }
         if (isset($data['field_id'])) {
             abort_unless(isset($data['farm_id'])
@@ -289,7 +309,7 @@ class OperationsController extends Controller
 
     public function showReservation(Request $request, ResourceReservation $reservation, PermissionService $permissions)
     {
-        $resource = SharedResource::findOrFail($reservation->shared_resource_id);
+        $resource = SharedResource::withTrashed()->findOrFail($reservation->shared_resource_id);
         if ($reservation->requested_by_user_id !== $request->user()->id) {
             $permissions->authorizeCommunity($request->user(), $resource->community_id, 'manage_resources');
         }
@@ -299,7 +319,7 @@ class OperationsController extends Controller
 
     public function reservationTransition(Request $request, ResourceReservation $reservation, string $transition, PermissionService $permissions, ReservationService $service)
     {
-        $resource = SharedResource::findOrFail($reservation->shared_resource_id);
+        $resource = SharedResource::withTrashed()->findOrFail($reservation->shared_resource_id);
         $notes = $request->validate(['notes' => ['nullable', 'string', 'max:1000']])['notes'] ?? null;
         if (in_array($transition, ['approve', 'reject'], true)) {
             $permissions->authorizeCommunity($request->user(), $resource->community_id, 'manage_resources');
@@ -330,6 +350,35 @@ class OperationsController extends Controller
         return response()->json(['data' => Recommendation::query()->where('farm_id', $farmId)->where('status', 'active')->latest()->get()]);
     }
 
+    public function planningHistory(Request $request, PermissionService $permissions)
+    {
+        $farmId = $request->integer('farm_id');
+        abort_unless($farmId, 422, 'farm_id is required.');
+        $permissions->authorizeFarm($request->user(), $farmId, 'view_farm');
+
+        $history = DB::table('planning_history')
+            ->leftJoin('fields', 'fields.id', '=', 'planning_history.field_id')
+            ->where('planning_history.farm_id', $farmId)
+            ->select([
+                'planning_history.id', 'planning_history.field_id', 'fields.name as field_name',
+                'planning_history.event', 'planning_history.subject_type', 'planning_history.subject_id',
+                'planning_history.before', 'planning_history.after', 'planning_history.created_at',
+            ])
+            ->orderByDesc('planning_history.created_at')
+            ->orderByDesc('planning_history.id')
+            ->limit(100)
+            ->get()
+            ->map(function ($item): array {
+                $payload = (array) $item;
+                $payload['before'] = $item->before ? json_decode($item->before, true) : null;
+                $payload['after'] = $item->after ? json_decode($item->after, true) : null;
+
+                return $payload;
+            });
+
+        return response()->json(['data' => $history]);
+    }
+
     public function farmAnalytics(Request $request, Farm $farm, PermissionService $permissions, AnalyticsService $analytics)
     {
         $permissions->authorizeFarm($request->user(), $farm, 'view_analytics');
@@ -353,6 +402,22 @@ class OperationsController extends Controller
         } else {
             throw ValidationException::withMessages(['scope' => ['A farm or community scope is required.']]);
         }
+    }
+
+    private function authorizeResourceView(Request $request, PermissionService $permissions, SharedResource $resource): void
+    {
+        if ($permissions->hasCommunityPermission($request->user(), $resource->community_id)) {
+            return;
+        }
+
+        $hasLinkedFarm = FarmCommunityLink::query()
+            ->where('community_id', $resource->community_id)
+            ->where('status', 'active')
+            ->whereHas('farm.memberships', fn ($query) => $query
+                ->where('user_id', $request->user()->id)
+                ->where('status', 'active'))
+            ->exists();
+        abort_unless($hasLinkedFarm, 403, 'You do not have permission to view this shared resource.');
     }
 
     private function requireOneScope(array $data): void

@@ -31,33 +31,44 @@ export function WorkspaceProvider({ children }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const reload = useCallback(async () => {
-    if (!isAuthenticated) {
-      setContexts([])
-      setActiveState(null)
+  const reload = useCallback(
+    async (preferredContext = null) => {
+      if (!isAuthenticated) {
+        setContexts([])
+        setActiveState(null)
+        setError(null)
+        return
+      }
+      setLoading(true)
       setError(null)
-      return
-    }
-    setLoading(true)
-    setError(null)
-    try {
-      const next = normalizeContexts(await api.listContexts())
-      setContexts(next)
-      setActiveState((current) => {
-        const refreshed = current
-          ? next.find((item) => item.id === current.id && item.type === current.type)
-          : null
-        if (refreshed) return refreshed
-        return next[0] ?? null
-      })
-    } catch (requestError) {
-      // Keep the last confirmed contexts during transient network failures so
-      // an already-mounted workspace does not silently switch scope.
-      setError(requestError)
-    } finally {
-      setLoading(false)
-    }
-  }, [isAuthenticated])
+      try {
+        const next = normalizeContexts(await api.listContexts())
+        setContexts(next)
+        setActiveState((current) => {
+          const preferred = preferredContext
+            ? next.find(
+                (item) =>
+                  item.id === String(preferredContext.id) && item.type === preferredContext.type,
+              )
+            : null
+          if (preferred) return preferred
+          const refreshed = current
+            ? next.find((item) => item.id === current.id && item.type === current.type)
+            : null
+          if (refreshed) return refreshed
+          return next[0] ?? null
+        })
+        return next
+      } catch (requestError) {
+        // Keep the last confirmed contexts during transient network failures so
+        // an already-mounted workspace does not silently switch scope.
+        setError(requestError)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [isAuthenticated],
+  )
 
   useEffect(() => {
     reload()

@@ -134,6 +134,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         Route::get('/communities', [YavaCommunityController::class, 'index']);
         Route::post('/communities', [YavaCommunityController::class, 'store']);
+        Route::get('/communities/discover', [YavaCommunityController::class, 'discover']);
         Route::get('/communities/{community}', [YavaCommunityController::class, 'show']);
         Route::patch('/communities/{community}', [YavaCommunityController::class, 'update']);
         Route::delete('/communities/{community}', [YavaCommunityController::class, 'destroy']);
@@ -212,6 +213,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/reservations/{reservation}', [OperationsController::class, 'showReservation']);
         Route::post('/reservations/{reservation}/{transition}', [OperationsController::class, 'reservationTransition'])->whereIn('transition', ['approve', 'reject', 'cancel', 'complete']);
         Route::get('/recommendations', [OperationsController::class, 'recommendations']);
+        Route::get('/planning-history', [OperationsController::class, 'planningHistory']);
 
         Route::get('/onboarding', [OnboardingController::class, 'show']);
         Route::put('/onboarding', [OnboardingController::class, 'update']);

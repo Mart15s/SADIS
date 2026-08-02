@@ -8,6 +8,7 @@ export const en = {
   'nav.crops': 'Crops',
   'nav.seasons': 'Crop seasons',
   'nav.tasks': 'Tasks',
+  'nav.calendar': 'Calendar',
   'nav.inventory': 'Inventory',
   'nav.resources': 'Resources',
   'nav.analytics': 'Analytics',

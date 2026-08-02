@@ -4,7 +4,7 @@ The Yava backend is a Laravel REST API backed by Eloquent, PostgreSQL in product
 
 ## Local setup
 
-Requirements: PHP 8.2 or later, Composer 2, and the PHP extensions required by `composer.json`.
+Requirements: PHP 8.3 or later, Composer 2, and the PHP extensions required by `composer.json`.
 
 ```bash
 composer install

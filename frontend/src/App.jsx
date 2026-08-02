@@ -13,6 +13,7 @@ import ResetPasswordPage from './pages/user/ResetPasswordPage.jsx'
 import DomainWorkspacePage from './pages/stage1/DomainWorkspacePage.jsx'
 import MembershipPage from './pages/stage1/MembershipPage.jsx'
 import AnalyticsWorkspacePage from './pages/stage1/AnalyticsWorkspacePage.jsx'
+import CalendarWorkspacePage from './pages/stage1/CalendarWorkspacePage.jsx'
 import FieldEditorPage from './pages/stage1/FieldEditorPage.jsx'
 import OnboardingPage from './pages/stage1/OnboardingPage.jsx'
 import OtpVerificationPage from './pages/stage1/OtpVerificationPage.jsx'
@@ -169,6 +170,14 @@ export default function App() {
           element={
             <Private>
               <DomainWorkspacePage resource="tasks" />
+            </Private>
+          }
+        />
+        <Route
+          path="calendar"
+          element={
+            <Private>
+              <CalendarWorkspacePage />
             </Private>
           }
         />

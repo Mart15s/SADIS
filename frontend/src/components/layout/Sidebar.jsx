@@ -15,6 +15,7 @@ const authLinks = [
   { to: '/crops', labelKey: 'nav.crops', icon: 'plants' },
   { to: '/crop-seasons', labelKey: 'nav.seasons', icon: 'plants' },
   { to: '/tasks', labelKey: 'nav.tasks', icon: 'tasks' },
+  { to: '/calendar', labelKey: 'nav.calendar', icon: 'tasks' },
   { to: '/inventory', labelKey: 'nav.inventory', icon: 'inventory' },
   { to: '/resources', labelKey: 'nav.resources', icon: 'resources' },
   { to: '/reservations', labelKey: 'nav.reservations', icon: 'resources' },

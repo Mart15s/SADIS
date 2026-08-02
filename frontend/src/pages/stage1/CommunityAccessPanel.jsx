@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Button from '../../components/ui/Button.jsx'
 import { api } from '../../lib/api.js'
+import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
+
+function communityOptionLabel(community) {
+  const location = [community.locality, community.state_code].filter(Boolean).join(', ')
+  const requestStatus = community.join_request_status
+    ? ` · request ${community.join_request_status}`
+    : ''
+
+  return `${community.name}${location ? ` — ${location}` : ''}${requestStatus}`
+}
 
 export default function CommunityAccessPanel({ onChanged }) {
   const [searchParams] = useSearchParams()
@@ -10,6 +20,7 @@ export default function CommunityAccessPanel({ onChanged }) {
   const [message, setMessage] = useState('')
   const [pending, setPending] = useState('')
   const [feedback, setFeedback] = useState({ type: '', message: '' })
+  const discovery = useAsyncData(() => api.listV1Path('communities/discover'), [], [])
 
   async function acceptInvitation(event) {
     event.preventDefault()
@@ -38,6 +49,14 @@ export default function CommunityAccessPanel({ onChanged }) {
     setFeedback({ type: '', message: '' })
     try {
       await api.postV1Path(`communities/${communityId}/join-requests`, { message })
+      discovery.setData((communities) =>
+        communities.map((community) =>
+          String(community.id) === String(communityId)
+            ? { ...community, join_request_status: 'pending' }
+            : community,
+        ),
+      )
+      setCommunityId('')
       setMessage('')
       setFeedback({
         type: 'success',
@@ -85,15 +104,40 @@ export default function CommunityAccessPanel({ onChanged }) {
         </form>
         <form className="stage1-form" onSubmit={requestAccess}>
           <label className="field">
-            <span>Community ID</span>
-            <input
-              type="number"
-              min="1"
+            <span>Community</span>
+            <select
               required
               value={communityId}
+              disabled={discovery.loading || Boolean(discovery.error)}
               onChange={(event) => setCommunityId(event.target.value)}
-            />
+            >
+              <option value="">
+                {discovery.loading ? 'Loading communities…' : 'Select a community'}
+              </option>
+              {discovery.data.map((community) => (
+                <option
+                  value={community.id}
+                  key={community.id}
+                  disabled={community.join_request_status === 'pending'}
+                >
+                  {communityOptionLabel(community)}
+                </option>
+              ))}
+            </select>
           </label>
+          {discovery.error ? (
+            <div>
+              <p className="field-error" role="alert">
+                {discovery.error.message}
+              </p>
+              <Button type="button" size="sm" variant="secondary" onClick={discovery.reload}>
+                Retry communities
+              </Button>
+            </div>
+          ) : null}
+          {!discovery.loading && !discovery.error && discovery.data.length === 0 ? (
+            <p>No communities are currently available to join.</p>
+          ) : null}
           <label className="field">
             <span>Message (optional)</span>
             <input value={message} onChange={(event) => setMessage(event.target.value)} />
@@ -102,7 +146,12 @@ export default function CommunityAccessPanel({ onChanged }) {
             type="submit"
             variant="secondary"
             loading={pending === 'request'}
-            disabled={Boolean(pending) && pending !== 'request'}
+            disabled={
+              !communityId ||
+              discovery.loading ||
+              Boolean(discovery.error) ||
+              (Boolean(pending) && pending !== 'request')
+            }
           >
             Request to join
           </Button>

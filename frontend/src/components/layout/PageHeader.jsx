@@ -60,7 +60,7 @@ export default function PageHeader({ title, description, eyebrow, meta, actions,
     pageChrome.registerPageHeader(id, getLatestHeader())
 
     return () => pageChrome.clearPageHeader(id)
-  }, [pageChrome, id, signature])
+  }, [pageChrome, id, signature, actions, meta])
 
   if (pageChrome) {
     return null

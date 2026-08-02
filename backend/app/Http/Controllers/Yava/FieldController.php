@@ -136,6 +136,15 @@ class FieldController extends Controller
                 if (isset($markerData['field_zone_id'], $zoneIdMap[(string) $markerData['field_zone_id']])) {
                     $markerData['field_zone_id'] = $zoneIdMap[(string) $markerData['field_zone_id']];
                 }
+                if (! empty($markerData['field_zone_id'])) {
+                    $belongsToField = FieldZone::query()->where('field_id', $locked->id)
+                        ->whereKey($markerData['field_zone_id'])->exists();
+                    if (! $belongsToField) {
+                        throw ValidationException::withMessages([
+                            'markers' => ['Every marker zone must belong to this field.'],
+                        ]);
+                    }
+                }
                 $marker->fill(collect($markerData)->except('id')->all())->save();
                 $markerIds[] = $marker->id;
             }

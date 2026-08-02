@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import { ErrorState, LoadingState, SuccessToast } from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
+import { useAuth } from '../../context/auth-context.js'
+import { useWorkspace } from '../../context/useWorkspace.js'
 import { api } from '../../lib/api.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 import { useUnsavedChangesGuard } from '../../lib/hooks/useUnsavedChangesGuard.js'
@@ -37,6 +39,8 @@ function draftReducer(state, action) {
 export default function FieldEditorPage() {
   const { fieldId } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
+  const { contexts, loading: contextsLoading } = useWorkspace()
   const storageKey = `yava-field-draft:${fieldId}`
   const [draftState, dispatch] = useReducer(draftReducer, {
     present: emptyDraft,
@@ -210,6 +214,23 @@ export default function FieldEditorPage() {
 
   if (pageState.loading) return <LoadingState title="Loading field editor…" />
   if (pageState.error) return <ErrorState error={pageState.error} onRetry={pageState.reload} />
+  if (contextsLoading) return <LoadingState title="Checking field permissions…" />
+  const fieldContext = contexts.find(
+    (context) => context.type === 'farm' && String(context.id) === String(pageState.data?.farm_id),
+  )
+  const canManageField = isAdmin || fieldContext?.permissions?.includes('manage_fields')
+
+  if (!canManageField) {
+    return (
+      <div className="page-stack stage1-page">
+        <PageHeader eyebrow="Field workspace" title={pageState.data?.name || 'Field editor'} />
+        <ErrorState description="You do not have permission to edit this field." />
+        <Link className="button button-secondary button-md" to="/fields">
+          Back to fields
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="field-editor-page">
@@ -219,10 +240,15 @@ export default function FieldEditorPage() {
         description="Draw the field boundary, add optional zones, and save one recoverable workspace revision."
         actions={
           <>
-            <Button variant="secondary" onClick={cancel}>
+            <Button className="field-editor-desktop-action" variant="secondary" onClick={cancel}>
               Cancel
             </Button>
-            <Button onClick={save} loading={saving} disabled={!dirty || draft.geometry.length < 3}>
+            <Button
+              className="field-editor-desktop-action"
+              onClick={save}
+              loading={saving}
+              disabled={!dirty || draft.geometry.length < 3}
+            >
               Save field
             </Button>
           </>

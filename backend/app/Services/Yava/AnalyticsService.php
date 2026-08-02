@@ -15,15 +15,22 @@ class AnalyticsService
 {
     public function farm(Farm $farm): array
     {
-        return [
+        $harvestQuantities = $this->harvestQuantities($farm->id);
+        $analytics = [
             'farm_id' => $farm->id,
             'area_square_metres' => (float) $farm->area_square_metres,
             'fields' => Field::query()->where('farm_id', $farm->id)->count(),
             'active_crop_seasons' => CropSeason::query()->where('farm_id', $farm->id)->whereIn('status', ['planned', 'active'])->count(),
             'open_tasks' => WorkTask::query()->where('farm_id', $farm->id)->whereNotIn('status', ['completed', 'cancelled'])->count(),
             'inventory_items' => StockItem::query()->where('farm_id', $farm->id)->count(),
-            'harvest_quantity' => (float) CropHarvest::query()->whereHas('cropSeason', fn ($query) => $query->where('farm_id', $farm->id))->sum('quantity'),
+            'harvest_quantities' => $harvestQuantities,
         ];
+        if (count($harvestQuantities) === 1) {
+            $analytics['harvest_quantity'] = reset($harvestQuantities);
+            $analytics['harvest_unit'] = array_key_first($harvestQuantities);
+        }
+
+        return $analytics;
     }
 
     public function community(Community $community): array
@@ -47,7 +54,12 @@ class AnalyticsService
                     $minimum['active_crop_seasons'] = CropSeason::query()->where('farm_id', $link->farm_id)->where('status', 'active')->count();
                 }
                 if (in_array('harvest_summary', $scopes, true)) {
-                    $minimum['harvest_quantity'] = (float) CropHarvest::query()->whereHas('cropSeason', fn ($q) => $q->where('farm_id', $link->farm_id))->sum('quantity');
+                    $quantities = $this->harvestQuantities($link->farm_id);
+                    $minimum['harvest_quantities'] = $quantities;
+                    if (count($quantities) === 1) {
+                        $minimum['harvest_quantity'] = reset($quantities);
+                        $minimum['harvest_unit'] = array_key_first($quantities);
+                    }
                 }
                 if (in_array('task_summary', $scopes, true)) {
                     $taskCounts = WorkTask::query()->where('farm_id', $link->farm_id)
@@ -65,5 +77,17 @@ class AnalyticsService
                 return $minimum;
             })->values(),
         ];
+    }
+
+    private function harvestQuantities(int $farmId): array
+    {
+        return CropHarvest::query()
+            ->whereHas('cropSeason', fn ($query) => $query->where('farm_id', $farmId))
+            ->selectRaw('unit, SUM(quantity) as aggregate')
+            ->groupBy('unit')
+            ->orderBy('unit')
+            ->pluck('aggregate', 'unit')
+            ->map(fn ($quantity) => (float) $quantity)
+            ->all();
     }
 }

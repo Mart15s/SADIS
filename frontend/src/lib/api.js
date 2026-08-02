@@ -157,14 +157,17 @@ export const api = {
     return data
   },
   async forgotPassword(payload) {
+    await ensureCsrfCookie()
     const { data } = await apiClient.post('/forgot-password', payload)
     return data
   },
   async resetPassword(payload) {
+    await ensureCsrfCookie()
     const { data } = await apiClient.post('/reset-password', payload)
     return data
   },
   async logout() {
+    await ensureCsrfCookie()
     const { data } = await apiClient.post('/logout')
     return data
   },

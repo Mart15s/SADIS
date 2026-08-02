@@ -13,8 +13,8 @@ class ReservationService
 {
     public function request(User $user, SharedResource $resource, array $data): ResourceReservation
     {
-        $startsAt = CarbonImmutable::parse($data['starts_at'])->utc();
-        $endsAt = CarbonImmutable::parse($data['ends_at'])->utc();
+        $startsAt = $this->parseReservationTime($data['starts_at'], $resource->timezone);
+        $endsAt = $this->parseReservationTime($data['ends_at'], $resource->timezone);
         if ($endsAt->lessThanOrEqualTo($startsAt)) {
             throw ValidationException::withMessages(['ends_at' => ['The end must be after the start.']]);
         }
@@ -65,5 +65,13 @@ class ReservationService
 
             return $locked->fresh();
         }, 3);
+    }
+
+    private function parseReservationTime(string $value, string $timezone): CarbonImmutable
+    {
+        $value = trim($value);
+        $hasExplicitOffset = preg_match('/(?:Z|[+-]\d{2}:?\d{2})$/i', $value) === 1;
+
+        return CarbonImmutable::parse($value, $hasExplicitOffset ? null : $timezone)->utc();
     }
 }

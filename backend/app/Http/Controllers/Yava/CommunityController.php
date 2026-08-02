@@ -118,10 +118,16 @@ class CommunityController extends Controller
             if ($invitation->phone && (! $request->user()->phone_verified_at || $otp->normalizePhone((string) $request->user()->phone) !== $invitation->phone)) {
                 throw ValidationException::withMessages(['code' => ['Verify the invited phone number before accepting this invitation.']]);
             }
-            CommunityMembership::query()->updateOrCreate(
-                ['community_id' => $invitation->community_id, 'user_id' => $request->user()->id],
-                ['role' => $invitation->role, 'status' => 'active', 'approved_by_user_id' => $invitation->invited_by_user_id, 'joined_at' => now(), 'revoked_at' => null]
-            );
+            $membership = CommunityMembership::query()->firstOrNew([
+                'community_id' => $invitation->community_id, 'user_id' => $request->user()->id,
+            ]);
+            if (! $membership->exists || $membership->status !== 'active') {
+                $membership->fill([
+                    'role' => $invitation->role, 'status' => 'active',
+                    'approved_by_user_id' => $invitation->invited_by_user_id,
+                    'joined_at' => now(), 'revoked_at' => null,
+                ])->save();
+            }
             $invitation->update(['status' => 'accepted', 'accepted_at' => now()]);
 
             return $invitation->fresh();
@@ -133,6 +139,10 @@ class CommunityController extends Controller
     public function requestJoin(Request $request, Community $community)
     {
         $data = $request->validate(['message' => ['nullable', 'string', 'max:1000']]);
+        if (CommunityMembership::query()->where('community_id', $community->id)
+            ->where('user_id', $request->user()->id)->where('status', 'active')->exists()) {
+            throw ValidationException::withMessages(['community' => ['You are already an active member of this community.']]);
+        }
         $join = CommunityJoinRequest::query()->updateOrCreate(
             ['community_id' => $community->id, 'user_id' => $request->user()->id],
             ['message' => $data['message'] ?? null, 'status' => 'pending', 'decided_by_user_id' => null, 'decided_at' => null]
@@ -160,10 +170,16 @@ class CommunityController extends Controller
             }
             $locked->update(['status' => $status, 'decided_by_user_id' => $request->user()->id, 'decided_at' => now()]);
             if ($status === 'approved') {
-                CommunityMembership::query()->updateOrCreate(
-                    ['community_id' => $locked->community_id, 'user_id' => $locked->user_id],
-                    ['role' => 'member', 'status' => 'active', 'approved_by_user_id' => $request->user()->id, 'joined_at' => now(), 'revoked_at' => null]
-                );
+                $membership = CommunityMembership::query()->firstOrNew([
+                    'community_id' => $locked->community_id, 'user_id' => $locked->user_id,
+                ]);
+                if (! $membership->exists || $membership->status !== 'active') {
+                    $membership->fill([
+                        'role' => 'member', 'status' => 'active',
+                        'approved_by_user_id' => $request->user()->id,
+                        'joined_at' => now(), 'revoked_at' => null,
+                    ])->save();
+                }
             }
 
             return $locked->fresh();
@@ -199,7 +215,9 @@ class CommunityController extends Controller
             if ($removesAdmin && CommunityMembership::query()->where('community_id', $community->id)->where('role', 'admin')->where('status', 'active')->count() === 1) {
                 throw ValidationException::withMessages(['membership' => ['Assign another active Community Admin before removing the sole administrator.']]);
             }
-            $locked->update($data + (isset($data['status']) && $data['status'] === 'revoked' ? ['revoked_at' => now()] : []));
+            $locked->update($data + (isset($data['status'])
+                ? ['revoked_at' => $data['status'] === 'revoked' ? now() : null]
+                : []));
 
             return $locked->fresh();
         }, 3);
@@ -219,6 +237,35 @@ class CommunityController extends Controller
             'postal_code' => ['nullable', 'string', 'max:20'], 'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'], 'address' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    public function discover(Request $request)
+    {
+        $data = $request->validate(['search' => ['nullable', 'string', 'max:100']]);
+        $search = trim((string) ($data['search'] ?? ''));
+        $userId = $request->user()->id;
+        $requestStatuses = CommunityJoinRequest::query()
+            ->where('user_id', $userId)
+            ->pluck('status', 'community_id');
+        $communities = Community::query()
+            ->select(['id', 'name', 'description', 'timezone', 'state_code', 'district', 'locality'])
+            ->whereDoesntHave('memberships', fn ($query) => $query
+                ->where('user_id', $userId)
+                ->where('status', 'active'))
+            ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search): void {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('district', 'like', "%{$search}%")
+                    ->orWhere('locality', 'like', "%{$search}%");
+            }))
+            ->orderBy('name')->limit(25)->get()
+            ->map(function (Community $community) use ($requestStatuses): array {
+                $payload = $community->toArray();
+                $payload['join_request_status'] = $requestStatuses[$community->id] ?? null;
+
+                return $payload;
+            });
+
+        return response()->json(['data' => $communities]);
     }
 
     private function memberPayload(CommunityMembership $membership, bool $includePrivateContact): array

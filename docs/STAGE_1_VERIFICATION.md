@@ -2,112 +2,111 @@
 
 - Date: 2026-08-02
 - Operator: Codex lead agent
-- Starting commit: `9b83f7b57fb619dc85edc6fdcfb06617ae60bde0`
+- Requested baseline: `9b83f7b57fb619dc85edc6fdcfb06617ae60bde0`
+- Actual local starting HEAD: `030b158`
+- Interrupted-work preservation commit: `43a5761`
 - Branch: `yava`
 
-This record covers the final internal Stage 1 regression performed before the
-preservation commit. The final commit identifier is the commit containing this
-file and is also recorded in the handoff report.
+This record covers the final regression run against the source that is included
+in the Stage 1 release commit. The release commit identifier is reported in the
+handoff after the commit and push complete.
 
 ## Automated results
 
 ### Backend
 
-- `php artisan test`: 265 tests, 1,898 assertions, all passed on SQLite.
-- `vendor/bin/phpunit --configuration phpunit.pgsql.xml`: 265 tests, 1,898
+- `php artisan test`: 277 tests, 2,037 assertions, all passed on SQLite.
+- `php vendor/bin/phpunit --configuration phpunit.pgsql.xml`: 277 tests, 2,037
   assertions, all passed on disposable PostgreSQL.
-- `vendor/bin/pint --test`: 304 files passed.
+- `php vendor/bin/pint --test`: 307 files passed.
 - `composer validate --strict`: valid.
 - `composer audit --locked`: no security vulnerability advisories found.
-- Fresh migration, demo seed, rollback/remigrate, and representative legacy
-  migration rehearsals passed on the current Stage 1 migration set.
+- `php artisan migrate:fresh --force` completed against clean PostgreSQL, then
+  `php artisan yava:stage1-demo` completed successfully.
 
 ### Frontend
 
-- `npm test`: 39 test files, 227 tests, all passed.
+- `npm test`: 46 test files, 253 tests, all passed.
 - `npm run lint`: passed.
 - `npm run format:check`: passed.
-- `npm run english:scan`: 114 source checks passed.
-- `npm run build`: 134 modules transformed; production build passed.
-- `npm audit --omit=dev`: two high-severity package entries remain for the
-  single React Router RSC advisory `GHSA-qwww-vcr4-c8h2`. Yava is a client-only
-  `BrowserRouter` SPA and has no RSC, SSR, server loader, or server-action path.
-  No patched compatible v7 release is available; `SECURITY.md` contains the
-  applicability assessment and upgrade gate. The npm audit is not clean.
+- `npm run english:scan`: 116 source checks passed.
+- `npm run build`: 136 modules transformed; production build passed (247.21 kB
+  CSS and 412.79 kB JavaScript before compression).
+- `npm audit --omit=dev`: ran and returned exit 1 for two high-severity package
+  entries associated with the single React Router RSC advisory
+  `GHSA-qwww-vcr4-c8h2`. Yava is a client-only `BrowserRouter` SPA and has no
+  RSC, SSR, server loader, or server-action path. The available forced fix is a
+  breaking downgrade, so it was not applied. The audit is not clean.
 
 ## Container verification
 
-The production image was rebuilt with pulled base-image metadata from the exact
-final source tree as `yava-stage1:stage1-final`.
+The production image was rebuilt from the final source as
+`yava-stage1:stage1-final-20260802`.
 
-- Image ID: `sha256:9abe21374ce4134262ee13beba2f38e4af6c730ce0e3665919a64683d8dfb5d8`.
-- Container became healthy; `/up` and `/` returned 200.
-- Deep SPA routes returned the byte-identical application shell.
-- Unauthenticated `/api/me` returned 401 JSON behavior.
-- `/.env` returned 403, `/vendor/autoload.php` returned 404, and `/index.php`
-  executed through PHP rather than exposing source.
-- All eight configured response security headers were present, nginx did not
-  expose a version, and `X-Powered-By` was absent.
-- Trusted CORS was exact and a hostile origin was not reflected.
-- Runtime log scans found no authorization, bearer, password, token, or OTP
-  markers. Graceful-stop and service supervision smoke checks passed.
+- Image digest: `sha256:1fe78c42c56918e80ac40f0b7372079199a84b6430f53d8e6efbe7487e1962db`.
+- A new container using the image and PostgreSQL became healthy.
+- `/up` and `/` returned HTTP 200; unauthenticated `/api/me` returned HTTP 401.
+- Clean PostgreSQL migration and deterministic demo seeding completed before
+  the runtime acceptance flow.
 
-## Browser, authorization, privacy, and onboarding
+## Browser, authorization, privacy, and workflow acceptance
 
-The browser workflow used deterministic Stage 1 demo accounts and a disposable
-PostgreSQL database.
+The browser workflow used the deterministic demo accounts and the rebuilt
+container at `http://127.0.0.1:10000`.
 
-- Guest deep links redirect to sign-in and restore the safe requested route
-  after owner login. Cookie-session logout succeeds and returns to sign-in.
-- Owner navigation and data loading were exercised for onboarding, communities,
-  farms, fields, crop seasons, tasks, inventory, shared resources,
-  reservations, and analytics.
-- Onboarding advanced, saved an interruption, returned home, and resumed at the
-  persisted next step.
-- Farm/community context switching returned only records for the active scope.
-- The farm management screen exposes community link requests, active links,
-  scoped link analytics, and revoke controls only to authorized farm managers.
-- A farm manager sees member names and roles without member email addresses or
-  community-link administration. A Community Admin sees authorized community
-  membership tools but cannot administer a farm through direct URLs.
-- Community analytics exposed only shared farm count, shared area, crop-season
-  count, and permitted harvest aggregate; task and private farm detail did not
-  leak.
-- Direct unauthorized farm-only routes showed the context/authorization error
-  state instead of exposing management UI.
-- The seeded GeoJSON field boundary now loads as three editable points and one
-  zone. A browser edit saved valid GeoJSON to PostgreSQL, reloaded without an
-  alert, and rendered both polygons.
+- A guest deep link to `/fields` redirected to
+  `/login?redirect=%2Ffields`; Farm Owner login restored `/fields`.
+- Stateful-cookie logout returned to sign-in, and subsequent logins worked.
+- Farm and Community contexts switched without a reload and loaded the correct
+  scoped data.
+- A four-point Field boundary and optional Zone saved and survived reload.
+- A Crop Condition was recorded; the season count updated immediately.
+- A Task was created, related to a Field, and completed; state updated without
+  a manual refresh.
+- An Inventory receipt was recorded; available stock changed from 25 to 27
+  litres and the movement appeared immediately.
+- The Farm membership screen rendered `FarmCommunityLinksPanel`, its scoped
+  analytics/permissions, and active-link management.
+- Farm Analytics displayed area, seasons, tasks, harvest-by-unit, and planning
+  history. Community Analytics displayed only explicitly shared aggregates.
+- Community Admin membership, invitation, join-request, and Farm-link controls
+  rendered with privacy-safe member representations for non-managers.
+- Community Admin approved a valid back-to-back reservation. Approval of the
+  overlapping pending reservation was rejected and the record remained pending.
+- A restricted viewer saw no create/edit/delete controls, received the explicit
+  no-permission Field Editor state on a direct URL, and saw member names/statuses
+  without email addresses or management controls. Direct identifier and API
+  authorization failures are also covered by the backend regression suite.
+- Reloaded views retained the saved Field, Crop Condition, Task, Inventory, and
+  reservation state in PostgreSQL.
 
-## Responsive and accessibility checks
+## Responsive verification
 
-Community management and the field editor were checked at 320, 360, 390, and
-412 px, 768 px tablet, and 1440 px desktop widths. The final field-editor sweep
-found no document-width overflow, visible clipped controls, or overlapping
-controls. The mobile editor toolbar wraps while preserving 44 px minimum touch
-targets.
+The final image was checked at 360, 390, 412, 768, and 1440 px widths.
 
-Runtime semantic checks on the final image found:
+- Login was checked at every width: no document overflow, both fields present,
+  and the sign-in action remained in the viewport.
+- A 65-page/viewport sweep covered navigation, onboarding, Farm and Community
+  lists/dashboards, Fields, Field Editor, Crop Seasons, Tasks, Calendar,
+  Inventory, Reservations, Members, and Analytics.
+- Every checked route rendered its main landmark and page heading without
+  document-width overflow.
+- The Field Editor keeps its primary save/cancel actions visible on mobile. Its
+  map tool row is a deliberate touch-scrollable toolbar, while the details sheet
+  remains off-canvas until opened; neither expands the document width.
 
-- one `main` landmark and one page `h1` at every tested width;
-- `lang="en"`, no unlabeled visible interactive controls, no duplicate IDs,
-  and no images missing alternative text;
-- mobile navigation moves focus into the drawer, traps page scrolling, closes
-  with Escape, restores focus to the opener, and restores body scrolling;
-- dialog focus/Escape behavior remains covered by the frontend component suite.
-
-These checks are targeted acceptance checks, not a certification against every
+These checks are targeted acceptance checks, not certification against every
 WCAG success criterion or an external assistive-technology audit.
 
 ## Genuine remaining limitations
 
 1. Monitor React Router for a compatible release that fixes
-   `GHSA-qwww-vcr4-c8h2`, then upgrade and repeat the full routing and browser
-   matrix. Do not report npm audit as clean before that.
-2. Production HTTPS/TLS termination, Render environment values, real provider
+   `GHSA-qwww-vcr4-c8h2`, then upgrade and repeat the routing/browser matrix. Do
+   not report npm audit as clean before that.
+2. Production TLS termination, deployed environment values, real provider
    credentials, backup/restore ownership, and post-deploy observation require a
-   deployment operator and were not exercised by this local internal run.
-3. Real SMS OTP delivery is intentionally unconfigured in Stage 1; the safe
-   unconfigured behavior is tested. External weather/geocoding availability
+   deployment operator and were not exercised by this local run.
+3. Real SMS OTP delivery is intentionally unconfigured in Stage 1. The safe
+   development OTP is local-only; external weather/geocoding availability
    remains degradable by design.
-4. Drone imagery and WebODM integration remain Stage 2 work.
+4. Drone imagery, WebODM, and NDVI remain Stage 2 work.

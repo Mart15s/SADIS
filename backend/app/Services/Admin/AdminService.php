@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Enums\UserRole;
 use App\Models\AuditLog;
+use App\Models\CommunityMembership;
 use App\Models\FarmMembership;
 use App\Models\HasInventory;
 use App\Models\HasPlot;
@@ -108,6 +109,24 @@ class AdminService
         if ($soleOwnedFarm) {
             throw ValidationException::withMessages([
                 'user' => ['Transfer ownership of every solely owned farm before deleting this account.'],
+            ]);
+        }
+
+        $soleAdminCommunity = CommunityMembership::query()
+            ->where('user_id', $user->id)
+            ->where('role', 'admin')
+            ->where('status', 'active')
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')->from('community_memberships as other_admins')
+                    ->whereColumn('other_admins.community_id', 'community_memberships.community_id')
+                    ->whereColumn('other_admins.user_id', '!=', 'community_memberships.user_id')
+                    ->where('other_admins.role', 'admin')->where('other_admins.status', 'active');
+            })
+            ->exists();
+
+        if ($soleAdminCommunity) {
+            throw ValidationException::withMessages([
+                'user' => ['Assign another active Community Admin before deactivating this account.'],
             ]);
         }
 

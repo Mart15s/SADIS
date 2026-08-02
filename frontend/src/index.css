@@ -13679,8 +13679,14 @@ body { max-width: 100%; overflow-x: hidden; color: var(--yava-ink); background: 
 .community-access-panel { display: grid; gap: .8rem; }
 .community-access-panel h2 { margin: .2rem 0 0; }
 .community-access-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.stage1-calendar { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.stage1-calendar-item { display: grid; grid-template-columns: minmax(11rem, .6fr) minmax(0, 1.4fr) auto; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--yava-border); border-radius: 16px; background: var(--yava-surface); }
+.stage1-calendar-item time { color: var(--yava-earth); font-weight: 800; }
+.stage1-calendar-item h2, .stage1-calendar-item p { margin: .15rem 0; }
+.stage1-calendar-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
 
 @media (max-width: 720px) {
+  .field-editor-desktop-action { display: none; }
   .topbar > .context-switcher { display: none; }
   .stage1-form, .stage1-split { grid-template-columns: 1fr; }
   .community-access-grid { grid-template-columns: 1fr; }
@@ -13698,6 +13704,8 @@ body { max-width: 100%; overflow-x: hidden; color: var(--yava-ink); background: 
   .field-editor-coordinate-row { grid-template-columns: minmax(3.5rem, 1fr) 4rem 4rem 44px; }
   .stage1-list article { align-items: flex-start; flex-direction: column; }
   .stage1-member-actions { width: 100%; justify-content: flex-start; }
+  .stage1-calendar-item { grid-template-columns: 1fr; align-items: start; }
+  .stage1-calendar-badges { justify-content: flex-start; }
 }
 
 @media (max-width: 359px) {

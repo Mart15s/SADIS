@@ -19,6 +19,7 @@ use App\Models\Field;
 use App\Models\FieldZone;
 use App\Models\InventoryMovement;
 use App\Models\Profile;
+use App\Models\Recommendation;
 use App\Models\ResourceReservation;
 use App\Models\SharedResource;
 use App\Models\StockItem;
@@ -36,6 +37,7 @@ class YavaStageOneDemoSeeder extends Seeder
         DB::transaction(function (): void {
             $owner = $this->user('yava.owner@example.com', 'Asha', 'Patel', '+919876543210');
             $manager = $this->user('yava.manager@example.com', 'Ravi', 'Kumar', '+919876543211');
+            $farmAdmin = $this->user('yava.admin@example.com', 'Anika', 'Shah', '+919876543215');
             $communityAdmin = $this->user('yava.community@example.com', 'Meera', 'Singh', '+919876543212');
             $viewer = $this->user('yava.viewer@example.com', 'Noor', 'Iyer', '+919876543213');
             $applicant = $this->user('yava.applicant@example.com', 'Leela', 'Das', '+919876543214');
@@ -71,6 +73,7 @@ class YavaStageOneDemoSeeder extends Seeder
             ]);
             FarmMembership::query()->updateOrCreate(['farm_id' => $farm->id, 'user_id' => $owner->id], ['role' => 'owner', 'status' => 'active', 'joined_at' => now()]);
             FarmMembership::query()->updateOrCreate(['farm_id' => $farm->id, 'user_id' => $manager->id], ['role' => 'manager', 'status' => 'active', 'joined_at' => now()]);
+            FarmMembership::query()->updateOrCreate(['farm_id' => $farm->id, 'user_id' => $farmAdmin->id], ['role' => 'admin', 'status' => 'active', 'joined_at' => now()]);
             FarmMembership::query()->updateOrCreate(['farm_id' => $farm->id, 'user_id' => $viewer->id], ['role' => 'viewer', 'status' => 'active', 'joined_at' => now()]);
             FarmCommunityLink::query()->updateOrCreate(['farm_id' => $farm->id, 'community_id' => $community->id], [
                 'status' => 'active', 'linked_by_user_id' => $owner->id, 'approved_by_user_id' => $communityAdmin->id,
@@ -116,6 +119,40 @@ class YavaStageOneDemoSeeder extends Seeder
                 'expected_ends_on' => '2026-10-15', 'planted_area_square_metres' => 6000, 'status' => 'active',
                 'created_by_user_id' => $owner->id,
             ]);
+            $historicalSeason = CropSeason::query()->updateOrCreate(['legacy_group_key' => 'demo-finger-millet-2024'], [
+                'farm_id' => $farm->id, 'field_id' => $field->id, 'field_zone_id' => null,
+                'crop_id' => $crop->id, 'crop_variety_id' => $variety->id, 'name' => '2024 Finger Millet',
+                'starts_on' => '2024-06-20', 'expected_ends_on' => '2024-10-20', 'ended_on' => '2024-10-14',
+                'planted_area_square_metres' => 12000, 'status' => 'completed', 'created_by_user_id' => $owner->id,
+            ]);
+            DB::table('crop_rotation_entries')->updateOrInsert([
+                'field_id' => $field->id, 'crop_season_id' => $historicalSeason->id,
+            ], [
+                'field_zone_id' => null, 'crop_id' => $crop->id, 'season_year' => 2024,
+                'crop_family' => 'Poaceae', 'source' => 'demo', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('crop_rotation_entries')->updateOrInsert([
+                'field_id' => $field->id, 'crop_season_id' => $season->id,
+            ], [
+                'field_zone_id' => $zone->id, 'crop_id' => $crop->id, 'season_year' => 2026,
+                'crop_family' => 'Poaceae', 'source' => 'demo', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('planning_history')->updateOrInsert([
+                'farm_id' => $farm->id, 'event' => 'crop_season_created',
+                'subject_type' => CropSeason::class, 'subject_id' => $historicalSeason->id,
+            ], [
+                'field_id' => $field->id, 'actor_user_id' => $owner->id, 'before' => null,
+                'after' => json_encode($historicalSeason->toArray()), 'created_at' => now()->subYears(2),
+            ]);
+            Recommendation::query()->updateOrCreate([
+                'farm_id' => $farm->id, 'title' => 'Inspect millet after forecast rain',
+            ], [
+                'field_id' => $field->id, 'crop_season_id' => $season->id, 'type' => 'weather',
+                'severity' => 'warning',
+                'message' => 'Check drainage and crop condition after the forecast rainfall window.',
+                'weather_context' => ['condition' => 'rain', 'source' => 'deterministic demo'],
+                'status' => 'active', 'valid_until' => now()->addWeek(),
+            ]);
             CropConditionRecord::query()->updateOrCreate([
                 'crop_season_id' => $season->id, 'notes' => 'Demo healthy crop inspection',
             ], [
@@ -136,6 +173,12 @@ class YavaStageOneDemoSeeder extends Seeder
                 'field_id' => $field->id, 'crop_season_id' => $season->id, 'assigned_to_user_id' => $manager->id,
                 'created_by_user_id' => $owner->id, 'status' => 'completed', 'priority' => 'medium',
                 'due_at' => now()->subDay(), 'completed_at' => now()->subDay(),
+            ]);
+            WorkTask::query()->updateOrCreate(['community_id' => $community->id, 'title' => 'Service shared tractor'], [
+                'farm_id' => null, 'created_by_user_id' => $communityAdmin->id,
+                'assigned_to_user_id' => $manager->id, 'task_type' => 'machinery_maintenance',
+                'status' => 'pending', 'priority' => 'medium', 'due_at' => now()->addDays(5),
+                'description' => 'Community maintenance task for the shared equipment fleet.',
             ]);
             $farmStock = StockItem::query()->updateOrCreate(['farm_id' => $farm->id, 'name' => 'Neem oil'], [
                 'category' => 'crop protection', 'quantity' => 25, 'unit' => 'litre', 'reorder_level' => 5,
@@ -158,9 +201,19 @@ class YavaStageOneDemoSeeder extends Seeder
                 'balance_after' => 80, 'occurred_at' => now()->subDays(3),
             ]);
             $resource = SharedResource::query()->updateOrCreate(['community_id' => $community->id, 'name' => 'Two-wheel tractor'], [
-                'type' => 'equipment', 'status' => 'available', 'timezone' => 'Asia/Kolkata',
+                'type' => 'tractor', 'status' => 'available', 'timezone' => 'Asia/Kolkata',
                 'requires_approval' => true, 'created_by_user_id' => $communityAdmin->id,
             ]);
+            foreach ([
+                ['Soil auger kit', 'tool'],
+                ['Seasonal field crew', 'community_worker'],
+                ['Agronomist field visit', 'agronomist_service'],
+            ] as [$name, $type]) {
+                SharedResource::query()->updateOrCreate(['community_id' => $community->id, 'name' => $name], [
+                    'type' => $type, 'status' => 'available', 'timezone' => 'Asia/Kolkata',
+                    'requires_approval' => true, 'created_by_user_id' => $communityAdmin->id,
+                ]);
+            }
             $bookingStart = now()->addWeek()->startOfDay()->addHours(8);
             ResourceReservation::query()->updateOrCreate([
                 'shared_resource_id' => $resource->id, 'purpose' => 'Approved demo booking',
@@ -187,7 +240,7 @@ class YavaStageOneDemoSeeder extends Seeder
 
         $this->command?->info('Yava Stage 1 demo data is ready.');
         $this->command?->line('Demo password for all accounts: '.self::PASSWORD);
-        $this->command?->line('Accounts: yava.owner@example.com, yava.manager@example.com, yava.community@example.com, yava.viewer@example.com, yava.applicant@example.com');
+        $this->command?->line('Accounts: yava.owner@example.com, yava.admin@example.com, yava.manager@example.com, yava.community@example.com, yava.viewer@example.com, yava.applicant@example.com');
     }
 
     private function user(string $email, string $name, string $surname, string $phone): User

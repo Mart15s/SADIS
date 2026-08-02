@@ -13,6 +13,7 @@ const routeLabels = [
   { pattern: /^\/crops/, label: 'Crops' },
   { pattern: /^\/crop-seasons/, label: 'Crop seasons' },
   { pattern: /^\/tasks/, label: 'Tasks' },
+  { pattern: /^\/calendar/, label: 'Calendar' },
   { pattern: /^\/resources/, label: 'Resources' },
   { pattern: /^\/reservations/, label: 'Reservations' },
   { pattern: /^\/analytics/, label: 'Analytics' },

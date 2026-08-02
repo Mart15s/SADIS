@@ -152,16 +152,41 @@ class CropController extends Controller
         }
         $fieldId = (int) ($data['field_id'] ?? $cropSeason->field_id);
         Field::query()->where('farm_id', $cropSeason->farm_id)->findOrFail($fieldId);
-        if (isset($data['field_zone_id'])) {
-            FieldZone::query()->where('field_id', $fieldId)->findOrFail($data['field_zone_id']);
+        $fieldZoneId = array_key_exists('field_zone_id', $data) ? $data['field_zone_id'] : $cropSeason->field_zone_id;
+        if ($fieldZoneId !== null) {
+            $belongsToField = FieldZone::query()->where('field_id', $fieldId)->whereKey($fieldZoneId)->exists();
+            if (! $belongsToField) {
+                throw ValidationException::withMessages(['field_zone_id' => ['The field zone must belong to the selected field.']]);
+            }
         }
-        if (isset($data['crop_id'])) {
-            Crop::query()->where(fn ($q) => $q->where('is_global', true)->orWhere('farm_id', $cropSeason->farm_id))->findOrFail($data['crop_id']);
+        $cropId = (int) ($data['crop_id'] ?? $cropSeason->crop_id);
+        Crop::query()->where(fn ($q) => $q->where('is_global', true)->orWhere('farm_id', $cropSeason->farm_id))->findOrFail($cropId);
+        $varietyId = array_key_exists('crop_variety_id', $data) ? $data['crop_variety_id'] : $cropSeason->crop_variety_id;
+        if ($varietyId !== null) {
+            $belongsToCrop = CropVariety::query()->where('crop_id', $cropId)->whereKey($varietyId)->exists();
+            if (! $belongsToCrop) {
+                throw ValidationException::withMessages(['crop_variety_id' => ['The crop variety must belong to the selected crop.']]);
+            }
         }
         unset($data['farm_id']);
         $cropSeason = DB::transaction(function () use ($cropSeason, $data, $before, $request): CropSeason {
             $locked = CropSeason::query()->lockForUpdate()->findOrFail($cropSeason->id);
             $locked->update($data);
+            $rotation = [
+                'field_id' => $locked->field_id,
+                'field_zone_id' => $locked->field_zone_id,
+                'crop_id' => $locked->crop_id,
+                'season_year' => (int) $locked->starts_on->format('Y'),
+                'source' => 'crop_season',
+                'updated_at' => now(),
+            ];
+            $updated = DB::table('crop_rotation_entries')->where('crop_season_id', $locked->id)->update($rotation);
+            if ($updated === 0 && ! DB::table('crop_rotation_entries')->where('crop_season_id', $locked->id)->exists()) {
+                DB::table('crop_rotation_entries')->insert($rotation + [
+                    'crop_season_id' => $locked->id,
+                    'created_at' => now(),
+                ]);
+            }
             DB::table('planning_history')->insert([
                 'farm_id' => $locked->farm_id, 'field_id' => $locked->field_id, 'actor_user_id' => $request->user()->id,
                 'event' => 'crop_season_updated', 'subject_type' => CropSeason::class, 'subject_id' => $locked->id,
