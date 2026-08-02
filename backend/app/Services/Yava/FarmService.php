@@ -95,10 +95,11 @@ class FarmService
     public function revokeLink(User $user, FarmCommunityLink $link, ?string $reason): void
     {
         DB::transaction(function () use ($user, $link, $reason): void {
-            $previous = $link->status;
-            $link->update(['status' => 'revoked', 'revoked_at' => now(), 'revocation_reason' => $reason]);
+            $locked = FarmCommunityLink::query()->lockForUpdate()->findOrFail($link->id);
+            $previous = $locked->status;
+            $locked->update(['status' => 'revoked', 'revoked_at' => now(), 'revocation_reason' => $reason]);
             FarmCommunityLinkEvent::query()->create([
-                'farm_community_link_id' => $link->id, 'actor_user_id' => $user->id,
+                'farm_community_link_id' => $locked->id, 'actor_user_id' => $user->id,
                 'event' => 'revoked', 'from_status' => $previous, 'to_status' => 'revoked',
                 'context' => ['reason' => $reason],
             ]);

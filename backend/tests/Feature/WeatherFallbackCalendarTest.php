@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ConditionType;
 use App\Enums\PlantType;
+use App\Models\CatalogPlant;
 use App\Models\GardenOwner;
 use App\Models\HasPlot;
 use App\Models\Plant;
@@ -80,7 +81,7 @@ class WeatherFallbackCalendarTest extends TestCase
             'fk_plant_zone_id' => $zone->id,
             'plant_zone_id' => $zone->id,
             'fk_plot_id' => $plot->id,
-            'fk_catalog_plant_id' => \App\Models\CatalogPlant::query()->create([
+            'fk_catalog_plant_id' => CatalogPlant::query()->create([
                 'name' => 'Pomidoras',
                 'canonical_name' => 'fallback-catalog-pomidoras',
                 'plant_type' => PlantType::Vegetable,

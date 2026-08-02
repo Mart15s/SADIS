@@ -17,12 +17,12 @@ use Illuminate\Support\Str;
 class RotationPlannerService
 {
     public const DEFAULT_PLANT_MOVEMENT_COOLDOWN_DAYS = 365;
+
     public const DEFAULT_ZONE_FAMILY_REST_DAYS = 1095;
 
     public function __construct(
         private readonly CropRotationClassifier $cropRotationClassifier,
-    ) {
-    }
+    ) {}
 
     public function evaluatePlot(Plot $plot, ?string $planningDate = null): array
     {
@@ -721,8 +721,8 @@ class RotationPlannerService
         $remainingCapacity = $this->remainingZoneCapacity($targetZone, $tentativePlants, $plant);
         $plantProfile = $this->cropRotationClassifier->profileForPlant($plant);
         $rotationConflict = null;
-        $passedReasons =& $positiveReasons;
-        $blockingReasons =& $hardBlockingReasons;
+        $passedReasons = &$positiveReasons;
+        $blockingReasons = &$hardBlockingReasons;
 
         if (! (bool) ($plantProfile['has_rotation_data'] ?? false)) {
             $softWarnings[] = 'Trūksta rotacijos šeimos arba grupės duomenų, todėl šiam augalui šeimos rotacijos patikros laikomos neutraliomis.';

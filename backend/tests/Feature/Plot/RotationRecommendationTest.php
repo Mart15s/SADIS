@@ -6,10 +6,8 @@ use App\Enums\PlantType;
 use App\Enums\SoilType;
 use App\Models\Plant;
 use App\Models\PlantCare;
-use App\Models\RotationPlanDraft;
 use App\Services\Plot\CropRotationClassifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use Tests\Feature\Concerns\CreatesGardenData;
 use Tests\TestCase;
@@ -794,6 +792,7 @@ class RotationRecommendationTest extends TestCase
         $this->assertLessThanOrEqual(0, $candidates['Per maza']['score']);
         $this->assertContains('Target zone does not have enough space for this plant.', $candidates['Per maza']['blocking_reasons']);
     }
+
     public function test_blocked_candidate_is_never_selected_as_automatic_target(): void
     {
         [$user, $owner] = $this->createGardenOwner('owner@example.com');

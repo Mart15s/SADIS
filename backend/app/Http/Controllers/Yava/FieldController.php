@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\FieldMarker;
 use App\Models\FieldZone;
-use App\Models\Farm;
 use App\Services\Yava\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class FieldController extends Controller
@@ -48,7 +48,7 @@ class FieldController extends Controller
         $permissions->authorizeFarm($request->user(), $field->farm_id, 'manage_fields');
         $data = $request->validate($this->rules(true));
         if (isset($data['farm_id']) && (int) $data['farm_id'] !== (int) $field->farm_id) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['farm_id' => ['Fields cannot be moved between farms.']]);
+            throw ValidationException::withMessages(['farm_id' => ['Fields cannot be moved between farms.']]);
         }
         unset($data['farm_id']);
         $field->update($data);
@@ -122,7 +122,9 @@ class FieldController extends Controller
                     : new FieldZone(['field_id' => $locked->id]);
                 $zone->fill(collect($zoneData)->except('id')->all())->save();
                 $zoneIds[] = $zone->id;
-                if ($clientId !== null) $zoneIdMap[(string) $clientId] = $zone->id;
+                if ($clientId !== null) {
+                    $zoneIdMap[(string) $clientId] = $zone->id;
+                }
             }
             FieldZone::query()->where('field_id', $locked->id)->where('is_whole_field', false)->whereNotIn('id', $zoneIds ?: [0])->delete();
             $markerIds = [];

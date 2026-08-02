@@ -45,7 +45,7 @@ function renderPostText(text) {
     <div className="community-post-text">
       <p>{value.slice(0, 260).trim()}...</p>
       <details className="community-read-more">
-        <summary>Skaityti daugiau</summary>
+        <summary>Read more</summary>
         <p>{value}</p>
       </details>
     </div>
@@ -107,7 +107,7 @@ export default function CommunityPage() {
       postsState.setData((current) => [created, ...current])
       setForm(initialPostForm)
       setCreateOpen(false)
-      setToastMessage('Bendruomenės įrašas paskelbtas.')
+      setToastMessage('Community post published.')
     } catch (error) {
       setCreateError(error.message)
     } finally {
@@ -116,7 +116,7 @@ export default function CommunityPage() {
   }
 
   if (postsState.loading || (isAuthenticated && plotsState.loading)) {
-    return <LoadingState title="Įkeliama bendruomenės sklaidos juosta..." />
+    return <LoadingState title="Loading community feed..." />
   }
 
   if (plotsState.error) {
@@ -130,44 +130,46 @@ export default function CommunityPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Bendruomenė"
-        eyebrow="Bendrinamos daržo erdvės"
-        description="Peržiūrėkite bendrinamus sklypų planus su savininkais, zonomis ir planavimo kontekstu."
-        meta={(
+        title="Community"
+        eyebrow="Shared growing spaces"
+        description="Browse shared field plans with owners, zones, and planning context."
+        meta={
           <>
-            <Badge tone="soft">{filteredPosts.length} matomi įrašai</Badge>
-            <Badge tone={isAuthenticated ? 'success' : 'warning'}>{isAuthenticated ? 'Prisijungta' : 'Svečio peržiūra'}</Badge>
+            <Badge tone="soft">{filteredPosts.length} visible posts</Badge>
+            <Badge tone={isAuthenticated ? 'success' : 'warning'}>
+              {isAuthenticated ? 'Signed in' : 'Guest view'}
+            </Badge>
           </>
-        )}
-        actions={(
-          <Button onClick={() => setCreateOpen(true)}>
-            Kurti įrašą
-          </Button>
-        )}
+        }
+        actions={<Button onClick={() => setCreateOpen(true)}>Create post</Button>}
       />
 
       <SuccessToast message={toastMessage} onDismiss={() => setToastMessage('')} />
 
       <FilterBar
         resultCount={filteredPosts.length}
-        onClear={search || selectedPlotId ? () => {
-          setSearch('')
-          startTransition(() => {
-            setSelectedPlotId('')
-          })
-        } : null}
+        onClear={
+          search || selectedPlotId
+            ? () => {
+                setSearch('')
+                startTransition(() => {
+                  setSelectedPlotId('')
+                })
+              }
+            : null
+        }
       >
-        <FormField id="community-search" label="Ieškoti įrašų">
+        <FormField id="community-search" label="Search posts">
           <input
             id="community-search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Ieškoti pagal pavadinimą, tekstą, autorių arba sklypą"
+            placeholder="Search by title, text, author, or field"
           />
         </FormField>
 
         {isAuthenticated ? (
-          <FormField id="plot-filter" label="Sklypo filtras">
+          <FormField id="plot-filter" label="Field filter">
             <select
               id="plot-filter"
               value={selectedPlotId}
@@ -177,7 +179,7 @@ export default function CommunityPage() {
                 })
               }}
             >
-              <option value="">Visi pasiekiami įrašai</option>
+              <option value="">All available posts</option>
               {plotsState.data.map((plot) => (
                 <option key={plot.id} value={plot.id}>
                   {plot.name}
@@ -202,8 +204,8 @@ export default function CommunityPage() {
         className="community-create-dialog"
       >
         <DialogHeader
-          title="Kurti bendruomenės įrašą"
-          subtitle="Pasidalykite daržo naujiena ir, jei reikia, pridėkite vieną savo sklypą."
+          title="Create community post"
+          subtitle="Share a farm update and optionally attach one of your fields."
           titleId="community-create-title"
           subtitleId="community-create-subtitle"
           onClose={() => {
@@ -212,35 +214,53 @@ export default function CommunityPage() {
               setCreateError('')
             }
           }}
-          closeLabel="Uždaryti įrašo kūrimą"
+          closeLabel="Close post creation"
         />
         {!isAuthenticated ? (
           <>
             <DialogBody>
               <EmptyState
-                title="Prisijunkite, kad galėtumėte skelbti"
-                description="Svečiai gali naršyti viešus bendruomenės įrašus, bet įrašui sukurti reikia prisijungti."
+                title="Sign in to publish"
+                description="Guests can browse public community posts, but you must sign in to create one."
               />
             </DialogBody>
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
-                Atšaukti
+                Cancel
               </Button>
             </DialogFooter>
           </>
         ) : (
           <form onSubmit={handleCreatePost}>
             <DialogBody className="community-create-body">
-              <FormField id="post-name" label="Pavadinimas">
-                <input id="post-name" name="name" value={form.name} onChange={handleFormChange} required />
+              <FormField id="post-name" label="Title">
+                <input
+                  id="post-name"
+                  name="name"
+                  value={form.name}
+                  onChange={handleFormChange}
+                  required
+                />
               </FormField>
-              <FormField id="post-text" label="Tekstas">
-                <textarea id="post-text" name="text" value={form.text} onChange={handleFormChange} required rows={6} />
+              <FormField id="post-text" label="Text">
+                <textarea
+                  id="post-text"
+                  name="text"
+                  value={form.text}
+                  onChange={handleFormChange}
+                  required
+                  rows={6}
+                />
               </FormField>
               <div className="community-create-options">
-                <FormField id="post-plot" label="Susieti su sklypu">
-                  <select id="post-plot" name="fk_plot_id" value={form.fk_plot_id} onChange={handleFormChange}>
-                    <option value="">Be sklypo</option>
+                <FormField id="post-plot" label="Link to a field">
+                  <select
+                    id="post-plot"
+                    name="fk_plot_id"
+                    value={form.fk_plot_id}
+                    onChange={handleFormChange}
+                  >
+                    <option value="">No field</option>
                     {plotsState.data.map((plot) => (
                       <option key={plot.id} value={plot.id}>
                         {plot.name}
@@ -248,7 +268,7 @@ export default function CommunityPage() {
                     ))}
                   </select>
                 </FormField>
-                <FormField id="post-share" label="Matomumas">
+                <FormField id="post-share" label="Visibility">
                   <select
                     id="post-share"
                     name="share"
@@ -260,8 +280,8 @@ export default function CommunityPage() {
                       }))
                     }}
                   >
-                    <option value="true">Bendrinamas</option>
-                    <option value="false">Privatus</option>
+                    <option value="true">Shared</option>
+                    <option value="false">Private</option>
                   </select>
                 </FormField>
               </div>
@@ -270,16 +290,16 @@ export default function CommunityPage() {
 
               {submitting ? (
                 <ProcessingState
-                  title="Skelbiamas įrašas"
-                  description="Ruošiami įrašo duomenys ir pridedama naujausia sklypo peržiūra."
-                  steps={['Tikrinamas turinys', 'Skelbiamas įrašas', 'Atnaujinama sklaidos juosta']}
+                  title="Publishing post"
+                  description="Preparing the post data and attaching the latest field preview."
+                  steps={['Validating content', 'Publishing post', 'Updating feed']}
                   compact
                 />
               ) : null}
             </DialogBody>
             <DialogFooter>
               <Button type="submit" loading={submitting}>
-                {submitting ? 'Skelbiamas įrašas' : 'Kurti įrašą'}
+                {submitting ? 'Publishing post' : 'Create post'}
               </Button>
               <Button
                 type="button"
@@ -290,7 +310,7 @@ export default function CommunityPage() {
                 }}
                 disabled={submitting}
               >
-                Atšaukti
+                Cancel
               </Button>
             </DialogFooter>
           </form>
@@ -299,22 +319,26 @@ export default function CommunityPage() {
 
       <div className="community-grid">
         <section className="post-stack">
-          {postsState.loading ? <LoadingState title="Atnaujinama bendruomenės sklaidos juosta..." layout="rows" /> : null}
+          {postsState.loading ? (
+            <LoadingState title="Updating community feed..." layout="rows" />
+          ) : null}
           {filteredPosts.length === 0 ? (
             <EmptyState
-              title="Bendruomenės įrašų nėra"
-              description="Bandykite kitą paieškos frazę arba išvalykite sklypo filtrą."
+              title="No community posts"
+              description="Try another search phrase or clear the field filter."
             />
           ) : (
-            <ResponsiveList className="resource-feed-list" ariaLabel="Bendruomenės įrašai">
+            <ResponsiveList className="resource-feed-list" ariaLabel="Community posts">
               {filteredPosts.map((post) => (
                 <ResourceCard key={post.id} className="post-card">
                   <ResourceCardHeader
                     title={post.name}
-                    badge={<Badge tone="soft">{post.owner_name || 'Nežinomas autorius'}</Badge>}
+                    badge={<Badge tone="soft">{post.owner_name || 'Unknown author'}</Badge>}
                   />
                   <ResourceCardMeta>
-                    <Badge tone={post.share ? 'success' : 'warning'}>{post.share ? 'Bendrinamas' : 'Privatus'}</Badge>
+                    <Badge tone={post.share ? 'success' : 'warning'}>
+                      {post.share ? 'Shared' : 'Private'}
+                    </Badge>
                     {post.plot_name ? <Badge tone="neutral">{post.plot_name}</Badge> : null}
                   </ResourceCardMeta>
                   <ResourceCardBody>
@@ -322,10 +346,15 @@ export default function CommunityPage() {
                     {post.plot_preview ? (
                       <div className="community-plan-shell">
                         <MapLayerControl
-                          title="Bendrinamo sklypo sluoksniai"
+                          title="Shared field layers"
                           items={[
-                            { id: 'boundary', label: 'Riba', active: true, color: '#47633b' },
-                            { id: 'zones', label: `${post.plot_preview.zones?.length ?? 0} zonos`, active: true, color: '#b9683f' },
+                            { id: 'boundary', label: 'Boundary', active: true, color: '#47633b' },
+                            {
+                              id: 'zones',
+                              label: `${post.plot_preview.zones?.length ?? 0} zones`,
+                              active: true,
+                              color: '#b9683f',
+                            },
                           ]}
                         />
                         <PlanPreview
@@ -339,9 +368,9 @@ export default function CommunityPage() {
                     ) : null}
                   </ResourceCardBody>
                   <ResourceCardFooter>
-                    <StatRow label="Autorius" value={post.owner_name || 'Nežinomas autorius'} />
-                    <StatRow label="Sklypas" value={post.plot_name || 'Bendras įrašas'} />
-                    <StatRow label="Paskelbta" value={formatDateTime(post.created_at)} />
+                    <StatRow label="Author" value={post.owner_name || 'Unknown author'} />
+                    <StatRow label="Field" value={post.plot_name || 'General post'} />
+                    <StatRow label="Published" value={formatDateTime(post.created_at)} />
                   </ResourceCardFooter>
                 </ResourceCard>
               ))}

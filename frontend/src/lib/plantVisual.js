@@ -1,10 +1,10 @@
 const NAME_VISUALS = [
   ['blueberr', 'berry'],
-  ['mėlyn', 'berry'],
+  ['m\u0117lyn', 'berry'],
   ['strawberr', 'berry'],
-  ['brašk', 'berry'],
+  ['bra\u0161k', 'berry'],
   ['mint', 'herb'],
-  ['mėt', 'herb'],
+  ['m\u0117t', 'herb'],
   ['basil', 'herb'],
   ['bazilik', 'herb'],
   ['tomato', 'fruit'],
@@ -16,13 +16,13 @@ const NAME_VISUALS = [
   ['bean', 'legume'],
   ['pupel', 'legume'],
   ['pea', 'legume'],
-  ['žirn', 'legume'],
+  ['\u017eirn', 'legume'],
   ['lettuce', 'leafy'],
   ['salot', 'leafy'],
   ['wheat', 'grain'],
-  ['kvieč', 'grain'],
+  ['kvie\u010d', 'grain'],
   ['rose', 'flower'],
-  ['gėl', 'flower'],
+  ['g\u0117l', 'flower'],
 ]
 
 const TYPE_VISUALS = {

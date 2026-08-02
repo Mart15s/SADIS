@@ -6,6 +6,7 @@ use App\Enums\ConditionType;
 use App\Enums\PlantType;
 use App\Enums\SoilType;
 use App\Models\GardenOwner;
+use App\Models\HasPlot;
 use App\Models\Plant;
 use App\Models\PlantZone;
 use App\Models\Plot;
@@ -25,6 +26,7 @@ class PlantMonitoringTest extends TestCase
         Sanctum::actingAs($user);
 
         $plot = Plot::create([
+            'garden_owner_id' => $user->id,
             'name' => 'Stebejimu sklypas',
             'city' => 'Alytus',
             'plot_size' => 100,
@@ -32,7 +34,7 @@ class PlantMonitoringTest extends TestCase
             'share' => false,
         ]);
 
-        \App\Models\HasPlot::create([
+        HasPlot::create([
             'fk_plot_id' => $plot->id,
             'fk_owner_id' => $user->id,
             'fk_profile_id' => $profile->id,
@@ -94,6 +96,7 @@ class PlantMonitoringTest extends TestCase
         Sanctum::actingAs($user);
 
         $plot = Plot::create([
+            'garden_owner_id' => $user->id,
             'name' => 'Ligu stebejimo sklypas',
             'city' => 'Alytus',
             'plot_size' => 80,
@@ -101,7 +104,7 @@ class PlantMonitoringTest extends TestCase
             'share' => false,
         ]);
 
-        \App\Models\HasPlot::create([
+        HasPlot::create([
             'fk_plot_id' => $plot->id,
             'fk_owner_id' => $user->id,
             'fk_profile_id' => $profile->id,

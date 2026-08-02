@@ -1,14 +1,23 @@
 import { useWorkspace } from '../../context/useWorkspace.js'
+import { useI18n } from '../../i18n/i18n-context.js'
 
 export default function ContextSwitcher() {
-  const { active, contexts, loading, setActive } = useWorkspace()
+  const { active, contexts, error, loading, setActive } = useWorkspace()
+  const { t } = useI18n()
   const value = active ? `${active.type}:${active.id}` : ''
 
   return (
-    <label className="context-switcher">
-      <span>Active workspace</span>
+    <label
+      className="context-switcher"
+      title={
+        error
+          ? t('context.refreshError')
+          : undefined
+      }
+    >
+      <span>{t('context.label')}</span>
       <select
-        aria-label="Active workspace"
+        aria-label={t('context.label')}
         value={value}
         disabled={loading}
         onChange={(event) => {
@@ -16,10 +25,13 @@ export default function ContextSwitcher() {
           setActive(type, id)
         }}
       >
-        {contexts.length === 0 ? <option value="">Personal workspace</option> : null}
+        {contexts.length === 0 ? <option value="">{t('context.personal')}</option> : null}
         {contexts.map((context) => (
           <option key={`${context.type}:${context.id}`} value={`${context.type}:${context.id}`}>
-            {context.type === 'farm' ? 'Farm' : 'Community'} · {context.name}
+            {t('context.option', {
+              type: t(context.type === 'farm' ? 'context.farm' : 'context.community'),
+              name: context.name,
+            })}
           </option>
         ))}
       </select>

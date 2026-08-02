@@ -61,7 +61,8 @@ export default function PlantsPage() {
   )
 
   const accessByPlotId = useMemo(
-    () => Object.fromEntries(pageState.data.plots.map((plot) => [String(plot.id), plot.access_role])),
+    () =>
+      Object.fromEntries(pageState.data.plots.map((plot) => [String(plot.id), plot.access_role])),
     [pageState.data.plots],
   )
 
@@ -91,7 +92,9 @@ export default function PlantsPage() {
         await api.deleteCatalogPlant(entry.id)
         pageState.setData((current) => ({
           ...current,
-          catalogPlants: current.catalogPlants.filter((catalogPlant) => catalogPlant.id !== entry.id),
+          catalogPlants: current.catalogPlants.filter(
+            (catalogPlant) => catalogPlant.id !== entry.id,
+          ),
         }))
       } else {
         await api.deleteManagedPlant(entry.id)
@@ -108,27 +111,40 @@ export default function PlantsPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title={activeView === 'catalog' ? 'Loading plant catalog...' : 'Loading plants...'} />
+    return (
+      <LoadingState
+        title={activeView === 'catalog' ? 'Loading plant catalog...' : 'Loading plants...'}
+      />
+    )
   }
 
   if (pageState.error) {
     return <ErrorState error={pageState.error} onRetry={pageState.reload} />
   }
 
-  const resultCount = activeView === 'catalog'
-    ? pageState.data.catalogPlants.length
-    : pageState.data.plants.length
+  const resultCount =
+    activeView === 'catalog' ? pageState.data.catalogPlants.length : pageState.data.plants.length
 
   const managedPlantColumns = [
     { key: 'name', label: 'Name', render: (plant) => plant.name },
     { key: 'type', label: 'Type', render: (plant) => formatPlantType(plant.plant_type) },
     { key: 'plot', label: 'Plot', render: (plant) => plant.plot?.name ?? 'Unknown plot' },
-    { key: 'zone', label: 'Zone', render: (plant) => plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Unknown zone' },
-    { key: 'catalog', label: 'Catalog', render: (plant) => plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? 'Manual record' },
+    {
+      key: 'zone',
+      label: 'Zone',
+      render: (plant) => plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Unknown zone',
+    },
+    {
+      key: 'catalog',
+      label: 'Catalog',
+      render: (plant) => plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? 'Manual record',
+    },
     {
       key: 'care',
       label: 'Care',
-      render: (plant) => <PlantStatusBadge status={careStatusLabel(plant)} careLinked={plant.has_plant_care} />,
+      render: (plant) => (
+        <PlantStatusBadge status={careStatusLabel(plant)} careLinked={plant.has_plant_care} />
+      ),
     },
     {
       key: 'actions',
@@ -148,10 +164,14 @@ export default function PlantsPage() {
     return (
       <div className="resource-action-row">
         <Link to={`/plants/catalog/${catalogPlant.id}`}>
-          <Button variant="ghost" size="sm">View</Button>
+          <Button variant="ghost" size="sm">
+            View
+          </Button>
         </Link>
         <Link to={`/plants/catalog/${catalogPlant.id}/edit`}>
-          <Button variant="secondary" size="sm">Edit</Button>
+          <Button variant="secondary" size="sm">
+            Edit
+          </Button>
         </Link>
         <Button
           variant="danger"
@@ -172,11 +192,15 @@ export default function PlantsPage() {
     return (
       <div className="resource-action-row">
         <Link to={`/plants/${plant.id}`}>
-          <Button variant="ghost" size="sm">View</Button>
+          <Button variant="ghost" size="sm">
+            View
+          </Button>
         </Link>
         {canEdit ? (
           <Link to={`/plants/${plant.id}/edit`}>
-            <Button variant="secondary" size="sm">Edit</Button>
+            <Button variant="secondary" size="sm">
+              Edit
+            </Button>
           </Link>
         ) : null}
         {canEdit ? (
@@ -197,10 +221,7 @@ export default function PlantsPage() {
   function renderCatalogPlantCard(catalogPlant) {
     return (
       <ResourceCard className="catalog-plant-card">
-        <ResourceCardHeader
-          title={catalogPlant.name}
-          subtitle={catalogPlant.canonical_name}
-        />
+        <ResourceCardHeader title={catalogPlant.name} subtitle={catalogPlant.canonical_name} />
         <ResourceCardMeta>
           {catalogPlant.plant_type ? (
             <Badge tone="neutral">{formatPlantType(catalogPlant.plant_type)}</Badge>
@@ -212,9 +233,7 @@ export default function PlantsPage() {
             <Badge tone="soft">{catalogPlant.usage_count} uses</Badge>
           ) : null}
         </ResourceCardMeta>
-        <ResourceCardFooter>
-          {renderCatalogPlantActions(catalogPlant)}
-        </ResourceCardFooter>
+        <ResourceCardFooter>{renderCatalogPlantActions(catalogPlant)}</ResourceCardFooter>
       </ResourceCard>
     )
   }
@@ -225,11 +244,15 @@ export default function PlantsPage() {
         <ResourceCardHeader
           title={plant.name}
           subtitle={plant.plot?.name ?? 'Unknown plot'}
-          badge={<PlantStatusBadge status={careStatusLabel(plant)} careLinked={plant.has_plant_care} />}
+          badge={
+            <PlantStatusBadge status={careStatusLabel(plant)} careLinked={plant.has_plant_care} />
+          }
         />
         <ResourceCardMeta>
           <Badge tone="neutral">{formatPlantType(plant.plant_type)}</Badge>
-          <Badge tone="soft">{plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Unknown zone'}</Badge>
+          <Badge tone="soft">
+            {plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Unknown zone'}
+          </Badge>
           <Badge tone={plant.has_plant_care ? 'success' : 'warning'}>
             {plant.catalog_plant?.name ?? plant.catalogPlant?.name ?? 'Manual record'}
           </Badge>
@@ -246,9 +269,7 @@ export default function PlantsPage() {
             </div>
           </dl>
         </ResourceCardBody>
-        <ResourceCardFooter>
-          {renderManagedPlantActions(plant)}
-        </ResourceCardFooter>
+        <ResourceCardFooter>{renderManagedPlantActions(plant)}</ResourceCardFooter>
       </ResourceCard>
     )
   }
@@ -259,17 +280,19 @@ export default function PlantsPage() {
         title="Plants"
         eyebrow="Plant planning"
         description="Manage planted plants and a reusable catalog with care profiles."
-        meta={(
+        meta={
           <>
-            <Badge tone="soft">{activeView === 'catalog' ? 'Catalog workspace' : 'Planted plants'}</Badge>
+            <Badge tone="soft">
+              {activeView === 'catalog' ? 'Catalog workspace' : 'Planted plants'}
+            </Badge>
             <Badge tone="neutral">Showing: {resultCount}</Badge>
           </>
-        )}
-        actions={(
+        }
+        actions={
           <Link to={activeView === 'catalog' ? '/plants/catalog/new' : '/plants/new'}>
             <Button>{activeView === 'catalog' ? 'Add catalog plant' : 'Add plant'}</Button>
           </Link>
-        )}
+        }
       />
 
       <section className="panel page-stack plants-workspace-panel">
@@ -297,9 +320,11 @@ export default function PlantsPage() {
               id="plants-workspace-search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={activeView === 'catalog'
-                ? 'Name, canonical name, family, or scientific name'
-                : 'Search by plant, plot, zone, or care name'}
+              placeholder={
+                activeView === 'catalog'
+                  ? 'Name, canonical name, family, or scientific name'
+                  : 'Search by plant, plot, zone, or care name'
+              }
             />
           </div>
           <div className="resource-filter-summary" aria-live="polite">
@@ -311,7 +336,11 @@ export default function PlantsPage() {
             ) : null}
           </div>
           <div className="plants-context-strip">
-            <MeasurementBadge label="View" value={activeView === 'catalog' ? 'Catalog' : 'Planted'} tone="leaf" />
+            <MeasurementBadge
+              label="View"
+              value={activeView === 'catalog' ? 'Catalog' : 'Planted'}
+              tone="leaf"
+            />
             <MeasurementBadge label="Showing" value={resultCount} tone="earth" />
             <MeasurementBadge label="Care source" value="Perenual" tone="amber" />
           </div>
@@ -328,47 +357,47 @@ export default function PlantsPage() {
           pageState.data.catalogPlants.length === 0 ? (
             <EmptyState
               title="No catalog plants found"
-              description={debouncedSearch
-                ? 'No catalog plants match the current search.'
-                : 'Create your first catalog plant to share identity and care data.'}
-              action={(
+              description={
+                debouncedSearch
+                  ? 'No catalog plants match the current search.'
+                  : 'Create your first catalog plant to share identity and care data.'
+              }
+              action={
                 <Link to="/plants/catalog/new">
                   <Button>Create catalog plant</Button>
                 </Link>
-              )}
+              }
             />
           ) : (
             <ResponsiveList className="catalog-card-grid" ariaLabel="Catalog plant list">
               {pageState.data.catalogPlants.map((catalogPlant) => (
-                <div key={catalogPlant.id}>
-                  {renderCatalogPlantCard(catalogPlant)}
-                </div>
+                <div key={catalogPlant.id}>{renderCatalogPlantCard(catalogPlant)}</div>
               ))}
             </ResponsiveList>
           )
-        ) : (
-          pageState.data.plants.length === 0 ? (
-            <EmptyState
-              title="No plants found"
-              description={debouncedSearch
+        ) : pageState.data.plants.length === 0 ? (
+          <EmptyState
+            title="No plants found"
+            description={
+              debouncedSearch
                 ? 'No plants match the current search.'
-                : 'Create your first planted plant record to track plants across plots and zones.'}
-              action={(
-                <Link to="/plants/new">
-                  <Button>Create plant</Button>
-                </Link>
-              )}
-            />
-          ) : (
-            <ResponsiveTable
-              columns={managedPlantColumns}
-              items={pageState.data.plants}
-              getKey={(plant) => plant.id}
-              renderCard={renderManagedPlantCard}
-              tableLabel="Planted plants table"
-              cardListLabel="Planted plants list"
-            />
-          )
+                : 'Create your first planted plant record to track plants across plots and zones.'
+            }
+            action={
+              <Link to="/plants/new">
+                <Button>Create plant</Button>
+              </Link>
+            }
+          />
+        ) : (
+          <ResponsiveTable
+            columns={managedPlantColumns}
+            items={pageState.data.plants}
+            getKey={(plant) => plant.id}
+            renderCard={renderManagedPlantCard}
+            tableLabel="Planted plants table"
+            cardListLabel="Planted plants list"
+          />
         )}
       </section>
     </div>

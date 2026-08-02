@@ -56,11 +56,24 @@ export default function ResetPasswordPage() {
       <form className="panel split-form" onSubmit={handleSubmit}>
         <div className="field">
           <label htmlFor="reset-email">Email address</label>
-          <input id="reset-email" name="email" type="email" value={form.email} onChange={handleChange} required />
+          <input
+            id="reset-email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="reset_code">Reset code</label>
-          <input id="reset_code" name="reset_code" value={form.reset_code} onChange={handleChange} required />
+          <input
+            id="reset_code"
+            name="reset_code"
+            value={form.reset_code}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="new-password">New password</label>

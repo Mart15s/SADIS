@@ -37,8 +37,7 @@ class CalendarGenerationService
         private readonly PlantLifecyclePhaseService $plantLifecyclePhaseService,
         private readonly PlantLifecycleService $plantLifecycleService,
         private readonly WeatherService $weatherService,
-    ) {
-    }
+    ) {}
 
     public function generateCalendar(Plot|int $plot, Carbon $startDate, Carbon $endDate): TaskCalendar
     {
@@ -539,6 +538,7 @@ class CalendarGenerationService
 
             if (! isset($deduplicated[$key])) {
                 $deduplicated[$key] = $action;
+
                 continue;
             }
 
@@ -810,6 +810,7 @@ class CalendarGenerationService
 
                     if ($existingBuyTask) {
                         $openBuyTaskIds->push($existingBuyTask->id);
+
                         continue;
                     }
 
@@ -907,12 +908,12 @@ class CalendarGenerationService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, array<string, mixed>>  $datePlanByKey
+     * @param  Collection<string, array<string, mixed>>  $datePlanByKey
      * @return array<string, mixed>
      */
     private function buildActionInventoryContextFromDatePlan(
         array $action,
-        \Illuminate\Support\Collection $datePlanByKey,
+        Collection $datePlanByKey,
         string $date,
     ): array {
         $requirements = collect($action['required_resources'] ?? [])
@@ -1152,6 +1153,7 @@ class CalendarGenerationService
 
             if (! isset($merged[$key])) {
                 $merged[$key] = $requirement;
+
                 continue;
             }
 

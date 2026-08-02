@@ -1,6 +1,8 @@
 export function safeWorkspacePoints(value) {
   return Array.isArray(value)
-    ? value.filter((point) => Number.isFinite(Number(point?.x)) && Number.isFinite(Number(point?.y))).map((point) => ({ x: Number(point.x), y: Number(point.y) }))
+    ? value
+        .filter((point) => Number.isFinite(Number(point?.x)) && Number.isFinite(Number(point?.y)))
+        .map((point) => ({ x: Number(point.x), y: Number(point.y) }))
     : []
 }
 

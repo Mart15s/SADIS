@@ -785,7 +785,7 @@ export function getBoundaryLabelLayout({
     },
     {
       mode: 'compact',
-      text: areaText?.trim() || plotName?.trim() || 'Sklypas',
+      text: areaText?.trim() || plotName?.trim() || 'Field',
     },
   ]
 
@@ -808,14 +808,14 @@ export function getBoundaryLabelLayout({
 
   if (canFitMarker(metrics, context, BOUNDARY_LABEL_MODES)) {
     return constrainLabelToViewport({
-      ...buildMarkerBox(areaText?.trim() ? 'm²' : 'Sklypas', metrics, BOUNDARY_LABEL_MODES),
+      ...buildMarkerBox(areaText?.trim() ? 'm²' : 'Field', metrics, BOUNDARY_LABEL_MODES),
       title: titleText,
       metrics,
     }, viewportBounds, 12)
   }
 
   return constrainLabelToViewport({
-    ...buildMarkerBox('Sklypas', metrics, BOUNDARY_LABEL_MODES),
+    ...buildMarkerBox('Field', metrics, BOUNDARY_LABEL_MODES),
     title: titleText,
     metrics,
   }, viewportBounds, 12)

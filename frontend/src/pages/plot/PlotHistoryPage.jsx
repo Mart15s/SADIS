@@ -46,7 +46,7 @@ export default function PlotHistoryPage() {
   }, [historyState.data.snapshots, selectedSnapshotId])
 
   if (historyState.loading) {
-    return <LoadingState title="Įkeliama planavimo istorija..." />
+    return <LoadingState title="Loading planning history…" />
   }
 
   if (historyState.error) {
@@ -54,7 +54,7 @@ export default function PlotHistoryPage() {
   }
 
   if (!historyState.data.plot) {
-    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
+    return <EmptyState title="Field not found" description="The selected field could not be loaded." />
   }
 
   const isOwner = historyState.data.accessRole === 'owner'
@@ -72,24 +72,24 @@ export default function PlotHistoryPage() {
         plotName={historyState.data.plot.name}
         sectionKey="history"
         isOwner={isOwner}
-        description="Istorijoje rodomi tik reikšmingi išsaugojimo pakeitimai, todėl galima peržiūrėti realias sklypo versijas."
+        description="History shows meaningful saved changes so you can review actual field versions."
         meta={(
-          <StatusBadge kind="selection" tone="neutral">{historyState.data.snapshots.length} išsaugotos versijos</StatusBadge>
+          <StatusBadge kind="selection" tone="neutral">{historyState.data.snapshots.length} saved versions</StatusBadge>
         )}
       />
 
       {historyState.data.snapshots.length === 0 ? (
         <EmptyState
-          title="Išsaugotų versijų dar nėra"
-          description="Istorija pradedama kaupti, kai redaktoriaus darbo sritis aiškiai išsaugoma."
+          title="No saved versions yet"
+          description="History starts accumulating when the editor workspace is explicitly saved."
         />
       ) : (
         <div className="plot-history-browser">
           <section className="panel page-stack plot-history-list-panel">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Išsaugotos versijos</h2>
-                <p className="section-copy">Pasirinkite versiją, kad peržiūrėtumėte tuo metu išsaugotą planą, metaduomenis ir augalus.</p>
+                <h2 className="section-title">Saved versions</h2>
+                <p className="section-copy">Select a version to review its saved plan, metadata, and plants.</p>
               </div>
             </div>
 
@@ -133,8 +133,8 @@ export default function PlotHistoryPage() {
                 </div>
 
                 <div className="plot-history-preview-meta">
-                  <MetricCard label="Zonos" value={versionZones.length} />
-                  <MetricCard label="Augalai" value={versionPlants.length} />
+                  <MetricCard label="Zones" value={versionZones.length} />
+                  <MetricCard label="Plants" value={versionPlants.length} />
                   <MetricCard label="Sklypo plotas" value={formatSquareMetersValue(snapshotPayload.plot?.plot_size, 2, '--')} />
                 </div>
 
@@ -149,8 +149,8 @@ export default function PlotHistoryPage() {
                 <section className="page-stack">
                   <div className="plot-page-section-head">
                     <div>
-                      <h3 className="section-title">Šios versijos augalai</h3>
-                      <p className="section-copy">Kompaktiški augalų įrašai leidžia patogiai peržiūrėti versiją be perteklinės lentelės.</p>
+                      <h3 className="section-title">Plants in this version</h3>
+                      <p className="section-copy">Compact plant records make the version easy to review without an oversized table.</p>
                     </div>
                   </div>
 
@@ -168,8 +168,8 @@ export default function PlotHistoryPage() {
                     </div>
                   ) : (
                     <EmptyStatePanel
-                      title="Šioje versijoje augalų neišsaugota"
-                      description="Ši versija apima išdėstymo arba sklypo lygio pakeitimus be augalų įrašų."
+                      title="No plants saved in this version"
+                      description="This version contains layout or field-level changes without plant records."
                       tone="subtle"
                     />
                   )}
@@ -177,8 +177,8 @@ export default function PlotHistoryPage() {
               </>
             ) : (
               <EmptyStatePanel
-                title="Pasirinkite versiją"
-                description="Kairėje pasirinkite išsaugotą versiją, kad peržiūrėtumėte jos planą ir augalus."
+                title="Select a version"
+                description="Choose a saved version on the left to review its plan and plants."
                 tone="subtle"
               />
             )}

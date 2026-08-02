@@ -4,24 +4,28 @@ Stage 1 keeps legacy endpoints temporarily while canonical Yava endpoints use th
 
 | Legacy surface | Canonical Yava surface | Compatibility rule | Removal gate |
 | --- | --- | --- | --- |
-| `/api/plots` | `/api/farms/{farm}/fields` | A legacy plot maps to one field; preserve the old envelope and identifiers through mapping records. | No frontend calls, mapping coverage validated, deprecation window complete. |
-| `/api/plots/{plot}` workspace/geometry | `/api/fields/{field}` and `/api/fields/{field}/zones` | Delegate geometry validation and transactional save to the field service. | Mobile/desktop Field Editor uses canonical save and recovery flow. |
-| `/api/plant-zones` | `/api/fields/{field}/zones` | Preserve legacy zone IDs via mappings; an implicit whole-field zone is not exposed as fabricated legacy data. | All legacy editors migrated. |
-| `/api/plants` | `/api/crop-seasons` plus condition/history resources | Return only deterministically mapped seasons; ambiguous Plant records remain legacy history. | Classifier report accepted and consumers migrated. |
-| `/api/catalog-plants` | `/api/crops` and `/api/crop-varieties` | Global catalogue is read-only for normal users; farm custom entries remain farm-scoped. | Global/farm catalogue consumers migrated. |
-| Legacy calendar/task routes | `/api/tasks` scoped by farm, field, season, or community | Shared task service owns state transitions and authorization. | Calendar and task UIs use canonical identifiers. |
-| Legacy inventory routes | `/api/farms/{farm}/inventory` and `/api/communities/{community}/inventory` | Mutations create immutable inventory movements; preserve old response shape when called through legacy routes. | Inventory consumers and reports use movements. |
-| Legacy access-right routes | `/api/farms/{farm}/members` and permission endpoints | Translate owner/editor/viewer only when mapping is unambiguous; server-side farm permissions control access. | All active shares mapped and accepted. |
-| Legacy community feed/posts | `/api/communities/{community}/activity` | Preserve as `legacy` activity only; never infer membership, community, or farm link. | Historical display has a supported archival path. |
-| Legacy harvest/rotation/analytics routes | Crop-season harvests, rotation plans, farm analytics | Resolve mappings then delegate to canonical query/services; community aggregation applies explicit sharing scopes. | Canonical dashboards validated against legacy samples. |
+| `/api/plots` | `/api/v1/fields` (Farm selected by `farm_id`) | A legacy Plot maps to one Field; preserve the old envelope and identifiers through mapping records. | No frontend calls, mapping coverage validated, deprecation window complete. |
+| `/api/plots/{plot}` and `/api/plots/{plot}/workspace` | `/api/v1/fields/{field}` and `/api/v1/fields/{field}/workspace` | Geometry validation and save semantics must remain equivalent while both editors exist. | Mobile/desktop Field Editor uses canonical save and recovery flow. |
+| `/api/plots/{plot}/plant-zones` | `/api/v1/fields/{field}/zones` | Preserve legacy Zone IDs via mappings; an implicit whole-Field zone is not exposed as fabricated legacy data. | All legacy editors migrated. |
+| `/api/plants` and `/api/plots/{plot}/plants` | `/api/v1/crop-seasons` plus condition/history resources | Return only deterministically mapped Seasons; ambiguous Plant records remain legacy history. | Classifier report accepted and consumers migrated. |
+| `/api/catalog-plants` | `/api/v1/crops` and `/api/v1/crops/{crop}/varieties` | Global catalogue and Farm-specific Crop behavior remain distinct during transition. | Global/Farm catalogue consumers migrated. |
+| `/api/plots/{plot}/calendars`, `/api/calendars/{calendar}/tasks`, `/api/tasks/{task}/*` | `/api/v1/tasks` and `/api/v1/tasks/{task}/*` | Preserve legacy task shapes while canonical Tasks carry explicit Farm/Field/Season/Community scope. | Calendar and task UIs use canonical identifiers. |
+| `/api/inventory` | `/api/v1/inventories` and `/api/v1/inventory-movements` | Canonical quantity changes create movement history; preserve the old response shape for verified legacy callers. | Inventory consumers and reports use movements. |
+| `/api/plots/{plot}/access` and sharing routes | `/api/v1/farms/{farm}/members` plus membership permissions | Translate owner/editor/viewer only when mapping is unambiguous; server-side Farm permissions control access. | All active shares mapped and accepted. |
+| `/api/community` and `/api/plots/{plot}/community` | Community membership, links, and analytics under `/api/v1/communities/*` | Keep legacy posts as historical compatibility data; never infer canonical membership or a Farm–Community link from a post. | Historical display has a supported archival path. |
+| `/api/plots/{plot}/harvests`, rotations, and analytics | `/api/v1/crop-seasons/{season}/harvests`, rotation warnings, and `/api/v1/farms/{farm}/analytics` | Resolve mappings before canonical access; Community aggregation uses only explicit link scopes. | Canonical dashboards validated against representative legacy samples. |
 
 ## Response and deprecation contract
 
-- Canonical responses use one documented resource envelope and consistent validation/error fields.
+- Canonical `/api/v1` responses use a `data` resource envelope where applicable; validation errors use `message` plus `errors`.
 - Compatibility responses keep only fields required by verified consumers.
 - Deprecation is announced through documentation and, where supported, `Deprecation`, `Sunset`, and successor-link headers.
 - Authorization is evaluated on the canonical target before data is serialized into an old shape.
 - A missing or ambiguous legacy mapping returns a safe conflict/not-found response; it never guesses ownership.
+
+The legacy and canonical controllers currently coexist. A row in this matrix describes the required compatibility contract, not permission to assume that similarly named records share an identifier. Migration mappings are the only supported identity bridge.
+
+Canonical Farm–Community link management uses `POST /api/v1/farms/{farm}/communities/{community}`, `GET /api/v1/farm-community-links` with one authorized scope filter, `POST /api/v1/farm-community-links/{link}/{approve|reject}`, and `DELETE /api/v1/farms/{farm}/community-links/{link}`. Canonical task payloads carry task type, optional materials, resource, and weather-warning context; inventory movements may reference a Field and Crop Season; reservations may reference a Field within the requesting Farm.
 
 ## Verification
 

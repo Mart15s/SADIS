@@ -142,14 +142,14 @@ return new class extends Migration
                 END
         ");
 
-        DB::statement("
+        DB::statement('
             UPDATE tasks
             SET plant_zone_id = COALESCE(
                 plant_zone_id,
                 (SELECT plants.plant_zone_id FROM plants WHERE plants.id = tasks.plant_id),
                 (SELECT MIN(used_on.fk_plant_zone_id) FROM used_on WHERE used_on.fk_task_id = tasks.id)
             )
-        ");
+        ');
     }
 
     private function preparePostgreSqlConstraints(): void

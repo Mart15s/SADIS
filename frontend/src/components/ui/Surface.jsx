@@ -7,8 +7,12 @@ export default function Surface({
   tone = 'default',
   ...props
 }) {
-  return createElement(as, {
-    className: `surface surface-${tone} ${className}`.trim(),
-    ...props,
-  }, children)
+  return createElement(
+    as,
+    {
+      className: `surface surface-${tone} ${className}`.trim(),
+      ...props,
+    },
+    children,
+  )
 }

@@ -102,12 +102,11 @@ function canonicalizeName(value) {
 }
 
 function buildFallbackDraftFromSearchResult(result) {
-  const conditions = Array.isArray(result.sunlight) && result.sunlight.length > 0
-    ? result.sunlight.join(', ')
-    : ''
+  const conditions =
+    Array.isArray(result.sunlight) && result.sunlight.length > 0 ? result.sunlight.join(', ') : ''
   const description = result.watering
-    ? `Importuota iš Perenual paieškos rezultato. Nurodytas laistymas: ${result.watering}.`
-    : 'Importuota iš Perenual paieškos rezultato. Jei reikia daugiau tikslumo, bendrus priežiūros laukus užpildykite rankiniu būdu.'
+    ? `Imported from a Perenual search result. Reported watering: ${result.watering}.`
+    : 'Imported from a Perenual search result. Complete the shared care fields manually if more precision is needed.'
 
   return {
     species_id: result.id,
@@ -141,11 +140,15 @@ function classificationNote(metadata) {
   const label = classification.profile_label ?? classification.profile_group ?? 'Aptiktas profilis'
   const officialType = classification.official_plant_type
 
-  if (officialType && classification.profile_group && officialType !== classification.profile_group) {
-    return `${label} aptiktas. Oficialus augalo tipas susietas su "${officialType}", kad atitiktų projekto specifikaciją.`
+  if (
+    officialType &&
+    classification.profile_group &&
+    officialType !== classification.profile_group
+  ) {
+    return `${label} detected. The official plant type is mapped to "${officialType}" to match the project specification.`
   }
 
-  return `${label} aptiktas pagal importuoto augalo požymius.`
+  return `${label} detected from the imported plant signals.`
 }
 
 export default function CatalogPlantFormPage() {
@@ -213,7 +216,7 @@ export default function CatalogPlantFormPage() {
       setPerenualResults([])
       setPerenualHasMore(false)
       setPerenualRequestedLimit(PERENUAL_RESULT_STEP)
-      setPerenualSearchError('Prieš ieškodami Perenual įveskite bent 2 simbolius.')
+      setPerenualSearchError('Enter at least 2 characters before searching Perenual.')
       return
     }
 
@@ -226,7 +229,9 @@ export default function CatalogPlantFormPage() {
 
     try {
       const response = await api.searchPerenualPlants(query, { limit })
-      const results = Array.isArray(response?.data) ? response.data.slice(0, PERENUAL_RESULT_MAX) : []
+      const results = Array.isArray(response?.data)
+        ? response.data.slice(0, PERENUAL_RESULT_MAX)
+        : []
       const nextLimit = Number(response?.meta?.next_limit ?? 0)
 
       setPerenualResults(results)
@@ -286,7 +291,9 @@ export default function CatalogPlantFormPage() {
         }))
         setCareForm(careToForm(fallbackDraft.plant_care))
         setPerenualQuery(result.name)
-        setFallbackNotice('Perenual detalės laikinai ribojamos (429). Forma užpildyta vis dar pasiekiamais paieškos rezultato duomenimis. Trūkstamus priežiūros laukus užpildykite rankiniu būdu ir išsaugokite, kai duomenys paruošti.')
+        setFallbackNotice(
+          'Perenual details are temporarily rate-limited (429). The form was filled with the search result data that is still available. Complete the missing care fields manually and save when ready.',
+        )
       } else {
         setMethodError(requestError.message)
       }
@@ -299,7 +306,9 @@ export default function CatalogPlantFormPage() {
     event.preventDefault()
 
     if (!isEdit && entryMethod === 'perenual' && !selectedSpeciesId) {
-      setMethodError('Prieš išsaugodami atlikite Perenual paiešką ir pasirinkite rezultatą arba pereikite prie rankinio įrašo.')
+      setMethodError(
+        'Search Perenual and select a result before saving, or switch to manual entry.',
+      )
       return
     }
 
@@ -320,7 +329,8 @@ export default function CatalogPlantFormPage() {
       source_family: catalogForm.source_family || null,
       source_image_url: catalogForm.source_image_url || null,
       metadata: catalogForm.metadata ?? null,
-      perenual_species_id: entryMethod === 'perenual' && selectedSpeciesId ? Number(selectedSpeciesId) : null,
+      perenual_species_id:
+        entryMethod === 'perenual' && selectedSpeciesId ? Number(selectedSpeciesId) : null,
       plant_care: {
         description: careForm.description || null,
         conditions: careForm.conditions || null,
@@ -349,7 +359,9 @@ export default function CatalogPlantFormPage() {
 
       navigate(`/plants/catalog/${savedCatalogPlant.id}`, {
         state: {
-          notice: isEdit ? 'Katalogo augalas sėkmingai atnaujintas.' : 'Katalogo augalas sėkmingai sukurtas.',
+          notice: isEdit
+            ? 'Catalog plant updated successfully.'
+            : 'Catalog plant created successfully.',
         },
       })
     } catch (requestError) {
@@ -361,7 +373,11 @@ export default function CatalogPlantFormPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title={isEdit ? 'Įkeliamas katalogo augalo redaktorius...' : 'Įkeliama katalogo augalo forma...'} />
+    return (
+      <LoadingState
+        title={isEdit ? 'Loading catalog plant editor...' : 'Loading catalog plant form...'}
+      />
+    )
   }
 
   if (pageState.error) {
@@ -369,31 +385,44 @@ export default function CatalogPlantFormPage() {
   }
 
   if (isEdit && !pageState.data) {
-    return <EmptyState title="Katalogo augalas nerastas" description="Pasirinkto katalogo augalo nepavyko įkelti." />
+    return (
+      <EmptyState
+        title="Catalog plant not found"
+        description="The selected catalog plant could not be loaded."
+      />
+    )
   }
 
   return (
     <div className="page-stack">
       <PageHeader
-        title={isEdit ? 'Redaguoti katalogo augalą' : 'Sukurti katalogo augalą'}
-        description={isEdit
-          ? 'Atnaujinkite pakartotinai naudojamą augalo tapatybę ir bendrą priežiūros profilį.'
-          : 'Sukurkite pakartotinai naudojamą katalogo augalą rankiniu būdu arba importuokite iš Perenual prieš sodindami sklypuose ir zonose.'}
-        actions={(
+        title={isEdit ? 'Edit catalog plant' : 'Create catalog plant'}
+        description={
+          isEdit
+            ? 'Update the reusable plant identity and shared care profile.'
+            : 'Create a reusable catalog plant manually or import it from Perenual before planting in fields and zones.'
+        }
+        actions={
           <Link to={isEdit ? `/plants/catalog/${catalogPlantId}` : '/plants?view=catalog'}>
-            <Button variant="secondary">Atšaukti</Button>
+            <Button variant="secondary">Cancel</Button>
           </Link>
-        )}
+        }
       />
 
       {!isEdit ? (
         <section className="panel page-stack">
           <div>
-            <h3 className="section-title">Pridėjimo būdas</h3>
-            <p className="section-copy">Pasirinkite, kaip pradėti katalogo įrašą. Prieš išsaugodami visus laukus dar galėsite redaguoti.</p>
+            <h3 className="section-title">Entry method</h3>
+            <p className="section-copy">
+              Choose how to start the catalog entry. You can edit every field before saving.
+            </p>
           </div>
 
-          <div className="plants-view-switch" role="tablist" aria-label="Katalogo augalo pridėjimo būdas">
+          <div
+            className="plants-view-switch"
+            role="tablist"
+            aria-label="Catalog plant entry method"
+          >
             <button
               type="button"
               role="tab"
@@ -401,7 +430,7 @@ export default function CatalogPlantFormPage() {
               className={`plants-view-switch-button ${entryMethod === 'manual' ? 'is-active' : ''}`.trim()}
               onClick={() => handleMethodChange('manual')}
             >
-              Rankinis įrašas
+              Manual entry
             </button>
             <button
               type="button"
@@ -416,32 +445,36 @@ export default function CatalogPlantFormPage() {
 
           {entryMethod === 'manual' ? (
             <div className="inline-note">
-              Rankinis įrašas visą eigą palieka sistemoje. Patys užpildykite katalogo tapatybę ir bendrinamus augalo priežiūros laukus.
+              Manual entry keeps the entire flow in the system. Complete the catalog identity and
+              shared plant care fields yourself.
             </div>
           ) : (
             <div className="page-stack">
               <form className="search-row plants-import-form" onSubmit={handlePerenualSearchSubmit}>
                 <div className="field plants-search-field">
-                  <label htmlFor="perenual-search">Ieškoti Perenual</label>
+                  <label htmlFor="perenual-search">Search Perenual</label>
                   <input
                     id="perenual-search"
                     value={perenualQuery}
                     onChange={(event) => setPerenualQuery(event.target.value)}
-                    placeholder="Įveskite augalo pavadinimą, tada spauskite Enter arba Ieškoti"
+                    placeholder="Enter a plant name, then press Enter or Search"
                   />
                 </div>
                 <div className="plants-import-actions">
                   <Button type="submit" disabled={perenualSearchLoading}>
-                    {perenualSearchLoading ? 'Ieškoma...' : 'Ieškoti'}
+                    {perenualSearchLoading ? 'Searching...' : 'Search'}
                   </Button>
                 </div>
               </form>
 
               <div className="inline-note">
-                Užklausos siunčiamos tik pateikus paiešką. Vien rašymas Perenual API nekviečia.
+                Requests are sent only when you submit the search. Typing alone does not call the
+                Perenual API.
               </div>
 
-              {perenualSearchError ? <span className="field-error">{perenualSearchError}</span> : null}
+              {perenualSearchError ? (
+                <span className="field-error">{perenualSearchError}</span>
+              ) : null}
               {methodError ? <span className="field-error">{methodError}</span> : null}
               {fallbackNotice ? <div className="inline-note">{fallbackNotice}</div> : null}
 
@@ -462,9 +495,11 @@ export default function CatalogPlantFormPage() {
                         >
                           <div className="list-head">
                             <strong>{result.name}</strong>
-                            <span className="badge badge-soft">Rūšis #{result.id}</span>
+                            <span className="badge badge-soft">Species #{result.id}</span>
                           </div>
-                          {result.scientific_name ? <div className="muted">{result.scientific_name}</div> : null}
+                          {result.scientific_name ? (
+                            <div className="muted">{result.scientific_name}</div>
+                          ) : null}
                           {result.image ? (
                             <img
                               src={result.image}
@@ -473,13 +508,19 @@ export default function CatalogPlantFormPage() {
                             />
                           ) : null}
                           <div className="meta-cluster">
-                            <span>{result.cycle ?? 'Ciklas nenurodytas'}</span>
-                            <span>{result.watering ?? 'Laistymas nenurodytas'}</span>
-                            <span>{result.sunlight?.join(', ') || 'Šviesos poreikis nenurodytas'}</span>
+                            <span>{result.cycle ?? 'Cycle not specified'}</span>
+                            <span>{result.watering ?? 'Watering not specified'}</span>
+                            <span>
+                              {result.sunlight?.join(', ') || 'Light needs not specified'}
+                            </span>
                           </div>
                           <div className="catalog-plant-actions">
                             <Button variant={isSelected ? 'primary' : 'secondary'}>
-                              {isLoading ? 'Įkeliama...' : (isSelected ? 'Pasirinkta' : 'Naudoti šį rezultatą')}
+                              {isLoading
+                                ? 'Loading...'
+                                : isSelected
+                                  ? 'Selected'
+                                  : 'Use this result'}
                             </Button>
                           </div>
                         </button>
@@ -495,26 +536,33 @@ export default function CatalogPlantFormPage() {
                         onClick={handleRodytiMoreResults}
                         disabled={perenualSearchLoading || prefillLoadingId !== null}
                       >
-                        {perenualSearchLoading ? 'Įkeliama daugiau...' : `Rodyti dar ${PERENUAL_RESULT_STEP}`}
+                        {perenualSearchLoading
+                          ? 'Loading more...'
+                          : `Show ${PERENUAL_RESULT_STEP} more`}
                       </Button>
                       <span className="field-hint">
-                        Viena papildoma Perenual užklausa siunčiama tik tada, kai aiškiai prašote daugiau rezultatų.
+                        One additional Perenual request is sent only when you explicitly ask for
+                        more results.
                       </span>
                     </div>
                   ) : null}
                 </div>
               ) : null}
 
-              {perenualSearchAttempted && !perenualSearchLoading && !perenualSearchError && perenualResults.length === 0 ? (
+              {perenualSearchAttempted &&
+              !perenualSearchLoading &&
+              !perenualSearchError &&
+              perenualResults.length === 0 ? (
                 <EmptyState
-                  title="Perenual atitikmenų nerasta"
-                  description="Bandykite platesnį augalo pavadinimą arba pereikite prie rankinio įrašo ir sukurkite katalogo augalą patys."
+                  title="No Perenual matches found"
+                  description="Try a broader plant name or switch to manual entry and create the catalog plant yourself."
                 />
               ) : null}
 
               {selectedSpeciesId ? (
                 <div className="inline-note">
-                  Pasirinkta Perenual rūšis #{selectedSpeciesId}. Toliau esanti forma dabar redaguojama ir išsaugojus išlaikys šią importo sąsają.
+                  Perenual species #{selectedSpeciesId} selected. The form below is editable and
+                  will preserve this import link when saved.
                 </div>
               ) : null}
             </div>
@@ -525,114 +573,147 @@ export default function CatalogPlantFormPage() {
       <form className="page-stack" onSubmit={handleSubmit}>
         <section className="panel page-stack">
           <div>
-            <h3 className="section-title">Katalogo tapatybė</h3>
-            <p className="section-copy">Pakartotinai naudojami tapatybės laukai, apibrėžiantys bendrinamą katalogo įrašą.</p>
+            <h3 className="section-title">Catalog identity</h3>
+            <p className="section-copy">
+              Reusable identity fields that define the shared catalog entry.
+            </p>
           </div>
 
           {!isEdit && entryMethod === 'perenual' && selectedSpeciesId && !catalogForm.plant_type ? (
             <div className="inline-note">
-              Perenual nepateikė pakankamai patikimų duomenų augalo tipui nustatyti. Prieš išsaugodami pasirinkite augalo tipą rankiniu būdu.
+              Perenual did not provide reliable enough data to determine the plant type. Select a
+              plant type manually before saving.
             </div>
           ) : null}
 
           {catalogForm.metadata?.classification ? (
-            <div className="inline-note">
-              {classificationNote(catalogForm.metadata)}
-            </div>
+            <div className="inline-note">{classificationNote(catalogForm.metadata)}</div>
           ) : null}
 
           <div className="form-grid plants-form-grid">
             <div className="field">
-              <label htmlFor="catalog-plant-name">Pavadinimas</label>
+              <label htmlFor="catalog-plant-name">Name</label>
               <input
                 id="catalog-plant-name"
                 value={catalogForm.name}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, name: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, name: event.target.value }))
+                }
                 required
               />
-              {fieldError('name') ? <span className="field-error">{fieldError('name')}</span> : null}
+              {fieldError('name') ? (
+                <span className="field-error">{fieldError('name')}</span>
+              ) : null}
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-canonical">Kataloginis pavadinimas</label>
+              <label htmlFor="catalog-plant-canonical">Catalog name</label>
               <input
                 id="catalog-plant-canonical"
                 value={catalogForm.canonical_name}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, canonical_name: event.target.value }))}
-                placeholder="Palikus tuščią sugeneruojama automatiškai"
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, canonical_name: event.target.value }))
+                }
+                placeholder="Generated automatically when left blank"
               />
-              {fieldError('canonical_name') ? <span className="field-error">{fieldError('canonical_name')}</span> : null}
+              {fieldError('canonical_name') ? (
+                <span className="field-error">{fieldError('canonical_name')}</span>
+              ) : null}
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-type">Augalo tipas</label>
+              <label htmlFor="catalog-plant-type">Plant type</label>
               <select
                 id="catalog-plant-type"
                 value={catalogForm.plant_type}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, plant_type: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, plant_type: event.target.value }))
+                }
                 required
               >
-                <option value="" disabled>Pasirinkite tipą</option>
+                <option value="" disabled>
+                  Select a type
+                </option>
                 {PLANT_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {formatPlantType(type)}
                   </option>
                 ))}
               </select>
-              {fieldError('plant_type') ? <span className="field-error">{fieldError('plant_type')}</span> : null}
+              {fieldError('plant_type') ? (
+                <span className="field-error">{fieldError('plant_type')}</span>
+              ) : null}
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-provider">Duomenų šaltinis</label>
+              <label htmlFor="catalog-plant-provider">Data source</label>
               <input
                 id="catalog-plant-provider"
                 value={catalogForm.source_provider}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, source_provider: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, source_provider: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-quality">Šaltinio kokybė</label>
+              <label htmlFor="catalog-plant-quality">Source quality</label>
               <input
                 id="catalog-plant-quality"
                 value={catalogForm.source_quality}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, source_quality: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, source_quality: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-scientific">Mokslinis pavadinimas</label>
+              <label htmlFor="catalog-plant-scientific">Scientific name</label>
               <input
                 id="catalog-plant-scientific"
                 value={catalogForm.source_scientific_name}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, source_scientific_name: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({
+                    ...current,
+                    source_scientific_name: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-family">Šeima</label>
+              <label htmlFor="catalog-plant-family">Family</label>
               <input
                 id="catalog-plant-family"
                 value={catalogForm.source_family}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, source_family: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, source_family: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-plant-image">Nuotraukos URL</label>
+              <label htmlFor="catalog-plant-image">Photo URL</label>
               <input
                 id="catalog-plant-image"
                 value={catalogForm.source_image_url}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, source_image_url: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({
+                    ...current,
+                    source_image_url: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field field-span-2">
-              <label htmlFor="catalog-plant-description">Katalogo aprašymas</label>
+              <label htmlFor="catalog-plant-description">Catalog description</label>
               <textarea
                 id="catalog-plant-description"
                 value={catalogForm.description}
-                onChange={(event) => setCatalogForm((current) => ({ ...current, description: event.target.value }))}
+                onChange={(event) =>
+                  setCatalogForm((current) => ({ ...current, description: event.target.value }))
+                }
               />
             </div>
           </div>
@@ -640,192 +721,273 @@ export default function CatalogPlantFormPage() {
 
         <section className="panel page-stack">
           <div>
-            <h3 className="section-title">Bendrinama augalo priežiūra</h3>
-            <p className="section-copy">Šis priežiūros profilis pakartotinai naudojamas su katalogu susietiems pasodintiems augalams.</p>
+            <h3 className="section-title">Shared plant care</h3>
+            <p className="section-copy">
+              This care profile is reused by planted crops linked to the catalog.
+            </p>
           </div>
 
           <div className="form-grid plants-form-grid">
             <div className="field field-span-2">
-              <label htmlFor="catalog-care-description">Priežiūros aprašymas</label>
+              <label htmlFor="catalog-care-description">Care description</label>
               <textarea
                 id="catalog-care-description"
                 value={careForm.description}
-                onChange={(event) => setCareForm((current) => ({ ...current, description: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({ ...current, description: event.target.value }))
+                }
               />
             </div>
 
             <div className="field field-span-2">
-              <label htmlFor="catalog-care-conditions">Sąlygos</label>
+              <label htmlFor="catalog-care-conditions">Conditions</label>
               <textarea
                 id="catalog-care-conditions"
                 value={careForm.conditions}
-                onChange={(event) => setCareForm((current) => ({ ...current, conditions: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({ ...current, conditions: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-water">Laistymo intervalas (dienomis)</label>
+              <label htmlFor="catalog-care-water">Watering interval (days)</label>
               <input
                 id="catalog-care-water"
                 type="number"
                 min="0"
                 value={careForm.watering_interval_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, watering_interval_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    watering_interval_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-fertilize">Tręšimo intervalas (dienomis)</label>
+              <label htmlFor="catalog-care-fertilize">Fertilizing interval (days)</label>
               <input
                 id="catalog-care-fertilize"
                 type="number"
                 min="0"
                 value={careForm.fertilizing_interval_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, fertilizing_interval_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    fertilizing_interval_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-pest">Kenkėjų patikros intervalas (dienomis)</label>
+              <label htmlFor="catalog-care-pest">Pest check interval (days)</label>
               <input
                 id="catalog-care-pest"
                 type="number"
                 min="0"
                 value={careForm.pest_check_interval_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, pest_check_interval_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    pest_check_interval_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-rain">Lietaus riba laistymui praleisti (mm)</label>
+              <label htmlFor="catalog-care-rain">Rain threshold to skip watering (mm)</label>
               <input
                 id="catalog-care-rain"
                 type="number"
                 step="0.1"
                 value={careForm.rain_skip_threshold_mm}
-                onChange={(event) => setCareForm((current) => ({ ...current, rain_skip_threshold_mm: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    rain_skip_threshold_mm: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-frost">Šalnos riba (°C)</label>
+              <label htmlFor="catalog-care-frost">Frost threshold (°C)</label>
               <input
                 id="catalog-care-frost"
                 type="number"
                 step="0.1"
                 value={careForm.frost_temp_threshold_c}
-                onChange={(event) => setCareForm((current) => ({ ...current, frost_temp_threshold_c: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    frost_temp_threshold_c: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-heat">Karščio riba papildomam laistymui (°C)</label>
+              <label htmlFor="catalog-care-heat">Heat threshold for extra watering (°C)</label>
               <input
                 id="catalog-care-heat"
                 type="number"
                 step="0.1"
                 value={careForm.heat_extra_water_temp_c}
-                onChange={(event) => setCareForm((current) => ({ ...current, heat_extra_water_temp_c: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    heat_extra_water_temp_c: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-wind">Apsauga nuo vėjo (km/h)</label>
+              <label htmlFor="catalog-care-wind">Wind protection (km/h)</label>
               <input
                 id="catalog-care-wind"
                 type="number"
                 step="0.1"
                 value={careForm.wind_protection_kmh}
-                onChange={(event) => setCareForm((current) => ({ ...current, wind_protection_kmh: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    wind_protection_kmh: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-reusable">Pakartotinai naudojamas profilis</label>
+              <label htmlFor="catalog-care-reusable">Reusable profile</label>
               <select
                 id="catalog-care-reusable"
                 value={careForm.reusable ? 'true' : 'false'}
-                onChange={(event) => setCareForm((current) => ({ ...current, reusable: event.target.value === 'true' }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    reusable: event.target.value === 'true',
+                  }))
+                }
               >
-                <option value="false">Ne</option>
-                <option value="true">Taip</option>
+                <option value="false">No</option>
+                <option value="true">Yes</option>
               </select>
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-growing">Augimo trukmė (dienomis)</label>
+              <label htmlFor="catalog-care-growing">Growing duration (days)</label>
               <input
                 id="catalog-care-growing"
                 type="number"
                 min="0"
                 value={careForm.growing_duration_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, growing_duration_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    growing_duration_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-germinating">Dygimo trukmė (dienomis)</label>
+              <label htmlFor="catalog-care-germinating">Germination duration (days)</label>
               <input
                 id="catalog-care-germinating"
                 type="number"
                 min="0"
                 value={careForm.germinating_duration_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, germinating_duration_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    germinating_duration_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-flowering">Žydėjimo trukmė (dienomis)</label>
+              <label htmlFor="catalog-care-flowering">Flowering duration (days)</label>
               <input
                 id="catalog-care-flowering"
                 type="number"
                 min="0"
                 value={careForm.flowering_duration_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, flowering_duration_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    flowering_duration_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-mature">Brandos trukmė (dienomis)</label>
+              <label htmlFor="catalog-care-mature">Maturity duration (days)</label>
               <input
                 id="catalog-care-mature"
                 type="number"
                 min="0"
                 value={careForm.mature_duration_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, mature_duration_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    mature_duration_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-end">Derėjimo pabaigos laikotarpis (dienomis)</label>
+              <label htmlFor="catalog-care-end">Fruiting end period (days)</label>
               <input
                 id="catalog-care-end"
                 type="number"
                 min="0"
                 value={careForm.mature_duration_end_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, mature_duration_end_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    mature_duration_end_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-end-alt">Brandos pabaigos trukmė (dienomis)</label>
+              <label htmlFor="catalog-care-end-alt">Maturity end duration (days)</label>
               <input
                 id="catalog-care-end-alt"
                 type="number"
                 min="0"
                 value={careForm.mature_end_duration_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, mature_end_duration_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    mature_end_duration_days: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="catalog-care-regenerating">Atsinaujinimo trukmė (dienomis)</label>
+              <label htmlFor="catalog-care-regenerating">Regeneration duration (days)</label>
               <input
                 id="catalog-care-regenerating"
                 type="number"
                 min="0"
                 value={careForm.regenerating_duration_days}
-                onChange={(event) => setCareForm((current) => ({ ...current, regenerating_duration_days: event.target.value }))}
+                onChange={(event) =>
+                  setCareForm((current) => ({
+                    ...current,
+                    regenerating_duration_days: event.target.value,
+                  }))
+                }
               />
             </div>
           </div>
@@ -835,10 +997,10 @@ export default function CatalogPlantFormPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saugoma...' : (isEdit ? 'Išsaugoti katalogo augalą' : 'Sukurti katalogo augalą')}
+            {submitting ? 'Saving...' : isEdit ? 'Save catalog plant' : 'Create catalog plant'}
           </Button>
           <Link to={isEdit ? `/plants/catalog/${catalogPlantId}` : '/plants?view=catalog'}>
-            <Button variant="secondary">Atgal</Button>
+            <Button variant="secondary">Back</Button>
           </Link>
         </div>
       </form>

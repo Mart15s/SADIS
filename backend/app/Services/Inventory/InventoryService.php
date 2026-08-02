@@ -10,12 +10,11 @@ use App\Models\InventoryUsageLog;
 use App\Models\Task;
 use App\Models\TaskResourceRequirement;
 use App\Services\Calendar\TaskInventoryCoverageService;
-use App\ValueObjects\NormalizedTaskResource;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -23,8 +22,7 @@ class InventoryService
 {
     public function __construct(
         private readonly TaskInventoryCoverageService $taskInventoryCoverageService,
-    ) {
-    }
+    ) {}
 
     /**
      * @return EloquentCollection<int, InventoryItem>
@@ -138,7 +136,7 @@ class InventoryService
             ? $task->taskCalendar->tasks->filter(fn (Task $calendarTask) => $this->taskDateKey($calendarTask) === $this->taskDateKey($task))
             : null;
 
-        if ($dayTasks instanceof \Illuminate\Support\Collection && $dayTasks->isNotEmpty()) {
+        if ($dayTasks instanceof Collection && $dayTasks->isNotEmpty()) {
             $summariesByDate = $this->taskInventoryCoverageService->summarizeTasksByDate($owner, $dayTasks, false);
 
             return $summariesByDate[$this->taskDateKey($task)]['tasks'][$task->id]['inventory_context']
@@ -392,8 +390,8 @@ class InventoryService
             : [
                 'resource_name' => (string) ($task->item ?? 'Inventory item'),
                 'normalized_name' => $this->normalizeInventoryName((string) ($task->item ?? 'inventory item')),
-                'inventory_item_type' => \App\Enums\InventoryItemType::Material,
-                'unit' => \App\Enums\InventoryUnit::Unit,
+                'inventory_item_type' => InventoryItemType::Material,
+                'unit' => InventoryUnit::Unit,
                 'required_quantity' => round((float) ($task->item_quantity ?? 0), 2),
                 'shortage_quantity' => round((float) ($task->item_quantity ?? 0), 2),
                 'is_consumed' => false,
@@ -504,7 +502,7 @@ class InventoryService
 
         return $taskCollection
             ->groupBy(fn (Task $task) => $this->taskDateKey($task) ?? 'undated')
-            ->map(function (\Illuminate\Support\Collection $dateTasks, string $dateKey) use ($owner, $lock): array {
+            ->map(function (Collection $dateTasks, string $dateKey) use ($owner, $lock): array {
                 $primaryPendingTasks = $dateTasks
                     ->filter(fn (Task $task) => $this->isPrimaryPendingTask($task))
                     ->values();
@@ -616,7 +614,7 @@ class InventoryService
                 $itemsQuery = $itemsQuery->lockForUpdate();
             }
 
-            $items = $itemsQuery ? $itemsQuery->get() : new EloquentCollection();
+            $items = $itemsQuery ? $itemsQuery->get() : new EloquentCollection;
             $availableQuantity = round((float) $items->sum('quantity'), 2);
 
             $aggregated[$resourceKey]['available_quantity'] = $availableQuantity;
@@ -654,10 +652,10 @@ class InventoryService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, array<string, mixed>>  $resourceSummariesByKey
+     * @param  Collection<string, array<string, mixed>>  $resourceSummariesByKey
      * @return array<string, mixed>
      */
-    private function buildTaskInventoryContextFromDaySummary(Task $task, \Illuminate\Support\Collection $resourceSummariesByKey): array
+    private function buildTaskInventoryContextFromDaySummary(Task $task, Collection $resourceSummariesByKey): array
     {
         if ($this->isBuyTask($task)) {
             $buyResource = $task->requiredResources->first();
@@ -824,7 +822,7 @@ class InventoryService
                     $matchingItems = $matchingItems->lockForUpdate();
                 }
 
-                $items = $matchingItems ? $matchingItems->get() : new EloquentCollection();
+                $items = $matchingItems ? $matchingItems->get() : new EloquentCollection;
                 $availableQuantity = round((float) $items->sum('quantity'), 2);
                 $shortageQuantity = round(max(0, $requirementData['required_quantity'] - $availableQuantity), 2);
 

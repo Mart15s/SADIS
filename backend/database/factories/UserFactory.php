@@ -29,6 +29,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'reset_code' => null,
             'role' => UserRole::Owner,
+            'status' => 'active',
         ];
     }
 }

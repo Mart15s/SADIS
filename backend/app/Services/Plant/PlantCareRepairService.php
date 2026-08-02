@@ -33,8 +33,7 @@ class PlantCareRepairService
 
     public function __construct(
         private readonly PlantCareService $plantCareService,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, int>
@@ -121,7 +120,7 @@ class PlantCareRepairService
         $care = $linkedCare ?? $candidateCare;
 
         if (! $care) {
-            $care = new PlantCare();
+            $care = new PlantCare;
         }
 
         $care->fill($this->mergeCatalogCareAttributes(

@@ -81,7 +81,7 @@ export default function PlotHarvestsPage() {
       }))
       setForm(createEmptyForm(new URLSearchParams()))
       setSearchParams({})
-      setSuccess(form.task_id ? 'Derlius užregistruotas, o kalendoriaus užduotis pažymėta atlikta.' : 'Derliaus įrašas užregistruotas.')
+      setSuccess(form.task_id ? 'Harvest recorded and the calendar task marked complete.' : 'Harvest record created.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -90,7 +90,7 @@ export default function PlotHarvestsPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title="Įkeliamas derliaus registravimas..." />
+    return <LoadingState title="Loading harvest records…" />
   }
 
   if (pageState.error) {
@@ -101,13 +101,13 @@ export default function PlotHarvestsPage() {
     <div className="page-stack">
       <PlotSectionNav
         plotId={plotId}
-        plotName={pageState.data.plot?.name ?? 'Sklypas'}
+        plotName={pageState.data.plot?.name ?? 'Field'}
         sectionKey="harvests"
         isOwner={pageState.data.accessRole === 'owner'}
-        description="Registruokite derliaus kiekius ir peržiūrėkite šio sklypo derliaus istoriją."
+        description="Record harvest quantities and review this field's harvest history."
         meta={(
           <>
-            <Badge tone="soft">{pageState.data.harvests.length} derliaus įrašai</Badge>
+            <Badge tone="soft">{pageState.data.harvests.length} harvest records</Badge>
             <Badge tone="neutral">{pageState.data.plants.length} galimi augalai</Badge>
           </>
         )}
@@ -124,19 +124,19 @@ export default function PlotHarvestsPage() {
         <form className="panel input-grid harvest-form" onSubmit={handleSubmit}>
           <div className="plot-page-section-head field-span-2">
             <div>
-              <h3>Registruoti derlių</h3>
-              <p className="section-copy">Įrašykite kiekį, datą ir, jei reikia, susiekite derlių su kalendoriaus užduotimi.</p>
+              <h3>Record harvest</h3>
+              <p className="section-copy">Enter the quantity and date, and optionally link the harvest to a calendar task.</p>
             </div>
           </div>
           <div className="field">
-            <label htmlFor="harvest-plant">Augalas</label>
+            <label htmlFor="harvest-plant">Plant</label>
             <select
               id="harvest-plant"
               value={form.plant_id}
               onChange={(event) => setForm((current) => ({ ...current, plant_id: event.target.value }))}
               required
             >
-              <option value="">Pasirinkite augalą</option>
+              <option value="">Select a plant</option>
               {pageState.data.plants.map((plant) => (
                 <option key={plant.id} value={plant.id}>
                   {plant.name}
@@ -145,12 +145,12 @@ export default function PlotHarvestsPage() {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="harvest-task">Susijusi kalendoriaus užduotis</label>
+            <label htmlFor="harvest-task">Related calendar task</label>
             <input
               id="harvest-task"
               value={form.task_id}
               onChange={(event) => setForm((current) => ({ ...current, task_id: event.target.value }))}
-              placeholder="Pasirinktinis užduoties ID"
+              placeholder="Optional task ID"
             />
           </div>
           <div className="field field-span-2">
@@ -190,34 +190,34 @@ export default function PlotHarvestsPage() {
             <ProcessingState
               title="Registruojamas derlius"
               description="Saugomas derliaus kiekis ir susiejamas su pasirinktu augalu."
-              steps={['Tikrinamas įrašas', 'Saugomas derlius', 'Atnaujinama istorija']}
+              steps={['Validating record', 'Saving harvest', 'Updating history']}
               compact
             />
           ) : null}
 
           <Button type="submit" loading={submitting}>
-            {submitting ? 'Saugomas derlius' : 'Registruoti derlių'}
+            {submitting ? 'Saving harvest' : 'Record harvest'}
           </Button>
         </form>
 
         <section className="panel table-stack harvest-history-panel">
           <div className="list-head">
             <h3>Derliaus istorija</h3>
-            <span>{pageState.data.harvests.length} įrašai</span>
+            <span>{pageState.data.harvests.length} records</span>
           </div>
 
           {pageState.data.harvests.length === 0 ? (
-            <EmptyState title="Derliaus įrašų nėra" description="Užregistruokite pirmą šio sklypo derliaus įrašą." />
+            <EmptyState title="No harvest records" description="Record the first harvest for this field." />
           ) : (
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Data</th>
-                    <th>Augalas</th>
+                    <th>Plant</th>
                     <th>Zona</th>
                     <th>Kiekis</th>
-                    <th>Užduotis</th>
+                    <th>Task</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -225,9 +225,9 @@ export default function PlotHarvestsPage() {
                     <tr key={record.id}>
                       <td>{formatDate(record.harvested_on)}</td>
                       <td>{record.plant_name}</td>
-                      <td>{record.zone_name || 'Nenurodyta'}</td>
+                      <td>{record.zone_name || 'Not specified'}</td>
                       <td>{formatQuantity(safeNumber(record.quantity, 2), record.unit ?? 'kg')}</td>
-                      <td>{record.task_name || record.task_id || 'Rankinis įrašas'}</td>
+                      <td>{record.task_name || record.task_id || 'Manual record'}</td>
                     </tr>
                   ))}
                 </tbody>

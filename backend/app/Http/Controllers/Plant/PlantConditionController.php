@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Plant\PlantConditionHistoryResource;
 use App\Models\Plant;
 use App\Models\Plot;
-use App\Services\Plot\AccessService;
 use App\Services\Plant\PlantConditionHistoryService;
+use App\Services\Plot\AccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -24,8 +24,7 @@ class PlantConditionController extends Controller
         Plant $plant,
         AccessService $accessService,
         PlantConditionHistoryService $plantConditionHistoryService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->authorizePlantEdit($request, $plot, $plant, $accessService);
 
         $validated = $request->validate([

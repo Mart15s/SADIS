@@ -12,12 +12,12 @@ Yava is a farm and community operations platform for fields, crop seasons, tasks
 
 ## Local development
 
-Prerequisites: PHP 8.3 with Composer, Node.js 22 with npm, and PostgreSQL. Docker Desktop can provide the disposable test database.
+Prerequisites: PHP 8.3 with Composer, Node.js 22 with npm, and PostgreSQL 17. Docker Desktop or OrbStack can provide the disposable test database. From a POSIX shell:
 
-```powershell
+```bash
 cd backend
 composer install
-Copy-Item .env.example .env
+cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan serve
@@ -25,7 +25,7 @@ php artisan serve
 
 In a second terminal:
 
-```powershell
+```bash
 cd frontend
 npm ci
 npm run dev
@@ -35,9 +35,10 @@ The default frontend URL is `http://localhost:5173`; the Laravel URL is normally
 
 ## Quality checks
 
-```powershell
+```bash
 cd backend
 php artisan test
+composer validate --strict
 composer audit --locked
 vendor/bin/pint --test
 
@@ -50,10 +51,10 @@ npm audit
 
 For a full PostgreSQL rehearsal:
 
-```powershell
+```bash
 docker compose -f docker/compose.postgres-test.yml up -d --wait
 cd backend
-php artisan test --configuration phpunit.pgsql.xml
+vendor/bin/phpunit --configuration phpunit.pgsql.xml
 cd ..
 docker compose -f docker/compose.postgres-test.yml down
 ```
@@ -62,16 +63,40 @@ The PostgreSQL service binds only to `127.0.0.1:55432`, stores its data in tempo
 
 Create Stage 1 demo data only in a local/disposable database:
 
-```powershell
+```bash
 cd backend
 php artisan yava:stage1-demo
 ```
+
+The demo command is destructive only to the selected database in the normal sense that it inserts demo records. Confirm the database name first; never run it against production.
+
+## Deployment image check
+
+The production image contains the compiled SPA, Laravel, nginx, and PHP-FPM. It refuses placeholder keys, debug mode, invalid ports, and production demo seeding. A local smoke run does not require production credentials:
+
+```bash
+docker build -t yava-stage1:local .
+docker run --detach --rm --name yava-stage1-local \
+  --publish 127.0.0.1:10000:10000 \
+  --env APP_KEY="base64:$(openssl rand -base64 32)" \
+  yava-stage1:local
+for attempt in {1..30}; do
+  [ "$(docker inspect --format '{{.State.Health.Status}}' yava-stage1-local)" = healthy ] && break
+  sleep 1
+done
+test "$(docker inspect --format '{{.State.Health.Status}}' yava-stage1-local)" = healthy
+curl --fail --show-error http://127.0.0.1:10000/up
+curl --fail --show-error http://127.0.0.1:10000/
+docker stop yava-stage1-local
+```
+
+This smoke check does not exercise database-backed APIs. Use the disposable PostgreSQL suite for that. The container never performs legacy conversion at boot; schema migration at boot is also off unless `RUN_SCHEMA_MIGRATIONS=true` is explicitly supplied. The Render Blueprint instead runs the schema-only `render-predeploy` command before deployment.
 
 ## Safe migration and deployment
 
 Schema migration and legacy data transformation are deliberately separate. Application boot does not transform legacy records. Review [operations and deployment](docs/OPERATIONS.md) and [legacy migration](docs/LEGACY_MIGRATION.md) before a release.
 
-```powershell
+```bash
 cd backend
 php artisan migrate --force
 php artisan yava:stage1-migrate
@@ -83,5 +108,7 @@ Additional references:
 
 - [Environment variables](docs/ENVIRONMENT.md)
 - [Security model and operations](docs/SECURITY.md)
+- [Roles, permissions, and data sharing](docs/AUTHORIZATION.md)
 - [API transition matrix](docs/API_TRANSITION_MATRIX.md)
 - [Acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md)
+- [Known limitations and Stage 2 exclusions](docs/KNOWN_LIMITATIONS.md)

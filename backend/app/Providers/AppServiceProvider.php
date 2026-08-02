@@ -4,10 +4,10 @@ namespace App\Providers;
 
 use App\Contracts\OtpProvider;
 use App\Services\Auth\DevelopmentOtpProvider;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
 use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
                 throw new RuntimeException("OTP provider [{$provider}] is not installed. Configure a production OtpProvider implementation.");
             }
 
-            return new DevelopmentOtpProvider();
+            return new DevelopmentOtpProvider;
         });
     }
 

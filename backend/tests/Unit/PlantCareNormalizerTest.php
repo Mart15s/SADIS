@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Services\Plant\PlantCareNormalizer;
 use App\Models\Plant;
+use App\Services\Plant\PlantCareNormalizer;
 use Tests\TestCase;
 
 class PlantCareNormalizerTest extends TestCase

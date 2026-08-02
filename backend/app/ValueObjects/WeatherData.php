@@ -15,8 +15,7 @@ final readonly class WeatherData
         public string $source = 'api',
         public ?string $sourceDate = null,
         public ?string $sourceCity = null,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): self
     {

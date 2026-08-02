@@ -16,7 +16,11 @@ export default function StatusBadge({
   size = 'md',
 }) {
   return (
-    <Badge tone={tone ?? KIND_TO_TONE[kind] ?? 'neutral'} size={size} className={`status-badge status-badge-${kind} ${className}`.trim()}>
+    <Badge
+      tone={tone ?? KIND_TO_TONE[kind] ?? 'neutral'}
+      size={size}
+      className={`status-badge status-badge-${kind} ${className}`.trim()}
+    >
       {children}
     </Badge>
   )

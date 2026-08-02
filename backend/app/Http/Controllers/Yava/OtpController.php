@@ -43,7 +43,9 @@ class OtpController extends Controller
         abort_unless($challengeId, 422, 'No active OTP challenge was found.');
         $challenge = $service->verify($challengeId, $data['code'], $request->ip());
         $user = $challenge->user_id ? User::with('profile')->find($challenge->user_id) : null;
-        if ($user && $challenge->purpose === 'login' && $request->hasSession()) {
+        // OtpService rejects every non-active account before it can mark the
+        // challenge verified or return control to an authentication boundary.
+        if ($user && $user->isActive() && $challenge->purpose === 'login' && $request->hasSession()) {
             Auth::guard('web')->login($user);
             $request->session()->regenerate();
         }

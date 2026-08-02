@@ -1,8 +1,5 @@
 import { memo, useMemo } from 'react'
-import {
-  STANDARD_PREVIEW_VIEWBOX,
-  buildPreviewModel,
-} from '../../lib/plotRender.js'
+import { STANDARD_PREVIEW_VIEWBOX, buildPreviewModel } from '../../lib/plotRender.js'
 
 export default memo(function PlanPreview({
   plotName,
@@ -21,7 +18,10 @@ export default memo(function PlanPreview({
   }, [plotGeometry, plotSize, zones])
 
   const clipPathId = useMemo(
-    () => `plan-preview-${String(plotName ?? 'plot').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${zones.length}`,
+    () =>
+      `plan-preview-${String(plotName ?? 'plot')
+        .replace(/[^a-z0-9]+/gi, '-')
+        .toLowerCase()}-${zones.length}`,
     [plotName, zones.length],
   )
   const gridPatternId = `${clipPathId}-grid`
@@ -31,7 +31,7 @@ export default memo(function PlanPreview({
       <svg
         className="plan-preview-svg"
         viewBox={`0 0 ${preview.viewBox.width} ${preview.viewBox.height}`}
-        aria-label={`${plotName || 'Sklypas'} vizualinė peržiūra`}
+        aria-label={`${plotName || 'Plot'} visual preview`}
       >
         <defs>
           <pattern id={gridPatternId} width="10" height="10" patternUnits="userSpaceOnUse">
@@ -42,9 +42,34 @@ export default memo(function PlanPreview({
           </clipPath>
         </defs>
 
-        <rect className="plan-preview-frame" x="2.5" y="2.5" width={preview.viewBox.width - 5} height={preview.viewBox.height - 5} rx="18" ry="18" />
-        <rect className="plan-preview-surface" x="8" y="8" width={preview.viewBox.width - 16} height={preview.viewBox.height - 16} rx="14" ry="14" />
-        <rect className="plan-preview-grid" x="8" y="8" width={preview.viewBox.width - 16} height={preview.viewBox.height - 16} rx="14" ry="14" fill={`url(#${gridPatternId})`} />
+        <rect
+          className="plan-preview-frame"
+          x="2.5"
+          y="2.5"
+          width={preview.viewBox.width - 5}
+          height={preview.viewBox.height - 5}
+          rx="18"
+          ry="18"
+        />
+        <rect
+          className="plan-preview-surface"
+          x="8"
+          y="8"
+          width={preview.viewBox.width - 16}
+          height={preview.viewBox.height - 16}
+          rx="14"
+          ry="14"
+        />
+        <rect
+          className="plan-preview-grid"
+          x="8"
+          y="8"
+          width={preview.viewBox.width - 16}
+          height={preview.viewBox.height - 16}
+          rx="14"
+          ry="14"
+          fill={`url(#${gridPatternId})`}
+        />
         <polygon className="plan-preview-outline" points={preview.plot} />
 
         <g clipPath={`url(#${clipPathId})`}>
@@ -70,8 +95,8 @@ export default memo(function PlanPreview({
                   />
                   <text
                     className={`plan-preview-label plan-preview-label--${zone.label.mode}`}
-                    x={zone.label.x + (zone.label.width / 2)}
-                    y={zone.label.y + (zone.label.height / 2)}
+                    x={zone.label.x + zone.label.width / 2}
+                    y={zone.label.y + zone.label.height / 2}
                     fontSize={zone.label.fontSize}
                   >
                     {zone.label.text}
@@ -83,7 +108,7 @@ export default memo(function PlanPreview({
         </g>
       </svg>
       {preview.zones.length > 0 ? (
-        <div className="plan-preview-legend" aria-label="Zonų legenda">
+        <div className="plan-preview-legend" aria-label="Zone legend">
           {preview.legend.map((zone) => (
             <span
               key={`legend-${zone.id}`}
@@ -103,7 +128,9 @@ export default memo(function PlanPreview({
         </div>
       ) : null}
       <figcaption className="plan-preview-caption">
-        {preview.source === 'geometry' ? 'Sinchronizuota sklypo geometrijos peržiūra' : 'Atsarginė sklypo peržiūra'}
+        {preview.source === 'geometry'
+          ? 'Synchronized plot geometry preview'
+          : 'Fallback plot preview'}
       </figcaption>
     </figure>
   )

@@ -49,11 +49,9 @@ export default function Topbar({ isWide = false, pageHeader = null }) {
 
   return (
     <header
-      className={[
-        'topbar',
-        isWide ? 'topbar-wide' : '',
-        pageHeader ? 'topbar--page-header' : '',
-      ].filter(Boolean).join(' ')}
+      className={['topbar', isWide ? 'topbar-wide' : '', pageHeader ? 'topbar--page-header' : '']
+        .filter(Boolean)
+        .join(' ')}
       aria-label="Workspace bar"
     >
       <div className="topbar-left">
@@ -69,7 +67,9 @@ export default function Topbar({ isWide = false, pageHeader = null }) {
       {hasPageChrome ? (
         <div className="topbar-page-chrome">
           {pageHeader.meta ? <div className="topbar-page-meta">{pageHeader.meta}</div> : null}
-          {pageHeader.actions ? <div className="topbar-page-actions">{pageHeader.actions}</div> : null}
+          {pageHeader.actions ? (
+            <div className="topbar-page-actions">{pageHeader.actions}</div>
+          ) : null}
         </div>
       ) : null}
 

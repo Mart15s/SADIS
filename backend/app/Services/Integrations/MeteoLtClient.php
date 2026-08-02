@@ -112,6 +112,7 @@ class MeteoLtClient
 
             if ($name === $city || $normalizedName === $normalizedCity) {
                 $exactMatches[] = $place;
+
                 continue;
             }
 

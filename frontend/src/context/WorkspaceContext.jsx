@@ -13,6 +13,7 @@ function normalizeContexts(payload) {
       type: item.type,
       name: item.name || `${item.type} ${item.id}`,
       role: item.role || null,
+      permissions: Array.isArray(item.permissions) ? item.permissions : [],
       timezone: item.timezone || 'Asia/Kolkata',
     }))
 }
@@ -21,43 +22,62 @@ export function WorkspaceProvider({ children }) {
   const { isAuthenticated } = useAuth()
   const [contexts, setContexts] = useState([])
   const [active, setActiveState] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) }
-    catch { return null }
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY))
+    } catch {
+      return null
+    }
   })
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const reload = useCallback(async () => {
     if (!isAuthenticated) {
       setContexts([])
+      setActiveState(null)
+      setError(null)
       return
     }
     setLoading(true)
+    setError(null)
     try {
       const next = normalizeContexts(await api.listContexts())
       setContexts(next)
       setActiveState((current) => {
-        if (current && next.some((item) => item.id === current.id && item.type === current.type)) return current
+        const refreshed = current
+          ? next.find((item) => item.id === current.id && item.type === current.type)
+          : null
+        if (refreshed) return refreshed
         return next[0] ?? null
       })
-    } catch {
-      // The application remains useful while a newly deployed v1 context endpoint warms up.
-      setContexts([])
+    } catch (requestError) {
+      // Keep the last confirmed contexts during transient network failures so
+      // an already-mounted workspace does not silently switch scope.
+      setError(requestError)
     } finally {
       setLoading(false)
     }
   }, [isAuthenticated])
 
-  useEffect(() => { reload() }, [reload])
+  useEffect(() => {
+    reload()
+  }, [reload])
   useEffect(() => {
     if (active) localStorage.setItem(STORAGE_KEY, JSON.stringify(active))
     else localStorage.removeItem(STORAGE_KEY)
   }, [active])
 
-  const setActive = useCallback((type, id) => {
-    const next = contexts.find((item) => item.type === type && item.id === String(id)) ?? null
-    setActiveState(next)
-  }, [contexts])
+  const setActive = useCallback(
+    (type, id) => {
+      const next = contexts.find((item) => item.type === type && item.id === String(id)) ?? null
+      setActiveState(next)
+    },
+    [contexts],
+  )
 
-  const value = useMemo(() => ({ contexts, active, setActive, loading, reload }), [active, contexts, loading, reload, setActive])
+  const value = useMemo(
+    () => ({ contexts, active, setActive, loading, error, reload }),
+    [active, contexts, error, loading, reload, setActive],
+  )
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>
 }

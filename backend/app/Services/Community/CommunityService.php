@@ -16,8 +16,7 @@ class CommunityService
 {
     public function __construct(
         private readonly AccessService $accessService,
-    ) {
-    }
+    ) {}
 
     /**
      * @return Collection<int, CommunityPost>

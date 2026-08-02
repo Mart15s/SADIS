@@ -24,8 +24,7 @@ class ShareController extends Controller
         Plot $plot,
         AccessService $accessService,
         PlotSnapshotService $plotSnapshotService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $grantor = $this->ensureUserOwnsPlot($request, $plot, $accessService);
         $recipientUser = User::query()
             ->with('gardenOwner')
@@ -65,8 +64,7 @@ class ShareController extends Controller
         User $recipient,
         AccessService $accessService,
         PlotSnapshotService $plotSnapshotService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $grantor = $this->ensureUserOwnsPlot($request, $plot, $accessService);
         $recipientOwner = $recipient->gardenOwner;
 
@@ -92,8 +90,7 @@ class ShareController extends Controller
         AccessRight $accessRight,
         AccessService $accessService,
         PlotSnapshotService $plotSnapshotService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $plot = $accessRight->plot;
         abort_unless($plot, 404);
 

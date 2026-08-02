@@ -4,7 +4,12 @@ namespace App\Http\Controllers\Yava;
 
 use App\Http\Controllers\Controller;
 use App\Models\Community;
+use App\Models\CommunityMembership;
+use App\Models\CropSeason;
 use App\Models\Farm;
+use App\Models\FarmCommunityLink;
+use App\Models\FarmMembership;
+use App\Models\Field;
 use App\Models\Recommendation;
 use App\Models\ResourceReservation;
 use App\Models\SharedResource;
@@ -16,10 +21,6 @@ use App\Services\Yava\PermissionService;
 use App\Services\Yava\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use App\Models\Field;
-use App\Models\CropSeason;
-use App\Models\FarmMembership;
-use App\Models\CommunityMembership;
 
 class OperationsController extends Controller
 {
@@ -55,6 +56,7 @@ class OperationsController extends Controller
     public function showTask(Request $request, WorkTask $task, PermissionService $permissions)
     {
         $this->authorizeScope($request, $permissions, $task->toArray(), 'view_farm');
+
         return response()->json(['data' => $task]);
     }
 
@@ -70,6 +72,7 @@ class OperationsController extends Controller
         }
         $this->validateTaskScope($data + $task->only(['farm_id', 'community_id', 'field_id', 'crop_season_id', 'assigned_to_user_id']));
         $task->update($data);
+
         return response()->json(['data' => $task->fresh()]);
     }
 
@@ -77,6 +80,7 @@ class OperationsController extends Controller
     {
         $this->authorizeScope($request, $permissions, $task->toArray(), 'manage_tasks');
         $task->update(['status' => 'completed', 'completed_at' => now()]);
+
         return response()->json(['data' => $task->fresh()]);
     }
 
@@ -84,12 +88,13 @@ class OperationsController extends Controller
     {
         $this->authorizeScope($request, $permissions, $task->toArray(), 'manage_tasks');
         $task->delete();
+
         return response()->json(null, 204);
     }
 
     public function inventories(Request $request, PermissionService $permissions)
     {
-        $query = StockItem::query();
+        $query = StockItem::query()->with(['movements' => fn ($movement) => $movement->latest('occurred_at')->latest('id')]);
         if ($request->filled('farm_id')) {
             $permissions->authorizeFarm($request->user(), $request->integer('farm_id'), 'view_farm');
             $query->where('farm_id', $request->integer('farm_id'));
@@ -99,6 +104,7 @@ class OperationsController extends Controller
         } else {
             abort(422, 'farm_id or community_id is required.');
         }
+
         return response()->json(['data' => $query->orderBy('name')->get()]);
     }
 
@@ -107,12 +113,14 @@ class OperationsController extends Controller
         $data = $request->validate($this->inventoryRules());
         $this->requireOneScope($data);
         $this->authorizeScope($request, $permissions, $data, 'manage_inventory');
+
         return response()->json(['data' => StockItem::query()->create($data)], 201);
     }
 
     public function showInventory(Request $request, StockItem $inventory, PermissionService $permissions)
     {
         $this->authorizeScope($request, $permissions, $inventory->toArray(), 'view_farm');
+
         return response()->json(['data' => $inventory->load('movements')]);
     }
 
@@ -127,6 +135,7 @@ class OperationsController extends Controller
             unset($data[$scope]);
         }
         $inventory->update($data);
+
         return response()->json(['data' => $inventory->fresh()]);
     }
 
@@ -135,6 +144,7 @@ class OperationsController extends Controller
         $this->authorizeScope($request, $permissions, $inventory->toArray(), 'manage_inventory');
         abort_if($inventory->movements()->exists(), 422, 'Inventory with movement history cannot be deleted.');
         $inventory->delete();
+
         return response()->json(null, 204);
     }
 
@@ -144,6 +154,7 @@ class OperationsController extends Controller
         $data = $request->validate([
             'type' => ['required', 'in:receipt,issue,consumption,return,adjustment_in,adjustment_out'],
             'quantity' => ['required', 'numeric', 'gt:0'], 'work_task_id' => ['nullable', 'exists:work_tasks,id'],
+            'field_id' => ['nullable', 'exists:fields,id'], 'crop_season_id' => ['nullable', 'exists:crop_seasons,id'],
             'notes' => ['nullable', 'string'], 'occurred_at' => ['sometimes', 'date'],
         ]);
         if (! empty($data['work_task_id'])) {
@@ -152,6 +163,18 @@ class OperationsController extends Controller
                 && (int) ($task->community_id ?? 0) === (int) ($inventory->community_id ?? 0), 422,
                 'The linked task must belong to the same inventory scope.');
         }
+        if (! empty($data['field_id'])) {
+            abort_unless($inventory->farm_id
+                && Field::query()->where('farm_id', $inventory->farm_id)->whereKey($data['field_id'])->exists(), 422,
+                'The field must belong to the inventory farm.');
+        }
+        if (! empty($data['crop_season_id'])) {
+            $season = CropSeason::findOrFail($data['crop_season_id']);
+            abort_unless($inventory->farm_id && (int) $season->farm_id === (int) $inventory->farm_id
+                && (empty($data['field_id']) || (int) $season->field_id === (int) $data['field_id']), 422,
+                'The crop season must belong to the inventory farm and selected field.');
+        }
+
         return response()->json(['data' => $service->record($request->user(), $inventory, $data)], 201);
     }
 
@@ -164,22 +187,40 @@ class OperationsController extends Controller
 
     public function resources(Request $request, PermissionService $permissions)
     {
-        $communityId = $request->integer('community_id');
-        abort_unless($communityId, 422, 'community_id is required.');
-        $permissions->authorizeCommunity($request->user(), $communityId);
-        return response()->json(['data' => SharedResource::query()->where('community_id', $communityId)->orderBy('name')->get()]);
+        $data = $request->validate([
+            'community_id' => ['nullable', 'integer', 'exists:communities,id'],
+            'farm_id' => ['nullable', 'integer', 'exists:farms,id'],
+        ]);
+        if ((isset($data['community_id']) ? 1 : 0) + (isset($data['farm_id']) ? 1 : 0) !== 1) {
+            throw ValidationException::withMessages(['scope' => ['Choose exactly one farm or community.']]);
+        }
+
+        $query = SharedResource::query();
+        if (isset($data['community_id'])) {
+            $permissions->authorizeCommunity($request->user(), (int) $data['community_id']);
+            $query->where('community_id', $data['community_id']);
+        } else {
+            $permissions->authorizeFarm($request->user(), (int) $data['farm_id'], 'view_farm');
+            $communityIds = FarmCommunityLink::query()
+                ->where('farm_id', $data['farm_id'])->where('status', 'active')->pluck('community_id');
+            $query->whereIn('community_id', $communityIds);
+        }
+
+        return response()->json(['data' => $query->orderBy('name')->get()]);
     }
 
     public function storeResource(Request $request, PermissionService $permissions)
     {
         $data = $request->validate($this->resourceRules());
         $permissions->authorizeCommunity($request->user(), (int) $data['community_id'], 'manage_resources');
+
         return response()->json(['data' => SharedResource::query()->create($data + ['created_by_user_id' => $request->user()->id])], 201);
     }
 
     public function showResource(Request $request, SharedResource $resource, PermissionService $permissions)
     {
         $permissions->authorizeCommunity($request->user(), $resource->community_id);
+
         return response()->json(['data' => $resource]);
     }
 
@@ -192,6 +233,7 @@ class OperationsController extends Controller
         }
         unset($data['community_id']);
         $resource->update($data);
+
         return response()->json(['data' => $resource->fresh()]);
     }
 
@@ -199,6 +241,7 @@ class OperationsController extends Controller
     {
         $permissions->authorizeCommunity($request->user(), $resource->community_id, 'manage_resources');
         $resource->delete();
+
         return response()->json(null, 204);
     }
 
@@ -209,9 +252,17 @@ class OperationsController extends Controller
             $resource = SharedResource::findOrFail($request->integer('resource_id'));
             $permissions->authorizeCommunity($request->user(), $resource->community_id);
             $query->where('shared_resource_id', $resource->id);
+        } elseif ($request->filled('community_id')) {
+            $communityId = $request->integer('community_id');
+            $permissions->authorizeCommunity($request->user(), $communityId);
+            $query->whereHas('resource', fn ($resource) => $resource->where('community_id', $communityId));
+            if (! $permissions->hasCommunityPermission($request->user(), $communityId, 'manage_resources')) {
+                $query->where('requested_by_user_id', $request->user()->id);
+            }
         } else {
             $query->where('requested_by_user_id', $request->user()->id);
         }
+
         return response()->json(['data' => $query->orderByDesc('starts_at')->get()]);
     }
 
@@ -219,6 +270,7 @@ class OperationsController extends Controller
     {
         $data = $request->validate([
             'resource_id' => ['required', 'exists:shared_resources,id'], 'farm_id' => ['nullable', 'exists:farms,id'],
+            'field_id' => ['nullable', 'exists:fields,id'],
             'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date'], 'purpose' => ['nullable', 'string', 'max:1000'],
         ]);
         $resource = SharedResource::findOrFail($data['resource_id']);
@@ -226,6 +278,12 @@ class OperationsController extends Controller
         if (isset($data['farm_id'])) {
             $permissions->authorizeFarm($request->user(), (int) $data['farm_id'], 'view_farm');
         }
+        if (isset($data['field_id'])) {
+            abort_unless(isset($data['farm_id'])
+                && Field::query()->where('farm_id', $data['farm_id'])->whereKey($data['field_id'])->exists(), 422,
+                'The field must belong to the requesting farm.');
+        }
+
         return response()->json(['data' => $service->request($request->user(), $resource, $data)], 201);
     }
 
@@ -235,6 +293,7 @@ class OperationsController extends Controller
         if ($reservation->requested_by_user_id !== $request->user()->id) {
             $permissions->authorizeCommunity($request->user(), $resource->community_id, 'manage_resources');
         }
+
         return response()->json(['data' => $reservation]);
     }
 
@@ -258,6 +317,7 @@ class OperationsController extends Controller
         } else {
             abort(404);
         }
+
         return response()->json(['data' => $result]);
     }
 
@@ -266,18 +326,21 @@ class OperationsController extends Controller
         $farmId = $request->integer('farm_id');
         abort_unless($farmId, 422, 'farm_id is required.');
         $permissions->authorizeFarm($request->user(), $farmId, 'view_farm');
+
         return response()->json(['data' => Recommendation::query()->where('farm_id', $farmId)->where('status', 'active')->latest()->get()]);
     }
 
     public function farmAnalytics(Request $request, Farm $farm, PermissionService $permissions, AnalyticsService $analytics)
     {
         $permissions->authorizeFarm($request->user(), $farm, 'view_analytics');
+
         return response()->json(['data' => $analytics->farm($farm)]);
     }
 
     public function communityAnalytics(Request $request, Community $community, PermissionService $permissions, AnalyticsService $analytics)
     {
         $permissions->authorizeCommunity($request->user(), $community);
+
         return response()->json(['data' => $analytics->community($community)]);
     }
 
@@ -318,24 +381,37 @@ class OperationsController extends Controller
                 : CommunityMembership::query()->where('community_id', $communityId)->where('user_id', $data['assigned_to_user_id'])->where('status', 'active')->exists();
             abort_unless($valid, 422, 'The assignee must be an active member of the task scope.');
         }
+        if (! empty($data['shared_resource_id'])) {
+            $resource = SharedResource::findOrFail($data['shared_resource_id']);
+            $valid = $communityId
+                ? (int) $resource->community_id === (int) $communityId
+                : FarmCommunityLink::query()->where('farm_id', $farmId)
+                    ->where('community_id', $resource->community_id)->where('status', 'active')->exists();
+            abort_unless($valid, 422, 'The shared resource must belong to the task community or an active linked community.');
+        }
     }
 
     private function taskRules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
+
         return [
             'farm_id' => ['nullable', 'exists:farms,id'], 'community_id' => ['nullable', 'exists:communities,id'],
             'field_id' => ['nullable', 'exists:fields,id'], 'crop_season_id' => ['nullable', 'exists:crop_seasons,id'],
             'assigned_to_user_id' => ['nullable', 'exists:users,id'], 'title' => [$required, 'string', 'max:255'],
+            'task_type' => ['sometimes', 'in:sowing,planting,fertilizing,spraying,irrigation,ploughing,cultivation,weeding,mowing,harvesting,soil_testing,field_inspection,machinery_maintenance,custom'],
+            'shared_resource_id' => ['nullable', 'exists:shared_resources,id'],
             'description' => ['nullable', 'string'], 'status' => ['sometimes', 'in:pending,in_progress,completed,cancelled'],
             'priority' => ['sometimes', 'in:low,medium,high,urgent'], 'starts_at' => ['nullable', 'date'],
-            'due_at' => ['nullable', 'date'],
+            'due_at' => ['nullable', 'date'], 'materials' => ['nullable', 'string', 'max:5000'],
+            'weather_warning' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
     private function inventoryRules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
+
         return [
             'farm_id' => ['nullable', 'exists:farms,id'], 'community_id' => ['nullable', 'exists:communities,id'],
             'name' => [$required, 'string', 'max:255'], 'category' => ['nullable', 'string', 'max:100'],
@@ -347,6 +423,7 @@ class OperationsController extends Controller
     private function resourceRules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
+
         return [
             'community_id' => [$required, 'exists:communities,id'], 'name' => [$required, 'string', 'max:255'],
             'description' => ['nullable', 'string'], 'type' => ['nullable', 'string', 'max:100'],

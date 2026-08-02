@@ -8,7 +8,9 @@ export default function FormField({
   span = false,
 }) {
   return (
-    <div className={`field ${span ? 'field-span-2' : ''} ${error ? 'field-invalid' : ''} ${className}`.trim()}>
+    <div
+      className={`field ${span ? 'field-span-2' : ''} ${error ? 'field-invalid' : ''} ${className}`.trim()}
+    >
       {label ? <label htmlFor={id}>{label}</label> : null}
       {children}
       {helper ? <span className="field-hint">{helper}</span> : null}

@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
-import { CircleMarker, MapContainer, Marker, Polygon, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import {
+  CircleMarker,
+  MapContainer,
+  Marker,
+  Polygon,
+  Polyline,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet'
 import { formatMeters } from '../../lib/plotMeasurements.js'
 import { getLatLngEdges } from '../../lib/geoMeasurements.js'
 
@@ -97,8 +107,9 @@ function MapViewSynchronizer({ view }) {
 
     const currentCenter = map.getCenter()
     const currentZoom = map.getZoom()
-    const hasDifferentCenter = Math.abs(currentCenter.lat - center.lat) > 0.000001
-      || Math.abs(currentCenter.lng - center.lng) > 0.000001
+    const hasDifferentCenter =
+      Math.abs(currentCenter.lat - center.lat) > 0.000001 ||
+      Math.abs(currentCenter.lng - center.lng) > 0.000001
     const hasDifferentZoom = Number.isFinite(Number(zoom)) && currentZoom !== zoom
 
     if (hasDifferentCenter || hasDifferentZoom) {
@@ -134,10 +145,7 @@ function getProjectedMidpoint(map, start, end) {
   const startPoint = map.latLngToLayerPoint(toLatLngTuple(start))
   const endPoint = map.latLngToLayerPoint(toLatLngTuple(end))
 
-  return map.layerPointToLatLng([
-    (startPoint.x + endPoint.x) / 2,
-    (startPoint.y + endPoint.y) / 2,
-  ])
+  return map.layerPointToLatLng([(startPoint.x + endPoint.x) / 2, (startPoint.y + endPoint.y) / 2])
 }
 
 function BoundaryOverlays({
@@ -154,9 +162,10 @@ function BoundaryOverlays({
   const map = useMap()
   const boundaryLine = useMemo(() => boundaryPoints.map(toLatLngTuple), [boundaryPoints])
   const polygonPoints = boundaryClosed && boundaryPoints.length >= 3 ? boundaryLine : []
-  const closingLine = !boundaryClosed && boundaryPoints.length >= 3
-    ? [toLatLngTuple(boundaryPoints[boundaryPoints.length - 1]), toLatLngTuple(boundaryPoints[0])]
-    : []
+  const closingLine =
+    !boundaryClosed && boundaryPoints.length >= 3
+      ? [toLatLngTuple(boundaryPoints[boundaryPoints.length - 1]), toLatLngTuple(boundaryPoints[0])]
+      : []
   const edgeLabels = getLatLngEdges(boundaryPoints, boundaryPoints.length >= 3).map((edge) => {
     const midpoint = getProjectedMidpoint(map, edge.start, edge.end)
 
@@ -236,25 +245,27 @@ function BoundaryOverlays({
         </Marker>
       ))}
 
-      {canInsertPoints ? edgeLabels.map((edge) => (
-        <Marker
-          key={`edge-insert-${edge.index}`}
-          position={toLatLngTuple(edge.midpoint)}
-          icon={edgeInsertIcon}
-          riseOnHover
-          title="Add a corner on this edge"
-          eventHandlers={{
-            click(event) {
-              event.originalEvent?.stopPropagation()
-              onBoundaryPointInsert?.(edge.index + 1, edge.midpoint)
-            },
-          }}
-        >
-          <Tooltip direction="top" offset={[0, -10]} className="plot-boundary-action-tooltip">
-            Add corner
-          </Tooltip>
-        </Marker>
-      )) : null}
+      {canInsertPoints
+        ? edgeLabels.map((edge) => (
+            <Marker
+              key={`edge-insert-${edge.index}`}
+              position={toLatLngTuple(edge.midpoint)}
+              icon={edgeInsertIcon}
+              riseOnHover
+              title="Add a corner on this edge"
+              eventHandlers={{
+                click(event) {
+                  event.originalEvent?.stopPropagation()
+                  onBoundaryPointInsert?.(edge.index + 1, edge.midpoint)
+                },
+              }}
+            >
+              <Tooltip direction="top" offset={[0, -10]} className="plot-boundary-action-tooltip">
+                Add corner
+              </Tooltip>
+            </Marker>
+          ))
+        : null}
 
       {boundaryPoints.map((point, index) => (
         <Marker
@@ -265,24 +276,34 @@ function BoundaryOverlays({
           autoPan={!readOnly}
           autoPanPadding={[56, 56]}
           riseOnHover
-          title={readOnly ? 'Sklypo ribos kampas' : index === 0 ? 'Pirmas kampas - čia uždaroma riba' : 'Vilkite kampą ribai koreguoti'}
-          eventHandlers={readOnly ? {
-            click(event) {
-              event.originalEvent?.stopPropagation()
-            },
-          } : {
-            drag(event) {
-              const next = event.target.getLatLng()
-              onBoundaryPointMove?.(index, { lat: next.lat, lng: next.lng })
-            },
-            click(event) {
-              event.originalEvent?.stopPropagation()
-            },
-            contextmenu(event) {
-              event.originalEvent?.preventDefault()
-              onBoundaryPointRemove?.(index)
-            },
-          }}
+          title={
+            readOnly
+              ? 'Plot boundary corner'
+              : index === 0
+                ? 'First corner — close the boundary here'
+                : 'Drag the corner to adjust the boundary'
+          }
+          eventHandlers={
+            readOnly
+              ? {
+                  click(event) {
+                    event.originalEvent?.stopPropagation()
+                  },
+                }
+              : {
+                  drag(event) {
+                    const next = event.target.getLatLng()
+                    onBoundaryPointMove?.(index, { lat: next.lat, lng: next.lng })
+                  },
+                  click(event) {
+                    event.originalEvent?.stopPropagation()
+                  },
+                  contextmenu(event) {
+                    event.originalEvent?.preventDefault()
+                    onBoundaryPointRemove?.(index)
+                  },
+                }
+          }
         />
       ))}
     </>
@@ -310,26 +331,33 @@ export default function PlotLocationMap({
   const initialZoom = view?.zoom ?? DEFAULT_ZOOM
   const canInsertPoints = !readOnly && boundaryClosed && boundaryPoints.length < MAX_BOUNDARY_POINTS
   const helperText = readOnly
-    ? 'Išsaugoti kampai, kraštinių ilgiai ir centras.'
+    ? 'Saved corners, edge lengths, and center.'
     : boundaryClosed
-      ? 'Tempkite kampus. Naudokite kraštinių žymeklius, kad pridėtumėte taškų.'
-      : 'Spustelėkite žemėlapį ir pridėkite kampus, tada uždarykite ribą.'
+      ? 'Drag corners. Use the edge markers to add points.'
+      : 'Click the map to add corners, then close the boundary.'
   const rootClassName = [
     'plot-location-map',
     `plot-location-map--${mode}`,
     readOnly ? 'plot-location-map--readonly' : '',
     className,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div className={rootClassName}>
-      <div className={`plot-location-map-mode-hint ${hintCollapsed ? 'is-collapsed' : ''}`.trim()} aria-live="polite">
+      <div
+        className={`plot-location-map-mode-hint ${hintCollapsed ? 'is-collapsed' : ''}`.trim()}
+        aria-live="polite"
+      >
         <div className="plot-location-map-mode-hint-head">
-          <strong>{readOnly ? 'Ribų vaizdas' : boundaryClosed ? 'Redaguoti ribą' : 'Braižyti ribą'}</strong>
+          <strong>
+            {readOnly ? 'Boundary view' : boundaryClosed ? 'Edit boundary' : 'Draw boundary'}
+          </strong>
           <button
             type="button"
             className="plot-location-map-hint-toggle"
-            aria-label={hintCollapsed ? 'Rodyti instrukciją' : 'Slėpti instrukciją'}
+            aria-label={hintCollapsed ? 'Show instructions' : 'Hide instructions'}
             aria-expanded={!hintCollapsed}
             onClick={() => setHintCollapsed((current) => !current)}
           >

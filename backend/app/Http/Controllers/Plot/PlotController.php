@@ -71,8 +71,7 @@ class PlotController extends Controller
         Plot $plot,
         AccessService $accessService,
         PlotSnapshotService $plotSnapshotService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureUserCanEditPlot($request, $plot, $accessService);
 
         $validated = $request->validate([
@@ -96,8 +95,7 @@ class PlotController extends Controller
         Plot $plot,
         AccessService $accessService,
         PlotSnapshotService $plotSnapshotService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureUserOwnsPlot($request, $plot, $accessService);
         $plotSnapshotService->capture($plot->fresh(['plantZones', 'plants']), 'plot_deleted', $request->user()->gardenOwner);
         $plot->delete();

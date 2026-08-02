@@ -14,8 +14,7 @@ class WeatherForecastRepairService
 {
     public function __construct(
         private readonly WeatherService $weatherService,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -62,6 +61,7 @@ class WeatherForecastRepairService
 
                 if ($dryRun) {
                     $summary['repaired_calendars']++;
+
                     continue;
                 }
 

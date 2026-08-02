@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 class LoginController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
+
     private const DECAY_SECONDS = 60;
 
     public function store(Request $request): JsonResponse
@@ -27,11 +28,13 @@ class LoginController extends Controller
         $key = Str::lower($validated['email']).'|'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $retryAfter = RateLimiter::availableIn($key);
+
             return response()->json(['message' => "Too many login attempts. Try again in {$retryAfter} seconds.", 'retry_after' => $retryAfter], 429);
         }
         $user = User::query()->with('profile')->where('email', $validated['email'])->first();
-        if (! $user || $user->status === 'deactivated' || ! Hash::check($validated['password'], $user->password)) {
+        if (! $user || ! $user->isActive() || ! Hash::check($validated['password'], $user->password)) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
+
             return response()->json(['message' => 'The provided credentials are incorrect.'], 422);
         }
         RateLimiter::clear($key);
@@ -44,6 +47,7 @@ class LoginController extends Controller
         if (config('auth_api.emit_legacy_token')) {
             $response['token'] = $user->createToken('legacy-api-token')->plainTextToken;
         }
+
         return response()->json($response);
     }
 }

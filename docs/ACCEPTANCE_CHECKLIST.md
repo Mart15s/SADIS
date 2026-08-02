@@ -5,7 +5,7 @@ Record the tested commit, date, browser/device, database engine, and operator. A
 ## Automated gates
 
 - [ ] `php artisan test` passes on the default test database.
-- [ ] `php artisan test --configuration phpunit.pgsql.xml` passes against disposable PostgreSQL.
+- [ ] `vendor/bin/phpunit --configuration phpunit.pgsql.xml` passes against disposable PostgreSQL without duplicate-configuration warnings.
 - [ ] `vendor/bin/pint --test` passes.
 - [ ] `composer audit --locked` has no unresolved applicable advisory.
 - [ ] `npm test` passes.
@@ -13,6 +13,8 @@ Record the tested commit, date, browser/device, database engine, and operator. A
 - [ ] `npm run build` passes.
 - [ ] `npm audit` findings are resolved or documented with applicability and upgrade plan.
 - [ ] Fresh PostgreSQL migration succeeds.
+- [ ] Production Docker image builds from the final lock files and reaches a healthy state.
+- [ ] Container smoke checks cover `/up`, `/`, deep-link SPA fallback, unauthenticated API JSON, and nginx/PHP-FPM failure handling.
 - [ ] Legacy dry-run, execution rehearsal, rerun/idempotency, count, and orphan reports are captured.
 - [ ] Automated source scan finds no hardcoded Lithuanian primary-UI text.
 
@@ -60,6 +62,7 @@ Record the tested commit, date, browser/device, database engine, and operator. A
 
 - [ ] Environment inventory is complete and contains no committed secrets.
 - [ ] Security headers are verified over HTTPS.
+- [ ] Render health check targets `/up`; same-origin CORS, Sanctum domains, secure cookies, trusted proxies, and PostgreSQL TLS values are set explicitly.
 - [ ] Schema migration and legacy data conversion run as separate explicit operations.
 - [ ] Previous image, verified database snapshot, restore permissions, and rollback owner are identified.
 - [ ] Post-deploy `/up` and critical smoke checks pass.

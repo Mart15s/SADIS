@@ -39,8 +39,7 @@ class AnalyticsService
         private readonly PlotSnapshotService $plotSnapshotService,
         private readonly PlantConditionHistoryService $plantConditionHistoryService,
         private readonly HarvestService $harvestService,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<int, string>|string|null  $analysisTypes

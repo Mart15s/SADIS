@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest'
 
 globalThis.React = React
 
-if (!Element.prototype.scrollIntoView) {
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function scrollIntoView() {}
 }
 

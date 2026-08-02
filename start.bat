@@ -2,19 +2,32 @@
 setlocal
 
 echo ============================================================
-echo  Garden System - Starting...
+echo  Yava - Starting local development servers...
 echo ============================================================
 echo.
 
 cd /d "%~dp0"
 
 echo [1/2] Starting Laravel backend (http://127.0.0.1:8000) ...
-start "Laravel Backend" cmd /k "cd /d "%~dp0backend" && php artisan serve"
+where php >nul 2>&1 || (
+    echo ERROR: PHP is not available on PATH.
+    exit /b 1
+)
+where npm >nul 2>&1 || (
+    echo ERROR: npm is not available on PATH.
+    exit /b 1
+)
+if not exist "%~dp0backend\.env" (
+    echo ERROR: backend\.env is missing. Copy backend\.env.example and generate APP_KEY first.
+    exit /b 1
+)
+
+start "Yava Laravel Backend" cmd /k "cd /d ""%~dp0backend"" && php artisan serve"
 
 timeout /t 2 /nobreak >nul
 
 echo [2/2] Starting React frontend (http://localhost:5173) ...
-start "React Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+start "Yava React Frontend" cmd /k "cd /d ""%~dp0frontend"" && npm run dev"
 
 echo.
 echo ============================================================

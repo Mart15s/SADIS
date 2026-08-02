@@ -4,9 +4,11 @@ import { useAuth } from '../../context/auth-context.js'
 import Button from '../../components/ui/Button.jsx'
 import FormSection from '../../components/ui/FormSection.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
+import { useI18n } from '../../i18n/i18n-context.js'
 
 export default function AccountPage() {
   const { profile, updateAccount, user } = useAuth()
+  const { locale, setLocale } = useI18n()
   const [form, setForm] = useState({
     email: user?.email ?? '',
     name: profile?.name ?? '',
@@ -65,15 +67,47 @@ export default function AccountPage() {
             <div className="input-grid">
               <div className="field">
                 <label htmlFor="account-email">Email address</label>
-                <input id="account-email" name="email" type="email" value={form.email} onChange={handleChange} required />
+                <input
+                  id="account-email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="field">
                 <label htmlFor="account-name">First name</label>
-                <input id="account-name" name="name" value={form.name} onChange={handleChange} required />
+                <input
+                  id="account-name"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="field">
                 <label htmlFor="account-surname">Last name</label>
-                <input id="account-surname" name="surname" value={form.surname} onChange={handleChange} required />
+                <input
+                  id="account-surname"
+                  name="surname"
+                  value={form.surname}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="account-locale">Language and regional format</label>
+                <select
+                  id="account-locale"
+                  value={locale}
+                  onChange={(event) => setLocale(event.target.value)}
+                >
+                  <option value="en-IN">English (India)</option>
+                </select>
+                <span className="field-hint">
+                  Dates, numbers, areas, and units use this regional format.
+                </span>
               </div>
             </div>
 

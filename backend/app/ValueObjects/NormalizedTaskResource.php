@@ -17,8 +17,7 @@ class NormalizedTaskResource
         public readonly float $requiredQuantity,
         public readonly float $shortageQuantity = 0.0,
         public readonly ?int $requirementId = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>|TaskResourceRequirement  $resource

@@ -49,6 +49,18 @@ class AnalyticsService
                 if (in_array('harvest_summary', $scopes, true)) {
                     $minimum['harvest_quantity'] = (float) CropHarvest::query()->whereHas('cropSeason', fn ($q) => $q->where('farm_id', $link->farm_id))->sum('quantity');
                 }
+                if (in_array('task_summary', $scopes, true)) {
+                    $taskCounts = WorkTask::query()->where('farm_id', $link->farm_id)
+                        ->selectRaw('status, COUNT(*) as aggregate')->groupBy('status')
+                        ->pluck('aggregate', 'status');
+                    $minimum['task_summary'] = [
+                        'total' => $taskCounts->sum(),
+                        'open' => $taskCounts->except(['completed', 'cancelled'])->sum(),
+                        'completed' => (int) ($taskCounts['completed'] ?? 0),
+                        'cancelled' => (int) ($taskCounts['cancelled'] ?? 0),
+                        'by_status' => $taskCounts->map(fn ($count) => (int) $count)->sortKeys()->all(),
+                    ];
+                }
 
                 return $minimum;
             })->values(),

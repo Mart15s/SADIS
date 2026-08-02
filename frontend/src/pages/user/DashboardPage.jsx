@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
-import { GardenTimeline, MeasurementBadge, PlantStatusBadge } from '../../components/garden/GardenControls.jsx'
+import {
+  GardenTimeline,
+  MeasurementBadge,
+  PlantStatusBadge,
+} from '../../components/garden/GardenControls.jsx'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import PlotBoundaryMiniMap from '../../components/plot/PlotBoundaryMiniMap.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
@@ -45,7 +49,7 @@ export default function DashboardPage() {
           eyebrow="Welcome"
           title="Garden work in one workspace"
           description="Plan plots, monitor plant status, and manage garden work from one clear interface."
-          actions={(
+          actions={
             <>
               <Link to="/login">
                 <Button variant="secondary">Sign in</Button>
@@ -54,10 +58,13 @@ export default function DashboardPage() {
                 <Button>Create account</Button>
               </Link>
             </>
-          )}
+          }
         />
 
-        <SectionCard title="What you can do after signing in" description="Make decisions using your plot, plant, and inventory data.">
+        <SectionCard
+          title="What you can do after signing in"
+          description="Make decisions using your plot, plant, and inventory data."
+        >
           <ul>
             <li>Create plots and arrange plant zones visually.</li>
             <li>Track plants, status history, rotation, and calendar work.</li>
@@ -106,13 +113,15 @@ export default function DashboardPage() {
         eyebrow="Garden management"
         title="Planning board"
         description="The workspace includes plots, zones, plant status, weather-based tasks, and inventory readiness."
-        meta={(
+        meta={
           <>
             <StatusBadge kind="connection">Garden data synced</StatusBadge>
-            <StatusBadge kind="ownership">{data.plots.length > 0 ? `${data.plots.length} active plots` : 'No plots yet'}</StatusBadge>
+            <StatusBadge kind="ownership">
+              {data.plots.length > 0 ? `${data.plots.length} active plots` : 'No plots yet'}
+            </StatusBadge>
           </>
-        )}
-        actions={(
+        }
+        actions={
           <>
             <Link to="/account">
               <Button variant="secondary">Account</Button>
@@ -124,7 +133,7 @@ export default function DashboardPage() {
               <Button variant="secondary">Inventory</Button>
             </Link>
           </>
-        )}
+        }
       />
 
       <section className="dashboard-map-band">
@@ -132,8 +141,8 @@ export default function DashboardPage() {
           <span className="workspace-section-eyebrow">Active garden model</span>
           <h2>Plots, zones, plants, and work in one management overview.</h2>
           <p>
-            This overview is based on real planning objects: plot plans, marked zones,
-            calendar work, and the inventory needed for care.
+            This overview is based on real planning objects: plot plans, marked zones, calendar
+            work, and the inventory needed for care.
           </p>
         </div>
         <div className="dashboard-measurement-strip" aria-label="Garden summary">
@@ -148,11 +157,11 @@ export default function DashboardPage() {
         <SectionCard
           title="Active plots"
           description=""
-          actions={(
+          actions={
             <Link to="/plots">
               <Button variant="ghost">Show all plots</Button>
             </Link>
-          )}
+          }
           className="dashboard-active-plots"
         >
           {data.plots.length > 0 ? (
@@ -167,13 +176,20 @@ export default function DashboardPage() {
                   <div className="dashboard-plot-row-copy">
                     <div className="list-head">
                       <strong>{plot.name}</strong>
-                      <StatusBadge kind="ownership">{formatAccessRole(plot.access_role ?? 'viewer')}</StatusBadge>
+                      <StatusBadge kind="ownership">
+                        {formatAccessRole(plot.access_role ?? 'viewer')}
+                      </StatusBadge>
                     </div>
                     <span className="muted">
-                      {plot.city || 'City not specified'} / {formatSquareMetersValue(plot.plot_size, 2)}
+                      {plot.city || 'City not specified'} /{' '}
+                      {formatSquareMetersValue(plot.plot_size, 2)}
                     </span>
                     <div className="dashboard-mini-metrics">
-                      <MeasurementBadge label="Zones" value={plot.plant_zones_count ?? 0} tone="field" />
+                      <MeasurementBadge
+                        label="Zones"
+                        value={plot.plant_zones_count ?? 0}
+                        tone="field"
+                      />
                       <MeasurementBadge label="Plants" value={plot.plants_count ?? 0} tone="leaf" />
                     </div>
                     <ActionRow>
@@ -192,11 +208,11 @@ export default function DashboardPage() {
             <EmptyState
               title="No plots yet"
               description="Create your first plot to use zones, plants, calendars, and analytics."
-              action={(
+              action={
                 <Link to="/plots">
                   <Button>Create your first plot</Button>
                 </Link>
-              )}
+              }
             />
           )}
         </SectionCard>
@@ -205,14 +221,20 @@ export default function DashboardPage() {
           <SectionCard title="Today's garden work" description="">
             <div className="dashboard-task-lane">
               {data.plots.slice(0, 3).map((plot) => (
-                <Link key={`task-${plot.id}`} to={`/plots/${plot.id}/calendar`} className="dashboard-task-row">
+                <Link
+                  key={`task-${plot.id}`}
+                  to={`/plots/${plot.id}/calendar`}
+                  className="dashboard-task-row"
+                >
                   <span className="dashboard-task-date">Today</span>
                   <strong>{plot.name}</strong>
                   <span>Open calendar work for marked zones</span>
                 </Link>
               ))}
               {data.plots.length === 0 ? (
-                <p className="muted">Create a plot and generate a calendar to see planned work here.</p>
+                <p className="muted">
+                  Create a plot and generate a calendar to see planned work here.
+                </p>
               ) : null}
             </div>
           </SectionCard>
@@ -236,14 +258,23 @@ export default function DashboardPage() {
                 <Link key={plant.id} to={`/plants/${plant.id}`} className="dashboard-plant-row">
                   <div>
                     <strong>{plant.name}</strong>
-                    <span>{plant.plot?.name ?? 'Unknown plot'} - {plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Zone not specified'}</span>
+                    <span>
+                      {plant.plot?.name ?? 'Unknown plot'} -{' '}
+                      {plant.plant_zone?.name ?? plant.plantZone?.name ?? 'Zone not specified'}
+                    </span>
                   </div>
-                  <PlantStatusBadge status={plant.condition ?? plant.lifecycle_phase} careLinked={plant.has_plant_care} />
+                  <PlantStatusBadge
+                    status={plant.condition ?? plant.lifecycle_phase}
+                    careLinked={plant.has_plant_care}
+                  />
                 </Link>
               ))}
             </div>
           ) : (
-            <EmptyState title="No plant records" description="Add planted plants from the plant workspace or directly from plot zones." />
+            <EmptyState
+              title="No plant records"
+              description="Add planted plants from the plant workspace or directly from plot zones."
+            />
           )}
         </SectionCard>
 

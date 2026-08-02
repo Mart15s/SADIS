@@ -8,7 +8,7 @@ enum TaskState: string
     case Completed = 'completed';
     case Canceled = 'canceled';
 
-    public static function normalize(string|null $value): string
+    public static function normalize(?string $value): string
     {
         return match ($value) {
             'cancelled' => self::Canceled->value,

@@ -1,11 +1,17 @@
 import { startTransition, useDeferredValue, useState } from 'react'
 import PageHeader from '../../components/layout/PageHeader.jsx'
-import { EmptyState, ErrorState, LoadingState } from '../../components/shared/StatusView.jsx'
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SuccessToast,
+} from '../../components/shared/StatusView.jsx'
 import Button from '../../components/ui/Button.jsx'
 import Card from '../../components/ui/Card.jsx'
 import { api } from '../../lib/api.js'
-import { formatDateTime, formatUserRole, USER_ROLES } from '../../lib/constants.js'
+import { formatUserRole, USER_ROLES } from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
+import { useI18n } from '../../i18n/i18n-context.js'
 
 export default function AdminUsersPage() {
   const [filters, setFilters] = useState({
@@ -15,12 +21,15 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [detailError, setDetailError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState('')
+  const { formatDateTime } = useI18n()
   const deferredSearch = useDeferredValue(filters.search)
   const usersState = useAsyncData(
-    () => api.listAdminUsers({
-      search: deferredSearch || undefined,
-      role: filters.role || undefined,
-    }),
+    () =>
+      api.listAdminUsers({
+        search: deferredSearch || undefined,
+        role: filters.role || undefined,
+      }),
     [deferredSearch, filters.role],
     [],
   )
@@ -39,14 +48,16 @@ export default function AdminUsersPage() {
   }
 
   async function handleRoleChange(userId, nextRole) {
+    if (saving) return
     setSaving(true)
 
     try {
       const updated = await api.updateAdminUserRole(userId, nextRole)
-      usersState.setData((current) => current.map((user) => (
-        user.id === updated.id ? updated : user
-      )))
+      usersState.setData((current) =>
+        current.map((user) => (user.id === updated.id ? updated : user)),
+      )
       setSelectedUser(updated)
+      setToast('User role updated.')
     } catch (error) {
       setDetailError(error.message)
     } finally {
@@ -55,12 +66,14 @@ export default function AdminUsersPage() {
   }
 
   async function handleDelete(userId) {
+    if (saving || !window.confirm('Deactivate this user account?')) return
     setSaving(true)
 
     try {
       await api.deleteAdminUser(userId)
       usersState.setData((current) => current.filter((user) => user.id !== userId))
       setSelectedUser((current) => (current?.id === userId ? null : current))
+      setToast('User account deactivated.')
     } catch (error) {
       setDetailError(error.message)
     } finally {
@@ -69,7 +82,7 @@ export default function AdminUsersPage() {
   }
 
   if (usersState.loading) {
-    return <LoadingState title="Įkeliami naudotojai..." />
+    return <LoadingState title="Loading users…" />
   }
 
   if (usersState.error) {
@@ -79,28 +92,33 @@ export default function AdminUsersPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Naudotojų administravimas"
-        description="Ieškokite, filtruokite, peržiūrėkite, keiskite roles ir šalinkite naudotojų paskyras."
+        title="User administration"
+        description="Search, filter, inspect, and manage system user accounts."
       />
+      <SuccessToast message={toast} onDismiss={() => setToast('')} />
 
       <div className="search-row">
         <div className="field">
-          <label htmlFor="admin-user-search">Ieškoti naudotojų</label>
+          <label htmlFor="admin-user-search">Search users</label>
           <input
             id="admin-user-search"
             value={filters.search}
-            onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-            placeholder="El. paštas, vardas arba pavardė"
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, search: event.target.value }))
+            }
+            placeholder="Email address, first name, or last name"
           />
         </div>
         <div className="field">
-          <label htmlFor="admin-user-role">Rolės filtras</label>
+          <label htmlFor="admin-user-role">Role filter</label>
           <select
             id="admin-user-role"
             value={filters.role}
-            onChange={(event) => setFilters((current) => ({ ...current, role: event.target.value }))}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, role: event.target.value }))
+            }
           >
-            <option value="">Visos rolės</option>
+            <option value="">All roles</option>
             {USER_ROLES.map((role) => (
               <option key={role} value={role}>
                 {formatUserRole(role)}
@@ -111,7 +129,10 @@ export default function AdminUsersPage() {
       </div>
 
       {usersState.data.length === 0 ? (
-        <EmptyState title="Naudotojų nerasta" description="Pagal pasirinktus paieškos ir filtro kriterijus paskyrų nerasta." />
+        <EmptyState
+          title="No users found"
+          description="No accounts match the selected search and role filters."
+        />
       ) : (
         <div className="detail-grid">
           <div className="panel table-stack">
@@ -119,23 +140,27 @@ export default function AdminUsersPage() {
               <table>
                 <thead>
                   <tr>
-                    <th>El. paštas</th>
-                    <th>Vardas</th>
-                    <th>Rolė</th>
-                    <th>Paskutinis prisijungimas</th>
-                    <th />
+                    <th>Email address</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Last sign-in</th>
+                    <th>
+                      <span className="sr-only">Actions</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {usersState.data.map((user) => (
                     <tr key={user.id}>
                       <td>{user.email}</td>
-                      <td>{[user.name, user.surname].filter(Boolean).join(' ') || 'Nenurodyta'}</td>
+                      <td>
+                        {[user.name, user.surname].filter(Boolean).join(' ') || 'Not specified'}
+                      </td>
                       <td>{formatUserRole(user.role)}</td>
                       <td>{formatDateTime(user.profile?.last_login)}</td>
                       <td>
                         <Button variant="ghost" onClick={() => handleInspect(user.id)}>
-                          Peržiūrėti
+                          Inspect
                         </Button>
                       </td>
                     </tr>
@@ -146,18 +171,17 @@ export default function AdminUsersPage() {
           </div>
 
           <Card>
-            <h3>Naudotojo informacija</h3>
+            <h3>User details</h3>
             {selectedUser ? (
               <div className="stack">
                 <strong>{selectedUser.email}</strong>
                 <span className="muted">
-                  {[selectedUser.name, selectedUser.surname].filter(Boolean).join(' ') || 'Profilio vardas nenurodytas'}
+                  {[selectedUser.name, selectedUser.surname].filter(Boolean).join(' ') ||
+                    'Profile name not specified'}
                 </span>
-                <span className="muted">
-                  Sukurta: {formatDateTime(selectedUser.created_at)}
-                </span>
+                <span className="muted">Created: {formatDateTime(selectedUser.created_at)}</span>
                 <div className="field">
-                  <label htmlFor="user-role">Rolė</label>
+                  <label htmlFor="user-role">Role</label>
                   <select
                     id="user-role"
                     value={selectedUser.role}
@@ -171,14 +195,18 @@ export default function AdminUsersPage() {
                     ))}
                   </select>
                 </div>
-                <Button variant="danger" onClick={() => handleDelete(selectedUser.id)} disabled={saving}>
-                  Pašalinti naudotoją
+                <Button
+                  variant="danger"
+                  onClick={() => handleDelete(selectedUser.id)}
+                  disabled={saving}
+                >
+                  Deactivate user
                 </Button>
               </div>
             ) : (
               <EmptyState
-                title="Pasirinkite naudotoją"
-                description="Paspauskite „Peržiūrėti“, kad įkeltumėte naudotojo informaciją."
+                title="Select a user"
+                description="Choose Inspect to load account details."
               />
             )}
             {detailError ? <span className="field-error">{detailError}</span> : null}

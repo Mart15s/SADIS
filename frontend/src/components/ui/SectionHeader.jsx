@@ -1,9 +1,4 @@
-export default function SectionHeader({
-  title,
-  description,
-  actions = null,
-  className = '',
-}) {
+export default function SectionHeader({ title, description, actions = null, className = '' }) {
   if (!title && !description && !actions) {
     return null
   }

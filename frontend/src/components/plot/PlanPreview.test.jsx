@@ -38,8 +38,10 @@ describe('PlanPreview', () => {
 
     expect(clipPath).not.toBeNull()
     expect(zonePolygon).not.toBeNull()
-    expect(zonePolygon?.getAttribute('points')).not.toBe('10.00,12.00 67.00,22.00 67.00,72.00 20.00,72.00')
-    expect(screen.getByLabelText(/Bendrinamas plot vizualinė peržiūra/i)).toBeInTheDocument()
+    expect(zonePolygon?.getAttribute('points')).not.toBe(
+      '10.00,12.00 67.00,22.00 67.00,72.00 20.00,72.00',
+    )
+    expect(screen.getByLabelText(/Bendrinamas plot visual preview/i)).toBeInTheDocument()
   })
 
   it('renders labels consistently for multiple visible zones and keeps a numbered legend fallback', () => {

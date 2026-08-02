@@ -115,18 +115,22 @@ class CropController extends Controller
         if (isset($data['crop_variety_id'])) {
             CropVariety::query()->where('crop_id', $crop->id)->findOrFail($data['crop_variety_id']);
         }
-        $season = CropSeason::query()->create($data + ['created_by_user_id' => $request->user()->id]);
-        DB::table('crop_rotation_entries')->insert([
-            'field_id' => $season->field_id, 'field_zone_id' => $season->field_zone_id,
-            'crop_season_id' => $season->id, 'crop_id' => $season->crop_id,
-            'season_year' => (int) $season->starts_on->format('Y'), 'source' => 'crop_season',
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
-        DB::table('planning_history')->insert([
-            'farm_id' => $season->farm_id, 'field_id' => $season->field_id, 'actor_user_id' => $request->user()->id,
-            'event' => 'crop_season_created', 'subject_type' => CropSeason::class, 'subject_id' => $season->id,
-            'after' => json_encode($season->toArray()), 'created_at' => now(),
-        ]);
+        $season = DB::transaction(function () use ($data, $request): CropSeason {
+            $season = CropSeason::query()->create($data + ['created_by_user_id' => $request->user()->id]);
+            DB::table('crop_rotation_entries')->insert([
+                'field_id' => $season->field_id, 'field_zone_id' => $season->field_zone_id,
+                'crop_season_id' => $season->id, 'crop_id' => $season->crop_id,
+                'season_year' => (int) $season->starts_on->format('Y'), 'source' => 'crop_season',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('planning_history')->insert([
+                'farm_id' => $season->farm_id, 'field_id' => $season->field_id, 'actor_user_id' => $request->user()->id,
+                'event' => 'crop_season_created', 'subject_type' => CropSeason::class, 'subject_id' => $season->id,
+                'after' => json_encode($season->toArray()), 'created_at' => now(),
+            ]);
+
+            return $season;
+        }, 3);
 
         return response()->json(['data' => $season->load(['field', 'crop'])], 201);
     }
@@ -155,14 +159,19 @@ class CropController extends Controller
             Crop::query()->where(fn ($q) => $q->where('is_global', true)->orWhere('farm_id', $cropSeason->farm_id))->findOrFail($data['crop_id']);
         }
         unset($data['farm_id']);
-        $cropSeason->update($data);
-        DB::table('planning_history')->insert([
-            'farm_id' => $cropSeason->farm_id, 'field_id' => $cropSeason->field_id, 'actor_user_id' => $request->user()->id,
-            'event' => 'crop_season_updated', 'subject_type' => CropSeason::class, 'subject_id' => $cropSeason->id,
-            'before' => json_encode($before), 'after' => json_encode($cropSeason->fresh()->toArray()), 'created_at' => now(),
-        ]);
+        $cropSeason = DB::transaction(function () use ($cropSeason, $data, $before, $request): CropSeason {
+            $locked = CropSeason::query()->lockForUpdate()->findOrFail($cropSeason->id);
+            $locked->update($data);
+            DB::table('planning_history')->insert([
+                'farm_id' => $locked->farm_id, 'field_id' => $locked->field_id, 'actor_user_id' => $request->user()->id,
+                'event' => 'crop_season_updated', 'subject_type' => CropSeason::class, 'subject_id' => $locked->id,
+                'before' => json_encode($before), 'after' => json_encode($locked->fresh()->toArray()), 'created_at' => now(),
+            ]);
 
-        return response()->json(['data' => $cropSeason->fresh()]);
+            return $locked->fresh();
+        }, 3);
+
+        return response()->json(['data' => $cropSeason]);
     }
 
     public function destroySeason(Request $request, CropSeason $cropSeason, PermissionService $permissions)
@@ -225,6 +234,7 @@ class CropController extends Controller
     private function seasonRules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
+
         return [
             'farm_id' => [$required, 'exists:farms,id'], 'field_id' => [$required, 'exists:fields,id'],
             'field_zone_id' => ['nullable', 'exists:field_zones,id'], 'crop_id' => [$required, 'exists:crops,id'],

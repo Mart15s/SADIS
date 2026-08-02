@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\ConditionType;
 use App\Enums\PlantType;
 use App\Models\CatalogPlant;
-use App\Models\Plant;
 use App\Models\PlantCare;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\CreatesGardenData;

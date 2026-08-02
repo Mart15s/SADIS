@@ -27,11 +27,14 @@ function normalizeMessage(payload, status = null) {
 
 function toApiError(error) {
   if (!error.response) {
-    return Object.assign(new Error('The server could not be reached. Check your connection and try again.'), {
-      status: 0,
-      details: null,
-      original: error,
-    })
+    return Object.assign(
+      new Error('The server could not be reached. Check your connection and try again.'),
+      {
+        status: 0,
+        details: null,
+        original: error,
+      },
+    )
   }
 
   return Object.assign(new Error(normalizeMessage(error.response.data, error.response.status)), {
@@ -205,8 +208,16 @@ export const api = {
     const { data } = await apiClient.post(`/v1/${path}`, payload)
     return unwrapResource(data)
   },
+  async patchV1Path(path, payload = {}) {
+    const { data } = await apiClient.patch(`/v1/${path}`, payload)
+    return unwrapResource(data)
+  },
   async putV1Path(path, payload = {}) {
     const { data } = await apiClient.put(`/v1/${path}`, payload)
+    return unwrapResource(data)
+  },
+  async deleteV1Path(path, payload) {
+    const { data } = await apiClient.delete(`/v1/${path}`, payload ? { data: payload } : undefined)
     return unwrapResource(data)
   },
   async saveOnboarding(payload) {
@@ -226,6 +237,13 @@ export const api = {
     await ensureCsrfCookie()
     const { data } = await apiClient.post('/v1/auth/otp/verify', payload)
     return unwrapResource(data)
+  },
+  async createCommunityInvitation(communityId, payload) {
+    const { data } = await apiClient.post(`/v1/communities/${communityId}/invitations`, payload)
+    return {
+      invitation: unwrapResource(data),
+      code: data?.invitation_code ?? null,
+    }
   },
   async listPlots() {
     const { data } = await apiClient.get('/plots')
@@ -374,7 +392,10 @@ export const api = {
     return data
   },
   async updateRotationDraftItem(plotId, draftId, plantId, payload) {
-    const { data } = await apiClient.patch(`/plots/${plotId}/rotations/plans/${draftId}/items/${plantId}`, payload)
+    const { data } = await apiClient.patch(
+      `/plots/${plotId}/rotations/plans/${draftId}/items/${plantId}`,
+      payload,
+    )
     return data
   },
   async rejectRotationPlan(plotId, draftId) {
@@ -394,7 +415,9 @@ export const api = {
     return data
   },
   async refreshCalendarWeather(plotId, calendarId) {
-    const { data } = await apiClient.post(`/plots/${plotId}/calendars/${calendarId}/weather-refresh`)
+    const { data } = await apiClient.post(
+      `/plots/${plotId}/calendars/${calendarId}/weather-refresh`,
+    )
     return data
   },
   async listCalendarTasks(calendarId, params = {}) {

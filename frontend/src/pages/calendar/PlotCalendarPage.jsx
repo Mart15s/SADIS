@@ -134,11 +134,11 @@ function taskInventoryLabel(mode) {
 }
 
 const VISIBLE_TEXT_TRANSLATIONS = {
-  'Stebėti įsitvirtinimą': 'Monitor establishment',
-  'Jaunus augalus įsitvirtinimo metu reikia stebėti atidžiau.': 'Young plants should be monitored more closely while they become established.',
-  'Faktinė būklė': 'Current status',
-  'Tikėtina būklė': 'Expected status',
-  'Detalės': 'Details',
+  'Steb\u0117ti \u012fsitvirtinim\u0105': 'Monitor establishment',
+  'Jaunus augalus \u012fsitvirtinimo metu reikia steb\u0117ti atid\u017eiau.': 'Young plants should be monitored more closely while they become established.',
+  'Faktin\u0117 b\u016bkl\u0117': 'Current status',
+  'Tik\u0117tina b\u016bkl\u0117': 'Expected status',
+  'Detal\u0117s': 'Details',
   'Atlikti': 'Complete',
   'Atnaujinta:': 'Updated:',
   'Orai': 'Weather',
@@ -158,9 +158,9 @@ function translateVisibleText(value) {
   return String(value)
     .replace(/\bPapildyta:/g, 'Restocked:')
     .replace(/\bNupirkti:\s*/g, 'Buy ')
-    .replace(/\bTrąšos\b/g, 'Fertilizer')
-    .replace(/\bApsauginė danga\b/g, 'Protective cover')
-    .replace(/\bAugalų atramos\b/g, 'Plant support')
+    .replace(/\bTr\u0105\u0161os\b/g, 'Fertilizer')
+    .replace(/\bApsaugin\u0117 danga\b/g, 'Protective cover')
+    .replace(/\bAugal\u0173 atramos\b/g, 'Plant support')
     .replace(/\bvnt\./g, 'unit')
 }
 

@@ -24,14 +24,17 @@ export function useUnsavedChangesGuard({ when, message }) {
     return window.confirm(message)
   })
 
-  useBeforeUnload((event) => {
-    if (!when) {
-      return
-    }
+  useBeforeUnload(
+    (event) => {
+      if (!when) {
+        return
+      }
 
-    event.preventDefault()
-    event.returnValue = ''
-  }, { capture: true })
+      event.preventDefault()
+      event.returnValue = ''
+    },
+    { capture: true },
+  )
 
   useEffect(() => {
     historyIndexRef.current = readHistoryIndex()

@@ -107,13 +107,14 @@ class AdminTest extends TestCase
             ->assertJsonValidationErrors(['role']);
     }
 
-    public function test_admin_can_delete_user_and_cleanup_orphaned_data(): void
+    public function test_admin_deactivation_preserves_identity_ownership_and_domain_history(): void
     {
         [$admin] = $this->createUserWithOwner('admin@example.com', UserRole::Admin);
         [$user, $owner, $profile] = $this->createUserWithOwner('user@example.com', UserRole::Owner, 'Vardenis', 'Pavardenis');
         [, $sharedOwner] = $this->createUserWithOwner('shared@example.com', UserRole::Owner, 'Kitas', 'Naudotojas');
 
         $exclusivePlot = Plot::query()->create([
+            'garden_owner_id' => $owner->id,
             'name' => 'Naikinamas sklypas',
             'city' => 'Vilnius',
             'plot_size' => 25,
@@ -123,6 +124,7 @@ class AdminTest extends TestCase
         ]);
 
         $sharedPlot = Plot::query()->create([
+            'garden_owner_id' => $owner->id,
             'name' => 'Bendras sklypas',
             'city' => 'Kaunas',
             'plot_size' => 50,
@@ -150,12 +152,14 @@ class AdminTest extends TestCase
         ]);
 
         $exclusiveItem = InventoryItem::query()->create([
+            'garden_owner_id' => $owner->id,
             'name' => 'Asmenines trasos',
             'quantity' => 10,
             'type' => InventoryItemType::Material,
         ]);
 
         $sharedItem = InventoryItem::query()->create([
+            'garden_owner_id' => $owner->id,
             'name' => 'Bendras kastuvas',
             'quantity' => 1,
             'type' => InventoryItemType::Tool,
@@ -179,26 +183,30 @@ class AdminTest extends TestCase
             'fk_profile_id' => $sharedOwner->fk_profile_id,
         ]);
 
+        $user->createToken('existing-session');
+
         Sanctum::actingAs($admin);
 
         $this->deleteJson("/api/admin/users/{$user->id}")
             ->assertOk()
-            ->assertJsonPath('message', "Naudotojas s\u{117}kmingai pa\u{161}alintas");
+            ->assertJsonPath('message', 'The account was deactivated successfully.');
 
-        $this->assertDatabaseMissing('users', [
-            'id' => $user->id,
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id, 'status' => 'deactivated',
         ]);
+        $this->assertNotNull($user->fresh()->deactivated_at);
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $user->id]);
 
-        $this->assertDatabaseMissing('profiles', [
+        $this->assertDatabaseHas('profiles', [
             'id' => $profile->id,
         ]);
 
-        $this->assertDatabaseMissing('garden_owners', [
+        $this->assertDatabaseHas('garden_owners', [
             'id_user' => $owner->id_user,
             'fk_profile_id' => $owner->fk_profile_id,
         ]);
 
-        $this->assertDatabaseMissing('plots', [
+        $this->assertDatabaseHas('plots', [
             'id' => $exclusivePlot->id,
         ]);
 
@@ -206,12 +214,15 @@ class AdminTest extends TestCase
             'id' => $sharedPlot->id,
         ]);
 
-        $this->assertDatabaseMissing('inventory_items', [
+        $this->assertDatabaseHas('inventory_items', [
             'id' => $exclusiveItem->id,
         ]);
 
         $this->assertDatabaseHas('inventory_items', [
             'id' => $sharedItem->id,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'user_deactivated', 'target_user_id' => $user->id,
         ]);
     }
 

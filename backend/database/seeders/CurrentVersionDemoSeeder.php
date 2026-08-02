@@ -16,9 +16,9 @@ use App\Models\AccessRight;
 use App\Models\CatalogPlant;
 use App\Models\CommunityPost;
 use App\Models\GardenOwner;
+use App\Models\HarvestRecord;
 use App\Models\HasInventory;
 use App\Models\HasPlot;
-use App\Models\HarvestRecord;
 use App\Models\InventoryItem;
 use App\Models\InventoryUsageLog;
 use App\Models\Plant;
@@ -37,6 +37,7 @@ use App\Models\User;
 use App\Models\WeatherForecast;
 use App\Services\Plot\RotationPlannerService;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -783,7 +784,7 @@ class CurrentVersionDemoSeeder extends Seeder
         }
     }
 
-    private function snapshot(Plot $plot, string $action, CarbonImmutable|\Carbon\CarbonInterface $date, string $summary): void
+    private function snapshot(Plot $plot, string $action, CarbonImmutable|CarbonInterface $date, string $summary): void
     {
         $plot->load('plantZones.plants', 'plants');
         DB::table('plot_snapshots')->insert([

@@ -42,8 +42,8 @@ class PlantCareSchemaUpdateTest extends TestCase
             $this->assertTrue(Schema::hasColumn('plant_care', $column));
         }
 
-        $catalogPlant = new CatalogPlant();
-        $plantCare = new PlantCare();
+        $catalogPlant = new CatalogPlant;
+        $plantCare = new PlantCare;
 
         $this->assertInstanceOf(BelongsTo::class, $catalogPlant->plantCare());
         $this->assertInstanceOf(HasManyThrough::class, $plantCare->plants());

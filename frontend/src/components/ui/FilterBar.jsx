@@ -12,7 +12,13 @@ export default function FilterBar({
     <div className={`resource-filter-bar filter-bar ${className}`.trim()}>
       {children}
       <div className="resource-filter-summary filter-bar-summary" aria-live="polite">
-        {typeof resultCount === 'number' ? <span>{resultCount} {resultLabel}</span> : resultCount}
+        {typeof resultCount === 'number' ? (
+          <span>
+            {resultCount} {resultLabel}
+          </span>
+        ) : (
+          resultCount
+        )}
         {onClear ? (
           <Button variant="ghost" size="sm" onClick={onClear} disabled={clearDisabled}>
             Valyti

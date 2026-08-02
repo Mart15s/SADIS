@@ -7,7 +7,6 @@ use App\Models\OtpChallenge;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class OtpService
@@ -54,34 +53,53 @@ class OtpService
 
     public function verify(string $challengeId, string $code, ?string $ipAddress): OtpChallenge
     {
-        return DB::transaction(function () use ($challengeId, $code, $ipAddress): OtpChallenge {
+        $result = DB::transaction(function () use ($challengeId, $code, $ipAddress): array {
             $challenge = OtpChallenge::query()->lockForUpdate()->findOrFail($challengeId);
-            if ($challenge->verified_at) {
-                throw ValidationException::withMessages(['code' => ['This code has already been used.']]);
+            $user = $challenge->user_id ? User::find($challenge->user_id) : null;
+            if ($challenge->verified_at || $challenge->invalidated_at) {
+                return ['error' => 'This code is no longer active.'];
             }
             if ($challenge->expires_at->isPast()) {
-                $this->audit($challenge, $challenge->user_id ? User::find($challenge->user_id) : null, 'expired', $ipAddress);
-                throw ValidationException::withMessages(['code' => ['This code has expired.']]);
+                $challenge->update(['invalidated_at' => now()]);
+                $this->audit($challenge, $user, 'expired', $ipAddress);
+
+                return ['error' => 'This code has expired.'];
             }
             if ($challenge->attempts >= $challenge->max_attempts) {
-                throw ValidationException::withMessages(['code' => ['Too many verification attempts. Request a new code.']]);
+                $challenge->update(['invalidated_at' => now()]);
+                $this->audit($challenge, $user, 'locked_out', $ipAddress);
+
+                return ['error' => 'Too many verification attempts. Request a new code.'];
             }
             $challenge->increment('attempts');
             if (! Hash::check($code, $challenge->code_hash)) {
-                $this->audit($challenge, $challenge->user_id ? User::find($challenge->user_id) : null, 'failed', $ipAddress);
-                throw ValidationException::withMessages(['code' => ['The verification code is invalid.']]);
+                $this->audit($challenge, $user, 'failed', $ipAddress);
+
+                return ['error' => 'The verification code is invalid.'];
+            }
+            if ($user && ! $user->isActive()) {
+                $challenge->update(['invalidated_at' => now()]);
+                $this->audit($challenge, $user, 'rejected_inactive', $ipAddress);
+
+                return ['error' => 'This account cannot be authenticated.'];
             }
             $challenge->update(['verified_at' => now()]);
-            if ($challenge->user_id && in_array($challenge->purpose, ['verify_phone', 'login'], true)) {
+            if ($user && in_array($challenge->purpose, ['verify_phone', 'login'], true)) {
                 User::query()->whereKey($challenge->user_id)->update([
                     'phone' => $challenge->phone,
                     'phone_verified_at' => now(),
                 ]);
             }
-            $this->audit($challenge, $challenge->user_id ? User::find($challenge->user_id) : null, 'verified', $ipAddress);
+            $this->audit($challenge, $user, 'verified', $ipAddress);
 
-            return $challenge->fresh();
+            return ['challenge' => $challenge->fresh()];
         }, 3);
+
+        if (isset($result['error'])) {
+            throw ValidationException::withMessages(['code' => [$result['error']]]);
+        }
+
+        return $result['challenge'];
     }
 
     private function audit(OtpChallenge $challenge, ?User $user, string $event, ?string $ipAddress): void

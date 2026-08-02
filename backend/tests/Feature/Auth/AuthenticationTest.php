@@ -42,10 +42,28 @@ class AuthenticationTest extends TestCase
     public function test_guest_and_deactivated_users_cannot_restore_authenticated_state(): void
     {
         $this->getJson('/api/me')->assertUnauthorized();
+        $this->get('/api/me')->assertUnauthorized()->assertHeader('content-type', 'application/json');
         $user = $this->user('inactive@example.com');
         $user->update(['status' => 'deactivated', 'deactivated_at' => now()]);
         Sanctum::actingAs($user);
         $this->getJson('/api/me')->assertForbidden()->assertJsonPath('message', 'This account is inactive.');
+    }
+
+    public function test_password_login_rejects_every_non_active_account_state(): void
+    {
+        foreach (['deactivated', 'archived', 'disabled', 'suspended', 'pending_review'] as $index => $status) {
+            $user = $this->user("inactive-{$index}@example.com");
+            $user->update(['status' => $status, 'deactivated_at' => now()]);
+            $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password123'])
+                ->assertUnprocessable()->assertJsonMissingPath('token')->assertJsonMissingPath('user');
+            $this->assertDatabaseCount('personal_access_tokens', 0);
+        }
+
+        $timestampOnly = $this->user('timestamp-only@example.com');
+        $timestampOnly->update(['deactivated_at' => now()]);
+        $this->postJson('/api/login', ['email' => $timestampOnly->email, 'password' => 'password123'])
+            ->assertUnprocessable()->assertJsonMissingPath('token')->assertJsonMissingPath('user');
+        $this->assertGuest('web');
     }
 
     public function test_password_reset_is_private_single_use_and_keeps_login_working(): void
@@ -57,7 +75,11 @@ class AuthenticationTest extends TestCase
         $this->postJson('/api/forgot-password', ['email' => $user->email])->assertOk()->assertJsonPath('message', $message);
         $this->postJson('/api/forgot-password', ['email' => 'unknown@example.com'])->assertOk()->assertJsonPath('message', $message);
         $url = null;
-        Mail::assertSent(PasswordResetLinkMail::class, function ($mail) use (&$url): bool { $url = $mail->resetUrl; return true; });
+        Mail::assertSent(PasswordResetLinkMail::class, function ($mail) use (&$url): bool {
+            $url = $mail->resetUrl;
+
+            return true;
+        });
         parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
 
         $payload = [
@@ -75,6 +97,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create(['email' => $email, 'password' => $password, 'status' => 'active']);
         $profile = Profile::query()->create(['user_id' => $user->id, 'name' => 'Yava', 'surname' => 'Farmer']);
         GardenOwner::query()->create(['id' => $user->id, 'user_id' => $user->id, 'id_user' => $user->id, 'fk_profile_id' => $profile->id]);
+
         return $user;
     }
 }

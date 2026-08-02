@@ -10,10 +10,13 @@ export default function FormSection({
 }) {
   return (
     <Surface as="section" className={`section-card form-section ${className}`.trim()}>
-      <SectionHeader title={title} description={description} actions={actions} className="section-card-header" />
-      <div className="section-card-body">
-        {children}
-      </div>
+      <SectionHeader
+        title={title}
+        description={description}
+        actions={actions}
+        className="section-card-header"
+      />
+      <div className="section-card-body">{children}</div>
     </Surface>
   )
 }

@@ -8,7 +8,6 @@ use App\Enums\SoilType;
 use App\Models\GardenOwner;
 use App\Models\HasPlot;
 use App\Models\Plant;
-use App\Models\PlantCare;
 use App\Models\PlantZone;
 use App\Models\Plot;
 use App\Models\Profile;
@@ -123,6 +122,7 @@ class PlantCatalogCreateTest extends TestCase
         ]);
 
         $plot = Plot::query()->create([
+            'garden_owner_id' => $owner->id,
             'name' => 'Catalog Plot',
             'city' => 'Vilnius',
             'plot_size' => 42,

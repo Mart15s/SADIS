@@ -7,17 +7,17 @@ const DIMENSION_LABEL_VIEWPORT_MARGIN = 8
 
 function projectPoint(point, viewport) {
   return {
-    x: roundTo((point.x * viewport.scale) + viewport.x, 2),
-    y: roundTo((point.y * viewport.scale) + viewport.y, 2),
+    x: roundTo(point.x * viewport.scale + viewport.x, 2),
+    y: roundTo(point.y * viewport.scale + viewport.y, 2),
   }
 }
 
 function boxesOverlap(first, second, padding = 5) {
   return !(
-    first.right + padding < second.left
-    || second.right + padding < first.left
-    || first.bottom + padding < second.top
-    || second.bottom + padding < first.top
+    first.right + padding < second.left ||
+    second.right + padding < first.left ||
+    first.bottom + padding < second.top ||
+    second.bottom + padding < first.top
   )
 }
 
@@ -60,8 +60,8 @@ export function getShapeEdges(shape) {
       end,
       length: roundTo(length, 2),
       midpoint: {
-        x: roundTo(start.x + (dx / 2), 2),
-        y: roundTo(start.y + (dy / 2), 2),
+        x: roundTo(start.x + dx / 2, 2),
+        y: roundTo(start.y + dy / 2, 2),
       },
       angle: Math.atan2(dy, dx) * (180 / Math.PI),
     }
@@ -97,7 +97,7 @@ export function createDimensionLabels({
     const end = projectPoint(edge.end, viewport)
     const midpoint = projectPoint(edge.midpoint, viewport)
     const text = formatMeters(edge.length)
-    const width = Math.max(48, Math.min(92, (text.length * 7) + 16))
+    const width = Math.max(48, Math.min(92, text.length * 7 + 16))
     const dx = end.x - start.x
     const dy = end.y - start.y
     const screenLength = Math.hypot(dx, dy)
@@ -106,31 +106,43 @@ export function createDimensionLabels({
       continue
     }
 
-    const normal = screenLength > 0
-      ? { x: -dy / screenLength, y: dx / screenLength }
-      : { x: 0, y: -1 }
+    const normal =
+      screenLength > 0 ? { x: -dy / screenLength, y: dx / screenLength } : { x: 0, y: -1 }
     const baseOffset = screenLength < Math.max(minScreenLength, width * 0.72) ? 12 : 0
 
-    const offsetSteps = [baseOffset, baseOffset + 12, -(baseOffset + 12), baseOffset + 24, -(baseOffset + 24), baseOffset + 36]
+    const offsetSteps = [
+      baseOffset,
+      baseOffset + 12,
+      -(baseOffset + 12),
+      baseOffset + 24,
+      -(baseOffset + 24),
+      baseOffset + 36,
+    ]
     let selectedPlacement = null
     let fallbackPlacement = null
 
     for (const offset of offsetSteps) {
       const x = clamp(
-        midpoint.x + (normal.x * offset),
-        DIMENSION_LABEL_VIEWPORT_MARGIN + (width / 2),
-        Math.max(DIMENSION_LABEL_VIEWPORT_MARGIN + (width / 2), viewportBounds.width - DIMENSION_LABEL_VIEWPORT_MARGIN - (width / 2)),
+        midpoint.x + normal.x * offset,
+        DIMENSION_LABEL_VIEWPORT_MARGIN + width / 2,
+        Math.max(
+          DIMENSION_LABEL_VIEWPORT_MARGIN + width / 2,
+          viewportBounds.width - DIMENSION_LABEL_VIEWPORT_MARGIN - width / 2,
+        ),
       )
       const y = clamp(
-        midpoint.y + (normal.y * offset),
-        DIMENSION_LABEL_VIEWPORT_MARGIN + (DIMENSION_LABEL_HEIGHT / 2),
-        Math.max(DIMENSION_LABEL_VIEWPORT_MARGIN + (DIMENSION_LABEL_HEIGHT / 2), viewportBounds.height - DIMENSION_LABEL_VIEWPORT_MARGIN - (DIMENSION_LABEL_HEIGHT / 2)),
+        midpoint.y + normal.y * offset,
+        DIMENSION_LABEL_VIEWPORT_MARGIN + DIMENSION_LABEL_HEIGHT / 2,
+        Math.max(
+          DIMENSION_LABEL_VIEWPORT_MARGIN + DIMENSION_LABEL_HEIGHT / 2,
+          viewportBounds.height - DIMENSION_LABEL_VIEWPORT_MARGIN - DIMENSION_LABEL_HEIGHT / 2,
+        ),
       )
       const box = {
-        left: x - (width / 2),
-        right: x + (width / 2),
-        top: y - (DIMENSION_LABEL_HEIGHT / 2),
-        bottom: y + (DIMENSION_LABEL_HEIGHT / 2),
+        left: x - width / 2,
+        right: x + width / 2,
+        top: y - DIMENSION_LABEL_HEIGHT / 2,
+        bottom: y + DIMENSION_LABEL_HEIGHT / 2,
       }
 
       fallbackPlacement = { x, y, box }
@@ -157,7 +169,7 @@ export function createDimensionLabels({
     labels.push({
       id: `${idPrefix}-${edge.index}`,
       text,
-      title: `Kraštinė ${edge.index + 1}: ${text}`,
+      title: `Edge ${edge.index + 1}: ${text}`,
       x: roundTo(selectedPlacement.x, 2),
       y: roundTo(selectedPlacement.y, 2),
       width,

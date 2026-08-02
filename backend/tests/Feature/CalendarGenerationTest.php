@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Exceptions\CalendarGenerationException;
 use App\Enums\ConditionType;
 use App\Enums\InventoryItemType;
 use App\Enums\InventoryUnit;
 use App\Enums\PlantType;
 use App\Enums\SoilType;
+use App\Exceptions\CalendarGenerationException;
 use App\Models\GardenOwner;
 use App\Models\HasInventory;
 use App\Models\HasPlot;
@@ -21,10 +21,11 @@ use App\Models\Task;
 use App\Models\TaskCalendar;
 use App\Models\TaskResourceRequirement;
 use App\Models\User;
+use App\Models\WeatherForecast;
 use App\Services\Calendar\TaskCalendarService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -573,7 +574,7 @@ class CalendarGenerationTest extends TestCase
             'fk_plot_id' => $plot->id,
         ]);
 
-        \App\Models\WeatherForecast::query()->create([
+        WeatherForecast::query()->create([
             'date' => '2026-03-20',
             'temperature' => 13,
             'temp_min' => 10,
@@ -666,7 +667,7 @@ class CalendarGenerationTest extends TestCase
         ]);
 
         $calendar = $this->generateCalendar($plot, '2026-03-20', '2026-03-21');
-        $forecasts = \App\Models\WeatherForecast::query()
+        $forecasts = WeatherForecast::query()
             ->where('task_calendar_id', $calendar->id)
             ->orderBy('date')
             ->get()
@@ -709,7 +710,7 @@ class CalendarGenerationTest extends TestCase
             'fk_plot_id' => $plot->id,
         ]);
 
-        \App\Models\WeatherForecast::query()->create([
+        WeatherForecast::query()->create([
             'date' => '2026-03-20',
             'temperature' => 13,
             'temp_min' => 10,
@@ -726,7 +727,7 @@ class CalendarGenerationTest extends TestCase
         ]);
 
         $calendar = $this->generateCalendar($plot->fresh(), '2026-03-20', '2026-03-22');
-        $forecasts = \App\Models\WeatherForecast::query()
+        $forecasts = WeatherForecast::query()
             ->where('task_calendar_id', $calendar->id)
             ->orderBy('date')
             ->get()
@@ -763,7 +764,7 @@ class CalendarGenerationTest extends TestCase
         ]);
 
         foreach (['2026-03-20', '2026-03-21', '2026-03-22'] as $date) {
-            \App\Models\WeatherForecast::query()->create([
+            WeatherForecast::query()->create([
                 'date' => $date,
                 'temperature' => 5.25,
                 'temp_min' => 2.7,
@@ -790,7 +791,7 @@ class CalendarGenerationTest extends TestCase
             '--calendar-id' => $calendar->id,
         ]);
 
-        $forecasts = \App\Models\WeatherForecast::query()
+        $forecasts = WeatherForecast::query()
             ->where('task_calendar_id', $calendar->id)
             ->orderBy('date')
             ->get();

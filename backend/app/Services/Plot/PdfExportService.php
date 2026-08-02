@@ -31,14 +31,13 @@ class PdfExportService
 
     public function __construct(
         private readonly AnalyticsService $analyticsService,
-    ) {
-    }
+    ) {}
 
     public function exportPlotReport(Plot $plot, GardenOwner $owner): Response
     {
         $html = $this->renderPlotReportHtml($plot, $owner);
 
-        $options = new Options();
+        $options = new Options;
         $options->set('defaultFont', 'DejaVu Sans');
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', false);

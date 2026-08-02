@@ -1,11 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const axiosGet = vi.fn()
-const clientPost = vi.fn()
-const client = {
-  get: vi.fn(), post: clientPost, patch: vi.fn(), put: vi.fn(), delete: vi.fn(),
-  interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
-}
+const { axiosGet, clientPost, client } = vi.hoisted(() => {
+  const axiosGet = vi.fn()
+  const clientPost = vi.fn()
+  return {
+    axiosGet,
+    clientPost,
+    client: {
+      get: vi.fn(),
+      post: clientPost,
+      patch: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
+    },
+  }
+})
 
 vi.mock('axios', () => ({
   default: { get: axiosGet, create: vi.fn(() => client) },

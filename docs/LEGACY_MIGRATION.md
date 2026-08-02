@@ -6,7 +6,7 @@ Stage 1 migration is additive and non-destructive. Legacy tables and columns rem
 
 - Dry-run is the default operating procedure before conversion.
 - Every execution has a migration-run/audit record and deterministic mappings.
-- Existing source rows are not deleted or rewritten merely to fit the new model.
+- Existing source rows are not deleted and legacy semantic values are not rewritten. Additive compatibility columns may be populated to link a source row to its canonical target.
 - Commands process bounded chunks and can resume after interruption.
 - Duplicate prevention uses stable source-type/source-id mappings and database uniqueness constraints.
 - Count, orphan, ambiguous, invalid, and already-migrated results are reported.
@@ -25,7 +25,7 @@ Stage 1 migration is additive and non-destructive. Legacy tables and columns rem
 
 Commands:
 
-```powershell
+```bash
 # Classify and report only; no domain rows are written.
 php artisan yava:stage1-migrate
 
@@ -35,10 +35,12 @@ php artisan yava:stage1-migrate --execute --chunk=250
 # Resume/continue a recorded run. Use --limit for a controlled rehearsal.
 php artisan yava:stage1-migrate --execute --run=RUN_UUID --chunk=250 --limit=1000
 
-# Report the latest run or an explicit run UUID.
+# Aggregate source/target/mapping/orphan counts, then add one run's details.
 php artisan yava:stage1-report
 php artisan yava:stage1-report RUN_UUID
 ```
+
+The UUID printed by a dry run is ephemeral because dry runs are not stored and cannot be resumed. Only an executing run can be continued with `--run`. Capture JSON output and stderr from each rehearsal in the release evidence directory outside the repository; do not commit production records or identifiers.
 
 Use each command's `--help` output from the deployed release as the authoritative option list. Never invent or assume production arguments from an older image.
 
@@ -66,7 +68,7 @@ Archive the following alongside the release record:
 - target totals and relationship-orphan checks;
 - operator identity and backup identifier.
 
-A retry with the same run UUID must not increase target counts for already-mapped source rows. Investigate any mismatch before enabling canonical reads.
+A retry with the same run UUID must not increase target counts for already-mapped source rows. A no-argument report returns aggregate counts; passing an executing run UUID also returns that persisted run and classification/status totals. Investigate any mismatch before enabling canonical reads.
 
 ## Failure and recovery
 

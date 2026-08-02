@@ -10,7 +10,7 @@ class EnsureUserIsActive
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()?->status !== 'active') {
+        if (! $request->user()?->isActive()) {
             $request->user()?->tokens()->delete();
             if ($request->hasSession()) {
                 auth('web')->logout();

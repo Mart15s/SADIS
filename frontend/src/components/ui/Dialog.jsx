@@ -13,8 +13,9 @@ const focusableSelector = [
 function getFocusableElements(container) {
   if (!container) return []
 
-  return Array.from(container.querySelectorAll(focusableSelector))
-    .filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'))
+  return Array.from(container.querySelectorAll(focusableSelector)).filter(
+    (element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'),
+  )
 }
 
 function useModalBehavior(open, panelRef, onClose) {
@@ -141,7 +142,7 @@ export function DialogHeader({
   onClose,
   titleId,
   subtitleId,
-  closeLabel = 'Uždaryti',
+  closeLabel = 'Close',
   className = '',
 }) {
   const fallbackTitleId = useId()
@@ -151,10 +152,16 @@ export function DialogHeader({
     <header className={`dialog-header ${className}`.trim()}>
       <div className="dialog-heading">
         <div className="dialog-title-row">
-          <h2 className="dialog-title" id={resolvedTitleId}>{title}</h2>
+          <h2 className="dialog-title" id={resolvedTitleId}>
+            {title}
+          </h2>
           {meta ? <div className="dialog-meta">{meta}</div> : null}
         </div>
-        {subtitle ? <p className="dialog-subtitle" id={subtitleId}>{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="dialog-subtitle" id={subtitleId}>
+            {subtitle}
+          </p>
+        ) : null}
       </div>
       {onClose ? <CloseButton onClick={onClose} ariaLabel={closeLabel} /> : null}
     </header>
@@ -162,22 +169,14 @@ export function DialogHeader({
 }
 
 export function DialogBody({ children, className = '' }) {
-  return (
-    <div className={`dialog-body ${className}`.trim()}>
-      {children}
-    </div>
-  )
+  return <div className={`dialog-body ${className}`.trim()}>{children}</div>
 }
 
 export function DialogFooter({ children, className = '' }) {
-  return (
-    <footer className={`dialog-footer ${className}`.trim()}>
-      {children}
-    </footer>
-  )
+  return <footer className={`dialog-footer ${className}`.trim()}>{children}</footer>
 }
 
-export function CloseButton({ onClick, ariaLabel = 'Uždaryti', className = '' }) {
+export function CloseButton({ onClick, ariaLabel = 'Close', className = '' }) {
   return (
     <button
       type="button"

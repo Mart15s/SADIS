@@ -31,8 +31,7 @@ class InventoryPlanningRepairService
 
     public function __construct(
         private readonly InventoryService $inventoryService,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, int>

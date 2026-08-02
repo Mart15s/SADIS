@@ -43,10 +43,10 @@ describe('PlotCreatePage Leaflet creation flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add boundary point' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add boundary point' }))
 
-    expect(screen.getAllByText(/3\s+taškai/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/3\s+points/).length).toBeGreaterThan(0)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Uždaryti ribą' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close boundary' }))
 
-    expect(screen.getByRole('button', { name: 'Zonos' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Zones' })).not.toBeDisabled()
   })
 })

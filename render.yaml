@@ -4,15 +4,23 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /
-    autoDeploy: false
+    preDeployCommand: render-predeploy
+    # Probe Laravel/PHP-FPM rather than the static SPA shell.
+    healthCheckPath: /up
+    autoDeployTrigger: "off"
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_LOCALE
+        value: en
+      - key: APP_FALLBACK_LOCALE
+        value: en
       - key: LOG_CHANNEL
         value: stderr
+      - key: LOG_LEVEL
+        value: info
       - key: DB_CONNECTION
         value: pgsql
       # Prefer an explicit pre-deploy operation. Enabling this only runs normal
@@ -31,15 +39,65 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
       - key: DATABASE_URL
         sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: SANCTUM_STATEFUL_DOMAINS
         sync: false
+      - key: SESSION_SECURE_COOKIE
+        value: true
+      - key: SESSION_HTTP_ONLY
+        value: true
+      - key: SESSION_SAME_SITE
+        value: lax
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: local
       - key: AUTH_EMIT_LEGACY_TOKEN
         value: false
       - key: TRUSTED_PROXIES
         sync: false
       - key: OTP_PROVIDER
         value: unconfigured
+      - key: OTP_EXPIRES_SECONDS
+        value: 300
+      - key: OTP_RESEND_COOLDOWN_SECONDS
+        value: 60
+      - key: OTP_MAX_ATTEMPTS
+        value: 5
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_SCHEME
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Yava
       - key: PERENUAL_API_KEY
+        sync: false
+      - key: METEO_LT_BASE_URL
+        value: https://api.meteo.lt/v1
+      - key: METEO_LT_FORECAST_TTL_MINUTES
+        value: 60
+      - key: NOMINATIM_BASE_URL
+        value: https://nominatim.openstreetmap.org
+      - key: NOMINATIM_USER_AGENT
         sync: false

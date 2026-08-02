@@ -152,7 +152,7 @@ describe('PlotRotationPage', () => {
       expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generuoti rotacijos juodraštį' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation draft' }))
 
     await waitFor(() => {
       expect(api.createRotationPlan).toHaveBeenCalledWith('5', expect.objectContaining({
@@ -160,15 +160,15 @@ describe('PlotRotationPage', () => {
       }))
     })
 
-    expect(screen.getByText('Reikia korekcijos')).toBeInTheDocument()
+    expect(screen.getByText('Needs adjustment')).toBeInTheDocument()
     expect(screen.getByText('Pepper')).toBeInTheDocument()
     expect(screen.getByText('Zone A')).toBeInTheDocument()
-    expect(screen.getByText('Tos pačios šeimos augalas čia sodintas 2025 m.')).toBeInTheDocument()
-    expect(screen.getByText('Šio juodraščio patvirtinti negalima, nes 1 vienmečiams augalams dar reikia tinkamos tikslinės zonos.')).toBeInTheDocument()
-    expect(screen.getByText('Reikia tinkamos tikslinės zonos')).toBeInTheDocument()
-    expect(screen.getByLabelText('Sprendimas')).toBeInTheDocument()
+    expect(screen.getByText('A plant from the same family was planted here in 2025.')).toBeInTheDocument()
+    expect(screen.getByText('This draft cannot be confirmed because 1 annual plants still need a suitable target zone.')).toBeInTheDocument()
+    expect(screen.getByText('Needs a suitable target zone')).toBeInTheDocument()
+    expect(screen.getByLabelText('Decision')).toBeInTheDocument()
     expect(screen.queryByText('Needs manual review')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeDisabled()
   })
 
   it('lets a user edit a generated draft item target zone inline', async () => {
@@ -215,13 +215,13 @@ describe('PlotRotationPage', () => {
       expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generuoti rotacijos juodraštį' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation draft' }))
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Sprendimas')).toBeInTheDocument()
+      expect(screen.getByLabelText('Decision')).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText('Sprendimas'), { target: { value: 'zone:12' } })
+    fireEvent.change(screen.getByLabelText('Decision'), { target: { value: 'zone:12' } })
 
     await waitFor(() => {
       expect(api.updateRotationDraftItem).toHaveBeenCalledWith('5', 90, 22, {
@@ -231,9 +231,9 @@ describe('PlotRotationPage', () => {
       })
     })
 
-    expect(screen.getByText('Paruošta patvirtinti')).toBeInTheDocument()
-    expect(screen.getByText(/Perkelti į/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' })).toBeEnabled()
+    expect(screen.getByText('Ready to confirm')).toBeInTheDocument()
+    expect(screen.getByText(/Move to/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeEnabled()
   })
 
   it('shows permanent plantings as non-blocking annual rotation context', async () => {
@@ -257,18 +257,18 @@ describe('PlotRotationPage', () => {
               selected_target_zone: null,
               is_rotatable: false,
               rotation_mode: 'permanent_planting',
-              exclusion_reason: 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.',
+              exclusion_reason: 'Permanent planting — excluded from annual crop rotation.',
               alternatives: [],
               fallback_solutions: [],
               candidate_zones: [],
             },
             {
               plant: { id: 32, name: "Raspberry 'Glen Ample'" },
-              current_zone: { id: 13, name: 'Aviečių zona' },
+              current_zone: { id: 13, name: 'Raspberry zone' },
               selected_target_zone: null,
               is_rotatable: false,
               rotation_mode: 'permanent_planting',
-              exclusion_reason: 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.',
+              exclusion_reason: 'Permanent planting — excluded from annual crop rotation.',
               alternatives: [],
               fallback_solutions: [],
               candidate_zones: [],
@@ -285,18 +285,18 @@ describe('PlotRotationPage', () => {
       expect(screen.getAllByText('North Plot').length).toBeGreaterThan(0)
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Generuoti rotacijos juodraštį' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generate rotation draft' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Paruošta patvirtinti')).toBeInTheDocument()
+      expect(screen.getByText('Ready to confirm')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Šiam sklypui metinė rotacija nereikalinga. Daugiametis sodinimas rodomas kontekstui ir gali likti vietoje.')).toBeInTheDocument()
-    expect(screen.getAllByText('Daugiametis sodinimas')).toHaveLength(2)
-    expect(screen.getAllByText('Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' })).toBeEnabled()
+    expect(screen.getByText('This plot does not need annual rotation. Permanent plantings are shown for context and can remain in place.')).toBeInTheDocument()
+    expect(screen.getAllByText('Permanent planting')).toHaveLength(2)
+    expect(screen.getAllByText('Permanent planting is excluded from annual crop rotation.').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByRole('button', { name: 'Confirm rotation plan' })).toBeEnabled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Patvirtinti rotacijos planą' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm rotation plan' }))
 
     await waitFor(() => {
       expect(api.confirmRotationPlan).toHaveBeenCalledWith('5', 91)

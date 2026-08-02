@@ -2,8 +2,8 @@
 
 namespace App\Services\Calendar;
 
-use App\Models\WeatherForecast;
 use App\Models\TaskCalendar;
+use App\Models\WeatherForecast;
 use App\Services\Integrations\MeteoLtClient;
 use App\ValueObjects\WeatherData;
 use Carbon\Carbon;
@@ -16,14 +16,16 @@ use Throwable;
 class WeatherService
 {
     public const SOURCE_API = 'api';
+
     public const SOURCE_STORED_CITY_DATE = 'stored_city_date';
+
     public const SOURCE_STORED_OTHER_CITY_DATE = 'stored_other_city_date';
+
     public const SOURCE_SEASONAL = 'seasonal';
 
     public function __construct(
         private readonly MeteoLtClient $meteoLtClient,
-    ) {
-    }
+    ) {}
 
     public function getForecastRange(string $city, Carbon $start, Carbon $end): array
     {
@@ -359,5 +361,4 @@ class WeatherService
             default => 1,
         };
     }
-
 }

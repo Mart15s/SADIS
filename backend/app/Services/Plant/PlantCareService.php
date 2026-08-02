@@ -8,7 +8,6 @@ use App\Models\PlantCare;
 use App\Services\Integrations\PerenualService;
 use App\Support\PlantCareName;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -49,8 +48,7 @@ class PlantCareService
     public function __construct(
         private readonly PerenualService $perenualService,
         private readonly PlantCareNormalizer $normalizer,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $overrides
@@ -302,8 +300,7 @@ class PlantCareService
         Plant $plant,
         ?PlantCare $selectedCare = null,
         ?int $speciesId = null,
-    ): PlantCare
-    {
+    ): PlantCare {
         $catalogPlant = $this->ensureCatalogPlantLink($plant);
 
         if ($selectedCare) {

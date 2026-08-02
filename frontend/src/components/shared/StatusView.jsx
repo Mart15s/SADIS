@@ -4,7 +4,14 @@ import EmptyStatePanel from '../ui/EmptyStatePanel.jsx'
 
 function SparkIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M10 2.8 11.7 7l4.5 1.1-3.2 2.9.9 4.4L10 13.2l-3.9 2.2.9-4.4L3.8 8.1 8.3 7z" />
     </svg>
   )
@@ -12,7 +19,14 @@ function SparkIcon() {
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="8.5" cy="8.5" r="5" />
       <path d="M17 17l-3.5-3.5" />
     </svg>
@@ -21,7 +35,14 @@ function SearchIcon() {
 
 function AlertIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M10 3L18 17H2L10 3z" />
       <path d="M10 9v4" />
       <circle cx="10" cy="15" r="0.5" fill="currentColor" />
@@ -31,7 +52,14 @@ function AlertIcon() {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4.5 10.5 8 14l7.5-8" />
     </svg>
   )
@@ -58,9 +86,9 @@ export function LoadingState({
         {[1, 2, 3].map((index) => (
           <article key={index} className="skeleton-card status-skeleton-card">
             <div className="skeleton skeleton-icon" />
-            <div className="skeleton skeleton-line" style={{ width: `${68 + (index * 6)}%` }} />
+            <div className="skeleton skeleton-line" style={{ width: `${68 + index * 6}%` }} />
             <div className="skeleton skeleton-line-sm" />
-            <div className="skeleton skeleton-line-sm" style={{ width: `${42 + (index * 8)}%` }} />
+            <div className="skeleton skeleton-line-sm" style={{ width: `${42 + index * 8}%` }} />
           </article>
         ))}
       </div>
@@ -68,12 +96,7 @@ export function LoadingState({
   )
 }
 
-export function ErrorState({
-  error,
-  title = 'Something went wrong',
-  description,
-  onRetry,
-}) {
+export function ErrorState({ error, title = 'Something went wrong', description, onRetry }) {
   return (
     <section className="status-screen">
       <div className="status-card status-card-error">
@@ -96,12 +119,7 @@ export function ErrorState({
   )
 }
 
-export function EmptyState({
-  title,
-  description,
-  action,
-  icon = 'search',
-}) {
+export function EmptyState({ title, description, action, icon = 'search' }) {
   const Icon = icon === 'success' ? CheckIcon : SearchIcon
 
   return (
@@ -126,7 +144,9 @@ export function ProcessingState({
   compact = false,
 }) {
   return (
-    <section className={`processing-state processing-state-${tone} ${compact ? 'processing-state-compact' : ''}`.trim()}>
+    <section
+      className={`processing-state processing-state-${tone} ${compact ? 'processing-state-compact' : ''}`.trim()}
+    >
       <div className="processing-state-copy">
         <strong>{title}</strong>
         {description ? <p>{description}</p> : null}
@@ -170,13 +190,22 @@ export function Toast({ message, type = 'success', onDismiss, duration }) {
   }
 
   return (
-    <div className={`toast toast-${type}`} role={type === 'error' ? 'alert' : 'status'} aria-live={type === 'error' ? 'assertive' : 'polite'}>
+    <div
+      className={`toast toast-${type}`}
+      role={type === 'error' ? 'alert' : 'status'}
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
+    >
       <span className="toast-icon">
         {type === 'error' || type === 'warning' ? <AlertIcon /> : <CheckIcon />}
       </span>
       <span className="toast-message">{message}</span>
       {onDismiss ? (
-        <button type="button" className="toast-dismiss" onClick={onDismiss} aria-label="Dismiss notification">
+        <button
+          type="button"
+          className="toast-dismiss"
+          onClick={onDismiss}
+          aria-label="Dismiss notification"
+        >
           x
         </button>
       ) : null}

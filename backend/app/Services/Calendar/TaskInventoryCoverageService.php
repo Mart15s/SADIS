@@ -10,7 +10,6 @@ use App\Models\Task;
 use App\Models\TaskResourceRequirement;
 use App\ValueObjects\NormalizedTaskResource;
 use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
@@ -251,7 +250,7 @@ class TaskInventoryCoverageService
                     InventoryUnit::from($summary['unit']),
                     $lock,
                 )
-                : new EloquentCollection();
+                : new EloquentCollection;
             $availableQuantity = round((float) $items->sum('quantity'), 2);
 
             $aggregated[$resourceKey]['available_quantity'] = $availableQuantity;
@@ -286,7 +285,7 @@ class TaskInventoryCoverageService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, array<string, mixed>>  $resourceSummariesByKey
+     * @param  Collection<string, array<string, mixed>>  $resourceSummariesByKey
      * @return array<string, mixed>
      */
     public function buildTaskInventoryContext(Task $task, Collection $resourceSummariesByKey): array

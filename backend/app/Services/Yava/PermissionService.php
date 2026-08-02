@@ -18,6 +18,10 @@ class PermissionService
         'manage_inventory', 'view_analytics', 'manage_members',
     ];
 
+    public const COMMUNITY_PERMISSIONS = [
+        'view', 'manage_resources', 'manage_tasks', 'manage_inventory', 'manage_members',
+    ];
+
     public function authorizeFarm(User $user, Farm|int $farm, string $permission): void
     {
         if (! $this->hasFarmPermission($user, $farm, $permission)) {
@@ -44,17 +48,7 @@ class PermissionService
             ->first();
 
         if ($membership) {
-            $override = $membership->permissions->firstWhere('permission', $permission);
-            if ($override) {
-                return (bool) $override->allowed;
-            }
-
-            return match ($membership->role) {
-                'owner', 'admin' => true,
-                'manager' => in_array($permission, ['view_farm', 'manage_fields', 'manage_crops', 'manage_tasks', 'manage_inventory', 'view_analytics'], true),
-                'worker' => in_array($permission, ['view_farm', 'manage_tasks'], true),
-                default => $permission === 'view_farm',
-            };
+            return in_array($permission, $this->farmPermissionsForMembership($user, $membership), true);
         }
 
         // A community role alone grants nothing. Only an active link's explicit
@@ -88,21 +82,64 @@ class PermissionService
         }
 
         $communityId = $community instanceof Community ? $community->id : $community;
-        $role = CommunityMembership::query()
+        $membership = CommunityMembership::query()
             ->where('community_id', $communityId)
             ->where('user_id', $user->id)
             ->where('status', 'active')
-            ->value('role');
+            ->first();
 
-        if (! $role) {
+        if (! $membership) {
             return false;
         }
 
-        return match ($permission) {
-            'view' => true,
-            'manage_resources' => in_array($role, ['admin', 'resource_manager'], true),
-            'manage_tasks', 'manage_inventory' => in_array($role, ['admin', 'coordinator'], true),
-            default => $role === 'admin',
+        return in_array($permission, $this->communityPermissionsForMembership($user, $membership), true);
+    }
+
+    /** @return list<string> */
+    public function farmPermissionsForMembership(User $user, FarmMembership $membership): array
+    {
+        if ($user->role === UserRole::Admin) {
+            return self::FARM_PERMISSIONS;
+        }
+
+        if ($membership->user_id !== $user->id || $membership->status !== 'active') {
+            return [];
+        }
+
+        $membership->loadMissing('permissions');
+        $defaults = match ($membership->role) {
+            'owner', 'admin' => self::FARM_PERMISSIONS,
+            'manager' => ['view_farm', 'manage_fields', 'manage_crops', 'manage_tasks', 'manage_inventory', 'view_analytics'],
+            'worker' => ['view_farm', 'manage_tasks'],
+            default => ['view_farm'],
+        };
+
+        return collect(self::FARM_PERMISSIONS)
+            ->filter(function (string $permission) use ($membership, $defaults): bool {
+                $override = $membership->permissions->firstWhere('permission', $permission);
+
+                return $override ? (bool) $override->allowed : in_array($permission, $defaults, true);
+            })
+            ->values()
+            ->all();
+    }
+
+    /** @return list<string> */
+    public function communityPermissionsForMembership(User $user, CommunityMembership $membership): array
+    {
+        if ($user->role === UserRole::Admin) {
+            return self::COMMUNITY_PERMISSIONS;
+        }
+
+        if ($membership->user_id !== $user->id || $membership->status !== 'active') {
+            return [];
+        }
+
+        return match ($membership->role) {
+            'admin' => self::COMMUNITY_PERMISSIONS,
+            'coordinator' => ['view', 'manage_tasks', 'manage_inventory'],
+            'resource_manager' => ['view', 'manage_resources'],
+            default => ['view'],
         };
     }
 }

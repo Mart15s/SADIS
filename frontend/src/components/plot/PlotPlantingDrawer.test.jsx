@@ -62,22 +62,26 @@ describe('PlotPlantingDrawer', () => {
       expect(api.listCatalogPlants).toHaveBeenCalledWith({})
     })
 
-    expect(screen.getByText(/Zonos kontekstas užrakintas/i)).toHaveTextContent('Greenhouse Zone')
+    expect(screen.getByText(/Zone context locked/i)).toHaveTextContent('Greenhouse Zone')
 
     await user.click(screen.getByTestId('catalog-option-5'))
 
-    expect(screen.getByLabelText(/Rodomas pavadinimas/i)).toHaveValue('Tomato')
-    expect(screen.queryByLabelText(/Laistymo intervalas/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/Bendrinamos priežiūros peržiūra/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Redaguoti bendrinamą priežiūrą/i })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Display name/i)).toHaveValue('Tomato')
+    expect(screen.queryByLabelText(/Watering interval/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Shared care preview/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Edit shared care/i })).toBeInTheDocument()
 
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Pridėti augalą į juodraštį/i }))
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Add plant to draft/i }),
+    )
 
     await waitFor(() => {
-      expect(onCreatePlant).toHaveBeenCalledWith(expect.objectContaining({
-        fk_catalog_plant_id: 5,
-        fk_plant_zone_id: 7,
-      }))
+      expect(onCreatePlant).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fk_catalog_plant_id: 5,
+          fk_plant_zone_id: 7,
+        }),
+      )
     })
 
     expect(onCreatePlant.mock.calls[0][0]).not.toHaveProperty('plant_care')

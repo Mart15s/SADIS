@@ -29,6 +29,7 @@ class InventoryMovementService
             return InventoryMovement::query()->create([
                 'stock_item_id' => $locked->id, 'actor_user_id' => $actor->id,
                 'work_task_id' => $data['work_task_id'] ?? null, 'type' => $data['type'],
+                'field_id' => $data['field_id'] ?? null, 'crop_season_id' => $data['crop_season_id'] ?? null,
                 'quantity' => $quantity, 'balance_after' => $balance,
                 'notes' => $data['notes'] ?? null, 'occurred_at' => $data['occurred_at'] ?? now(),
             ]);

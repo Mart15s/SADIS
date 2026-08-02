@@ -39,6 +39,7 @@ class SignUpController extends Controller
             GardenOwner::query()->create([
                 'id' => $user->id, 'user_id' => $user->id, 'id_user' => $user->id, 'fk_profile_id' => $profile->id,
             ]);
+
             return [$user, $profile];
         });
         if ($request->hasSession()) {
@@ -49,6 +50,7 @@ class SignUpController extends Controller
         if (config('auth_api.emit_legacy_token')) {
             $response['token'] = $user->createToken('legacy-api-token')->plainTextToken;
         }
+
         return response()->json($response, 201);
     }
 }

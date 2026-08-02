@@ -13,7 +13,7 @@ enum TaskType: string
     case Transplant = 'transplant';
     case Watering = 'watering';
 
-    public static function normalize(string|null $value): string
+    public static function normalize(?string $value): string
     {
         return match ($value) {
             self::Buy->value,

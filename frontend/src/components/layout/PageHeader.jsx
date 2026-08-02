@@ -8,7 +8,10 @@ function nodeSignature(node) {
   if (Array.isArray(node)) return node.map(nodeSignature).join('|')
 
   if (isValidElement(node)) {
-    const typeName = typeof node.type === 'string' ? node.type : node.type?.displayName ?? node.type?.name ?? 'component'
+    const typeName =
+      typeof node.type === 'string'
+        ? node.type
+        : (node.type?.displayName ?? node.type?.name ?? 'component')
     const propSignature = ['to', 'href', 'tone', 'kind', 'variant']
       .map((propName) => node.props?.[propName])
       .filter((value) => value !== undefined && value !== null)
@@ -21,27 +24,23 @@ function nodeSignature(node) {
   return ''
 }
 
-export default function PageHeader({
-  title,
-  description,
-  eyebrow,
-  meta,
-  actions,
-  className = '',
-}) {
+export default function PageHeader({ title, description, eyebrow, meta, actions, className = '' }) {
   const pageChrome = usePageChrome()
   const id = useId()
   const location = useLocation()
   const signature = useMemo(
-    () => [
-      title,
-      description,
-      eyebrow,
-      className,
-      location.pathname,
-      nodeSignature(meta),
-      nodeSignature(actions),
-    ].filter(Boolean).join('::'),
+    () =>
+      [
+        title,
+        description,
+        eyebrow,
+        className,
+        location.pathname,
+        nodeSignature(meta),
+        nodeSignature(actions),
+      ]
+        .filter(Boolean)
+        .join('::'),
     [title, description, eyebrow, className, location.pathname, meta, actions],
   )
   const getLatestHeader = useEffectEvent(() => ({

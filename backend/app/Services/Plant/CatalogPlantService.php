@@ -15,8 +15,7 @@ class CatalogPlantService
     public function __construct(
         private readonly PerenualService $perenualService,
         private readonly PlantCareNormalizer $plantCareNormalizer,
-    ) {
-    }
+    ) {}
 
     private const CATALOG_FIELDS = [
         'name',
@@ -67,7 +66,7 @@ class CatalogPlantService
      */
     public function saveCatalogPlant(array $payload, ?CatalogPlant $catalogPlant = null): CatalogPlant
     {
-        $catalogPlant ??= new CatalogPlant();
+        $catalogPlant ??= new CatalogPlant;
         $previousCareId = $catalogPlant->fk_plant_care_id;
 
         $canonicalName = $this->canonicalName(
@@ -184,7 +183,7 @@ class CatalogPlantService
         } elseif ($existingCare) {
             $care = $existingCare;
         } elseif ($plantCarePayload !== null) {
-            $care = new PlantCare();
+            $care = new PlantCare;
         } else {
             return null;
         }

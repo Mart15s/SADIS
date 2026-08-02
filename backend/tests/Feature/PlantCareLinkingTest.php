@@ -282,6 +282,7 @@ class PlantCareLinkingTest extends TestCase
         ]);
 
         $plot = Plot::query()->create([
+            'garden_owner_id' => $owner->id,
             'name' => 'Care Plot',
             'city' => 'Vilnius',
             'plot_size' => 42,

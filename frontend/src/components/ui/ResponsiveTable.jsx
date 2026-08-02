@@ -11,7 +11,12 @@ export default function ResponsiveTable({
 }) {
   return (
     <div className={`responsive-table ${className}`.trim()}>
-      <div className="table-wrap responsive-table-scroll" role="region" aria-label={tableLabel} tabIndex={0}>
+      <div
+        className="table-wrap responsive-table-scroll"
+        role="region"
+        aria-label={tableLabel}
+        tabIndex={0}
+      >
         <table>
           <thead>
             <tr>

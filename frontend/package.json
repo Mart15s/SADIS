@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "english:scan": "vitest run src/test/englishPrimarySource.test.js",
+    "format": "prettier --write src/App.jsx src/main.jsx src/components/layout src/components/shared src/components/ui src/context src/i18n src/lib/api.js src/lib/auth.js src/lib/navigation.js src/lib/navigation.test.js src/lib/hooks src/lib/fieldWorkspace.js src/pages/admin/AdminUsersPage.jsx src/pages/stage1 src/pages/user src/test/englishPrimarySource.test.js README.md package.json vite.config.js eslint.config.js",
+    "format:check": "prettier --check src/App.jsx src/main.jsx src/components/layout src/components/shared src/components/ui src/context src/i18n src/lib/api.js src/lib/auth.js src/lib/navigation.js src/lib/navigation.test.js src/lib/hooks src/lib/fieldWorkspace.js src/pages/admin/AdminUsersPage.jsx src/pages/stage1 src/pages/user src/test/englishPrimarySource.test.js README.md package.json vite.config.js eslint.config.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
@@ -19,7 +22,7 @@
     "react-dom": "^19.2.4",
     "react-konva": "^19.2.3",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.13.2"
+    "react-router-dom": "7.18.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -34,6 +37,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "jsdom": "^27.0.1",
+    "prettier": "^3.6.2",
     "vite": "^8.0.1",
     "vitest": "^3.2.4"
   }

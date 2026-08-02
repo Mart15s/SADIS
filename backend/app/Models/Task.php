@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\TaskState;
 use App\Enums\TaskPriority;
+use App\Enums\TaskState;
 use App\Enums\TaskType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AccessRight;
 use App\Models\CatalogPlant;
 use App\Models\GardenOwner;
 use App\Models\HarvestRecord;
@@ -83,7 +84,7 @@ class FullFlowDemoAccountSeederTest extends TestCase
             CatalogPlant::query()
                 ->where('canonical_name', 'garlic')
                 ->whereDoesntHave('plants')
-            ->exists()
+                ->exists()
         );
     }
 
@@ -151,7 +152,7 @@ class FullFlowDemoAccountSeederTest extends TestCase
             'condition_history_records' => PlantConditionHistory::query()
                 ->whereIn('plant_id', Plant::query()->whereIn('fk_plot_id', $plotIds)->pluck('id'))
                 ->count(),
-            'shared_access_records' => \App\Models\AccessRight::query()
+            'shared_access_records' => AccessRight::query()
                 ->whereIn('plot_id', $plotIds)
                 ->count(),
             'rotation_drafts' => RotationPlanDraft::query()

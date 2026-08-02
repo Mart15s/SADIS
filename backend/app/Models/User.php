@@ -47,6 +47,16 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Authentication is permitted only for the single explicitly active state.
+     * Treating unknown future states as inactive keeps every authentication path
+     * fail-closed (for example archived, disabled, or suspended accounts).
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active' && $this->deactivated_at === null;
+    }
+
     public function gardenOwner(): HasOne
     {
         return $this->hasOne(GardenOwner::class, 'user_id');

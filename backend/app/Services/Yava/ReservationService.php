@@ -22,7 +22,7 @@ class ReservationService
         return DB::transaction(function () use ($user, $resource, $data, $startsAt, $endsAt): ResourceReservation {
             $reservation = ResourceReservation::query()->create([
                 'shared_resource_id' => $resource->id, 'requested_by_user_id' => $user->id,
-                'farm_id' => $data['farm_id'] ?? null, 'status' => 'pending',
+                'farm_id' => $data['farm_id'] ?? null, 'field_id' => $data['field_id'] ?? null, 'status' => 'pending',
                 'starts_at' => $startsAt, 'ends_at' => $endsAt, 'purpose' => $data['purpose'] ?? null,
             ]);
 

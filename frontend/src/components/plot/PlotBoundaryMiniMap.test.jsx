@@ -3,7 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 import PlotBoundaryMiniMap, { normalizeMapBoundary } from './PlotBoundaryMiniMap.jsx'
 
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children, className }) => <div className={className} data-testid="mini-map">{children}</div>,
+  MapContainer: ({ children, className }) => (
+    <div className={className} data-testid="mini-map">
+      {children}
+    </div>
+  ),
   TileLayer: () => <div data-testid="tile-layer" />,
   Polygon: ({ positions }) => <div data-testid="boundary-polygon">{positions.length} points</div>,
   useMap: () => ({
@@ -33,26 +37,28 @@ describe('PlotBoundaryMiniMap', () => {
 
     expect(screen.getByTestId('tile-layer')).toBeInTheDocument()
     expect(screen.getByTestId('boundary-polygon')).toHaveTextContent('4 points')
-    expect(screen.queryByText('Riba nenurodyta')).not.toBeInTheDocument()
+    expect(screen.queryByText('No boundary specified')).not.toBeInTheDocument()
     expect(screen.queryByText('Map boundary preview')).not.toBeInTheDocument()
   })
 
   it('keeps a clean fallback when no usable boundary exists', () => {
     render(<PlotBoundaryMiniMap plotName="Empty Plot" plotGeometry={{ points: [] }} />)
 
-    expect(screen.getByLabelText('Empty Plot ribų peržiūra nepasiekiama')).toBeInTheDocument()
-    expect(screen.getByText('Riba nenurodyta')).toBeInTheDocument()
+    expect(screen.getByLabelText('Empty Plot boundary preview unavailable')).toBeInTheDocument()
+    expect(screen.getByText('No boundary specified')).toBeInTheDocument()
   })
 
   it('drops invalid coordinates while preserving valid boundary data', () => {
-    expect(normalizeMapBoundary({
-      map: {
-        boundary: [
-          { lat: 54.681, lng: 25.271 },
-          { lat: 200, lng: 25.276 },
-          { lat: 54.678, lng: 25.277 },
-        ],
-      },
-    })).toHaveLength(2)
+    expect(
+      normalizeMapBoundary({
+        map: {
+          boundary: [
+            { lat: 54.681, lng: 25.271 },
+            { lat: 200, lng: 25.276 },
+            { lat: 54.678, lng: 25.277 },
+          ],
+        },
+      }),
+    ).toHaveLength(2)
   })
 })

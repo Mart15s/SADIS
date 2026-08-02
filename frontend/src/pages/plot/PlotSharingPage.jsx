@@ -68,7 +68,7 @@ export default function PlotSharingPage() {
     try {
       await api.revokeAccessRight(accessRightId)
       await pageState.reload()
-      setSuccess('Bendrinimo prieiga pašalinta.')
+      setSuccess('Sharing access removed.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -77,7 +77,7 @@ export default function PlotSharingPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title="Įkeliamas bendrinimas..." />
+    return <LoadingState title="Loading sharing settings…" />
   }
 
   if (pageState.error) {
@@ -85,7 +85,7 @@ export default function PlotSharingPage() {
   }
 
   if (!pageState.data.plot) {
-    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
+    return <EmptyState title="Field not found" description="The selected field could not be loaded." />
   }
 
   return (
@@ -95,7 +95,7 @@ export default function PlotSharingPage() {
         plotName={pageState.data.plot.name}
         sectionKey="sharing"
         isOwner={isOwner}
-        description="Bendrinimo sprendimai laikomi atskirai nuo plano redagavimo. Savininkai čia valdo bendradarbius."
+        description="Sharing settings are kept separate from plan editing. Owners manage collaborators here."
         meta={(
           <>
             <StatusBadge kind="selection" tone="neutral">{formatAccessRole(pageState.data.accessRole)}</StatusBadge>
@@ -108,21 +108,21 @@ export default function PlotSharingPage() {
       {!isOwner ? (
         <EmptyState
           title="Reikalinga savininko prieiga"
-          description="Tik sklypo savininkas gali suteikti arba panaikinti bendrinimo prieigą."
+          description="Only the field owner can grant or revoke sharing access."
         />
       ) : (
         <div className="detail-grid plot-sharing-grid">
           <section className="panel page-stack plot-sharing-panel">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Pakviesti bendradarbį</h2>
-                <p className="section-copy">Suteikite peržiūros arba redagavimo teisę kitam naudotojui.</p>
+                <h2 className="section-title">Invite a collaborator</h2>
+                <p className="section-copy">Grant another user permission to view or edit.</p>
               </div>
             </div>
 
             <form className="input-grid" onSubmit={handleShare}>
               <div className="field field-span-2">
-                <label htmlFor="share-email">Naudotojo el. paštas</label>
+                <label htmlFor="share-email">User email</label>
                 <input
                   id="share-email"
                   type="email"
@@ -147,7 +147,7 @@ export default function PlotSharingPage() {
               {error ? <span className="field-error">{error}</span> : null}
 
               <div className="form-actions">
-                <Button type="submit" loading={busy}>Bendrinti sklypą</Button>
+                <Button type="submit" loading={busy}>Share field</Button>
               </div>
             </form>
           </section>
@@ -155,16 +155,16 @@ export default function PlotSharingPage() {
           <section className="panel page-stack plot-sharing-panel">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Dabartinės prieigos</h2>
-                <p className="section-copy">Čia matomi visi naudotojai, turintys prieigą prie šio sklypo.</p>
+                <h2 className="section-title">Current access</h2>
+                <p className="section-copy">All users with access to this field appear here.</p>
               </div>
-              <StatusBadge kind="selection" tone="neutral">{pageState.data.accessRights.length} aktyvių</StatusBadge>
+              <StatusBadge kind="selection" tone="neutral">{pageState.data.accessRights.length} active</StatusBadge>
             </div>
 
             {pageState.data.accessRights.length === 0 ? (
               <EmptyStatePanel
-                title="Aktyvių prieigų nėra"
-                description="Šis sklypas dar nėra bendrinamas su kitais naudotojais."
+                title="No active access"
+                description="This field has not been shared with other users."
                 tone="subtle"
               />
             ) : (
@@ -187,7 +187,7 @@ export default function PlotSharingPage() {
                       onClick={() => handleRevoke(accessRight.access_right_id)}
                       disabled={busy}
                     >
-                      Pašalinti
+                      Remove
                     </Button>
                   </article>
                 ))}

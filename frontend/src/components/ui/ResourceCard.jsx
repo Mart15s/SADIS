@@ -1,10 +1,6 @@
 import { createElement, memo } from 'react'
 
-function ResourceCard({
-  children,
-  className = '',
-  as: Component = 'article',
-}) {
+function ResourceCard({ children, className = '', as: Component = 'article' }) {
   return createElement(Component, { className: `resource-card ${className}`.trim() }, children)
 }
 
@@ -30,31 +26,19 @@ export function ResourceCardHeader({
 export function ResourceCardMeta({ children, className = '' }) {
   if (!children) return null
 
-  return (
-    <div className={`resource-card-meta ${className}`.trim()}>
-      {children}
-    </div>
-  )
+  return <div className={`resource-card-meta ${className}`.trim()}>{children}</div>
 }
 
 export function ResourceCardBody({ children, className = '' }) {
   if (!children) return null
 
-  return (
-    <div className={`resource-card-body ${className}`.trim()}>
-      {children}
-    </div>
-  )
+  return <div className={`resource-card-body ${className}`.trim()}>{children}</div>
 }
 
 export function ResourceCardFooter({ children, className = '' }) {
   if (!children) return null
 
-  return (
-    <footer className={`resource-card-footer ${className}`.trim()}>
-      {children}
-    </footer>
-  )
+  return <footer className={`resource-card-footer ${className}`.trim()}>{children}</footer>
 }
 
 export default memo(ResourceCard)

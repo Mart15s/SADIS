@@ -13,12 +13,16 @@ export function formatDate(value, options = {}, locale = DEFAULT_LOCALE) {
 }
 
 export function formatDateTime(value, options = {}, locale = DEFAULT_LOCALE, timeZone) {
-  return formatDate(value, {
-    hour: '2-digit',
-    minute: '2-digit',
-    ...(timeZone ? { timeZone } : {}),
-    ...options,
-  }, locale)
+  return formatDate(
+    value,
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+      ...(timeZone ? { timeZone } : {}),
+      ...options,
+    },
+    locale,
+  )
 }
 
 export function formatNumber(value, options = {}, locale = DEFAULT_LOCALE) {
@@ -30,8 +34,10 @@ export function formatNumber(value, options = {}, locale = DEFAULT_LOCALE) {
 export function formatArea(squareMeters, preference = 'hectare', locale = DEFAULT_LOCALE) {
   const area = Number(squareMeters)
   if (!Number.isFinite(area)) return '—'
-  if (preference === 'acre') return `${formatNumber(area / 4046.8564224, { maximumFractionDigits: 2 }, locale)} ac`
-  if (preference === 'square_meter' || area < 10000) return `${formatNumber(area, { maximumFractionDigits: 1 }, locale)} m²`
+  if (preference === 'acre')
+    return `${formatNumber(area / 4046.8564224, { maximumFractionDigits: 2 }, locale)} ac`
+  if (preference === 'square_meter' || area < 10000)
+    return `${formatNumber(area, { maximumFractionDigits: 1 }, locale)} m²`
   return `${formatNumber(area / 10000, { maximumFractionDigits: 2 }, locale)} ha`
 }
 

@@ -25,7 +25,6 @@ use App\Http\Controllers\User\LoginController;
 use App\Http\Controllers\User\LogoutController;
 use App\Http\Controllers\User\PasswordResetController;
 use App\Http\Controllers\User\SignUpController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Yava\CommunityController as YavaCommunityController;
 use App\Http\Controllers\Yava\ContextController;
 use App\Http\Controllers\Yava\CropController as YavaCropController;
@@ -34,6 +33,7 @@ use App\Http\Controllers\Yava\FieldController;
 use App\Http\Controllers\Yava\OnboardingController;
 use App\Http\Controllers\Yava\OperationsController;
 use App\Http\Controllers\Yava\OtpController;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [SignUpController::class, 'store'])->middleware('throttle:registration');
 Route::post('/login', [LoginController::class, 'store']);
@@ -158,6 +158,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/farms/{farm}/members', [FarmController::class, 'addMember']);
         Route::patch('/farms/{farm}/members/{membership}', [FarmController::class, 'updateMember']);
         Route::post('/farms/{farm}/communities/{community}', [FarmController::class, 'linkCommunity']);
+        Route::get('/farm-community-links', [FarmController::class, 'communityLinks']);
         Route::post('/farm-community-links/{link}/{decision}', [FarmController::class, 'decideCommunityLink'])->whereIn('decision', ['approve', 'reject']);
         Route::delete('/farms/{farm}/community-links/{link}', [FarmController::class, 'revokeCommunity']);
         Route::get('/farms/{farm}/analytics', [OperationsController::class, 'farmAnalytics']);

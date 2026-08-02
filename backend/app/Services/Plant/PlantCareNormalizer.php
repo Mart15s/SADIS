@@ -13,8 +13,7 @@ class PlantCareNormalizer
 {
     public function __construct(
         private readonly PlantCareDefaults $defaults,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $seed

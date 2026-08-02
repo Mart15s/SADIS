@@ -22,8 +22,7 @@ class TaskWorkflowService
         private readonly HarvestService $harvestService,
         private readonly PlantCareService $plantCareService,
         private readonly PlantLifecycleService $plantLifecycleService,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{task: Task, harvest_record: HarvestRecord|null, condition_history_entry: PlantConditionHistory|null}

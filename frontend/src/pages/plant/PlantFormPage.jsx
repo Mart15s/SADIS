@@ -5,7 +5,14 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/shared/St
 import Button from '../../components/ui/Button.jsx'
 import { KeyValueGrid, StatRow } from '../../components/ui/DefinitionList.jsx'
 import { api } from '../../lib/api.js'
-import { CONDITION_TYPES, PLANT_TYPES, formatDayCount, formatDisplayValue, formatPlantCondition, formatPlantType } from '../../lib/constants.js'
+import {
+  CONDITION_TYPES,
+  PLANT_TYPES,
+  formatDayCount,
+  formatDisplayValue,
+  formatPlantCondition,
+  formatPlantType,
+} from '../../lib/constants.js'
 import { useAsyncData } from '../../lib/hooks/useAsyncData.js'
 
 function createEmptyPlantForm() {
@@ -44,7 +51,9 @@ function plantToForm(plant) {
     disease_notes: plant.disease_notes ?? '',
     fk_plot_id: String(plant.plot?.id ?? plant.fk_plot_id ?? ''),
     fk_plant_zone_id: String(plant.plant_zone?.id ?? plant.fk_plant_zone_id ?? ''),
-    fk_catalog_plant_id: String(plant.catalog_plant?.id ?? plant.catalogPlant?.id ?? plant.fk_catalog_plant_id ?? ''),
+    fk_catalog_plant_id: String(
+      plant.catalog_plant?.id ?? plant.catalogPlant?.id ?? plant.fk_catalog_plant_id ?? '',
+    ),
   }
 }
 
@@ -66,11 +75,15 @@ function classificationSummary(metadata) {
   const label = classification.profile_label ?? classification.profile_group ?? 'Aptiktas profilis'
   const officialType = classification.official_plant_type
 
-  if (officialType && classification.profile_group && officialType !== classification.profile_group) {
-    return `${label} aptiktas. Oficialus augalo tipas lieka "${officialType}", kad atitiktų reikalaujamą specifikaciją.`
+  if (
+    officialType &&
+    classification.profile_group &&
+    officialType !== classification.profile_group
+  ) {
+    return `${label} detected. The official plant type remains "${officialType}" to match the required specification.`
   }
 
-  return `${label} aptiktas pagal katalogo klasifikavimo požymius.`
+  return `${label} detected from the catalog classification signals.`
 }
 
 export default function PlantFormPage() {
@@ -101,9 +114,13 @@ export default function PlantFormPage() {
     { plots: [], catalogPlants: [], plant: null },
   )
 
-  const selectedCatalogPlant = useMemo(() => (
-    pageState.data.catalogPlants.find((entry) => String(entry.id) === String(plantForm.fk_catalog_plant_id)) ?? null
-  ), [pageState.data.catalogPlants, plantForm.fk_catalog_plant_id])
+  const selectedCatalogPlant = useMemo(
+    () =>
+      pageState.data.catalogPlants.find(
+        (entry) => String(entry.id) === String(plantForm.fk_catalog_plant_id),
+      ) ?? null,
+    [pageState.data.catalogPlants, plantForm.fk_catalog_plant_id],
+  )
 
   useEffect(() => {
     if (isEdit) {
@@ -113,7 +130,12 @@ export default function PlantFormPage() {
 
       const nextForm = plantToForm(pageState.data.plant)
       setPlantForm(nextForm)
-      setCatalogSearch(pageState.data.plant.catalog_plant?.name ?? pageState.data.plant.catalogPlant?.name ?? pageState.data.plant.name ?? '')
+      setCatalogSearch(
+        pageState.data.plant.catalog_plant?.name ??
+          pageState.data.plant.catalogPlant?.name ??
+          pageState.data.plant.name ??
+          '',
+      )
       return
     }
 
@@ -128,7 +150,9 @@ export default function PlantFormPage() {
     }))
 
     if (initialCatalogPlantId) {
-      const catalogPlant = pageState.data.catalogPlants.find((entry) => String(entry.id) === String(initialCatalogPlantId))
+      const catalogPlant = pageState.data.catalogPlants.find(
+        (entry) => String(entry.id) === String(initialCatalogPlantId),
+      )
 
       if (catalogPlant) {
         setCatalogSearch(catalogPlant.name)
@@ -140,7 +164,13 @@ export default function PlantFormPage() {
         }))
       }
     }
-  }, [initialCatalogPlantId, isEdit, pageState.data.catalogPlants, pageState.data.plant, pageState.data.plots])
+  }, [
+    initialCatalogPlantId,
+    isEdit,
+    pageState.data.catalogPlants,
+    pageState.data.plant,
+    pageState.data.plots,
+  ])
 
   useEffect(() => {
     if (!plantForm.fk_plot_id) {
@@ -151,7 +181,8 @@ export default function PlantFormPage() {
     let cancelled = false
     setZonesLoading(true)
 
-    api.listPlantZones(plantForm.fk_plot_id)
+    api
+      .listPlantZones(plantForm.fk_plot_id)
       .then((loadedZones) => {
         if (cancelled) {
           return
@@ -160,7 +191,9 @@ export default function PlantFormPage() {
         setZones(loadedZones)
         setPlantForm((current) => ({
           ...current,
-          fk_plant_zone_id: loadedZones.some((zone) => String(zone.id) === String(current.fk_plant_zone_id))
+          fk_plant_zone_id: loadedZones.some(
+            (zone) => String(zone.id) === String(current.fk_plant_zone_id),
+          )
             ? current.fk_plant_zone_id
             : String(loadedZones[0]?.id ?? ''),
         }))
@@ -189,13 +222,19 @@ export default function PlantFormPage() {
     }
 
     return pageState.data.catalogPlants
-      .filter((entry) => [
-        entry.name,
-        entry.canonical_name,
-        entry.plant_type,
-        entry.source_scientific_name,
-        entry.source_family,
-      ].some((value) => String(value ?? '').toLowerCase().includes(search)))
+      .filter((entry) =>
+        [
+          entry.name,
+          entry.canonical_name,
+          entry.plant_type,
+          entry.source_scientific_name,
+          entry.source_family,
+        ].some((value) =>
+          String(value ?? '')
+            .toLowerCase()
+            .includes(search),
+        ),
+      )
       .slice(0, 8)
   }, [catalogSearch, pageState.data.catalogPlants])
 
@@ -233,7 +272,9 @@ export default function PlantFormPage() {
       disease: Boolean(plantForm.disease),
       disease_notes: plantForm.disease_notes || null,
       fk_plant_zone_id: Number(plantForm.fk_plant_zone_id),
-      fk_catalog_plant_id: plantForm.fk_catalog_plant_id ? Number(plantForm.fk_catalog_plant_id) : null,
+      fk_catalog_plant_id: plantForm.fk_catalog_plant_id
+        ? Number(plantForm.fk_catalog_plant_id)
+        : null,
     }
 
     if (!isEdit) {
@@ -247,7 +288,7 @@ export default function PlantFormPage() {
 
       navigate(`/plants/${savedPlant.id}`, {
         state: {
-          notice: isEdit ? 'Augalas sėkmingai atnaujintas.' : 'Augalas sėkmingai sukurtas.',
+          notice: isEdit ? 'Plant updated successfully.' : 'Plant created successfully.',
         },
       })
     } catch (requestError) {
@@ -259,7 +300,7 @@ export default function PlantFormPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title={isEdit ? 'Įkeliamas augalo redaktorius...' : 'Įkeliama augalo forma...'} />
+    return <LoadingState title={isEdit ? 'Loading plant editor...' : 'Loading plant form...'} />
   }
 
   if (pageState.error) {
@@ -267,19 +308,21 @@ export default function PlantFormPage() {
   }
 
   if (isEdit && !pageState.data.plant) {
-    return <EmptyState title="Augalas nerastas" description="Nepavyko įkelti pasirinkto augalo." />
+    return (
+      <EmptyState title="Plant not found" description="The selected plant could not be loaded." />
+    )
   }
 
   if (!isEdit && pageState.data.plots.length === 0) {
     return (
       <EmptyState
-        title="Pirmiausia sukurkite sklypą"
-        description="Augalai priklauso sklypui ir zonai, todėl prieš kuriant pasodinto augalo įrašą reikia bent vieno sklypo."
-        action={(
+        title="Create a field first"
+        description="Plants belong to a field and a zone, so you need at least one field before creating a planted crop record."
+        action={
           <Link to="/plots">
-            <Button>Atidaryti sklypus</Button>
+            <Button>Open fields</Button>
           </Link>
-        )}
+        }
       />
     )
   }
@@ -289,29 +332,34 @@ export default function PlantFormPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title={isEdit ? 'Redaguoti augalą' : 'Sukurti augalą'}
-        description={isEdit
-          ? 'Atnaujinkite pasodinto augalo įrašą ir jo ryšį su katalogu.'
-          : 'Pridėkite augalą į sklypą ir zoną, kai įmanoma pradėdami nuo pakartotinai naudojamo augalų katalogo.'}
-        actions={(
+        title={isEdit ? 'Edit plant' : 'Create plant'}
+        description={
+          isEdit
+            ? 'Update the planted crop record and its catalog link.'
+            : 'Add a plant to a field and zone, starting from the reusable plant catalog when possible.'
+        }
+        actions={
           <>
             <Link to={isEdit ? `/plants/${plantId}` : '/plants'}>
-              <Button variant="secondary">Atšaukti</Button>
+              <Button variant="secondary">Cancel</Button>
             </Link>
             <Link to="/plants/catalog/new">
-              <Button variant="ghost">Naujas katalogo augalas</Button>
+              <Button variant="ghost">New catalog plant</Button>
             </Link>
           </>
-        )}
+        }
       />
 
       <section className="panel page-stack">
         <div>
-          <h3 className="section-title">Katalogo augalas</h3>
-          <p className="section-copy">Pasirinkite katalogo augalą, kad prieš sodinimą zonoje būtų užpildyti bendri tapatybės ir priežiūros duomenys.</p>
+          <h3 className="section-title">Catalog plant</h3>
+          <p className="section-copy">
+            Select a catalog plant to prefill shared identity and care data before planting it in a
+            zone.
+          </p>
         </div>
         <div className="field">
-          <label htmlFor="catalog-search">Katalogo paieška</label>
+          <label htmlFor="catalog-search">Catalog search</label>
           <input
             id="catalog-search"
             value={catalogSearch}
@@ -322,16 +370,18 @@ export default function PlantFormPage() {
                 fk_catalog_plant_id: '',
               }))
             }}
-            placeholder="Ieškoti augalų kataloge"
+            placeholder="Search the plant catalog"
           />
         </div>
         {plantForm.fk_catalog_plant_id ? (
           <div className="inline-note">
-            Pasirinktas katalogo augalas #{plantForm.fk_catalog_plant_id}. Bendra priežiūra redaguojama katalogo augalo puslapyje.
+            Catalog plant #{plantForm.fk_catalog_plant_id} selected. Shared care is edited on the
+            catalog plant page.
           </div>
         ) : (
           <div className="inline-note">
-            Katalogo augalas nepasirinktas. Galite išsaugoti rankinį augalo įrašą, bet pakartotinai naudojamus augalus geriausia pirmiausia sukurti kataloge.
+            No catalog plant selected. You can save a manual plant record, but reusable plants are
+            best created in the catalog first.
           </div>
         )}
         {filteredCatalog.length > 0 ? (
@@ -347,69 +397,87 @@ export default function PlantFormPage() {
                   <strong>{entry.name}</strong>
                   <span className="badge badge-soft">{formatPlantType(entry.plant_type)}</span>
                 </div>
-                <div className="muted">{entry.source_scientific_name || 'Mokslinis pavadinimas neišsaugotas'}</div>
+                <div className="muted">
+                  {entry.source_scientific_name || 'No scientific name saved'}
+                </div>
                 <div className="meta-cluster">
-                  <StatRow label="Laistyti kas" value={formatDayCount(entry.plant_care_summary?.watering_interval_days)} />
-                  <StatRow label="Tręšti kas" value={formatDayCount(entry.plant_care_summary?.fertilizing_interval_days)} />
-                  <StatRow label="Pasodinta" value={entry.usage_count ?? 0} />
+                  <StatRow
+                    label="Water every"
+                    value={formatDayCount(entry.plant_care_summary?.watering_interval_days)}
+                  />
+                  <StatRow
+                    label="Fertilize every"
+                    value={formatDayCount(entry.plant_care_summary?.fertilizing_interval_days)}
+                  />
+                  <StatRow label="Planted" value={entry.usage_count ?? 0} />
                 </div>
               </button>
             ))}
           </div>
         ) : (
-          <div className="inline-note">Pagal šią paiešką katalogo augalų nerasta.</div>
+          <div className="inline-note">No catalog plants match this search.</div>
         )}
       </section>
 
       <form className="page-stack" onSubmit={handleSubmit}>
         <section className="panel page-stack">
           <div>
-            <h3 className="section-title">Pasodinto augalo įrašas</h3>
-            <p className="section-copy">Šiam sklypui ir zonai būdingi pasodinimo duomenys.</p>
+            <h3 className="section-title">Planted crop record</h3>
+            <p className="section-copy">Planting data specific to this field and zone.</p>
           </div>
 
           <div className="form-grid plants-form-grid">
             {!isEdit ? (
               <div className="field">
-                <label htmlFor="plant-plot">Sklypas</label>
+                <label htmlFor="plant-plot">Field</label>
                 <select
                   id="plant-plot"
                   value={plantForm.fk_plot_id}
-                  onChange={(event) => setPlantForm((current) => ({
-                    ...current,
-                    fk_plot_id: event.target.value,
-                    fk_plant_zone_id: '',
-                  }))}
+                  onChange={(event) =>
+                    setPlantForm((current) => ({
+                      ...current,
+                      fk_plot_id: event.target.value,
+                      fk_plant_zone_id: '',
+                    }))
+                  }
                   required
                 >
-                  <option value="" disabled>Pasirinkite sklypą</option>
+                  <option value="" disabled>
+                    Select a field
+                  </option>
                   {pageState.data.plots.map((plot) => (
                     <option key={plot.id} value={plot.id}>
                       {plot.name}
                     </option>
                   ))}
                 </select>
-                {fieldError('fk_plot_id') ? <span className="field-error">{fieldError('fk_plot_id')}</span> : null}
+                {fieldError('fk_plot_id') ? (
+                  <span className="field-error">{fieldError('fk_plot_id')}</span>
+                ) : null}
               </div>
             ) : (
               <div className="field">
-                <label>Sklypas</label>
+                <label>Field</label>
                 <div className="inline-note">
-                  {pageState.data.plant?.plot?.name ?? 'Nežinomas sklypas'}
+                  {pageState.data.plant?.plot?.name ?? 'Unknown field'}
                 </div>
               </div>
             )}
 
             <div className="field">
-              <label htmlFor="plant-zone">Zona</label>
+              <label htmlFor="plant-zone">Zone</label>
               <select
                 id="plant-zone"
                 value={plantForm.fk_plant_zone_id}
-                onChange={(event) => setPlantForm((current) => ({ ...current, fk_plant_zone_id: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, fk_plant_zone_id: event.target.value }))
+                }
                 required
                 disabled={zonesLoading || zones.length === 0}
               >
-                <option value="" disabled>{zonesLoading ? 'Įkeliamos zonos...' : 'Pasirinkite zoną'}</option>
+                <option value="" disabled>
+                  {zonesLoading ? 'Loading zones...' : 'Select a zone'}
+                </option>
                 {zones.map((zone) => (
                   <option key={zone.id} value={zone.id}>
                     {zone.name}
@@ -417,44 +485,58 @@ export default function PlantFormPage() {
                 ))}
               </select>
               {zones.length === 0 && !zonesLoading ? (
-                <span className="field-hint">Prieš išsaugodami augalą, pasirinktame sklype sukurkite zoną.</span>
+                <span className="field-hint">
+                  Create a zone in the selected field before saving the plant.
+                </span>
               ) : null}
-              {fieldError('fk_plant_zone_id') ? <span className="field-error">{fieldError('fk_plant_zone_id')}</span> : null}
+              {fieldError('fk_plant_zone_id') ? (
+                <span className="field-error">{fieldError('fk_plant_zone_id')}</span>
+              ) : null}
             </div>
 
             <div className="field">
-              <label htmlFor="plant-name">Rodomas pavadinimas</label>
+              <label htmlFor="plant-name">Display name</label>
               <input
                 id="plant-name"
                 value={plantForm.name}
-                onChange={(event) => setPlantForm((current) => ({ ...current, name: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, name: event.target.value }))
+                }
               />
-              {fieldError('name') ? <span className="field-error">{fieldError('name')}</span> : null}
+              {fieldError('name') ? (
+                <span className="field-error">{fieldError('name')}</span>
+              ) : null}
             </div>
 
             <div className="field">
-              <label htmlFor="plant-type">Augalo tipas</label>
+              <label htmlFor="plant-type">Plant type</label>
               <select
                 id="plant-type"
                 value={plantForm.type}
-                onChange={(event) => setPlantForm((current) => ({ ...current, type: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, type: event.target.value }))
+                }
               >
-                <option value="">Pasirinkite tipą</option>
+                <option value="">Select a type</option>
                 {PLANT_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {formatPlantType(type)}
                   </option>
                 ))}
               </select>
-              {fieldError('type') ? <span className="field-error">{fieldError('type')}</span> : null}
+              {fieldError('type') ? (
+                <span className="field-error">{fieldError('type')}</span>
+              ) : null}
             </div>
 
             <div className="field">
-              <label htmlFor="plant-condition">Būklė</label>
+              <label htmlFor="plant-condition">Condition</label>
               <select
                 id="plant-condition"
                 value={plantForm.condition}
-                onChange={(event) => setPlantForm((current) => ({ ...current, condition: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, condition: event.target.value }))
+                }
                 required
               >
                 {CONDITION_TYPES.map((condition) => (
@@ -466,99 +548,126 @@ export default function PlantFormPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="plant-date">Sodinimo data</label>
+              <label htmlFor="plant-date">Planting date</label>
               <input
                 id="plant-date"
                 type="date"
                 value={plantForm.plant_date}
-                onChange={(event) => setPlantForm((current) => ({ ...current, plant_date: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, plant_date: event.target.value }))
+                }
                 required
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-growing-time">Augimo trukmė (dienomis)</label>
+              <label htmlFor="plant-growing-time">Growing duration (days)</label>
               <input
                 id="plant-growing-time"
                 type="number"
                 min="0"
                 value={plantForm.growing_time_days}
-                onChange={(event) => setPlantForm((current) => ({ ...current, growing_time_days: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, growing_time_days: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-size">Augalo dydis</label>
+              <label htmlFor="plant-size">Plant size</label>
               <input
                 id="plant-size"
                 type="number"
                 min="0"
                 step="0.1"
                 value={plantForm.plant_size}
-                onChange={(event) => setPlantForm((current) => ({ ...current, plant_size: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, plant_size: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-temp">Rekomenduojama temperatūra</label>
+              <label htmlFor="plant-temp">Recommended temperature</label>
               <input
                 id="plant-temp"
                 type="number"
                 step="0.1"
                 value={plantForm.recommended_temperature}
-                onChange={(event) => setPlantForm((current) => ({ ...current, recommended_temperature: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({
+                    ...current,
+                    recommended_temperature: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-humidity">Rekomenduojama drėgmė</label>
+              <label htmlFor="plant-humidity">Recommended humidity</label>
               <input
                 id="plant-humidity"
                 type="number"
                 step="0.1"
                 value={plantForm.recommended_humidity}
-                onChange={(event) => setPlantForm((current) => ({ ...current, recommended_humidity: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({
+                    ...current,
+                    recommended_humidity: event.target.value,
+                  }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-rest">Poilsio laikas (dienomis)</label>
+              <label htmlFor="plant-rest">Rest time (days)</label>
               <input
                 id="plant-rest"
                 type="number"
                 min="0"
                 value={plantForm.rest_time_days}
-                onChange={(event) => setPlantForm((current) => ({ ...current, rest_time_days: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, rest_time_days: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-photo">Nuotraukos URL</label>
+              <label htmlFor="plant-photo">Photo URL</label>
               <input
                 id="plant-photo"
                 value={plantForm.photo_url}
-                onChange={(event) => setPlantForm((current) => ({ ...current, photo_url: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, photo_url: event.target.value }))
+                }
               />
             </div>
 
             <div className="field">
-              <label htmlFor="plant-disease">Liga nustatyta</label>
+              <label htmlFor="plant-disease">Disease detected</label>
               <select
                 id="plant-disease"
                 value={plantForm.disease ? 'true' : 'false'}
-                onChange={(event) => setPlantForm((current) => ({ ...current, disease: event.target.value === 'true' }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({
+                    ...current,
+                    disease: event.target.value === 'true',
+                  }))
+                }
               >
-                <option value="false">Ne</option>
-                <option value="true">Taip</option>
+                <option value="false">No</option>
+                <option value="true">Yes</option>
               </select>
             </div>
 
             <div className="field field-span-2">
-              <label htmlFor="plant-disease-notes">Ligos pastabos</label>
+              <label htmlFor="plant-disease-notes">Disease notes</label>
               <textarea
                 id="plant-disease-notes"
                 value={plantForm.disease_notes}
-                onChange={(event) => setPlantForm((current) => ({ ...current, disease_notes: event.target.value }))}
+                onChange={(event) =>
+                  setPlantForm((current) => ({ ...current, disease_notes: event.target.value }))
+                }
               />
             </div>
           </div>
@@ -567,14 +676,19 @@ export default function PlantFormPage() {
         {selectedCatalogPlant ? (
           <section className="panel page-stack">
             <div>
-              <h3 className="section-title">Bendrinamos priežiūros peržiūra</h3>
-              <p className="section-copy">Šis pasodintas augalas naudos pasirinkto katalogo augalo bendrinamą priežiūrą.</p>
+              <h3 className="section-title">Shared care preview</h3>
+              <p className="section-copy">
+                This planted crop will use the shared care profile from the selected catalog plant.
+              </p>
             </div>
 
             <div className="meta-cluster">
-              <StatRow label="Katalogas" value={selectedCatalogPlant.name} />
-              <StatRow label="Kataloginis pavadinimas" value={formatDisplayValue(selectedCatalogPlant.canonical_name)} />
-              <StatRow label="Naudojimai" value={selectedCatalogPlant.usage_count ?? 0} />
+              <StatRow label="Catalog" value={selectedCatalogPlant.name} />
+              <StatRow
+                label="Catalog name"
+                value={formatDisplayValue(selectedCatalogPlant.canonical_name)}
+              />
+              <StatRow label="Uses" value={selectedCatalogPlant.usage_count ?? 0} />
             </div>
 
             {selectedCatalogPlant.metadata?.classification ? (
@@ -587,24 +701,33 @@ export default function PlantFormPage() {
               <KeyValueGrid
                 className="plants-detail-grid"
                 items={[
-                  { label: 'Laistymo intervalas', value: formatDayCount(selectedCare.watering_interval_days) },
-                  { label: 'Tręšimo intervalas', value: formatDayCount(selectedCare.fertilizing_interval_days) },
-                  { label: 'Kenkėjų patikros', value: formatDayCount(selectedCare.pest_check_interval_days) },
-                  { label: 'Sąlygos', value: selectedCare.conditions || 'Nenurodyta' },
+                  {
+                    label: 'Watering interval',
+                    value: formatDayCount(selectedCare.watering_interval_days),
+                  },
+                  {
+                    label: 'Fertilizing interval',
+                    value: formatDayCount(selectedCare.fertilizing_interval_days),
+                  },
+                  {
+                    label: 'Pest checks',
+                    value: formatDayCount(selectedCare.pest_check_interval_days),
+                  },
+                  { label: 'Conditions', value: selectedCare.conditions || 'Not specified' },
                 ]}
               />
             ) : (
               <div className="inline-note">
-                Šis katalogo augalas dar neturi susieto bendrinamos priežiūros profilio.
+                This catalog plant does not have a linked shared care profile yet.
               </div>
             )}
 
             <div className="row-actions">
               <Link to={`/plants/catalog/${selectedCatalogPlant.id}`}>
-                <Button variant="ghost">Atidaryti katalogo augalą</Button>
+                <Button variant="ghost">Open catalog plant</Button>
               </Link>
               <Link to={`/plants/catalog/${selectedCatalogPlant.id}/edit`}>
-                <Button variant="secondary">Redaguoti bendrinamą priežiūrą</Button>
+                <Button variant="secondary">Edit shared care</Button>
               </Link>
             </div>
           </section>
@@ -614,10 +737,10 @@ export default function PlantFormPage() {
 
         <div className="form-actions">
           <Button type="submit" disabled={submitting || zones.length === 0}>
-            {submitting ? 'Saugoma...' : (isEdit ? 'Išsaugoti augalą' : 'Sukurti augalą')}
+            {submitting ? 'Saving...' : isEdit ? 'Save plant' : 'Create plant'}
           </Button>
           <Link to={isEdit ? `/plants/${plantId}` : '/plants'}>
-            <Button variant="secondary">Atgal</Button>
+            <Button variant="secondary">Back</Button>
           </Link>
         </div>
       </form>

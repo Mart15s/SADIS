@@ -26,6 +26,7 @@ class PasswordResetController extends Controller
         $key = 'pwreset|'.Str::lower($data['email']).'|'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $retry = RateLimiter::availableIn($key);
+
             return response()->json(['message' => "Too many password reset requests. Try again in {$retry} seconds.", 'retry_after' => $retry], 429);
         }
         RateLimiter::hit($key, 600);
@@ -34,9 +35,11 @@ class PasswordResetController extends Controller
                 $this->emailServerBoundary->sendPasswordResetLink($user, Password::broker()->createToken($user));
             } catch (Throwable $exception) {
                 report($exception);
+
                 return response()->json(['message' => 'The reset email could not be sent. Check the email service configuration.'], 503);
             }
         }
+
         return response()->json(['message' => self::RESET_LINK_SENT_MESSAGE]);
     }
 
@@ -61,6 +64,7 @@ class PasswordResetController extends Controller
         if ($status !== Password::PASSWORD_RESET) {
             return response()->json(['message' => 'The password reset code is invalid or has expired.'], 422);
         }
+
         return response()->json(['message' => 'Your password has been updated successfully.']);
     }
 }

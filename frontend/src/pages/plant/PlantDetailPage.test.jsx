@@ -99,10 +99,10 @@ describe('PlantDetailPage routing', () => {
       expect(screen.getByRole('heading', { name: 'Tomato' })).toBeInTheDocument()
     })
 
-    expect(screen.getByRole('heading', { name: /Gyvavimo ciklo gairės/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Būklės istorija/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Derliaus istorija/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Grįžti į augalus/i })).toHaveAttribute('href', '/plants')
+    expect(screen.getByRole('heading', { name: /Lifecycle guidance/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Condition history/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Harvest history/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Back to plants/i })).toHaveAttribute('href', '/plants')
   })
 
   it('uses the same detail experience from the plot route while keeping plot back navigation', async () => {
@@ -118,9 +118,9 @@ describe('PlantDetailPage routing', () => {
       expect(api.getPlant).toHaveBeenCalledWith('5', '12')
     })
 
-    expect(screen.getByRole('heading', { name: /Gyvavimo ciklo gairės/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Būklės istorija/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Derliaus istorija/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Grįžti į sklypą/i })).toHaveAttribute('href', '/plots/5')
+    expect(screen.getByRole('heading', { name: /Lifecycle guidance/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Condition history/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Harvest history/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Back to field/i })).toHaveAttribute('href', '/plots/5')
   })
 })

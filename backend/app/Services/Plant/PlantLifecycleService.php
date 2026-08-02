@@ -19,8 +19,7 @@ class PlantLifecycleService
     public function __construct(
         private readonly PlantConditionHistoryService $plantConditionHistoryService,
         private readonly PlantLifecyclePhaseService $plantLifecyclePhaseService,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  Collection<int, PlantConditionHistory>|null  $conditionHistory

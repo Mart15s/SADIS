@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Calendar;
 
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,7 +17,7 @@ class TaskCalendarResource extends JsonResource
             'end_date' => $this->end_date?->toDateString(),
             'fk_plot_id' => $this->fk_plot_id,
             'available_dates' => $this->start_date && $this->end_date
-                ? collect(\Carbon\CarbonPeriod::create($this->start_date, $this->end_date))
+                ? collect(CarbonPeriod::create($this->start_date, $this->end_date))
                     ->map(fn ($date) => $date->toDateString())
                     ->values()
                     ->all()

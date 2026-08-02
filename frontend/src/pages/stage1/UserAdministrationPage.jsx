@@ -1,5 +1,5 @@
-import DomainWorkspacePage from './DomainWorkspacePage.jsx'
+import AdminUsersPage from '../admin/AdminUsersPage.jsx'
 
 export default function UserAdministrationPage() {
-  return <DomainWorkspacePage resource="users" />
+  return <AdminUsersPage />
 }

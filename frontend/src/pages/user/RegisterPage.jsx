@@ -45,7 +45,7 @@ export default function RegisterPage() {
     <div className="page-stack auth-card">
       <PageHeader
         title="Create an account"
-        description="Registration creates your user, profile, garden owner record, and API access token in one request."
+        description="Create your Yava profile, then set up or join the farm and community workspaces you need."
       />
 
       <form className="panel split-form" onSubmit={handleSubmit}>
@@ -55,11 +55,24 @@ export default function RegisterPage() {
         </div>
         <div className="field">
           <label htmlFor="surname">Last name</label>
-          <input id="surname" name="surname" value={form.surname} onChange={handleChange} required />
+          <input
+            id="surname"
+            name="surname"
+            value={form.surname}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="email">Email address</label>
-          <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="password">Password</label>
@@ -97,8 +110,8 @@ export default function RegisterPage() {
           <Button type="submit" disabled={submitting}>
             {submitting ? 'Creating account…' : 'Create account'}
           </Button>
-          <Link to="/login">
-            <Button variant="secondary">Back to sign in</Button>
+          <Link className="button button-secondary button-md" to="/login">
+            Back to sign in
           </Link>
         </div>
       </form>

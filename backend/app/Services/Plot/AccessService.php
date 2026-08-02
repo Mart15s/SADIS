@@ -114,7 +114,7 @@ class AccessService
         });
     }
 
-    public function getUserRoleForPlot(GardenOwner $owner, Plot $plot): string|null
+    public function getUserRoleForPlot(GardenOwner $owner, Plot $plot): ?string
     {
         if ($this->userIsOwner($owner, $plot)) {
             return self::OWNER_ROLE;

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- live Konva drag previews intentionally use refs outside React state */
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Layer, Line, Rect, Stage } from 'react-konva'
 import { MapLayerControl, MeasurementBadge, PlotScaleControl } from '../garden/GardenControls.jsx'
@@ -505,7 +506,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     ))
   }
 
-  function reportZoneCreateBlokuota(message = 'Nerasta laisvos nepersidengiančios vietos naujai zonai.') {
+  function reportZoneCreateBlokuota(message = 'No free non-overlapping space was found for a new zone.') {
     if (onZoneCreateBlokuota) {
       onZoneCreateBlokuota(message)
     }
@@ -995,7 +996,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
     const worldPoint = toWorldPoint(pointer)
 
     if (!pointInPolygon(worldPoint, renderedBoundary)) {
-      reportZoneCreateBlokuota('Zonas braižykite pradėdami sklypo ribos viduje.')
+      reportZoneCreateBlokuota('Start drawing zones inside the field boundary.')
       return false
     }
 
@@ -1152,7 +1153,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
   const zoomLabel = viewport.scale >= 10 ? `${safeNumber(viewport.scale, 1)}x` : `${safeNumber(viewport.scale, 2)}x`
   const viewportBounds = { width: canvasSize.width, height: canvasSize.height }
   const saveStatus = isLayoutSaving
-    ? { className: 'badge badge-warning', text: 'Saugomas išdėstymas...' }
+    ? { className: 'badge badge-warning', text: 'Saving layout…' }
     : layoutSaveFeedback?.type === 'error'
       ? { className: 'badge badge-danger', text: layoutSaveFeedback.message }
       : layoutSaveFeedback?.type === 'success'
@@ -1282,16 +1283,16 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
   return (
     <div className="designer-panel">
-      <div className="designer-toolbar" role="toolbar" aria-label="Sklypo redaktoriaus įrankiai">
+      <div className="designer-toolbar" role="toolbar" aria-label="Field editor tools">
         <DesignerIconButton
-          label="Pasirinkti arba redaguoti"
+          label="Select or edit"
           icon="cursor"
           active={!isDrawingZoneMode}
           onClick={() => setInteractionMode(INTERACTION_MODES.idle)}
         />
         {canEdit ? (
           <DesignerIconButton
-            label="Braižyti zoną"
+            label="Draw zone"
             icon="draw"
             active={isDrawingZoneMode}
             onClick={() => {
@@ -1305,7 +1306,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
         ) : null}
         <span className="designer-toolbar-divider" aria-hidden="true" />
         <DesignerIconButton label="Talpinti vaizde" icon="fit" onClick={handleFitView} />
-        {canEdit ? <DesignerIconButton label="Atkurti išdėstymą" icon="reset" onClick={resetDesignerLayout} /> : null}
+        {canEdit ? <DesignerIconButton label="Reset layout" icon="reset" onClick={resetDesignerLayout} /> : null}
         <span className="designer-toolbar-divider" aria-hidden="true" />
         <DesignerIconButton
           label="Lygiuoti prie tinklelio"
@@ -1315,14 +1316,14 @@ export default memo(forwardRef(function PlotDesignerCanvas({
           onClick={() => setSnapEnabled((current) => !current)}
         />
         <DesignerIconButton
-          label="Rodyti matmenis"
+          label="Show dimensions"
           icon="ruler"
           active={showDimensions}
           onClick={() => setRodytiDimensions((current) => !current)}
         />
         {canEdit && showSaveAction ? (
           <Button className="designer-toolbar-save" onClick={onSaveLayout} disabled={isLayoutSaveDisabled || isLayoutSaving}>
-            {isLayoutSaving ? 'Saugomas išdėstymas...' : 'Išsaugoti išdėstymą'}
+            {isLayoutSaving ? 'Saving layout…' : 'Save layout'}
           </Button>
         ) : null}
         {saveStatus ? <span className={saveStatus.className}>{saveStatus.text}</span> : null}
@@ -1336,10 +1337,10 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       <div className="designer-meta-grid">
         <MeasurementBadge label="Sklypo plotas" value={formatSquareMeters(calculateArea(renderedBoundary), 1)} tone="field" className="designer-measurement" />
         <MeasurementBadge label="Sklypo perimetras" value={formatMeters(plotMetrics.perimeter)} tone="earth" className="designer-measurement" />
-        <MeasurementBadge label="Kraštinių ilgiai" value={plotMetrics.sideSummary || 'Geometrijos nėra'} tone="amber" className="designer-measurement designer-measurement-wide" />
+        <MeasurementBadge label="Side lengths" value={plotMetrics.sideSummary || 'No geometry'} tone="amber" className="designer-measurement designer-measurement-wide" />
         <MeasurementBadge
-          label={selectedZone ? 'Pasirinkta zona' : 'Sužymėtos zonos'}
-          value={selectedZone && selectedMetrics ? `${formatMeters(selectedMetrics.perimeter)} perimetras` : `${zones.length} iš viso`}
+          label={selectedZone ? 'Selected zone' : 'Mapped zones'}
+          value={selectedZone && selectedMetrics ? `${formatMeters(selectedMetrics.perimeter)} perimeter` : `${zones.length} total`}
           tone="leaf"
           className="designer-measurement"
         />
@@ -1767,7 +1768,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
       </div>
 
       {!mapFirstHud && zones.length > 0 ? (
-        <div className="designer-legend" aria-label="Zonų legenda">
+        <div className="designer-legend" aria-label="Zone legend">
           {zones.map((zone, index) => {
             const zoneId = String(zone.id)
             const colors = getZoneColor(index, zone)
@@ -1799,7 +1800,7 @@ export default memo(forwardRef(function PlotDesignerCanvas({
 
       {mapFirstHud ? (
         <div className="designer-bottom-hud" aria-label="Canvas status">
-          <div className="designer-legend" aria-label="Zonų legenda">
+          <div className="designer-legend" aria-label="Zone legend">
             {zones.length > 0 ? zones.map((zone, index) => {
               const zoneId = String(zone.id)
               const colors = getZoneColor(index, zone)

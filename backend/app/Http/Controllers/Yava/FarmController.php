@@ -8,7 +8,6 @@ use App\Models\Farm;
 use App\Models\FarmCommunityLink;
 use App\Models\FarmMemberPermission;
 use App\Models\FarmMembership;
-use App\Models\User;
 use App\Services\Yava\FarmService;
 use App\Services\Yava\PermissionService;
 use Illuminate\Http\Request;
@@ -47,7 +46,14 @@ class FarmController extends Controller
     {
         $permissions->authorizeFarm($request->user(), $farm, 'view_farm');
 
-        return response()->json(['data' => $farm->load(['fields', 'memberships.user:id,email', 'communities'])]);
+        $canManageMembers = $permissions->hasFarmPermission($request->user(), $farm, 'manage_members');
+        $farm->load(['fields', 'memberships.user.profile', 'memberships.permissions', 'communities']);
+        $payload = $farm->toArray();
+        $payload['memberships'] = $farm->memberships
+            ->map(fn (FarmMembership $membership) => $this->memberPayload($membership, $canManageMembers))
+            ->values();
+
+        return response()->json(['data' => $payload]);
     }
 
     public function update(Request $request, Farm $farm, PermissionService $permissions)
@@ -72,9 +78,13 @@ class FarmController extends Controller
 
     public function members(Request $request, Farm $farm, PermissionService $permissions)
     {
-        $permissions->authorizeFarm($request->user(), $farm, 'manage_members');
+        $permissions->authorizeFarm($request->user(), $farm, 'view_farm');
 
-        return response()->json(['data' => FarmMembership::query()->with(['user:id,email', 'permissions'])->where('farm_id', $farm->id)->get()]);
+        $canManageMembers = $permissions->hasFarmPermission($request->user(), $farm, 'manage_members');
+        $memberships = FarmMembership::query()->with(['user.profile', 'permissions'])->where('farm_id', $farm->id)->get()
+            ->map(fn (FarmMembership $membership) => $this->memberPayload($membership, $canManageMembers));
+
+        return response()->json(['data' => $memberships]);
     }
 
     public function addMember(Request $request, Farm $farm, PermissionService $permissions)
@@ -94,6 +104,7 @@ class FarmController extends Controller
             foreach ($data['permissions'] ?? [] as $permission) {
                 FarmMemberPermission::query()->updateOrCreate(['farm_membership_id' => $membership->id, 'permission' => $permission], ['allowed' => true]);
             }
+
             return $membership;
         });
 
@@ -109,25 +120,29 @@ class FarmController extends Controller
             'status' => ['sometimes', 'in:active,revoked'],
             'permissions' => ['sometimes', 'array'], 'permissions.*' => ['string', 'in:'.implode(',', PermissionService::FARM_PERMISSIONS)],
         ]);
-        $removesOwner = $membership->role === 'owner' && $membership->status === 'active'
-            && (($data['role'] ?? 'owner') !== 'owner' || ($data['status'] ?? 'active') !== 'active');
-        if ($removesOwner && FarmMembership::query()->where('farm_id', $farm->id)->where('role', 'owner')->where('status', 'active')->count() === 1) {
-            throw ValidationException::withMessages(['membership' => ['Transfer farm ownership before removing or demoting the sole owner.']]);
-        }
-        DB::transaction(function () use ($membership, $data): void {
-            $membership->update(array_filter([
+        $membership = DB::transaction(function () use ($membership, $farm, $data): FarmMembership {
+            Farm::query()->lockForUpdate()->findOrFail($farm->id);
+            $locked = FarmMembership::query()->lockForUpdate()->findOrFail($membership->id);
+            $removesOwner = $locked->role === 'owner' && $locked->status === 'active'
+                && (($data['role'] ?? 'owner') !== 'owner' || ($data['status'] ?? 'active') !== 'active');
+            if ($removesOwner && FarmMembership::query()->where('farm_id', $farm->id)->where('role', 'owner')->where('status', 'active')->count() === 1) {
+                throw ValidationException::withMessages(['membership' => ['Transfer farm ownership before removing or demoting the sole owner.']]);
+            }
+            $locked->update(array_filter([
                 'role' => $data['role'] ?? null, 'status' => $data['status'] ?? null,
                 'revoked_at' => ($data['status'] ?? null) === 'revoked' ? now() : null,
             ], fn ($value) => $value !== null));
             if (array_key_exists('permissions', $data)) {
-                $membership->permissions()->delete();
+                $locked->permissions()->delete();
                 foreach ($data['permissions'] as $permission) {
-                    FarmMemberPermission::query()->create(['farm_membership_id' => $membership->id, 'permission' => $permission, 'allowed' => true]);
+                    FarmMemberPermission::query()->create(['farm_membership_id' => $locked->id, 'permission' => $permission, 'allowed' => true]);
                 }
             }
-        });
 
-        return response()->json(['data' => $membership->fresh('permissions')]);
+            return $locked->fresh('permissions');
+        }, 3);
+
+        return response()->json(['data' => $membership]);
     }
 
     public function linkCommunity(Request $request, Farm $farm, Community $community, PermissionService $permissions, FarmService $service)
@@ -141,6 +156,40 @@ class FarmController extends Controller
         ]);
 
         return response()->json(['data' => $service->linkFarm($request->user(), $farm, $community, $data)], 201);
+    }
+
+    public function communityLinks(Request $request, PermissionService $permissions)
+    {
+        $data = $request->validate([
+            'farm_id' => ['nullable', 'integer', 'exists:farms,id'],
+            'community_id' => ['nullable', 'integer', 'exists:communities,id'],
+        ]);
+        if ((isset($data['farm_id']) ? 1 : 0) + (isset($data['community_id']) ? 1 : 0) !== 1) {
+            throw ValidationException::withMessages(['scope' => ['Choose exactly one farm or community.']]);
+        }
+
+        $query = FarmCommunityLink::query()->with(['farm:id,name', 'community:id,name']);
+        if (isset($data['farm_id'])) {
+            $permissions->authorizeFarm($request->user(), (int) $data['farm_id'], 'manage_members');
+            $query->where('farm_id', $data['farm_id']);
+        } else {
+            $permissions->authorizeCommunity($request->user(), (int) $data['community_id'], 'manage_members');
+            $query->where('community_id', $data['community_id']);
+        }
+
+        $links = $query->orderByDesc('requested_at')->orderByDesc('id')->get()->map(fn (FarmCommunityLink $link) => [
+            'id' => $link->id,
+            'status' => $link->status,
+            'farm' => $link->farm?->only(['id', 'name']),
+            'community' => $link->community?->only(['id', 'name']),
+            'analytics_scopes' => $link->analytics_scopes ?? [],
+            'farm_access_permissions' => $link->farm_access_permissions ?? [],
+            'requested_at' => $link->requested_at,
+            'approved_at' => $link->approved_at,
+            'revoked_at' => $link->revoked_at,
+        ]);
+
+        return response()->json(['data' => $links]);
     }
 
     public function decideCommunityLink(Request $request, FarmCommunityLink $link, string $decision, PermissionService $permissions, FarmService $service)
@@ -166,6 +215,7 @@ class FarmController extends Controller
     private function rules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
+
         return [
             'name' => [$required, 'string', 'max:255'], 'description' => ['nullable', 'string'],
             'area_square_metres' => ['sometimes', 'numeric', 'min:0'], 'timezone' => ['sometimes', 'timezone:all'],
@@ -175,5 +225,23 @@ class FarmController extends Controller
             'latitude' => ['nullable', 'numeric', 'between:-90,90'], 'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'address' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    private function memberPayload(FarmMembership $membership, bool $includePrivateContact): array
+    {
+        $user = $membership->user;
+        $payload = $membership->withoutRelations()->toArray();
+        $payload['user'] = array_filter([
+            'id' => $user?->id,
+            'name' => $user?->profile?->name,
+            'surname' => $user?->profile?->surname,
+            'email' => $includePrivateContact ? $user?->email : null,
+            'phone' => $includePrivateContact ? $user?->phone : null,
+        ], static fn ($value) => $value !== null);
+        if ($includePrivateContact) {
+            $payload['permissions'] = $membership->permissions->toArray();
+        }
+
+        return $payload;
     }
 }

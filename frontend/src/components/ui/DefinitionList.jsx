@@ -2,19 +2,14 @@ function hasRenderableValue(value) {
   return value !== null && value !== undefined && value !== ''
 }
 
-export function DefinitionItem({
-  label,
-  value,
-  children,
-  className = '',
-}) {
+export function DefinitionItem({ label, value, children, className = '' }) {
   const renderedValue = hasRenderableValue(children) ? children : value
 
   return (
     <div className={`definition-item ${className}`.trim()}>
       <dt className="definition-item-label">{label}</dt>
       <dd className="definition-item-value">
-        {hasRenderableValue(renderedValue) ? renderedValue : 'Nenurodyta'}
+        {hasRenderableValue(renderedValue) ? renderedValue : 'Not specified'}
       </dd>
     </div>
   )
@@ -23,14 +18,15 @@ export function DefinitionItem({
 export function DefinitionList({ items = [], children, className = '' }) {
   return (
     <dl className={`definition-list ${className}`.trim()}>
-      {children ?? items.map((item) => (
-        <DefinitionItem
-          key={item.key ?? item.label}
-          label={item.label}
-          value={item.value}
-          className={item.className ?? ''}
-        />
-      ))}
+      {children ??
+        items.map((item) => (
+          <DefinitionItem
+            key={item.key ?? item.label}
+            label={item.label}
+            value={item.value}
+            className={item.className ?? ''}
+          />
+        ))}
     </dl>
   )
 }
@@ -38,14 +34,15 @@ export function DefinitionList({ items = [], children, className = '' }) {
 export function KeyValueGrid({ items = [], children, className = '' }) {
   return (
     <dl className={`key-value-grid ${className}`.trim()}>
-      {children ?? items.map((item) => (
-        <DefinitionItem
-          key={item.key ?? item.label}
-          label={item.label}
-          value={item.value}
-          className={item.className ?? ''}
-        />
-      ))}
+      {children ??
+        items.map((item) => (
+          <DefinitionItem
+            key={item.key ?? item.label}
+            label={item.label}
+            value={item.value}
+            className={item.className ?? ''}
+          />
+        ))}
     </dl>
   )
 }
@@ -57,7 +54,7 @@ export function StatRow({ label, value, children, className = '' }) {
     <div className={`stat-row ${className}`.trim()}>
       <span className="stat-row-label">{label}</span>
       <strong className="stat-row-value">
-        {hasRenderableValue(renderedValue) ? renderedValue : 'Nenurodyta'}
+        {hasRenderableValue(renderedValue) ? renderedValue : 'Not specified'}
       </strong>
     </div>
   )

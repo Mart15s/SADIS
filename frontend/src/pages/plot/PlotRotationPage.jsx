@@ -47,7 +47,7 @@ function normalizeDraft(response) {
   }
 }
 
-function zoneName(zone, fallback = 'Nežinoma zona') {
+function zoneName(zone, fallback = 'Unknown zone') {
   return zone?.name || zone?.zone_name || fallback
 }
 
@@ -88,18 +88,17 @@ function formatRotationReason(reason) {
 
   const normalized = String(reason).replace('ā€”', '—')
   const translations = {
-    'Target zone is different from the current zone, which satisfies the basic rotation movement rule.': 'Tikslinė zona skiriasi nuo dabartinės, todėl atitinka pagrindinę rotacijos perkėlimo taisyklę.',
-    'Target zone has enough space for this plant.': 'Tikslinėje zonoje pakanka vietos šiam augalui.',
-    'Target zone does not contain the same plant conflict.': 'Tikslinėje zonoje nėra konflikto su tuo pačiu augalu.',
-    'Soil compatibility data is incomplete.': 'Dirvožemio suderinamumo duomenys yra nepilni.',
-    'Permanent planting — excluded from annual crop rotation.': 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.',
-    'Daugiametis sodinimas — excluded from annual crop rotation.': 'Daugiametis sodinimas – neįtraukiamas į metinę rotaciją.',
-    'Perennial plant — recommended to stay in its current zone.': 'Daugiametį augalą rekomenduojama palikti dabartinėje zonoje.',
+    'Target zone is different from the current zone, which satisfies the basic rotation movement rule.': 'The target zone is different from the current zone, satisfying the basic rotation movement rule.',
+    'Target zone has enough space for this plant.': 'The target zone has enough space for this plant.',
+    'Target zone does not contain the same plant conflict.': 'The target zone does not contain the same plant conflict.',
+    'Soil compatibility data is incomplete.': 'Soil compatibility data is incomplete.',
+    'Permanent planting — excluded from annual crop rotation.': 'Permanent planting is excluded from annual crop rotation.',
+    'Perennial plant — recommended to stay in its current zone.': 'The perennial plant should remain in its current zone.',
   }
 
   const sameFamilyMatch = normalized.match(/^Same family was planted here in (\d{4})\.$/)
   if (sameFamilyMatch) {
-    return `Tos pačios šeimos augalas čia sodintas ${sameFamilyMatch[1]} m.`
+    return `A plant from the same family was planted here in ${sameFamilyMatch[1]}.`
   }
 
   return translations[normalized] ?? normalized
@@ -157,7 +156,7 @@ export default function PlotRotationPage() {
         planning_date: planningDate,
       })
       setDraft(normalizeDraft(response))
-      setSuccess('Rotacijos juodraštis sugeneruotas.')
+      setSuccess('Rotation draft generated.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -177,7 +176,7 @@ export default function PlotRotationPage() {
       await api.confirmRotationPlan(plotId, draft.id)
       await pageState.reload()
       setDraft(null)
-      setSuccess('Rotacijos planas patvirtintas.')
+      setSuccess('Rotation plan confirmed.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -201,7 +200,7 @@ export default function PlotRotationPage() {
         payloadForDecision(value, manualNote),
       )
       setDraft(normalizeDraft(response))
-      setSuccess('Rotacijos juodraštis atnaujintas.')
+      setSuccess('Rotation draft updated.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -220,7 +219,7 @@ export default function PlotRotationPage() {
     try {
       await api.rejectRotationPlan(plotId, draft.id)
       setDraft(null)
-      setSuccess('Rotacijos juodraštis atmestas.')
+      setSuccess('Rotation draft discarded.')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -229,7 +228,7 @@ export default function PlotRotationPage() {
   }
 
   if (pageState.loading) {
-    return <LoadingState title="Įkeliamas rotacijos planavimas..." />
+    return <LoadingState title="Loading rotation planning..." />
   }
 
   if (pageState.error) {
@@ -237,7 +236,7 @@ export default function PlotRotationPage() {
   }
 
   if (!pageState.data.plot) {
-    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
+    return <EmptyState title="Plot not found" description="The selected plot could not be loaded." />
   }
 
   return (
@@ -247,11 +246,11 @@ export default function PlotRotationPage() {
         plotName={pageState.data.plot.name}
         sectionKey="rotation"
         isOwner={isOwner}
-        description="Augalų rotacijos planavimas laikomas atskiroje darbo srityje, kad redaktorius išliktų skirtas geometrijai ir sodinimui."
+        description="Crop rotation planning has its own workspace, keeping the editor focused on geometry and planting."
         meta={(
           <>
-            <StatusBadge kind="selection" tone="neutral">{pageState.data.zones.length} zonos</StatusBadge>
-            <StatusBadge kind="selection" tone="neutral">{pageState.data.plants.length} augalai</StatusBadge>
+            <StatusBadge kind="selection" tone="neutral">{pageState.data.zones.length} zones</StatusBadge>
+            <StatusBadge kind="selection" tone="neutral">{pageState.data.plants.length} plants</StatusBadge>
           </>
         )}
       />
@@ -260,21 +259,21 @@ export default function PlotRotationPage() {
       <div className="page-stack">
         {!canEdit ? (
           <EmptyState
-            title="Tik rotacijos peržiūra"
-            description="Čia galite peržiūrėti išsaugotus rotacijos sprendimus, bet planui generuoti arba patvirtinti reikia savininko ar redaktoriaus teisės."
+            title="View-only rotation access"
+            description="You can review saved rotation decisions here, but generating or confirming a plan requires owner or editor access."
           />
         ) : (
           <section className="panel page-stack">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Generuoti juodraštį</h2>
-                <p className="section-copy">Sukurkite vieną siūlomą rotacijos planą, peržiūrėkite neišspręstus augalus ir patvirtinkite tik tada, kai rezultatas tinkamas naudoti.</p>
+                <h2 className="section-title">Generate draft</h2>
+                <p className="section-copy">Create a proposed rotation plan, review unresolved plants, and confirm it only when the result is ready to use.</p>
               </div>
             </div>
 
             <form className="plot-rotation-toolbar" onSubmit={handleGenerate}>
               <div className="field">
-                <label htmlFor="rotation-planning-date">Planavimo data</label>
+                <label htmlFor="rotation-planning-date">Planning date</label>
                 <input
                   id="rotation-planning-date"
                   type="date"
@@ -285,7 +284,7 @@ export default function PlotRotationPage() {
               </div>
               <div className="form-actions">
                 <Button type="submit" loading={busy}>
-                  {busy ? 'Generuojamas juodraštis' : 'Generuoti rotacijos juodraštį'}
+                  {busy ? 'Generating draft' : 'Generate rotation draft'}
                 </Button>
               </div>
             </form>
@@ -295,8 +294,8 @@ export default function PlotRotationPage() {
 
         {pageState.data.plants.length === 0 || pageState.data.zones.length === 0 ? (
           <EmptyStatePanel
-            title="Rotacijos planavimui reikia zonų ir augalų"
-            description="Prieš generuodami rotacijos juodraštį redaktoriuje pridėkite bent vieną zoną ir vieną pasodintą augalą."
+            title="Rotation planning requires zones and plants"
+            description="Add at least one zone and one planted crop in the editor before generating a rotation draft."
             tone="subtle"
           />
         ) : null}
@@ -305,61 +304,61 @@ export default function PlotRotationPage() {
           <section className="panel page-stack">
             <div className="plot-page-section-head">
               <div>
-                <h2 className="section-title">Plano juodraštis</h2>
-                <p className="section-copy">Pirmiausia peržiūrėkite santrauką, tada tikrinkite tik tuos augalus, kuriems dar reikia dėmesio.</p>
+                <h2 className="section-title">Plan draft</h2>
+                <p className="section-copy">Review the summary first, then check only the plants that still need attention.</p>
               </div>
               <StatusBadge kind="status" tone={planStatus === 'ready' ? 'success' : 'warning'}>
-                {planStatus === 'ready' ? 'Paruošta patvirtinti' : 'Reikia korekcijos'}
+                {planStatus === 'ready' ? 'Ready to confirm' : 'Needs adjustment'}
               </StatusBadge>
             </div>
 
             <div className="plot-rotation-summary">
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Augalai</span>
+                <span className="plot-rotation-stat-label">Plants</span>
                 <strong className="plot-rotation-stat-value">{summary.plantCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Vienmečiai</span>
+                <span className="plot-rotation-stat-label">Annuals</span>
                 <strong className="plot-rotation-stat-value">{summary.annualCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Daugiamečiai</span>
+                <span className="plot-rotation-stat-label">Perennials</span>
                 <strong className="plot-rotation-stat-value">{summary.permanentCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Priskirta</span>
+                <span className="plot-rotation-stat-label">Assigned</span>
                 <strong className="plot-rotation-stat-value">{summary.assignedCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Rankinis įrašas</span>
+                <span className="plot-rotation-stat-label">Manual entries</span>
                 <strong className="plot-rotation-stat-value">{summary.manuallyEditedCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Neišspręsta</span>
+                <span className="plot-rotation-stat-label">Unresolved</span>
                 <strong className="plot-rotation-stat-value">{summary.unresolvedCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Blokuota</span>
+                <span className="plot-rotation-stat-label">Blocked</span>
                 <strong className="plot-rotation-stat-value">{summary.blockedCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Pertrauka</span>
+                <span className="plot-rotation-stat-label">Cooldown</span>
                 <strong className="plot-rotation-stat-value">{summary.cooldownBlokuotaCount}</strong>
               </div>
               <div className="plot-rotation-stat">
-                <span className="plot-rotation-stat-label">Lieka</span>
+                <span className="plot-rotation-stat-label">Staying</span>
                 <strong className="plot-rotation-stat-value">{summary.stayingCount}</strong>
               </div>
             </div>
 
             {summary.unresolvedCount > 0 ? (
               <span className="field-error">
-                Šio juodraščio patvirtinti negalima, nes {summary.unresolvedCount} vienmečiams augalams dar reikia tinkamos tikslinės zonos.
+                This draft cannot be confirmed because {summary.unresolvedCount} annual plants still need a suitable target zone.
               </span>
             ) : summary.annualCount === 0 && summary.permanentCount > 0 ? (
-              <p className="section-copy">Šiam sklypui metinė rotacija nereikalinga. Daugiametis sodinimas rodomas kontekstui ir gali likti vietoje.</p>
+              <p className="section-copy">This plot does not need annual rotation. Permanent plantings are shown for context and can remain in place.</p>
             ) : summary.assignedCount === 0 ? (
-              <span className="field-error">Pasirinktai datai nepavyko sugeneruoti tinkamos automatinės rotacijos.</span>
+              <span className="field-error">A suitable automatic rotation could not be generated for the selected date.</span>
             ) : null}
 
             <div className="plot-rotation-draft-list">
@@ -386,47 +385,47 @@ export default function PlotRotationPage() {
                       <div>
                         <strong>{entry.plant?.name}</strong>
                         <p className="muted">
-                          {entry.current_zone?.name ? `Dabartinė zona: ${entry.current_zone.name}` : 'Dabartinė zona nenurodyta'}
+                          {entry.current_zone?.name ? `Current zone: ${entry.current_zone.name}` : 'Current zone not specified'}
                         </p>
                       </div>
                       <StatusBadge kind="selection" tone={!isRotatable || ['assigned', 'manual_override', 'stays'].includes(resolutionStatus) ? 'success' : 'warning'}>
                         {!isRotatable
-                          ? 'Daugiametis sodinimas'
+                          ? 'Permanent planting'
                           : resolutionStatus === 'blocked'
-                            ? 'Blokuota'
+                            ? 'Blocked'
                             : resolutionStatus === 'stays'
-                              ? 'Lieka'
+                              ? 'Staying'
                               : targetZone
-                                ? `Tikslas: ${targetZone.zone_name}`
-                                : 'Reikia tinkamos tikslinės zonos'}
+                                ? `Target: ${targetZone.zone_name}`
+                                : 'Needs a suitable target zone'}
                       </StatusBadge>
                     </div>
 
                     {!isRotatable ? (
                       <p className="plot-rotation-draft-summary">
-                        {formatRotationReason(exclusionReason) || 'Daugiametį augalą rekomenduojama palikti dabartinėje zonoje.'}
+                        {formatRotationReason(exclusionReason) || 'The perennial plant should remain in its current zone.'}
                       </p>
                     ) : targetZone?.is_stay_decision ? (
                       <p className="plot-rotation-draft-summary">
-                        Palikti zonoje <strong>{targetZone.zone_name}</strong>.
+                        Keep in <strong>{targetZone.zone_name}</strong>.
                       </p>
                     ) : targetZone ? (
                       <p className="plot-rotation-draft-summary">
-                        Perkelti į <strong>{targetZone.zone_name}</strong>
+                        Move to <strong>{targetZone.zone_name}</strong>
                         {generatedTargetZone?.zone_name && generatedTargetZone.zone_name !== targetZone.zone_name
-                          ? <> vietoje sugeneruoto tikslo <strong>{generatedTargetZone.zone_name}</strong>.</>
+                          ? <> instead of the generated target <strong>{generatedTargetZone.zone_name}</strong>.</>
                           : '.'}
                       </p>
                     ) : (
                       <p className="plot-rotation-draft-summary">
-                        Šiam vienmečiam augalui dar reikia tinkamos tikslinės zonos. Pasirinkite tikslą, pažymėkite, kad jis lieka vietoje, arba palikite sprendimą vėlesniam laikui.
+                        This annual plant still needs a suitable target zone. Choose a target, mark it as staying in place, or leave the decision for later.
                       </p>
                     )}
 
                     {isRotatable ? (
                       <div className="plot-rotation-editor">
                         <div className="field">
-                          <label htmlFor={`rotation-decision-${entry.plant?.id}`}>Sprendimas</label>
+                          <label htmlFor={`rotation-decision-${entry.plant?.id}`}>Decision</label>
                           <select
                             id={`rotation-decision-${entry.plant?.id}`}
                             value={selectedDecisionValue}
@@ -434,10 +433,10 @@ export default function PlotRotationPage() {
                             onChange={(event) => handleDraftItemDecision(entry, event.target.value)}
                           >
                             <option value="generated" disabled={!generatedTargetZone}>
-                              {generatedTargetZone ? `Palikti sugeneruotą: ${generatedTargetZone.zone_name}` : 'Sugeneruotos tikslinės zonos nėra'}
+                              {generatedTargetZone ? `Keep generated target: ${generatedTargetZone.zone_name}` : 'No generated target zone'}
                             </option>
-                            <option value="stay">Palikti dabartinėje zonoje</option>
-                            <option value="unresolved">Reikia rankinio sprendimo</option>
+                            <option value="stay">Keep in current zone</option>
+                            <option value="unresolved">Requires manual decision</option>
                             {validCandidates.map((candidate) => {
                               const blockedReason = formatRotationReason(firstBlockingReason(candidate))
 
@@ -448,20 +447,20 @@ export default function PlotRotationPage() {
                                   disabled={!candidate.is_eligible}
                                 >
                                   {candidate.zone_name}
-                                  {candidate.is_eligible ? ` - balas ${candidate.score}` : ` - blokuota${blockedReason ? `: ${blockedReason}` : ''}`}
+                                  {candidate.is_eligible ? ` - score ${candidate.score}` : ` - blocked${blockedReason ? `: ${blockedReason}` : ''}`}
                                 </option>
                               )
                             })}
                           </select>
                         </div>
                         <div className="field">
-                          <label htmlFor={`rotation-note-${entry.plant?.id}`}>Rankinė pastaba</label>
+                          <label htmlFor={`rotation-note-${entry.plant?.id}`}>Manual note</label>
                           <input
                             id={`rotation-note-${entry.plant?.id}`}
                             defaultValue={entry.manual_note ?? ''}
                             disabled={busy}
                             maxLength={500}
-                            placeholder="Pasirinktinė pakeitimo priežastis"
+                            placeholder="Optional reason for the change"
                             onBlur={(event) => {
                               if ((entry.manual_note ?? '') !== event.target.value) {
                                 handleDraftItemDecision(entry, selectedDecisionValue, event.target.value)
@@ -482,11 +481,11 @@ export default function PlotRotationPage() {
 
                     {(exclusionReason || positiveReasons.length > 0 || softWarnings.length > 0 || alternatives.length > 0 || fallbackSolutions.length > 0 || blockedCandidates.length > 0) ? (
                       <details className="task-card-details">
-                        <summary>Kodėl siūloma ši rekomendacija</summary>
+                        <summary>Why this recommendation is suggested</summary>
                         <div className="task-card-detail-stack">
                           {exclusionReason ? (
                             <div className="task-card-detail-block">
-                              <strong>Rotacijos apimtis</strong>
+                              <strong>Rotation scope</strong>
                               <div className="task-card-resource-list">
                                 <div className="task-card-resource-row">
                                   <span>{formatRotationReason(exclusionReason)}</span>
@@ -497,7 +496,7 @@ export default function PlotRotationPage() {
 
                           {targetZone && positiveReasons.length > 0 ? (
                             <div className="task-card-detail-block">
-                              <strong>Teigiamos priežastys</strong>
+                              <strong>Positive reasons</strong>
                               <div className="task-card-resource-list">
                                 {positiveReasons.slice(0, 3).map((reason) => (
                                   <div key={`${entry.plant?.id}-${reason}`} className="task-card-resource-row">
@@ -510,7 +509,7 @@ export default function PlotRotationPage() {
 
                           {targetZone && softWarnings.length > 0 ? (
                             <div className="task-card-detail-block">
-                              <strong>Įspėjimai</strong>
+                              <strong>Warnings</strong>
                               <div className="task-card-resource-list">
                                 {softWarnings.slice(0, 3).map((warning) => (
                                   <div key={`${entry.plant?.id}-${warning}`} className="task-card-resource-row">
@@ -523,12 +522,12 @@ export default function PlotRotationPage() {
 
                           {alternatives.length > 0 ? (
                             <div className="task-card-detail-block">
-                              <strong>Alternatyvios zonos</strong>
+                              <strong>Alternative zones</strong>
                               <div className="task-card-resource-list">
                                 {alternatives.slice(0, 3).map((alternative) => (
                                   <div key={`${entry.plant?.id}-${alternative.zone_id}`} className="task-card-resource-row">
                                     <span>{alternative.zone_name}</span>
-                                    <span>Balas {alternative.score}</span>
+                                    <span>Score {alternative.score}</span>
                                   </div>
                                 ))}
                               </div>
@@ -537,7 +536,7 @@ export default function PlotRotationPage() {
 
                           {!targetZone && blockedCandidates.length > 0 ? (
                             <div className="task-card-detail-block">
-                              <strong>Blokuotos kandidatės zonos</strong>
+                              <strong>Blocked candidate zones</strong>
                               <div className="task-card-resource-list">
                                 {blockedCandidates.map((candidate) => (
                                   <div key={`${entry.plant?.id}-${candidate.zone_id}`} className="task-card-resource-row">
@@ -551,7 +550,7 @@ export default function PlotRotationPage() {
 
                           {fallbackSolutions.length > 0 ? (
                             <div className="task-card-detail-block">
-                              <strong>Atsarginiai pasiūlymai</strong>
+                              <strong>Fallback suggestions</strong>
                               <div className="task-card-resource-list">
                                 {fallbackSolutions.map((solution) => (
                                   <div key={`${entry.plant?.id}-${solution}`} className="task-card-resource-row">
@@ -572,16 +571,16 @@ export default function PlotRotationPage() {
             {canEdit ? (
               <div className="form-actions">
                 <Button onClick={handleConfirm} disabled={planStatus !== 'ready'} loading={busy}>
-                  Patvirtinti rotacijos planą
+                  Confirm rotation plan
                 </Button>
-                <Button variant="ghost" onClick={handleReject} disabled={busy}>Atmesti juodraštį</Button>
+                <Button variant="ghost" onClick={handleReject} disabled={busy}>Discard draft</Button>
               </div>
             ) : null}
           </section>
         ) : (
           <EmptyStatePanel
-            title="Aktyvaus juodraščio nėra"
-            description="Sugeneruokite juodraštį, kai norite įvertinti zonų pakeitimus šiame sklype."
+            title="No active draft"
+            description="Generate a draft when you want to evaluate zone changes for this plot."
             tone="subtle"
           />
         )}
@@ -589,16 +588,16 @@ export default function PlotRotationPage() {
         <section className="panel page-stack">
           <div className="plot-page-section-head">
             <div>
-              <h2 className="section-title">Išsaugota rotacijos istorija</h2>
-              <p className="section-copy">Patvirtinti rotacijos perkėlimai čia išlieka kaip ilgalaikis sodinimo sprendimų įrašas.</p>
+              <h2 className="section-title">Saved rotation history</h2>
+              <p className="section-copy">Confirmed rotation moves remain here as a long-term record of planting decisions.</p>
             </div>
-            <StatusBadge kind="selection" tone="neutral">{pageState.data.history.length} įrašai</StatusBadge>
+            <StatusBadge kind="selection" tone="neutral">{pageState.data.history.length} records</StatusBadge>
           </div>
 
           {pageState.data.history.length === 0 ? (
             <EmptyStatePanel
-              title="Rotacijos istorijos dar nėra"
-              description="Patvirtinkite rotacijos juodraštį, kad būtų pradėta ilgalaikė šio sklypo rotacijos istorija."
+              title="No rotation history yet"
+              description="Confirm a rotation draft to begin the long-term rotation history for this plot."
               tone="subtle"
             />
           ) : (
@@ -606,22 +605,22 @@ export default function PlotRotationPage() {
               {pageState.data.history.map((entry) => (
                 <article key={entry.id} className="plot-rotation-history-item">
                   <div className="plot-rotation-history-main">
-                    <strong>{entry.plant?.name ?? 'Augalas pašalintas'}</strong>
+                    <strong>{entry.plant?.name ?? 'Plant removed'}</strong>
                     <div className="plot-rotation-history-zones">
                       <span>
-                        <span className="plot-rotation-history-label">Iš zonos</span>
+                        <span className="plot-rotation-history-label">From zone</span>
                         <strong>{zoneName(entry.from_zone)}</strong>
                       </span>
                       <span>
-                        <span className="plot-rotation-history-label">Į zoną</span>
+                        <span className="plot-rotation-history-label">To zone</span>
                         <strong>{zoneName(entry.to_zone ?? entry.plant_zone)}</strong>
                       </span>
                     </div>
                     {entry.decision_note ? <p className="muted">{entry.decision_note}</p> : null}
                   </div>
                   <span className="plot-rotation-history-date" title={entry.decision_status ?? undefined}>
-                    Rotuota {formatDate(entry.from_date)}
-                    {entry.to_date ? ` iki ${formatDate(entry.to_date)}` : ''}
+                    Rotated {formatDate(entry.from_date)}
+                    {entry.to_date ? ` through ${formatDate(entry.to_date)}` : ''}
                   </span>
                 </article>
               ))}

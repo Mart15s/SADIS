@@ -8,7 +8,7 @@ enum TaskPriority: string
     case Medium = 'medium';
     case High = 'high';
 
-    public static function normalize(string|null $value): string
+    public static function normalize(?string $value): string
     {
         return match ($value) {
             self::Low->value,

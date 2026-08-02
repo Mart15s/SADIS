@@ -14,9 +14,7 @@ export default function InspectorPanel({
         </div>
         {meta ? <div className="inspector-panel-meta">{meta}</div> : null}
       </header>
-      <div className="inspector-panel-body">
-        {children}
-      </div>
+      <div className="inspector-panel-body">{children}</div>
     </aside>
   )
 }

@@ -46,7 +46,7 @@ return new class extends Migration
         });
 
         DB::table('inventory_items')->update([
-            'normalized_name' => DB::raw("LOWER(TRIM(name))"),
+            'normalized_name' => DB::raw('LOWER(TRIM(name))'),
         ]);
 
         DB::table('inventory_items')

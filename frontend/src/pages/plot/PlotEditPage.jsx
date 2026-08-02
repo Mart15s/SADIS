@@ -48,7 +48,7 @@ export default function PlotEditPage() {
   }, [pageState.data.plot])
 
   if (pageState.loading) {
-    return <LoadingState title="Įkeliamas sklypo redaktorius..." />
+    return <LoadingState title="Loading field editor…" />
   }
 
   if (pageState.error) {
@@ -56,11 +56,11 @@ export default function PlotEditPage() {
   }
 
   if (!pageState.data.plot) {
-    return <EmptyState title="Sklypas nerastas" description="Pasirinkto sklypo nepavyko įkelti." />
+    return <EmptyState title="Field not found" description="The selected field could not be loaded." />
   }
 
   if (!form) {
-    return <LoadingState title="Ruošiamas sklypo redaktorius..." />
+    return <LoadingState title="Preparing field editor…" />
   }
 
   const canEdit = ['owner', 'editor'].includes(pageState.data.accessRole)
@@ -118,14 +118,14 @@ export default function PlotEditPage() {
       <div className="page-stack">
         <PageHeader
           title="Sklypo redaktorius"
-          description="Pagal dabartinę rolę šį sklypą galite peržiūrėti, bet atnaujinti gali tik savininkai ir redaktoriai."
+          description="Your current role can view this field, but only owners and editors can update it."
         />
         <EmptyState
           title="Redagavimo prieiga negalima"
-          description="Grįžkite į sklypo peržiūros puslapį, jei norite tik skaityti duomenis."
+          description="Return to the field overview if you only need to read its data."
           action={(
             <Link to={`/plots/${plotId}`}>
-              <Button>Grįžti į sklypą</Button>
+              <Button>Return to field</Button>
             </Link>
           )}
         />
@@ -137,12 +137,12 @@ export default function PlotEditPage() {
     <div className="page-stack">
       <PageHeader
         eyebrow="Sklypo nustatymai"
-        title="Redaguoti sklypo duomenis"
-        description={`Atnaujinkite ${pageState.data.plot.name} tapatybę, vietą, dydį ir bendruomenės matomumą nepaveikdami esamo išdėstymo.`}
+        title="Edit field details"
+        description={`Update ${pageState.data.plot.name}'s identity, location, size, and community visibility without changing its layout.`}
         meta={(
           <>
             <Badge tone="soft">{pageState.data.accessRole}</Badge>
-            <Badge tone={form.share ? 'success' : 'neutral'}>{form.share ? 'Bendrinamas' : 'Privatus'}</Badge>
+            <Badge tone={form.share ? 'success' : 'neutral'}>{form.share ? 'Shared' : 'Private'}</Badge>
           </>
         )}
       />
@@ -151,11 +151,11 @@ export default function PlotEditPage() {
 
       <form className="panel split-form" onSubmit={handleSave}>
         <div className="field">
-          <label htmlFor="edit-name">Pavadinimas</label>
+          <label htmlFor="edit-name">Name</label>
           <input id="edit-name" name="name" value={form.name} onChange={handleChange} required />
         </div>
         <div className="field">
-          <label htmlFor="edit-city">Miestas</label>
+          <label htmlFor="edit-city">City</label>
           <input id="edit-city" name="city" value={form.city} onChange={handleChange} required />
         </div>
         <div className="field">
@@ -172,7 +172,7 @@ export default function PlotEditPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="edit-date">Sukūrimo data</label>
+          <label htmlFor="edit-date">Created on</label>
           <input
             id="edit-date"
             name="creation_date"
@@ -183,11 +183,11 @@ export default function PlotEditPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="edit-description">Aprašymas</label>
+          <label htmlFor="edit-description">Description</label>
           <textarea id="edit-description" name="description" value={form.description} onChange={handleChange} />
         </div>
         <div className="field">
-          <label htmlFor="edit-share">Bendruomenės matomumas</label>
+          <label htmlFor="edit-share">Community visibility</label>
           <select
             id="edit-share"
             value={String(form.share)}
@@ -198,8 +198,8 @@ export default function PlotEditPage() {
               }))
             }}
           >
-            <option value="false">Privatus</option>
-            <option value="true">Bendrinamas</option>
+            <option value="false">Private</option>
+            <option value="true">Shared</option>
           </select>
         </div>
 
@@ -216,14 +216,14 @@ export default function PlotEditPage() {
 
         <div className="form-actions">
           <Button type="submit" loading={submitting}>
-            {submitting ? 'Saugomi pakeitimai' : 'Išsaugoti pakeitimus'}
+            {submitting ? 'Saving changes' : 'Save changes'}
           </Button>
           <Link to={`/plots/${plotId}`}>
-            <Button variant="secondary">Atšaukti</Button>
+            <Button variant="secondary">Cancel</Button>
           </Link>
           {isOwner ? (
             <Button variant="danger" onClick={handleDelete} disabled={submitting}>
-              Šalinti sklypą
+              Delete field
             </Button>
           ) : null}
         </div>

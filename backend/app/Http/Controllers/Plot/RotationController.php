@@ -150,8 +150,7 @@ class RotationController extends Controller
         Plot $plot,
         AccessService $accessService,
         RotationPlannerService $rotationPlannerService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureUserCanEditPlot($request, $plot, $accessService);
 
         $validated = $request->validate([

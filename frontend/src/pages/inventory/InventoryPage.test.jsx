@@ -36,7 +36,7 @@ describe('InventoryPage task replenishment flow', () => {
     ]))
 
     render(
-      <MemoryRouter initialEntries={[`/inventory?taskId=41&taskName=Buy%20Protective%20cover&returnTo=%2Fplots%2F5%2Fcalendar%3FcalendarId%3D9%26date%3D2026-04-20&returnLabel=Gr%C4%AF%C5%BEti%20%C4%AF%20kalendoriaus%20dien%C4%85&missing=${missing}`]}>
+      <MemoryRouter initialEntries={[`/inventory?taskId=41&taskName=Buy%20Protective%20cover&returnTo=%2Fplots%2F5%2Fcalendar%3FcalendarId%3D9%26date%3D2026-04-20&returnLabel=Return%20to%20calendar%20day&missing=${missing}`]}>
         <Routes>
           <Route path="/inventory" element={<InventoryPage />} />
         </Routes>
@@ -48,10 +48,10 @@ describe('InventoryPage task replenishment flow', () => {
     })
 
     expect(screen.getByRole('heading', { name: /Add inventory record/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/Pavadinimas/i)).toHaveValue('Protective cover')
-    expect(screen.getByLabelText(/Tipas/i)).toHaveValue('tool')
-    expect(screen.getByLabelText(/Tipas/i)).toBeDisabled()
-    expect(screen.getByLabelText(/Kiekis/i)).toHaveValue(23)
+    expect(screen.getByLabelText(/Name/i)).toHaveValue('Protective cover')
+    expect(screen.getByLabelText(/Type/i)).toHaveValue('tool')
+    expect(screen.getByLabelText(/Type/i)).toBeDisabled()
+    expect(screen.getByLabelText(/Quantity/i)).toHaveValue(23)
     expect(screen.getAllByRole('link', { name: /Return to calendar day/i })[0]).toHaveAttribute(
       'href',
       '/plots/5/calendar?calendarId=9&date=2026-04-20',
@@ -94,7 +94,7 @@ describe('InventoryPage task replenishment flow', () => {
       expect(screen.getByRole('heading', { name: /Edit inventory record/i })).toBeInTheDocument()
     })
 
-    expect(screen.getByLabelText(/Pavadinimas/i)).toHaveValue('Protective cover')
-    expect(screen.getByLabelText(/Kiekis/i)).toHaveValue(23)
+    expect(screen.getByLabelText(/Name/i)).toHaveValue('Protective cover')
+    expect(screen.getByLabelText(/Quantity/i)).toHaveValue(23)
   })
 })

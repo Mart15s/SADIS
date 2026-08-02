@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageHeader from '../../components/layout/PageHeader.jsx'
 import Button from '../../components/ui/Button.jsx'
 import { useAuth } from '../../context/auth-context.js'
+import { safeRedirectPath } from '../../lib/navigation.js'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -29,7 +30,7 @@ export default function LoginPage() {
 
     try {
       await login(form)
-      navigate(searchParams.get('redirect') || '/')
+      navigate(safeRedirectPath(searchParams.get('redirect')))
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -44,7 +45,14 @@ export default function LoginPage() {
       <form className="panel input-grid" onSubmit={handleSubmit}>
         <div className="field">
           <label htmlFor="email">Email address</label>
-          <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
         </div>
 
         <div className="field">
@@ -65,11 +73,17 @@ export default function LoginPage() {
           <Button type="submit" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
-          <Link to="/forgot-password">
-            <Button variant="secondary">Forgot password?</Button>
+          <Link className="button button-secondary button-md" to="/forgot-password">
+            Forgot password?
           </Link>
-          <Link to="/register">
-            <Button variant="ghost">Create an account</Button>
+          <Link
+            className="button button-secondary button-md"
+            to={`/otp${searchParams.get('redirect') ? `?redirect=${encodeURIComponent(searchParams.get('redirect'))}` : ''}`}
+          >
+            Use a one-time code
+          </Link>
+          <Link className="button button-ghost button-md" to="/register">
+            Create an account
           </Link>
         </div>
       </form>

@@ -10,10 +10,10 @@ use App\Http\Resources\Calendar\TaskCalendarListResource;
 use App\Http\Resources\Calendar\TaskCalendarResource;
 use App\Models\Plot;
 use App\Models\TaskCalendar;
-use App\Services\Plot\AccessService;
-use App\Services\Inventory\InventoryService;
 use App\Services\Calendar\TaskCalendarService;
 use App\Services\Calendar\WeatherService;
+use App\Services\Inventory\InventoryService;
+use App\Services\Plot\AccessService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,8 +42,7 @@ class CalendarController extends Controller
         TaskCalendarService $service,
         InventoryService $inventoryService,
         AccessService $accessService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureUserCanEditPlot($request, $plot, $accessService);
 
         try {
@@ -73,8 +72,7 @@ class CalendarController extends Controller
         AccessService $accessService,
         InventoryService $inventoryService,
         WeatherService $weatherService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureUserCanViewPlot($request, $plot, $accessService);
         abort_unless($calendar->fk_plot_id === $plot->id, 404);
 
@@ -98,8 +96,7 @@ class CalendarController extends Controller
         AccessService $accessService,
         InventoryService $inventoryService,
         WeatherService $weatherService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureUserCanEditPlot($request, $plot, $accessService);
         abort_unless($calendar->fk_plot_id === $plot->id, 404);
 

@@ -44,20 +44,37 @@ COPY --from=backend-vendor /app/backend ./
 COPY --from=frontend-build /app/frontend/dist/ ./public/
 
 COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY docker/nginx-http.conf /etc/nginx/conf.d/00-yava-http.conf
 COPY docker/php-fpm-www.conf /usr/local/etc/php-fpm.d/zz-render.conf
 COPY docker/start.sh /usr/local/bin/render-start
+COPY docker/predeploy.sh /usr/local/bin/render-predeploy
 
-RUN chmod +x /usr/local/bin/render-start \
+RUN chmod +x /usr/local/bin/render-start /usr/local/bin/render-predeploy \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache public \
     && rm -f /etc/nginx/sites-enabled/default
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
+    APP_LOCALE=en \
+    APP_FALLBACK_LOCALE=en \
     LOG_CHANNEL=stderr \
+    LOG_LEVEL=info \
     DB_CONNECTION=pgsql \
+    SESSION_DRIVER=cookie \
+    SESSION_SECURE_COOKIE=true \
+    SESSION_HTTP_ONLY=true \
+    SESSION_SAME_SITE=lax \
+    CACHE_STORE=file \
+    QUEUE_CONNECTION=sync \
+    FILESYSTEM_DISK=local \
+    OTP_PROVIDER=unconfigured \
     PORT=10000
 
 EXPOSE 10000
+
+STOPSIGNAL SIGTERM
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD php -r 'exit(@file_get_contents("http://127.0.0.1:".getenv("PORT")."/up") === false ? 1 : 0);'
 
 CMD ["render-start"]

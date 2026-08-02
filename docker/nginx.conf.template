@@ -1,6 +1,8 @@
 server {
     listen ${PORT};
     server_name _;
+    server_tokens off;
+    fastcgi_hide_header X-Powered-By;
     root /var/www/html/public;
     index index.html index.php;
 
@@ -9,7 +11,7 @@ server {
 
     # Browser-side defence in depth. The application is a same-origin SPA; only
     # OpenStreetMap raster tiles are loaded cross-origin.
-    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:" always;
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
@@ -18,7 +20,7 @@ server {
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
-    access_log /dev/stdout;
+    access_log /dev/stdout yava;
     error_log /dev/stderr warn;
 
     location = /favicon.ico {
@@ -75,7 +77,11 @@ server {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
         fastcgi_param SCRIPT_NAME /index.php;
+        # Laravel's default HTML health view pulls third-party development
+        # assets. Force its built-in JSON representation for a minimal probe.
+        fastcgi_param HTTP_ACCEPT application/json;
         fastcgi_param HTTPS $http_x_forwarded_proto;
+        fastcgi_param HTTP_PROXY "";
         fastcgi_pass 127.0.0.1:9000;
     }
 
@@ -83,12 +89,18 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    location ~ \.php$ {
-        try_files $uri =404;
+    # Only Laravel's public front controller may execute PHP. In particular,
+    # an uploaded or accidentally published .php file is never executable.
+    location = /index.php {
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
         fastcgi_param HTTPS $http_x_forwarded_proto;
+        fastcgi_param HTTP_PROXY "";
         fastcgi_pass 127.0.0.1:9000;
+    }
+
+    location ~ \.php$ {
+        return 404;
     }
 }

@@ -7,7 +7,14 @@ function finiteLatLng(point) {
   const lat = Number(point?.lat)
   const lng = Number(point?.lng)
 
-  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180
+  ) {
     return null
   }
 
@@ -20,9 +27,7 @@ export function normalizeMapBoundary(geometry) {
     return []
   }
 
-  return geometry.map.boundary
-    .map(finiteLatLng)
-    .filter(Boolean)
+  return geometry.map.boundary.map(finiteLatLng).filter(Boolean)
 }
 
 function centerForBoundary(boundary, geometry) {
@@ -53,28 +58,32 @@ function FitBoundary({ boundary }) {
       return
     }
 
-    map.fitBounds(boundary.map((point) => [point.lat, point.lng]), {
-      animate: false,
-      padding: [18, 18],
-      maxZoom: 18,
-    })
+    map.fitBounds(
+      boundary.map((point) => [point.lat, point.lng]),
+      {
+        animate: false,
+        padding: [18, 18],
+        maxZoom: 18,
+      },
+    )
   }, [boundary, boundaryKey, map])
 
   return null
 }
 
-export default memo(function PlotBoundaryMiniMap({
-  plotGeometry,
-  plotName,
-  className = '',
-}) {
+export default memo(function PlotBoundaryMiniMap({ plotGeometry, plotName, className = '' }) {
   const boundary = useMemo(() => normalizeMapBoundary(plotGeometry), [plotGeometry])
   const center = useMemo(() => centerForBoundary(boundary, plotGeometry), [boundary, plotGeometry])
 
   if (boundary.length < 3) {
     return (
-      <figure className={`plot-boundary-mini-map plot-boundary-mini-map--empty ${className}`.trim()}>
-        <div className="plot-boundary-mini-map-placeholder" aria-label={`${plotName || 'Sklypas'} ribų peržiūra nepasiekiama`}>
+      <figure
+        className={`plot-boundary-mini-map plot-boundary-mini-map--empty ${className}`.trim()}
+      >
+        <div
+          className="plot-boundary-mini-map-placeholder"
+          aria-label={`${plotName || 'Plot'} boundary preview unavailable`}
+        >
           <svg viewBox="0 0 160 104" role="presentation" focusable="false">
             <rect x="10" y="10" width="140" height="84" rx="8" />
             <path d="M24 78L58 42l24 20 24-32 30 48" />
@@ -82,7 +91,7 @@ export default memo(function PlotBoundaryMiniMap({
             <circle cx="82" cy="62" r="4" />
             <circle cx="106" cy="30" r="4" />
           </svg>
-          <span>Riba nenurodyta</span>
+          <span>No boundary specified</span>
         </div>
       </figure>
     )
