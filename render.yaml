@@ -18,9 +18,9 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: RUN_MIGRATIONS
-        value: false
+        sync: false
       - key: RUN_DEMO_SEEDER
-        value: false
+        sync: false
       - key: RUN_DEMO1_RICH_SEEDER
         value: false
       - key: DEMO_SEEDER_CLASS
