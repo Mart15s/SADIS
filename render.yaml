@@ -15,6 +15,14 @@ services:
         value: false
       - key: LOG_CHANNEL
         value: stderr
+      - key: CACHE_STORE
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: local
       - key: DB_CONNECTION
         value: pgsql
       - key: RUN_MIGRATIONS
