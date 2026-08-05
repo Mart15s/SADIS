@@ -40,11 +40,11 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 class CurrentVersionDemoSeeder extends Seeder
 {
-    private const PASSWORD = 'password';
-
     private const SOURCE = 'current-version-demo';
 
     private const EMAILS = [
@@ -61,8 +61,12 @@ class CurrentVersionDemoSeeder extends Seeder
     /** @var array<string, CatalogPlant> */
     private array $catalog = [];
 
+    private string $password;
+
     public function run(): void
     {
+        $this->password = $this->demoPassword();
+
         DB::transaction(function (): void {
             $this->cleanupDemoOwnedRecords();
             $this->seedCatalog();
@@ -79,7 +83,23 @@ class CurrentVersionDemoSeeder extends Seeder
         });
 
         $this->command?->info('Current version demo dataset seeded.');
-        $this->command?->line('Demo password for all demo accounts: '.self::PASSWORD);
+    }
+
+    private function demoPassword(): string
+    {
+        if (app()->environment('testing')) {
+            return Str::random(32);
+        }
+
+        $password = (string) env('DEMO_ACCOUNT_PASSWORD', '');
+
+        if (strlen($password) < 16) {
+            throw new RuntimeException(
+                'DEMO_ACCOUNT_PASSWORD must be set to at least 16 characters before seeding demo accounts.'
+            );
+        }
+
+        return $password;
     }
 
     private function cleanupDemoOwnedRecords(): void
@@ -234,7 +254,7 @@ class CurrentVersionDemoSeeder extends Seeder
         foreach ($users as $key => [$name, $surname, $email, $role]) {
             $user = User::query()->create([
                 'email' => $email,
-                'password' => self::PASSWORD,
+                'password' => $this->password,
                 'role' => $role,
                 'created_at' => now()->subMonths(10),
                 'updated_at' => now(),
