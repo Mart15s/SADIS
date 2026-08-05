@@ -39,6 +39,8 @@ Svarbiausi laukai:
 
 Produkcijai skirtų Render kintamųjų pavyzdžiai pateikti `.env.render.example`. Realūs raktai, slaptažodžiai ir duomenų bazės prisijungimai į repozitoriją neturi būti keliami.
 
+Vercel + Render architektūra, saugus migracijų ir demo duomenų paleidimas bei rollback aprašyti [`DEPLOYMENT.md`](DEPLOYMENT.md).
+
 ## Paleidimas lokaliai
 
 Backend:

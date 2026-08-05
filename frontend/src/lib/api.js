@@ -3,6 +3,21 @@ import { getAuthToken } from './auth.js'
 
 let unauthorizedHandler = null
 
+function normalizeBackendUrl(value) {
+  const normalized = value?.trim().replace(/\/+$/, '') ?? ''
+
+  return normalized.endsWith('/api') ? normalized.slice(0, -4) : normalized
+}
+
+const backendUrl = normalizeBackendUrl(import.meta.env.VITE_API_BASE_URL)
+const apiBaseUrl = backendUrl ? `${backendUrl}/api` : '/api'
+
+function usesCrossOriginBearerAuth() {
+  if (!backendUrl || typeof window === 'undefined') return false
+
+  return new URL(backendUrl, window.location.origin).origin !== window.location.origin
+}
+
 const GENERIC_SERVER_ERROR = 'Užklausos nepavyko įvykdyti. Patikrinkite duomenis ir bandykite dar kartą.'
 
 function normalizeMessage(payload, status = null) {
@@ -64,8 +79,10 @@ export function unwrapCollection(payload) {
 }
 
 export const apiClient = axios.create({
-  baseURL: '/api',
-  withCredentials: true,
+  baseURL: apiBaseUrl,
+  // Production authentication uses Sanctum personal access tokens across the
+  // Vercel/Render boundary. Cookies remain enabled for the local proxy only.
+  withCredentials: !usesCrossOriginBearerAuth(),
   headers: {
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
