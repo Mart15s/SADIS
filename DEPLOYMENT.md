@@ -6,6 +6,13 @@ The React/Vite frontend is deployed from `frontend/` to Vercel. The Laravel 13 A
 
 Authentication uses Laravel Sanctum personal access tokens. The browser stores the token and sends it in the `Authorization` header. Production requests therefore go directly from Vercel to Render without cross-site session cookies.
 
+## Live deployment
+
+- Frontend: `https://sadis-mart15s.vercel.app`
+- API: `https://sad-system-web.onrender.com`
+- Vercel project: `sadis-mart15s`
+- Render Blueprint: `sadis-production`
+
 ## Vercel frontend
 
 - Root directory: `frontend`
